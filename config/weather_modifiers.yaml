@@ -1,0 +1,17 @@
+# Weather modifiers aligned with the PDF guide
+temperature:
+  cold: {threshold_f: 35, pass_yards_pct: -0.03, kicking_pct: -0.02, turnover_bonus: 0.1}
+  hot:  {threshold_f: 85, pass_yards_pct: -0.02, kicking_pct:  0.00, turnover_bonus: 0.0}
+
+wind:
+  light:    {min_mph: 5,  max_mph: 10,  pass_yards_pct: -0.02, kicking_pct: -0.01, turnover_bonus: 0.0}
+  moderate: {min_mph: 10, max_mph: 20,  pass_yards_pct: -0.05, kicking_pct: -0.03, turnover_bonus: 0.1}
+  strong:   {min_mph: 20, max_mph: 30,  pass_yards_pct: -0.10, kicking_pct: -0.06, turnover_bonus: 0.2}
+
+precip:
+  heavy: {pass_yards_pct: -0.08, kicking_pct: -0.05, turnover_bonus: 0.3}  # heavy rain/snow
+  none:  {pass_yards_pct:  0.00, kicking_pct:  0.00, turnover_bonus: 0.0}
+
+# Default home-field and any static adjustments
+defaults:
+  home_field_pts: 1.8
