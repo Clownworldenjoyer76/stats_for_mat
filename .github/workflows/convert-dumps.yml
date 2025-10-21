@@ -1,0 +1,51 @@
+name: Convert dumps to CSV and push
+
+on:
+  workflow_dispatch: {}  # run manually from Actions tab
+
+permissions:
+  contents: write  # allow committing/pushing with GITHUB_TOKEN
+
+jobs:
+  convert-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Ensure pandas exists even if requirements.txt is minimal
+          python - << 'PY'
+import pkgutil, sys
+missing = [p for p in ['pandas'] if pkgutil.find_loader(p) is None]
+if missing:
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install"] + missing)
+PY
+
+      - name: Convert dumps to CSV
+        run: |
+          python src/convert_dumps_to_csv.py
+
+      - name: Commit changes (if any)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: convert dumps to CSV and update data/raw"
+            git push
+          else
+            echo "No changes to commit."
+          fi
