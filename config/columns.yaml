@@ -1,0 +1,23 @@
+# Map your raw CSV column names (case-insensitive) to the unified schema keys
+# If a field is missing in your raw files, leave it blank or remove it—the ETL will handle defaults.
+
+team: team
+opponent: opponent
+week: week
+season: season
+
+# Offensive
+off_ppg: off_ppg           # points per game (or per-week points; ETL will aggregate)
+off_py_pg: off_py_pg       # passing yards per game
+off_ry_pg: off_ry_pg       # rushing yards per game
+giveaways_pg: giveaways_pg # turnovers committed per game
+
+# Defensive (opponent allowed)
+def_pag: def_pag           # points allowed per game
+def_py_pg: def_py_pg       # pass yards allowed per game
+def_ry_pg: def_ry_pg       # rush yards allowed per game
+takeaways_pg: takeaways_pg # defensive takeaways per game
+
+# Optional
+st_edge: st_edge           # special teams adjustment, positive favors team (in points)
+home_away: home_away       # values: 'home' | 'away' (optional)
