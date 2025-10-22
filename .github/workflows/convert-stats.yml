@@ -1,0 +1,40 @@
+name: Convert stats dumps to CSV
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas
+
+      - name: Convert stats to CSV
+        run: |
+          python src/convert_stats_to_csv.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw/stats || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: convert stats to CSV"
+            git push
+          else
+            echo "No changes to commit."
+          fi
