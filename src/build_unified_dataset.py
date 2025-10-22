@@ -1,110 +1,96 @@
 #!/usr/bin/env python3
 """
-Build a unified, season-to-date team-level dataset
-from data/raw/stats and data/raw/team_stats.
+Build a unified team-level dataset from data/raw/team_stats ONLY.
+- No week/season detection (files are already up to date).
+- Ignores data/raw/stats (player stats).
+- Merges on detected team column; prefixes columns by source file stem.
+- Fills numeric NaNs with 0 to avoid blanks.
 
 Output: data/processed/nfl_unified_with_metrics.csv
 """
 
+from pathlib import Path
 import pandas as pd
 import numpy as np
-from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw"
-PROCESSED = ROOT / "data" / "processed"
-PROCESSED.mkdir(parents=True, exist_ok=True)
+TEAM_RAW = ROOT / "data" / "raw" / "team_stats"
+OUT_DIR = ROOT / "data" / "processed"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+OUT_PATH = OUT_DIR / "nfl_unified_with_metrics.csv"
 
-def infer_numeric_cols(df):
-    numeric_cols = []
-    for c in df.columns:
-        try:
-            s = pd.to_numeric(df[c], errors="coerce")
-            if s.notna().sum() > len(s) * 0.5:
-                numeric_cols.append(c)
-        except Exception:
-            pass
-    return numeric_cols
+TEAM_COL_PAT = re.compile(r"\bteam\b", re.IGNORECASE)
 
-def normalize_team_names(df):
+def detect_team_col(df: pd.DataFrame) -> str | None:
     for c in df.columns:
-        if re.search(r'team', c, re.I):
-            df[c] = df[c].astype(str).str.strip()
-    return df
-
-def extract_team_col(df):
-    for c in df.columns:
-        if re.search(r'team', c, re.I):
+        if TEAM_COL_PAT.search(str(c)):
             return c
     return None
 
-def classify_file(filename, columns):
-    name = filename.lower()
-    joined = " ".join(columns).lower()
-    if "pass" in name or "pass" in joined:
-        return "passing"
-    if "rush" in name or "rush" in joined:
-        return "rushing"
-    if "defense" in name or "def" in joined:
-        return "defense"
-    if "kick" in name or "punt" in joined:
-        return "special"
-    if "return" in name:
-        return "returning"
-    if "turnover" in name:
-        return "turnovers"
-    if "down" in name:
-        return "downs"
-    if "yard" in name:
-        return "yardage"
-    if "score" in name:
-        return "scoring"
-    return "misc"
+def numericize(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    for c in out.columns:
+        if c == "team":
+            continue
+        out[c] = pd.to_numeric(out[c], errors="coerce")
+    return out
 
-def summarize_team(df, category):
-    team_col = extract_team_col(df)
-    if not team_col:
-        return pd.DataFrame()
+def load_and_prepare(file_path: Path) -> pd.DataFrame | None:
+    df = pd.read_csv(file_path)
+    team_col = detect_team_col(df)
+    if team_col is None:
+        print(f"[SKIP] {file_path.name} (no 'team' column detected)")
+        return None
 
-    df = normalize_team_names(df)
     df = df.rename(columns={team_col: "team"})
-    numeric_cols = infer_numeric_cols(df)
-    if not numeric_cols:
-        return pd.DataFrame()
+    # Keep one row per team; if multiple, take the first (files are season-to-date)
+    df = df.dropna(subset=["team"]).copy()
+    df["team"] = df["team"].astype(str).str.strip()
+    # If duplicates exist, keep the first per team
+    df = df.drop_duplicates(subset=["team"], keep="first").reset_index(drop=True)
 
-    agg = df.groupby("team")[numeric_cols].mean().reset_index()
-    agg["category"] = category
-    return agg
+    # Prefix non-team columns by file stem
+    prefix = file_path.stem.lower()
+    rename_map = {c: f"{prefix}_{c}" for c in df.columns if c != "team"}
+    df = df.rename(columns=rename_map)
 
-def build_unified():
-    frames = []
-    for folder in ["stats", "team_stats"]:
-        base = RAW / folder
-        for file in sorted(base.glob("*.csv")):
-            try:
-                df = pd.read_csv(file)
-                cat = classify_file(file.stem, df.columns)
-                summary = summarize_team(df, cat)
-                if not summary.empty:
-                    frames.append(summary)
-                    print(f"[OK] {file.name} → {cat}")
-                else:
-                    print(f"[SKIP] {file.name} (no numeric data)")
-            except Exception as e:
-                print(f"[WARN] {file.name}: {e}")
+    # Coerce numerics (after rename)
+    df = numericize(df)
+    return df
 
-    if not frames:
-        print("No data to unify.")
+def main():
+    csvs = sorted(TEAM_RAW.glob("*.csv"))
+    if not csvs:
+        print(f"[INFO] No CSVs found in {TEAM_RAW}")
+        OUT_PATH.write_text("")  # produce an empty file to signal run
         return
 
-    combined = pd.concat(frames, ignore_index=True)
-    wide = combined.pivot_table(index="team", columns="category", aggfunc="mean")
-    wide.columns = [f"{c[1]}_{c[0]}" if c[1] else c[0] for c in wide.columns]
-    wide = wide.reset_index()
+    merged = None
+    for fp in csvs:
+        try:
+            part = load_and_prepare(fp)
+            if part is None or part.empty:
+                continue
+            if merged is None:
+                merged = part
+            else:
+                merged = merged.merge(part, on="team", how="outer")
+            print(f"[OK] merged {fp.name}")
+        except Exception as e:
+            print(f"[WARN] {fp.name}: {e}")
 
-    wide.to_csv(PROCESSED / "nfl_unified_with_metrics.csv", index=False)
-    print(f"[DONE] Wrote {len(wide)} teams → {PROCESSED/'nfl_unified_with_metrics.csv'}")
+    if merged is None or merged.empty:
+        print("[INFO] Nothing to write; no valid team tables.")
+        OUT_PATH.write_text("")
+        return
+
+    # Fill numeric NaNs with 0; leave text columns (just 'team') as-is
+    num_cols = [c for c in merged.columns if c != "team"]
+    merged[num_cols] = merged[num_cols].fillna(0)
+
+    merged.to_csv(OUT_PATH, index=False)
+    print(f"[DONE] {len(merged)} teams → {OUT_PATH}")
 
 if __name__ == "__main__":
-    build_unified()
+    main()
