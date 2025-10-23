@@ -24,7 +24,7 @@ jobs:
         run: pip install pandas
 
       - name: Run normalization script
-        run: python scripts/normalize_teams.py
+        run: python src/normalize_teams.py
 
       - name: Force commit and push changes
         run: |
