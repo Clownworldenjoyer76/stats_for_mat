@@ -2,24 +2,33 @@
 """
 Unified Player Projections + Anytime TD Scorer
 
-Reads (only the columns explicitly listed):
-  data/raw/stats/passing.csv    -> PLAYER, TEAM, PYDS, PTD, INT
-  data/raw/stats/rushing.csv    -> PLAYER, TEAM, RATT, RYDS, RTD
-  data/raw/stats/receiving.csv  -> PLAYER, TEAM, TGT, REC, RECYDS, RECTD, RECAVG, YAC
-  data/raw/stats/returning.csv  -> PLAYER, TEAM, K_RET, K_RET_YDS, K_RET_AVG, K_RET_TD, P_RET, P_RET_YDS, P_RET_AVG, P_RET_TD
-  data/raw/stats/kicking.csv    -> PLAYER, TEAM, FGM, FGA, FG_PCT, XPM, XPA
-  data/raw/stats/defensive.csv  -> PLAYER, TEAM, TCKL, SCK, DEF_INT
-  data/raw/stats/scoring.csv    -> PLAYER, TEAM, GP, TD, PASS_TD, RUSH_TD, REC_TD, K_RET_TD, P_RET_TD, INT_TD
+Inputs (only the columns explicitly listed are used):
+  data/raw/stats/passing.csv
+    -> PLAYER, TEAM, PYDS, PTD, INT
+  data/raw/stats/rushing.csv
+    -> PLAYER, TEAM, RATT, RYDS, RTD
+  data/raw/stats/receiving.csv
+    -> PLAYER, TEAM, TGT, REC, RECYDS, RECTD, RECAVG, YAC
+  data/raw/stats/returning.csv
+    -> PLAYER, TEAM, K_RET, K_RET_YDS, K_RET_AVG, K_RET_TD, P_RET, P_RET_YDS, P_RET_AVG, P_RET_TD
+  data/raw/stats/kicking.csv
+    -> PLAYER, TEAM, FGM, FGA, FG_PCT, XPM, XPA
+  data/raw/stats/defensive.csv
+    -> PLAYER, TEAM, TCKL, SCK, DEF_INT
+  data/raw/stats/kickoffs_punts.csv
+    -> Player, Team, GP, KO, YDS, K-AVG, TB, TB %, OSKA, OSK, AVG, PUNTS, P-YDS, P-AVG, P-LNG, IN20, IN20 %, P-TB, P-TB %, BLK, NET AVG
+  data/raw/stats/scoring.csv
+    -> PLAYER, TEAM, GP, TD, PASS_TD, RUSH_TD, REC_TD, K_RET_TD, P_RET_TD, INT_TD
 
 Context:
-  data/processed/games.csv, data/team_stadiums.csv,
-  data/processed/nfl_unified_with_metrics.csv (defense_PYDS/G, defense_RYDS/G)
+  data/processed/games.csv
+  data/team_stadiums.csv
+  data/processed/nfl_unified_with_metrics.csv   (defense_PYDS/G, defense_RYDS/G)
 
-Outputs:
-  data/processed/player_projections.csv with:
-    - Weather/dome-aware, defense-adjusted projections across roles
-    - Anytime TD expected value and probability:
-        expected_anytime_td, anytime_td_prob
+Output:
+  data/processed/player_projections.csv
+  Columns include role projections +:
+    expected_anytime_td, anytime_td_prob
 """
 
 from pathlib import Path
@@ -34,6 +43,7 @@ P_RECV   = BASE_RAW / "receiving.csv"
 P_RET    = BASE_RAW / "returning.csv"
 P_KICK   = BASE_RAW / "kicking.csv"
 P_DEF    = BASE_RAW / "defensive.csv"
+P_PUNT   = BASE_RAW / "kickoffs_punts.csv"
 P_SCORE  = BASE_RAW / "scoring.csv"
 
 P_GAMES  = Path("data/processed/games.csv")
@@ -41,12 +51,12 @@ P_TEAMS  = Path("data/team_stadiums.csv")
 P_MET    = Path("data/processed/nfl_unified_with_metrics.csv")
 P_OUT    = Path("data/processed/player_projections.csv")
 
-# ---------- Import weather_bundle (with fallback) ----------
+# ---------- weather_bundle (import with safe fallback) ----------
 def _fallback_weather_bundle(temp_f, wind_mph, precip_in, dome):
     if str(dome).strip().lower() == "yes":
         return dict(pass_mult=1.0, rush_mult=1.0, to_delta=0.0,
                     rz_mult=1.0, drives_mult=1.0, fg_pct_delta=0.0, net_punt_delta=0.0)
-    def _f(x, d): 
+    def _f(x, d):
         try: return float(x)
         except Exception: return d
     t = _f(temp_f, 70.0); w = _f(wind_mph, 0.0); r = _f(precip_in, 0.0)
@@ -89,8 +99,12 @@ def _norm(df: pd.DataFrame, mapping: dict) -> pd.DataFrame:
     return df.rename(columns=rename)
 
 def _avg(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    if df is None: 
+    if df is None:
         return pd.DataFrame(columns=["PLAYER","TEAM"] + cols)
+    # Coerce numeric cols to float safely (handles '', ' ', etc.)
+    for c in cols:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
     return df.groupby(["PLAYER","TEAM"], as_index=False)[cols].mean()
 
 def home_mult(is_home: int) -> float:
@@ -101,7 +115,7 @@ games   = pd.read_csv(P_GAMES)
 teams   = pd.read_csv(P_TEAMS)
 metrics = pd.read_csv(P_MET)
 
-# Matchups: team -> opponent + weather (from HOME stadium) + dome flag
+# Build matchups (team -> opponent + weather/dome determined by HOME stadium)
 home_side = games[["home_team","away_team","temp_f","wind_mph","precip_in"]].copy()
 home_side["team"] = home_side["home_team"]; home_side["opponent"] = home_side["away_team"]; home_side["is_home"] = 1
 away_side = games[["home_team","away_team","temp_f","wind_mph","precip_in"]].copy()
@@ -110,7 +124,6 @@ matchups = pd.concat([home_side, away_side], ignore_index=True)[
     ["team","opponent","is_home","temp_f","wind_mph","precip_in"]
 ]
 
-# Dome flag comes from the HOME team's stadium and applies to both teams in the game
 teams_dome = teams[["TEAM","dome"]].copy()
 home_dome = games[["home_team"]].merge(teams_dome, left_on="home_team", right_on="TEAM", how="left").rename(columns={"dome":"home_dome"})
 home_dome_map = pd.concat([
@@ -128,16 +141,18 @@ metrics = _norm(metrics, {
 metrics_ctx = metrics[["TEAM","defense_PYDS/G","defense_RYDS/G"]].rename(columns={"TEAM":"opponent"})
 matchups = matchups.merge(metrics_ctx, on="opponent", how="left")
 
-league_avg_pass_def = metrics["defense_PYDS/G"].mean()
-league_avg_rush_def = metrics["defense_RYDS/G"].mean()
+league_avg_pass_def = pd.to_numeric(metrics["defense_PYDS/G"], errors="coerce").mean()
+league_avg_rush_def = pd.to_numeric(metrics["defense_RYDS/G"], errors="coerce").mean()
 
 def def_adj_pass(opp_def):
-    if pd.isna(opp_def) or pd.isna(league_avg_pass_def) or league_avg_pass_def == 0: 
+    opp_def = float(opp_def) if pd.notna(opp_def) else None
+    if opp_def is None or pd.isna(league_avg_pass_def) or league_avg_pass_def == 0:
         return 1.0
     return 1 - ((opp_def - league_avg_pass_def) / league_avg_pass_def) * 0.6
 
 def def_adj_rush(opp_def):
-    if pd.isna(opp_def) or pd.isna(league_avg_rush_def) or league_avg_rush_def == 0: 
+    opp_def = float(opp_def) if pd.notna(opp_def) else None
+    if opp_def is None or pd.isna(league_avg_rush_def) or league_avg_rush_def == 0:
         return 1.0
     return 1 - ((opp_def - league_avg_rush_def) / league_avg_rush_def) * 0.5
 
@@ -147,9 +162,9 @@ if pass_df is not None:
     pass_df = _norm(pass_df, {
         "PLAYER": ["PLAYER","Player","Name"],
         "TEAM":   ["TEAM","Team"],
-        "PYDS":   ["PYDS"],   # from file
-        "PTD":    ["PTD"],    # from file
-        "INT":    ["INT"],    # from file
+        "PYDS":   ["PYDS"],
+        "PTD":    ["PTD"],
+        "INT":    ["INT"],
     })
 
 rush_df = _read_csv(P_RUSH)
@@ -157,9 +172,9 @@ if rush_df is not None:
     rush_df = _norm(rush_df, {
         "PLAYER": ["PLAYER","Player","Name"],
         "TEAM":   ["TEAM","Team"],
-        "RATT":   ["RATT"],   # from file
-        "RYDS":   ["RYDS"],   # from file
-        "RTD":    ["RTD"],    # from file
+        "RATT":   ["RATT"],
+        "RYDS":   ["RYDS"],
+        "RTD":    ["RTD"],
     })
 
 recv_df = _read_csv(P_RECV)
@@ -212,6 +227,31 @@ if def_df is not None:
         "DEF_INT": ["DEF_INT"],
     })
 
+punt_df = _read_csv(P_PUNT)
+if punt_df is not None:
+    punt_df = _norm(punt_df, {
+        "PLAYER":   ["Player","PLAYER","Name"],
+        "TEAM":     ["Team","TEAM"],
+        "KO":       ["KO"],
+        "K_YDS":    ["YDS"],       # kickoff yards
+        "K_AVG":    ["K-AVG"],     # kickoff avg
+        "TB":       ["TB"],
+        "TB_pct":   ["TB %"],
+        "OSKA":     ["OSKA"],
+        "OSK":      ["OSK"],
+        "OSK_AVG":  ["AVG"],       # average onside?
+        "PUNTS":    ["PUNTS"],
+        "P_YDS":    ["P-YDS"],
+        "P_AVG":    ["P-AVG"],
+        "P_LNG":    ["P-LNG"],
+        "IN20":     ["IN20"],
+        "IN20_pct": ["IN20 %"],
+        "P_TB":     ["P-TB"],
+        "P_TB_pct": ["P-TB %"],
+        "BLK":      ["BLK"],
+        "NET_AVG":  ["NET AVG"],
+    })
+
 score_df = _read_csv(P_SCORE)
 if score_df is not None:
     score_df = _norm(score_df, {
@@ -226,28 +266,32 @@ if score_df is not None:
         "P_RET_TD": ["P_RET_TD"],
         "INT_TD":   ["INT_TD"],
     })
-    # per-game baseline for non-passing TDs
-    for c in ["RUSH_TD","REC_TD","K_RET_TD","P_RET_TD","INT_TD"]:
-        if c not in score_df.columns: score_df[c] = 0.0
+    # ---- CRITICAL FIX ----
+    # Coerce potential string/blank cells to numeric to avoid float+str errors.
+    for c in ["GP","TD","PASS_TD","RUSH_TD","REC_TD","K_RET_TD","P_RET_TD","INT_TD"]:
+        if c in score_df.columns:
+            score_df[c] = pd.to_numeric(score_df[c], errors="coerce").fillna(0)
+
     score_df["GP_safe"] = score_df["GP"].replace({0: 1})
     score_df["baseline_nonpass_td_pg"] = (
-        score_df["RUSH_TD"].fillna(0)
-      + score_df["REC_TD"].fillna(0)
-      + score_df["K_RET_TD"].fillna(0)
-      + score_df["P_RET_TD"].fillna(0)
-      + score_df["INT_TD"].fillna(0)
+        score_df["RUSH_TD"]
+      + score_df["REC_TD"]
+      + score_df["K_RET_TD"]
+      + score_df["P_RET_TD"]
+      + score_df["INT_TD"]
     ) / score_df["GP_safe"]
     score_avg = score_df[["PLAYER","TEAM","baseline_nonpass_td_pg"]].copy()
 else:
     score_avg = pd.DataFrame(columns=["PLAYER","TEAM","baseline_nonpass_td_pg"])
 
-# ---------- Per-player averages by category ----------
+# ---------- Per-player averages ----------
 pass_avg = _avg(pass_df, ["PYDS","PTD","INT"])
 rush_avg = _avg(rush_df, ["RATT","RYDS","RTD"])
 recv_avg = _avg(recv_df, ["TGT","REC","RECYDS","RECTD","RECAVG","YAC"])
 ret_avg  = _avg(ret_df,  ["K_RET","K_RET_YDS","K_RET_AVG","K_RET_TD","P_RET","P_RET_YDS","P_RET_AVG","P_RET_TD"])
 kick_avg = _avg(kick_df, ["FGM","FGA","FG_PCT","XPM","XPA"])
 def_avg  = _avg(def_df,  ["TCKL","SCK","DEF_INT"])
+punt_avg = _avg(punt_df, ["KO","K_YDS","K_AVG","TB","TB_pct","OSKA","OSK","OSK_AVG","PUNTS","P_YDS","P_AVG","P_LNG","IN20","IN20_pct","P_TB","P_TB_pct","BLK","NET_AVG"])
 
 # ---------- Build player universe ----------
 players = pass_avg.merge(rush_avg, on=["PLAYER","TEAM"], how="outer")
@@ -255,6 +299,7 @@ players = players.merge(recv_avg, on=["PLAYER","TEAM"], how="outer")
 players = players.merge(ret_avg,  on=["PLAYER","TEAM"], how="outer")
 players = players.merge(kick_avg, on=["PLAYER","TEAM"], how="outer")
 players = players.merge(def_avg,  on=["PLAYER","TEAM"], how="outer")
+players = players.merge(punt_avg, on=["PLAYER","TEAM"], how="outer")
 players = players.merge(score_avg, on=["PLAYER","TEAM"], how="left")
 
 # Attach matchup row
@@ -275,12 +320,19 @@ for _, r in players.iterrows():
     out = {
         "player": player, "team": team, "opponent": opp, "is_home": is_home,
         "temp_f": r.get("temp_f"), "wind_mph": r.get("wind_mph"), "dome": r.get("dome"),
+        # offense
         "proj_pass_yds": None, "proj_pass_td": None, "proj_int": None,
         "proj_rush_yds": None, "proj_rush_td": None,
         "proj_rec_yards": None, "proj_rec_td": None, "proj_targets": None, "proj_rec": None, "proj_yac": None,
+        # returns
         "proj_kr_yds": None, "proj_kr_td": None, "proj_pr_yds": None, "proj_pr_td": None,
+        # kickers
         "proj_fgm": None, "proj_fga": None, "proj_xpm": None, "proj_xpa": None, "proj_fg_pct": None,
+        # defense IDP
         "proj_tackles": None, "proj_sacks": None, "proj_def_int": None,
+        # punting / kickoffs
+        "proj_tb_pct": None, "proj_net_avg": None, "proj_punt_avg": None, "proj_kick_avg": None,
+        # anytime TD
         "expected_anytime_td": None, "anytime_td_prob": None,
     }
 
@@ -309,7 +361,6 @@ for _, r in players.iterrows():
         out["proj_yac"]       = round(yac * (0.98 if wb["pass_mult"] < 1.0 else 1.0), 1)
 
     # ----- Returns (KR/PR) -----
-    # Yards per return modestly impacted by wind; TD rates are rare -> keep from history
     if (pd.notna(r.get("K_RET")) and pd.notna(r.get("K_RET_AVG"))) or (pd.notna(r.get("P_RET")) and pd.notna(r.get("P_RET_AVG"))):
         kr = float(r.get("K_RET") or 0.0); kr_avg = float(r.get("K_RET_AVG") or 0.0)
         pr = float(r.get("P_RET") or 0.0); pr_avg = float(r.get("P_RET_AVG") or 0.0)
@@ -332,26 +383,37 @@ for _, r in players.iterrows():
         out["proj_xpm"] = round(min(out["proj_xpa"], xpm * (1 + wb["fg_pct_delta"])), 1)
         out["proj_fg_pct"] = round(adj_fg_pct, 1)
 
-    # ----- Defensive -----
+    # ----- Defensive (IDP) -----
     if pd.notna(r.get("TCKL")):
         tckl = float(r["TCKL"]); sck = float(r.get("SCK") or 0.0); dint = float(r.get("DEF_INT") or 0.0)
         pace = wb["drives_mult"]
         out["proj_tackles"] = round(tckl * (0.98 + 0.02*pace), 1)
-        out["proj_sacks"]   = round(sck   * (1.00 + 0.05*(1 - wb["pass_mult"])), 2)
+        out["proj_sacks"]   = round(sck   * (1.00 + 0.05*(1 - wb["pass_mult"])), 2)  # slightly higher in wind
         out["proj_def_int"] = round(dint  * (1.00 + max(0.0, wb["to_delta"])), 2)
+
+    # ----- Kickoffs / Punting -----
+    if pd.notna(r.get("NET_AVG")) or pd.notna(r.get("K_AVG")):
+        # Weather net_punt_delta is additive; K_AVG slightly impacted by wind.
+        if pd.notna(r.get("NET_AVG")):
+            net = float(r.get("NET_AVG") or 0.0) + wb["net_punt_delta"]
+            out["proj_net_avg"] = round(net, 1)
+        if pd.notna(r.get("P_AVG")):
+            out["proj_punt_avg"] = round(float(r.get("P_AVG") or 0.0) + wb["net_punt_delta"], 1)
+        if pd.notna(r.get("K_AVG")):
+            kavg = float(r.get("K_AVG") or 0.0) * (1.0 + (wb["fg_pct_delta"] * 0.5))
+            out["proj_kick_avg"] = round(kavg, 1)
+        if pd.notna(r.get("TB_pct")):
+            out["proj_tb_pct"] = round(float(r.get("TB_pct") or 0.0), 1)
 
     # ----- Anytime TD (non-passing) -----
     base_nonpass_pg = float(r.get("baseline_nonpass_td_pg") or 0.0)
-    # Component-based expected TD from projections
     comp_rush = float(out["proj_rush_td"] or 0.0)
     comp_rec  = float(out["proj_rec_td"]  or 0.0)
     comp_kr   = float(out["proj_kr_td"]   or 0.0)
     comp_pr   = float(out["proj_pr_td"]   or 0.0)
-    # Defensive INT TD proxy: small fraction of projected INTs
-    comp_def  = 0.15 * float(out["proj_def_int"] or 0.0)
+    comp_def  = 0.15 * float(out["proj_def_int"] or 0.0)  # small INT-TD proxy
 
     comp_sum = comp_rush + comp_rec + comp_kr + comp_pr + comp_def
-    # Blend baseline (pace-adjusted) and components
     pace_mult = (0.97 + 0.03 * wb["drives_mult"])
     lam = max(0.0, 0.5 * (base_nonpass_pg * pace_mult) + 0.5 * comp_sum)
 
