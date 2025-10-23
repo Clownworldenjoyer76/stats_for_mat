@@ -1,8 +1,17 @@
-scrape team stats and player stats and drop in non csv folders
-scrape weekly schedule
-   DAY	DATE	TEAM_A	TEAM_B	TIME	ODDS
+1. Scrape team stats and player    stats 
 
-*RUN WORKFLOWS
+   a. Dump in /stats and /team_stats 
+   
+2. Scrape weekly schedule
+
+   a. Ensure headers below 
+   [DAY DATE	TEAM_A	TEAM_B	       TIME	ODDS]
+
+    b. Dump in  
+      data/raw/week_matchups_odds.csv
+
+
+3. *RUN WORKFLOWS
   Build unified team dataset
   Convert stats dumps to CSV
   Build unified team dataset
