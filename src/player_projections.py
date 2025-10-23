@@ -95,7 +95,6 @@ def coerce_numeric(df: pd.DataFrame, cols: list[str]) -> None:
             df[c] = pd.to_numeric(df[c], errors="coerce")
 
 def per_game(df: pd.DataFrame, totals: list[str], gp_col: str = "GP") -> None:
-    """Create *_pg columns from totals/attempts using GP; safe divide (0 -> NaN)."""
     if df is None or gp_col not in df.columns:
         return
     df[gp_col] = pd.to_numeric(df[gp_col], errors="coerce").fillna(0)
@@ -111,6 +110,18 @@ def avg_by_player(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
 
 def home_mult(is_home: int) -> float:
     return 1.02 if int(is_home or 0) == 1 else 0.98
+
+def _nz(x: object) -> float:
+    """Return numeric value or 0.0 (never NaN/None)."""
+    try:
+        if pd.isna(x):
+            return 0.0
+    except Exception:
+        pass
+    try:
+        return float(x)
+    except Exception:
+        return 0.0
 
 # ---------- Load context ----------
 games   = pd.read_csv(P_GAMES)
@@ -183,7 +194,6 @@ if recv_df is not None:
     recv_df = _norm(recv_df, {"PLAYER":["PLAYER","Player","Name"], "TEAM":["TEAM","Team"]})
     coerce_numeric(recv_df, ["GP","TGT","REC","RECYDS","RECTD","RECAVG","YAC"])
     per_game(recv_df, ["TGT","REC","RECYDS","RECTD","YAC"], gp_col="GP")
-    # RECAVG is already per catch, not per game; keep as is (coerced).
     recv_avg = avg_by_player(recv_df, ["TGT_pg","REC_pg","RECYDS_pg","RECTD_pg","RECAVG","YAC_pg"])
 else:
     recv_avg = pd.DataFrame(columns=["PLAYER","TEAM","TGT_pg","REC_pg","RECYDS_pg","RECTD_pg","RECAVG","YAC_pg"])
@@ -194,7 +204,6 @@ if ret_df is not None:
     ret_df = _norm(ret_df, {"PLAYER":["PLAYER","Player","Name"], "TEAM":["TEAM","Team"]})
     coerce_numeric(ret_df, ["GP","K_RET","K_RET_YDS","K_RET_AVG","K_RET_TD","P_RET","P_RET_YDS","P_RET_AVG","P_RET_TD"])
     per_game(ret_df, ["K_RET","K_RET_YDS","K_RET_TD","P_RET","P_RET_YDS","P_RET_TD"], gp_col="GP")
-    # *_AVG columns are already per return; keep as is.
     ret_avg = avg_by_player(ret_df, ["K_RET_pg","K_RET_YDS_pg","K_RET_AVG","K_RET_TD_pg",
                                      "P_RET_pg","P_RET_YDS_pg","P_RET_AVG","P_RET_TD_pg"])
 else:
@@ -207,7 +216,6 @@ if kick_df is not None:
     kick_df = _norm(kick_df, {"PLAYER":["PLAYER","Player","Name"], "TEAM":["TEAM","Team"]})
     coerce_numeric(kick_df, ["GP","FGM","FGA","FG_PCT","XPM","XPA"])
     per_game(kick_df, ["FGM","FGA","XPM","XPA"], gp_col="GP")
-    # FG_PCT is already a percent; keep as is.
     kick_avg = avg_by_player(kick_df, ["FGM_pg","FGA_pg","FG_PCT","XPM_pg","XPA_pg"])
 else:
     kick_avg = pd.DataFrame(columns=["PLAYER","TEAM","FGM_pg","FGA_pg","FG_PCT","XPM_pg","XPA_pg"])
@@ -294,21 +302,21 @@ for _, r in players.iterrows():
 
     # ----- Passing (per-game) -----
     if pd.notna(r.get("PYDS_pg")):
-        pass_yds_pg = float(r["PYDS_pg"]); ptd_pg = float(r.get("PTD_pg") or 0.0); int_pg = float(r.get("INT_pg") or 0.0)
+        pass_yds_pg = _nz(r.get("PYDS_pg")); ptd_pg = _nz(r.get("PTD_pg")); int_pg = _nz(r.get("INT_pg"))
         out["proj_pass_yds"] = round(pass_yds_pg * wb["pass_mult"] * hmult * p_mult, 1)
         out["proj_pass_td"]  = round(ptd_pg      * wb["pass_mult"] * hmult * p_mult, 3)
         out["proj_int"]      = round(int_pg      * (1.00 + max(0.0, wb["to_delta"])), 3)
 
     # ----- Rushing (per-game) -----
     if pd.notna(r.get("RYDS_pg")):
-        rush_yds_pg = float(r["RYDS_pg"]); rtd_pg = float(r.get("RTD_pg") or 0.0)
+        rush_yds_pg = _nz(r.get("RYDS_pg")); rtd_pg = _nz(r.get("RTD_pg"))
         out["proj_rush_yds"] = round(rush_yds_pg * wb["rush_mult"] * hmult * r_mult, 1)
         out["proj_rush_td"]  = round(rtd_pg      * wb["rush_mult"] * hmult * r_mult, 3)
 
     # ----- Receiving (per-game) -----
     if pd.notna(r.get("RECYDS_pg")):
-        recyds_pg = float(r["RECYDS_pg"]); rectd_pg = float(r.get("RECTD_pg") or 0.0)
-        rec_pg = float(r.get("REC_pg") or 0.0); tgt_pg = float(r.get("TGT_pg") or 0.0); yac_pg = float(r.get("YAC_pg") or 0.0)
+        recyds_pg = _nz(r.get("RECYDS_pg")); rectd_pg = _nz(r.get("RECTD_pg"))
+        rec_pg = _nz(r.get("REC_pg")); tgt_pg = _nz(r.get("TGT_pg")); yac_pg = _nz(r.get("YAC_pg"))
         adj = wb["pass_mult"] * hmult * p_mult
         out["proj_rec_yards"] = round(recyds_pg * adj, 1)
         out["proj_rec_td"]    = round(rectd_pg  * adj, 3)
@@ -318,20 +326,20 @@ for _, r in players.iterrows():
 
     # ----- Returns (per-game) -----
     if pd.notna(r.get("K_RET_pg")) or pd.notna(r.get("P_RET_pg")):
-        kr_pg = float(r.get("K_RET_pg") or 0.0); kr_avg = float(r.get("K_RET_AVG") or 0.0)
-        pr_pg = float(r.get("P_RET_pg") or 0.0); pr_avg = float(r.get("P_RET_AVG") or 0.0)
+        kr_pg = _nz(r.get("K_RET_pg")); kr_avg = _nz(r.get("K_RET_AVG"))
+        pr_pg = _nz(r.get("P_RET_pg")); pr_avg = _nz(r.get("P_RET_AVG"))
         pace = wb["drives_mult"]
         wind_eff = 0.98 if wb["fg_pct_delta"] < 0 else 1.0
         out["proj_kr_yds"] = round(kr_pg * kr_avg * pace * wind_eff, 1) if kr_pg > 0 else None
-        out["proj_kr_td"]  = float(r.get("K_RET_TD_pg") or 0.0)
+        out["proj_kr_td"]  = _nz(r.get("K_RET_TD_pg"))
         out["proj_pr_yds"] = round(pr_pg * pr_avg * pace * wind_eff, 1) if pr_pg > 0 else None
-        out["proj_pr_td"]  = float(r.get("P_RET_TD_pg") or 0.0)
+        out["proj_pr_td"]  = _nz(r.get("P_RET_TD_pg"))
 
     # ----- Kickers (per-game) -----
     if pd.notna(r.get("FGA_pg")):
-        fga_pg = float(r["FGA_pg"]); fgm_pg = float(r.get("FGM_pg") or 0.0)
-        xpa_pg = float(r.get("XPA_pg") or 0.0); xpm_pg = float(r.get("XPM_pg") or 0.0)
-        fg_pct = float(r.get("FG_PCT") or (fgm_pg / fga_pg * 100 if fga_pg > 0 else 0.0))
+        fga_pg = _nz(r.get("FGA_pg")); fgm_pg = _nz(r.get("FGM_pg"))
+        xpa_pg = _nz(r.get("XPA_pg")); xpm_pg = _nz(r.get("XPM_pg"))
+        fg_pct = _nz(r.get("FG_PCT")) if _nz(r.get("FG_PCT")) > 0 else (_nz(fgm_pg) / fga_pg * 100 if fga_pg > 0 else 0.0)
         adj_fg_pct = max(0.0, min(100.0, fg_pct + (wb["fg_pct_delta"] * 100)))
         out["proj_fga"] = round(fga_pg * (0.97 + 0.03*wb["drives_mult"]), 2)
         out["proj_fgm"] = round(out["proj_fga"] * (adj_fg_pct / 100.0), 2)
@@ -341,7 +349,7 @@ for _, r in players.iterrows():
 
     # ----- Defensive (per-game) -----
     if pd.notna(r.get("TCKL_pg")):
-        tckl_pg = float(r["TCKL_pg"]); sck_pg = float(r.get("SCK_pg") or 0.0); dint_pg = float(r.get("DEF_INT_pg") or 0.0)
+        tckl_pg = _nz(r.get("TCKL_pg")); sck_pg = _nz(r.get("SCK_pg")); dint_pg = _nz(r.get("DEF_INT_pg"))
         pace = wb["drives_mult"]
         out["proj_tackles"] = round(tckl_pg * (0.98 + 0.02*pace), 2)
         out["proj_sacks"]   = round(sck_pg   * (1.00 + 0.05*(1 - wb["pass_mult"])), 3)
@@ -350,25 +358,26 @@ for _, r in players.iterrows():
     # ----- Kickoffs / Punting (per-game where relevant) -----
     if pd.notna(r.get("NET_AVG")) or pd.notna(r.get("K_AVG")) or pd.notna(r.get("P_AVG")):
         if pd.notna(r.get("NET_AVG")):
-            out["proj_net_avg"] = round(float(r.get("NET_AVG") or 0.0) + wb["net_punt_delta"], 1)
+            out["proj_net_avg"] = round(_nz(r.get("NET_AVG")) + wb["net_punt_delta"], 1)
         if pd.notna(r.get("P_AVG")):
-            out["proj_punt_avg"] = round(float(r.get("P_AVG") or 0.0) + wb["net_punt_delta"], 1)
+            out["proj_punt_avg"] = round(_nz(r.get("P_AVG")) + wb["net_punt_delta"], 1)
         if pd.notna(r.get("K_AVG")):
-            out["proj_kick_avg"] = round(float(r.get("K_AVG") or 0.0) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
+            out["proj_kick_avg"] = round(_nz(r.get("K_AVG")) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
         if pd.notna(r.get("TB_pct")):
-            out["proj_tb_pct"] = round(float(r.get("TB_pct") or 0.0), 1)
+            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 1)
 
-    # ----- Anytime TD λ (per-game) -----
-    base_nonpass_pg = float(r.get("baseline_nonpass_td_pg") or 0.0)
-    comp_rush = float(out["proj_rush_td"] or 0.0)
-    comp_rec  = float(out["proj_rec_td"]  or 0.0)
-    comp_kr   = float(out["proj_kr_td"]   or 0.0)
-    comp_pr   = float(out["proj_pr_td"]   or 0.0)
-    comp_def  = 0.15 * float(out["proj_def_int"] or 0.0)
+    # ----- Anytime TD λ (per-game; hardened against None/NaN) -----
+    base_nonpass_pg = _nz(r.get("baseline_nonpass_td_pg"))
+    comp_rush = _nz(out.get("proj_rush_td"))
+    comp_rec  = _nz(out.get("proj_rec_td"))
+    comp_kr   = _nz(out.get("proj_kr_td"))
+    comp_pr   = _nz(out.get("proj_pr_td"))
+    comp_def  = 0.15 * _nz(out.get("proj_def_int"))
 
     comp_sum = comp_rush + comp_rec + comp_kr + comp_pr + comp_def
-    pace_mult = (0.97 + 0.03 * wb["drives_mult"])  # small drive-based modifier
-    lam = max(0.0, 0.5 * (base_nonpass_pg * pace_mult) + 0.5 * comp_sum)
+    pace_mult = (0.97 + 0.03 * _nz(wb.get("drives_mult")))
+    lam_raw = 0.5 * (base_nonpass_pg * pace_mult) + 0.5 * comp_sum
+    lam = lam_raw if lam_raw > 0 else 0.0
 
     out["expected_anytime_td"] = round(lam, 4)
     out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
