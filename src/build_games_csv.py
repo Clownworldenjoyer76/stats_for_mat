@@ -1,31 +1,24 @@
-
 #!/usr/bin/env python3
 """
 Build the official games.csv at data/processed/games.csv
 
+Updates:
+- Append Odds (from data/raw/odds.csv where book == "CONSENSUS"), favorite, total, and game_id.
+- Match odds by TEAM_A (week_matchups_odds.csv) -> away_team (odds.csv).
+- Odds = lower (more negative) of spread_home vs spread_away.
+- favorite = home_team if chosen value came from spread_home, else away_team.
+- Keep Odds column (now sourced from odds.csv) and append game_id as the final column.
+
 Inputs:
-- data/raw/week_matchups_odds.csv
-    Required columns: DAY, DATE, TIME, TEAM_A, TEAM_B, ODDS, weatherapi_datetime
-- data/team_stadiums.csv
-    Required columns: TEAM, STADIUM, LATITUDE, LONGITUDE
+- data/raw/week_matchups_odds.csv  [DAY, DATE, TIME, TEAM_A, TEAM_B, weatherapi_datetime]
+- data/team_stadiums.csv           [TEAM, STADIUM, LATITUDE, LONGITUDE]
+- data/raw/odds.csv                [away_team, home_team, book, spread_home, spread_away, total, game_id]
 
-Environment:
-- WEATHERAPI_KEY must be set to a valid WeatherAPI.com API key.
-
-Notes:
-- Day is converted from abbreviations (e.g., 'SUN' -> 'Sunday').
-- Date is converted from like 'Oct 26' -> 'October 26'. Year is inferred from the weatherapi_datetime when possible,
-  otherwise current year is used for parsing only (year is dropped in the final output).
-
-Output columns (exact order):
-Day, Date, Time, away_team, home_team, Stadium, temp_f, wind_mph, wind_dir, precip_in, chance_of_rain, Odds
+Env:
+- WEATHERAPI_KEY for WeatherAPI.com
 """
 import os
 import sys
-import csv
-import math
-import json
-import time
 import logging
 from pathlib import Path
 from typing import Dict, Tuple, Optional
@@ -33,261 +26,172 @@ from typing import Dict, Tuple, Optional
 import pandas as pd
 import requests
 from dateutil import parser as dateparser
-from calendar import day_name
 
 # ---------- Config ----------
 RAW_MATCHUPS = Path("data/raw/week_matchups_odds.csv")
 TEAM_STADIUMS = Path("data/team_stadiums.csv")
+RAW_ODDS = Path("data/raw/odds.csv")
 OUTPUT = Path("data/processed/games.csv")
 
 WEATHER_API_KEY = os.getenv("WEATHERAPI_KEY")
 WEATHER_BASE = "https://api.weatherapi.com/v1/forecast.json"
-# We'll request up to 3 days ahead/behind by selecting the date part of weatherapi_datetime.
-# WeatherAPI forecast endpoint includes hourly data in forecastday[].hour[]
 
-# ---------- Logging ----------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-# ---------- Utilities ----------
-DAY_ABBR_TO_FULL = {
-    'SUN': 'Sunday', 'MON': 'Monday', 'TUE': 'Tuesday', 'WED': 'Wednesday',
-    'THU': 'Thursday', 'FRI': 'Friday', 'SAT': 'Saturday'
-}
-
-MONTH_ABBR_TO_FULL = {
-    'Jan': 'January','Feb':'February','Mar':'March','Apr':'April','May':'May','Jun':'June',
-    'Jul':'July','Aug':'August','Sep':'September','Sept':'September','Oct':'October','Nov':'November','Dec':'December'
-}
+# ---------- Helpers ----------
+DAY_ABBR_TO_FULL = {'SUN':'Sunday','MON':'Monday','TUE':'Tuesday','WED':'Wednesday','THU':'Thursday','FRI':'Friday','SAT':'Saturday'}
+MONTH_ABBR_TO_FULL = {'Jan':'January','Feb':'February','Mar':'March','Apr':'April','May':'May','Jun':'June','Jul':'July','Aug':'August','Sep':'September','Sept':'September','Oct':'October','Nov':'November','Dec':'December'}
 
 def to_full_day(day_abbr: str) -> str:
-    if pd.isna(day_abbr):
-        return ""
-    d = day_abbr.strip().upper()
+    if pd.isna(day_abbr): return ""
+    d = str(day_abbr).strip().upper()
     return DAY_ABBR_TO_FULL.get(d, d.title())
 
 def to_full_month_date(date_str: str, year_hint: Optional[int]) -> str:
-    """
-    Convert 'Oct 26' -> 'October 26'. If an unexpected format is present,
-    return the input unchanged (but stripped).
-    """
-    if pd.isna(date_str) or not str(date_str).strip():
-        return ""
-    s = str(date_str).strip()
-    # Split expected format "Oct 26"
-    parts = s.replace(",", "").split()
+    if pd.isna(date_str) or not str(date_str).strip(): return ""
+    s = str(date_str).strip().replace(",", "")
+    parts = s.split()
     if len(parts) >= 2 and parts[0] in MONTH_ABBR_TO_FULL:
         try:
-            month_full = MONTH_ABBR_TO_FULL[parts[0]]
-            day_num = str(int(parts[1]))
-            return f"{month_full} {day_num}"
+            return f"{MONTH_ABBR_TO_FULL[parts[0]]} {int(parts[1])}"
         except Exception:
             pass
-    # Fallback: try to parse with dateutil (adding a year if we have one)
     try:
-        if year_hint is not None:
-            tmp = f"{s} {year_hint}"
-        else:
-            tmp = s
+        tmp = f"{s} {year_hint}" if year_hint is not None else s
         dt = dateparser.parse(tmp, fuzzy=True, default=None)
         if dt:
-            month_full = dt.strftime("%B")
-            day_num = dt.day
-            return f"{month_full} {day_num}"
+            return f"{dt.strftime('%B')} {dt.day}"
     except Exception:
         pass
     return s
 
 def nearest_hour_record(hours, target_epoch):
-    """
-    Given a list of hourly objects (each with 'time_epoch'), return the one closest to target_epoch.
-    """
-    if not hours:
-        return None
-    best = None
-    best_diff = 10**18
-    for h in hours:
+    best = None; best_diff = 10**18
+    for h in hours or []:
         te = h.get("time_epoch")
-        if te is None:
-            continue
+        if te is None: continue
         diff = abs(te - target_epoch)
         if diff < best_diff:
-            best_diff = diff
-            best = h
+            best_diff = diff; best = h
     return best
 
 def fetch_hourly_weather(lat: float, lon: float, when_iso: str, session: requests.Session, cache: Dict[Tuple[str, str], dict]) -> dict:
-    """
-    Fetch hourly forecast from WeatherAPI and return the hour record nearest to `when_iso`.
-    Caches by (q, date) to minimize requests. Returns a dict with keys used downstream.
-    """
     if not WEATHER_API_KEY:
-        raise RuntimeError("WEATHERAPI_KEY is not set in the environment. Please export it before running.")
-
-    when_dt = dateparser.parse(when_iso)
+        raise RuntimeError("WEATHERAPI_KEY is not set.")
+    when_dt = dateparser.parse(str(when_iso))
     if when_dt is None:
-        raise ValueError(f"Could not parse weatherapi_datetime value: {when_iso}")
+        raise ValueError(f"Could not parse weatherapi_datetime: {when_iso}")
     date_key = when_dt.strftime("%Y-%m-%d")
     q = f"{lat:.4f},{lon:.4f}"
+    ck = (q, date_key)
 
-    cache_key = (q, date_key)
-    if cache_key not in cache:
-        params = {
-            "key": WEATHER_API_KEY,
-            "q": q,
-            "dt": date_key,           # request the specific date
-            "aqi": "no",
-            "alerts": "no"
-        }
-        # WeatherAPI's forecast.json supports a 'days' param for multiple days; with dt we pin a specific date.
-        # We'll rely on hourly data within that day to select the closest hour.
-        logging.info(f"Requesting WeatherAPI for q={q} dt={date_key}")
+    if ck not in cache:
+        params = {"key": WEATHER_API_KEY, "q": q, "dt": date_key, "aqi":"no", "alerts":"no"}
         resp = session.get(WEATHER_BASE, params=params, timeout=20)
         if resp.status_code != 200:
             raise RuntimeError(f"WeatherAPI error {resp.status_code}: {resp.text}")
-        data = resp.json()
-        cache[cache_key] = data
-    else:
-        data = cache[cache_key]
+        cache[ck] = resp.json()
 
-    # Extract hours list
-    forecastdays = data.get("forecast", {}).get("forecastday", [])
+    data = cache[ck]
     hours = []
-    for fd in forecastdays:
+    for fd in data.get("forecast", {}).get("forecastday", []):
         hours.extend(fd.get("hour", []))
-
-    target_epoch = int(when_dt.timestamp())
-    h = nearest_hour_record(hours, target_epoch)
-
-    # Prepare a normalized result, with safe defaults if missing
+    h = nearest_hour_record(hours, int(when_dt.timestamp()))
     if not h:
-        # return safe defaults if no hourly match
-        return {
-            "temp_f": None,
-            "wind_mph": None,
-            "wind_dir": None,
-            "precip_in": None,
-            "chance_of_rain": None
-        }
-
+        return {"temp_f": None, "wind_mph": None, "wind_dir": None, "precip_in": None, "chance_of_rain": None}
     return {
         "temp_f": h.get("temp_f"),
         "wind_mph": h.get("wind_mph"),
         "wind_dir": h.get("wind_dir"),
         "precip_in": h.get("precip_in"),
-        # hour objects typically have chance_of_rain (int 0-100); fallback to daily "day" chance_of_rain if missing
-        "chance_of_rain": h.get("chance_of_rain")
+        "chance_of_rain": h.get("chance_of_rain"),
     }
 
 def main() -> int:
-    # Validate inputs exist
-    for p in [RAW_MATCHUPS, TEAM_STADIUMS]:
+    for p in [RAW_MATCHUPS, TEAM_STADIUMS, RAW_ODDS]:
         if not p.exists():
             logging.error(f"Missing required input: {p}")
             return 2
 
-    # Read inputs
     matchups = pd.read_csv(RAW_MATCHUPS)
     stadiums = pd.read_csv(TEAM_STADIUMS)
+    odds = pd.read_csv(RAW_ODDS)
 
-    # Validate required columns
-    required_match_cols = {"DAY", "DATE", "TIME", "TEAM_A", "TEAM_B", "ODDS", "weatherapi_datetime"}
-    missing_match = required_match_cols - set(matchups.columns)
-    if missing_match:
-        logging.error(f"Missing required columns in {RAW_MATCHUPS}: {sorted(missing_match)}")
+    req_match = {"DAY","DATE","TIME","TEAM_A","TEAM_B","weatherapi_datetime"}
+    req_stad  = {"TEAM","STADIUM","LATITUDE","LONGITUDE"}
+    req_odds  = {"away_team","home_team","book","spread_home","spread_away","total","game_id"}
+    missing = []
+    if req_match - set(matchups.columns): missing.append(f"{RAW_MATCHUPS}: {sorted(req_match - set(matchups.columns))}")
+    if req_stad  - set(stadiums.columns): missing.append(f"{TEAM_STADIUMS}: {sorted(req_stad  - set(stadiums.columns))}")
+    if req_odds  - set(odds.columns):     missing.append(f"{RAW_ODDS}: {sorted(req_odds  - set(odds.columns))}")
+    if missing:
+        for m in missing: logging.error(f"Missing columns -> {m}")
         return 2
 
-    required_stad_cols = {"TEAM", "STADIUM", "LATITUDE", "LONGITUDE"}
-    missing_stad = required_stad_cols - set(stadiums.columns)
-    if missing_stad:
-        logging.error(f"Missing required columns in {TEAM_STADIUMS}: {sorted(missing_stad)}")
-        return 2
-
-    # Prepare stadium lookup on TEAM
-    stad_lookup = stadiums.set_index("TEAM")[["STADIUM", "LATITUDE", "LONGITUDE"]]
-
-    # Merge stadium info onto matchups, matching home team (TEAM_B)
+    # Merge stadium info for home team
+    stad_lookup = stadiums.set_index("TEAM")[["STADIUM","LATITUDE","LONGITUDE"]]
     df = matchups.merge(stad_lookup, left_on="TEAM_B", right_index=True, how="left")
 
-    # For year hint in date conversion, try to extract from weatherapi_datetime
-    def extract_year(v):
-        try:
-            return dateparser.parse(str(v)).year
-        except Exception:
-            return None
-
-    year_hints = df["weatherapi_datetime"].map(extract_year)
-
-    # Convert Day and Date
+    # Day/Date transforms
+    def year_from(v):
+        try: return dateparser.parse(str(v)).year
+        except Exception: return None
+    year_hints = df["weatherapi_datetime"].map(year_from)
     df["Day"] = df["DAY"].map(to_full_day)
-    df["Date"] = [to_full_month_date(d, yh) for d, yh in zip(df["DATE"], year_hints)]
-
-    # Rename teams
+    df["Date"] = [to_full_month_date(d, y) for d, y in zip(df["DATE"], year_hints)]
     df["away_team"] = df["TEAM_A"]
     df["home_team"] = df["TEAM_B"]
+    df["Stadium"]   = df["STADIUM"]
+    df["Time"]      = df["TIME"]
 
-    # Stadium
-    df["Stadium"] = df["STADIUM"]
-
-    # Weather columns placeholders
-    df["temp_f"] = None
-    df["wind_mph"] = None
-    df["wind_dir"] = None
-    df["precip_in"] = None
-    df["chance_of_rain"] = None
-
-    # Fetch weather for each row using WeatherAPI hourly, nearest to weatherapi_datetime
-    session = requests.Session()
-    cache: Dict[Tuple[str, str], dict] = {}
-
+    # Weather
+    for c in ["temp_f","wind_mph","wind_dir","precip_in","chance_of_rain"]:
+        df[c] = None
+    session = requests.Session(); cache: Dict[Tuple[str,str],dict] = {}
     for idx, row in df.iterrows():
-        lat = row.get("LATITUDE")
-        lon = row.get("LONGITUDE")
-        when_iso = row.get("weatherapi_datetime")
+        lat, lon, when_iso = row.get("LATITUDE"), row.get("LONGITUDE"), row.get("weatherapi_datetime")
         if pd.isna(lat) or pd.isna(lon) or pd.isna(when_iso):
-            logging.warning(f"Skipping weather fetch for row {idx} due to missing lat/lon or time.")
             continue
         try:
             w = fetch_hourly_weather(float(lat), float(lon), str(when_iso), session, cache)
-            df.at[idx, "temp_f"] = w.get("temp_f")
-            df.at[idx, "wind_mph"] = w.get("wind_mph")
-            df.at[idx, "wind_dir"] = w.get("wind_dir")
-            df.at[idx, "precip_in"] = w.get("precip_in")
-            df.at[idx, "chance_of_rain"] = w.get("chance_of_rain")
+            for k,v in w.items(): df.at[idx, k] = v
         except Exception as e:
-            logging.error(f"Weather fetch failed for row {idx} ({row.get('TEAM_B')} @ {row.get('STADIUM')}): {e}")
+            logging.warning(f"Weather fetch failed for {row.get('TEAM_B')} @ {row.get('STADIUM')}: {e}")
 
-    # Odds
-    df["Odds"] = df["ODDS"]
+    # Odds merge: use only CONSENSUS rows, match TEAM_A -> away_team
+    odds["book_norm"] = odds["book"].astype(str).str.upper().str.strip()
+    consensus = odds[odds["book_norm"] == "CONSENSUS"].copy()
+    consensus = consensus[["away_team","home_team","spread_home","spread_away","total","game_id"]]
 
-    # Time (pass through)
-    df["Time"] = df["TIME"]
+    df = df.merge(consensus, left_on="TEAM_A", right_on="away_team", how="left", suffixes=("", "_odds"))
 
-    # Select columns in EXACT order
-    out_cols = [
-        "Day",
-        "Date",
-        "Time",
-        "away_team",
-        "home_team",
-        "Stadium",
-        "temp_f",
-        "wind_mph",
-        "wind_dir",
-        "precip_in",
-        "chance_of_rain",
-        "Odds",
-    ]
+    # Compute Odds and favorite
+    def to_float(v):
+        try: return float(v)
+        except Exception: return None
+    df["spread_home_num"] = df["spread_home"].apply(to_float)
+    df["spread_away_num"] = df["spread_away"].apply(to_float)
 
-    out_df = df[out_cols].copy()
+    def choose(row):
+        sh, sa = row["spread_home_num"], row["spread_away_num"]
+        if sh is None and sa is None: return None, None
+        if sh is None: return sa, "away"
+        if sa is None: return sh, "home"
+        return (sh, "home") if sh <= sa else (sa, "away")
 
-    # Ensure output directory
+    chosen = df.apply(choose, axis=1, result_type="expand")
+    df["Odds"] = chosen[0]
+    df["favorite"] = chosen[1].map({"home": df["home_team"], "away": df["away_team"]})
+    # map above doesn't broadcast; do row-wise selection:
+    df["favorite"] = df.apply(lambda r: r["home_team"] if r["favorite"] == "home" else (r["away_team"] if r["favorite"] == "away" else None), axis=1)
+
+    # total and game_id already present from merge
+    # Final column order
+    out_cols = ["Day","Date","Time","away_team","home_team","Stadium","temp_f","wind_mph","wind_dir","precip_in","chance_of_rain","Odds","favorite","total","game_id"]
+
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    out_df.to_csv(OUTPUT, index=False)
-    logging.info(f"Wrote {OUTPUT.resolve()} with {len(out_df)} rows.")
+    df[out_cols].to_csv(OUTPUT, index=False)
+    logging.info(f"Wrote {OUTPUT.resolve()} with {len(df)} rows.")
     return 0
 
 if __name__ == "__main__":
