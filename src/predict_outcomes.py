@@ -1,6 +1,9 @@
+
 #!/usr/bin/env python3
 """
-Predict NFL game outcomes using Projection_System formulas and your processed data.
+Predict NFL game outcomes using Projection_System formulas and your processed data,
+with extended weather effects beyond passing (bundle applies to pass, rush, TOs, RZ proxy,
+drives/pace, and special teams deltas).
 
 Inputs
 ------
@@ -21,13 +24,6 @@ data/processed/projections.csv
     game_id, away_team, home_team,
     pred_away_pts, pred_home_pts, point_diff, win_prob_home,
     pass_yards_away, pass_yards_home, rush_yards_away, rush_yards_home
-
-Implements (aligned with Projection_System.pdf):
-- Weather Adjustment (ignored for dome='yes' on home team).
-- Home Field Advantage baseline (+2.0).
-- Turnover differential adjustment (Poisson-inspired).
-- Special teams EPA-style tweak (FG% and net punt diff).
-- Market Blend: 0.6 * Model + 0.4 * Vegas implied totals.
 """
 import math
 from pathlib import Path
@@ -87,75 +83,83 @@ def compute_home_spread(row):
         return None
     return -abs(sp) if fav == row.get("home_team") else +abs(sp)
 
-# Weather passing multiplier (Projection_System weather rules)
-def weather_pass_multiplier(temp_f, wind_mph, precip_in, dome_flag: str):
-    # Dome? No weather adjustment
-    if isinstance(dome_flag, str) and dome_flag.strip().lower() == "yes":
-        return 1.0
+# ------------- Weather Bundle (extended factors) -------------
+def weather_bundle(temp_f, wind_mph, precip_in, dome):
+    """Return multipliers and deltas for multiple weather pathways. Dome => neutral effects."""
+    if str(dome).strip().lower() == "yes":
+        return dict(pass_mult=1.0, rush_mult=1.0, to_delta=0.0,
+                    rz_mult=1.0, drives_mult=1.0, fg_pct_delta=0.0, net_punt_delta=0.0)
+    # Coerce
+    try: t = float(temp_f) if pd.notna(temp_f) else 70.0
+    except Exception: t = 70.0
+    try: w = float(wind_mph) if pd.notna(wind_mph) else 0.0
+    except Exception: w = 0.0
+    try: r = float(precip_in) if pd.notna(precip_in) else 0.0
+    except Exception: r = 0.0
 
-    mult = 1.0
-    # Temp ref 70°F, coefficient 0.004 per degree (PassYds_Adjust in Projection_System)  [oai_citation:0‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
-    try:
-        if pd.notna(temp_f):
-            mult *= (1 - 0.004 * (70 - float(temp_f)))
-    except Exception:
-        pass
-    # Wind tiers (10–20: -1.5%, 20+: -3%)  [oai_citation:1‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
-    try:
-        w = float(wind_mph) if pd.notna(wind_mph) else 0.0
-        if 10 <= w < 20:
-            mult *= (1 - 0.015)
-        elif w >= 20:
-            mult *= (1 - 0.03)
-    except Exception:
-        pass
-    # Precip: −6% on passing yardage  [oai_citation:2‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
-    try:
-        r = float(precip_in) if pd.notna(precip_in) else 0.0
-        if r > 0:
-            mult *= (1 - 0.06)
-    except Exception:
-        pass
-    # Avoid extreme boosts/drops
-    return max(0.75, mult)
+    # Severity logic
+    if r > 0 or w >= 20:
+        sev = "heavy"
+    elif w >= 10:
+        sev = "moderate"
+    elif w >= 5:
+        sev = "light"
+    elif t < 35:
+        sev = "cold"
+    else:
+        sev = "none"
 
-# Logistic from point diff → home win probability (calibrated margin scale)
+    table = {
+        "none":     (1.00, 1.00, 0.00, 1.00, 1.00,  0.00,  0.0),
+        "light":    (0.98, 1.00, 0.00, 1.00, 1.00, -0.01, -0.1),
+        "moderate": (0.95, 1.03, 0.10, 0.98, 0.99, -0.02, -0.3),
+        "heavy":    (0.92, 1.06, 0.30, 0.95, 0.97, -0.05, -0.8),
+        "cold":     (0.97, 1.02, 0.10, 0.98, 0.99, -0.02, -0.2),
+    }
+    pm, rm, to, rz, dr, fg, np = table[sev]
+    return dict(pass_mult=pm, rush_mult=rm, to_delta=to, rz_mult=rz,
+                drives_mult=dr, fg_pct_delta=fg, net_punt_delta=np)
+
+# Logistic from point diff → home win probability
 def win_prob_from_diff(point_diff):
     return 1/(1+math.exp(-point_diff/6.5))
 
 # Model points from offense/defense yardage (yards-to-points ~ 15 yds/pt)
 YDS_PER_POINT = 15.0
 
-def model_points(off_team, def_team, weather_mult):
-    # Off passing vs opponent pass defense (Projection_System “Behind-the-Scenes Logic”)  [oai_citation:3‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
+def model_points(off_team, def_team, wb):
+    """Return (points, pass_yards, rush_yards) for offense vs defense, including weather bundle."""
+    # Passing vs pass defense
     off_pass = g(M, off_team, "passing_PYDS/G", 0.0)
     def_pass = g(M, def_team, "defense_PYDS/G", 0.0)
     pass_yards = (off_pass + def_pass) / 2.0
-    pass_yards *= weather_mult
+    pass_yards *= wb["pass_mult"]
 
-    # Off rushing vs opponent rush defense (same logic)
+    # Rushing vs rush defense
     off_rush = g(M, off_team, "rushing_RYDS/G", 0.0)
     def_rush = g(M, def_team, "defense_RYDS/G", 0.0)
     rush_yards = (off_rush + def_rush) / 2.0
+    rush_yards *= wb["rush_mult"]
 
-    # Base points from yards (Yards→Points translation concept)  [oai_citation:4‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
+    # Base points from yards
     base_pts = (pass_yards + rush_yards) / YDS_PER_POINT
 
-    # Turnover differential (Poisson-inspired expected loss/gain)  [oai_citation:5‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
+    # Turnover differential (Poisson-inspired) with weather bump
     team_give = g(M, off_team, "turnovers_GA", 0.0) / max(1.0, g(M, off_team, "turnovers_GP", 1.0))
     opp_take  = (g(M, def_team, "turnovers_DEF_INT", 0.0) + g(M, def_team, "turnovers_FUMR", 0.0)) / \
                 max(1.0, g(M, def_team, "turnovers_GP", 1.0))
-    lambda_to = (team_give + opp_take)/2.0
+    lambda_to = (team_give + opp_take)/2.0 + wb["to_delta"]
     to_adj_pts = 3.2 * (lambda_to - 1.4) * 0.6  # small tilt
 
-    # Special teams adjustment (FG% + Net punt diff)  [oai_citation:6‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
-    fg_off = g(M, off_team, "kicking_FG_PCT", 0.0)
+    # Special teams adjustment (FG% + Net punt), include weather deltas on offense side
+    fg_off = (g(M, off_team, "kicking_FG_PCT", 0.0) + wb["fg_pct_delta"])
     fg_def = g(M, def_team, "kicking_FG_PCT", 0.0)
-    net_punt_off = g(M, off_team, "kickoffs_punts_NET_AVG", 0.0)
+    net_punt_off = (g(M, off_team, "kickoffs_punts_NET_AVG", 0.0) + wb["net_punt_delta"])
     net_punt_def = g(M, def_team, "kickoffs_punts_NET_AVG", 0.0)
     st_adj = 0.02 * (fg_off - fg_def) + 0.04 * (net_punt_off - net_punt_def)
 
-    return base_pts + to_adj_pts + st_adj, pass_yards, rush_yards
+    pts = base_pts + to_adj_pts + st_adj
+    return pts, pass_yards, rush_yards
 
 # ---------- Compute per game ----------
 rows = []
@@ -163,25 +167,27 @@ for _, grow in games.iterrows():
     home = grow["home_team"]
     away = grow["away_team"]
 
-    # Dome check based on home team (your rule)
+    # Dome check (home team drives the environment)
     dome_flag = S.at[home, "dome"] if home in S.index and "dome" in S.columns else "no"
 
-    # Weather mult from games.csv (ignored if dome='yes')
-    w_mult = weather_pass_multiplier(grow.get("temp_f"), grow.get("wind_mph"),
-                                     grow.get("precip_in"), dome_flag)
+    # Build weather bundle
+    wb = weather_bundle(grow.get("temp_f"), grow.get("wind_mph"), grow.get("precip_in"), dome_flag)
 
-    # Model points (each side vs opponent defense)
-    away_model_pts, away_pass_yds, away_rush_yds = model_points(away, home, w_mult)
-    home_model_pts, home_pass_yds, home_rush_yds = model_points(home, away, w_mult)
+    # Model points (each side vs opponent defense), bundle already adjusts pass/rush/TO/ST
+    away_model_pts, away_pass_yds, away_rush_yds = model_points(away, home, wb)
+    home_model_pts, home_pass_yds, home_rush_yds = model_points(home, away, wb)
 
-    # Home Field Advantage baseline (+2.0)  [oai_citation:7‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
+    # Home field advantage (+2.0)
     home_model_pts += 2.0
 
-    # Vegas implied split
+    # Apply a small aggregate weather scaling to total efficiency (drives + mixed yardage)
+    mix_mult = wb["drives_mult"] * (0.5*wb["pass_mult"] + 0.5*wb["rush_mult"])
+    away_model_pts *= mix_mult
+    home_model_pts *= mix_mult
+
+    # Vegas implied split and market blend
     home_spread = compute_home_spread(grow)
     v_away, v_home = vegas_implied(grow.get("total"), home_spread)
-
-    # Market blend (0.6 model + 0.4 vegas). Fallback to model-only if vegas missing.  [oai_citation:8‡Projection_System.pdf](sediment://file_000000006ab861f7866beb9956e6c9f5)
     if v_away is not None and v_home is not None:
         away_pts = 0.6*away_model_pts + 0.4*v_away
         home_pts = 0.6*home_model_pts + 0.4*v_home
@@ -193,7 +199,7 @@ for _, grow in games.iterrows():
     home_pts = max(6.0, float(home_pts))
 
     diff = home_pts - away_pts
-    winp_home = 1/(1+math.exp(-diff/6.5))
+    winp_home = win_prob_from_diff(diff)
 
     rows.append({
         "game_id": grow["game_id"],
