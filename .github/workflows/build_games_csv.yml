@@ -1,20 +1,19 @@
-name: Build Games CSV
+name: Build and Commit Games CSV
 
 on:
-  workflow_dispatch:        # allow manual trigger
-  schedule:
-    - cron: "0 12 * * FRI"  # runs every Friday at 12:00 UTC (edit as needed)
+  workflow_dispatch:
 
 jobs:
   build-games:
     runs-on: ubuntu-latest
-
     env:
       WEATHERAPI_KEY: ${{ secrets.WEATHERAPI_KEY }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,17 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests python-dateutil
 
-      - name: Run games CSV builder
-        run: |
-          python src/build_games_csv.py
+      - name: Run builder script
+        run: python src/build_games_csv.py
 
-      - name: Verify output
+      - name: Commit and push updated games.csv
         run: |
-          ls -lh data/processed/ || echo "Output directory missing."
-          head -n 10 data/processed/games.csv || echo "No CSV generated."
-
-      - name: Upload games.csv artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: games_csv
-          path: data/processed/games.csv
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/games.csv
+          git commit -m "Automated update: games.csv" || echo "No changes to commit"
+          git push
