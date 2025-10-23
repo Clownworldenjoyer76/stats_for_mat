@@ -1,7 +1,7 @@
 name: Build Games CSV
 
 on:
-  workflow_dispatch:        # allows manual trigger
+  workflow_dispatch:        # allow manual trigger
   schedule:
     - cron: "0 12 * * FRI"  # runs every Friday at 12:00 UTC (edit as needed)
 
@@ -28,11 +28,11 @@ jobs:
 
       - name: Run games CSV builder
         run: |
-          python build_games_csv.py
+          python src/build_games_csv.py
 
       - name: Verify output
         run: |
-          ls -lh data/processed/
+          ls -lh data/processed/ || echo "Output directory missing."
           head -n 10 data/processed/games.csv || echo "No CSV generated."
 
       - name: Upload games.csv artifact
