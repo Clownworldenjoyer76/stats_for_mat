@@ -3,6 +3,9 @@ name: Build and Commit Games CSV
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write   # allow commit/push
+
 jobs:
   build-games:
     runs-on: ubuntu-latest
