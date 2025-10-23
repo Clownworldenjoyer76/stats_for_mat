@@ -3,19 +3,14 @@
 Player Projections Builder
 
 Reads:
-  data/raw/stats/passing.csv        # per-row passing logs (any casing for headers is ok)
-  data/raw/stats/rushing.csv        # per-row rushing logs (any casing for headers is ok)
-  data/processed/games.csv          # weekly matchups + weather (home/away, temp, wind, precip, total, odds, game_id)
-  data/team_stadiums.csv            # TEAM, STADIUM, LATITUDE, LONGITUDE, dome
+  data/raw/stats/passing.csv
+  data/raw/stats/rushing.csv
+  data/processed/games.csv
+  data/team_stadiums.csv
   data/processed/nfl_unified_with_metrics.csv
-                                    # includes defense_PYDS/G, defense_RYDS/G per TEAM
 
 Writes:
   data/processed/player_projections.csv
-  Columns:
-    player, team, opponent, is_home, temp_f, wind_mph, dome,
-    proj_pass_yds, proj_pass_td, proj_int,
-    proj_rush_yds, proj_rush_td
 """
 
 from pathlib import Path
@@ -31,7 +26,6 @@ P_OUT    = Path("data/processed/player_projections.csv")
 
 # ---------- Import weather_bundle from your team script (with a safe fallback) ----------
 def _fallback_weather_bundle(temp_f, wind_mph, precip_in, dome):
-    """Neutral effects if dome=='yes'. Otherwise apply severity-based multipliers."""
     if str(dome).strip().lower() == "yes":
         return dict(pass_mult=1.0, rush_mult=1.0, to_delta=0.0,
                     rz_mult=1.0, drives_mult=1.0, fg_pct_delta=0.0, net_punt_delta=0.0)
@@ -69,7 +63,6 @@ def _fallback_weather_bundle(temp_f, wind_mph, precip_in, dome):
                 drives_mult=dr, fg_pct_delta=fg, net_punt_delta=np)
 
 try:
-    # If your patched team script is in PYTHONPATH this will succeed:
     from src.predict_outcomes import weather_bundle  # type: ignore
 except Exception:
     weather_bundle = _fallback_weather_bundle
@@ -81,10 +74,6 @@ def _read_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 def _normalize_columns(df: pd.DataFrame, mapping: dict) -> pd.DataFrame:
-    """
-    mapping: {"Canonical": ["variant1","variant2",...]}
-    Returns df with any found variants renamed to Canonical.
-    """
     lower_map = {c.lower(): c for c in df.columns}
     rename = {}
     for canon, variants in mapping.items():
@@ -106,21 +95,25 @@ games   = _read_csv(P_GAMES)
 teams   = _read_csv(P_TEAMS)
 metrics = _read_csv(P_MET)
 
-# ---------- Normalize typical column names ----------
+# ---------- Normalize column names to canonical ----------
+# Your passing.csv uses PYDS (yards) and PTD (pass TDs) — mapped below.
 pass_df = _normalize_columns(pass_df, {
     "PLAYER":   ["PLAYER","Player","player","Name"],
     "TEAM":     ["TEAM","Team","team"],
-    "PASS_YDS": ["PASS_YDS","PassYds","Pass_Yds","PYDS","YDS","PASSING_YDS"],
-    "PASS_TD":  ["PASS_TD","PassTD","TD","PASSING_TD"],
+    "PASS_YDS": ["PYDS","PASS_YDS","PassYds","Pass_Yds","PASSING_YDS","YDS"],
+    "PASS_TD":  ["PTD","PASS_TD","PassTD","TD","PASSING_TD"],  # <-- includes PTD
     "INT":      ["INT","Interceptions","PASS_INT","PICKS"],
 })
+
+# Your rushing.csv uses RYDS (yards) and RTD (rush TDs) — mapped below.
 rush_df = _normalize_columns(rush_df, {
     "PLAYER":   ["PLAYER","Player","player","Name"],
     "TEAM":     ["TEAM","Team","team"],
-    "RUSH_YDS": ["RUSH_YDS","RushYds","RYDS","RushingYds","YDS","RUSHING_YDS"],
-    "RUSH_TD":  ["RUSH_TD","RushTD","TD","RUSHING_TD"],
-    "CARRIES":  ["CARRIES","Att","RATT","ATT","Attempts"],
+    "RUSH_YDS": ["RYDS","RUSH_YDS","RushYds","RushingYds","RUSHING_YDS","YDS"],
+    "RUSH_TD":  ["RTD","RUSH_TD","RushTD","TD","RUSHING_TD"],  # <-- includes RTD
+    "CARRIES":  ["RATT","CARRIES","Att","ATT","Attempts"],      # your file has RATT
 })
+
 metrics = _normalize_columns(metrics, {
     "TEAM":            ["TEAM","Team","team"],
     "defense_PYDS/G":  ["defense_PYDS/G","DEF_PYDS_G","defense_PYDS_g"],
@@ -136,8 +129,7 @@ _ensure_columns(metrics, ["TEAM","defense_PYDS/G","defense_RYDS/G"], "nfl_unifie
 pass_avg = pass_df.groupby(["PLAYER","TEAM"], as_index=False)[["PASS_YDS","PASS_TD","INT"]].mean()
 rush_avg = rush_df.groupby(["PLAYER","TEAM"], as_index=False)[["RUSH_YDS","RUSH_TD","CARRIES"]].mean()
 
-# ---------- Build weekly matchup map (team -> opponent + game weather from home site) ----------
-# For each game, create two rows: home team and away team. Weather columns already reflect home site.
+# ---------- Build weekly matchup map (team -> opponent + weather from home site) ----------
 home_side = games[["home_team","away_team","temp_f","wind_mph","precip_in"]].copy()
 home_side["team"] = home_side["home_team"]
 home_side["opponent"] = home_side["away_team"]
@@ -148,18 +140,15 @@ away_side["team"] = away_side["away_team"]
 away_side["opponent"] = away_side["home_team"]
 away_side["is_home"] = 0
 
-matchups = pd.concat([home_side, away_side], ignore_index=True)
-matchups = matchups[["team","opponent","is_home","temp_f","wind_mph","precip_in"]]
+matchups = pd.concat([home_side, away_side], ignore_index=True)[["team","opponent","is_home","temp_f","wind_mph","precip_in"]]
 
-# Map home team's dome value to both teams in that game (dome rule: home stadium defines weather context)
+# Map home stadium's dome flag to both teams in that game
 teams_dome = teams[["TEAM","dome"]].copy()
 home_dome = games[["home_team"]].merge(teams_dome, left_on="home_team", right_on="TEAM", how="left").rename(columns={"dome":"home_dome"})
-
 home_dome_map = pd.concat([
     games[["home_team","away_team"]].assign(team=games["home_team"]).merge(home_dome[["home_team","home_dome"]], on="home_team", how="left"),
     games[["home_team","away_team"]].assign(team=games["away_team"]).merge(home_dome[["home_team","home_dome"]], on="home_team", how="left"),
 ], ignore_index=True)[["team","home_dome"]].drop_duplicates()
-
 matchups = matchups.merge(home_dome_map, on="team", how="left").rename(columns={"home_dome":"dome"})
 
 # ---------- Merge opponent defensive context ----------
@@ -183,8 +172,6 @@ def def_adj_rush(opp_def):
 # ---------- Build unified player base and attach matchup row ----------
 players = pd.merge(pass_avg, rush_avg, on=["PLAYER","TEAM"], how="outer")
 players = players.merge(matchups, left_on="TEAM", right_on="team", how="left")
-
-# Drop any players without a scheduled opponent this week (optional; comment out to keep)
 players = players[players["opponent"].notna()].copy()
 
 # ---------- Apply multipliers per player ----------
@@ -201,7 +188,6 @@ for _, r in players.iterrows():
     pass_def_mult = def_adj_pass(r.get("defense_PYDS/G"))
     rush_def_mult = def_adj_rush(r.get("defense_RYDS/G"))
 
-    # Base averages (0 if missing)
     pass_yds = float(r.get("PASS_YDS") or 0.0)
     pass_td  = float(r.get("PASS_TD")  or 0.0)
     picks    = float(r.get("INT")      or 0.0)
@@ -209,10 +195,9 @@ for _, r in players.iterrows():
     rush_yds = float(r.get("RUSH_YDS") or 0.0)
     rush_td  = float(r.get("RUSH_TD")  or 0.0)
 
-    # Projections
     proj_pass_yds = pass_yds * wb["pass_mult"] * home_mult * pass_def_mult
     proj_pass_td  = pass_td  * wb["pass_mult"] * home_mult * pass_def_mult
-    proj_int      = picks    * (1.00 + max(0.0, wb["to_delta"]))   # bump INTs upward in bad wx
+    proj_int      = picks    * (1.00 + max(0.0, wb["to_delta"]))
 
     proj_rush_yds = rush_yds * wb["rush_mult"] * home_mult * rush_def_mult
     proj_rush_td  = rush_td  * wb["rush_mult"] * home_mult * rush_def_mult
