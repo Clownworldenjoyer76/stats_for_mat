@@ -372,14 +372,23 @@ for _, r in players.iterrows():
         if pd.notna(r.get("K_AVG")):
             out["proj_kick_avg"] = round(_nz(r.get("K_AVG")) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
         if pd.notna(r.get("TB_pct")):
-            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 1)
-
-    # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
-    # Shrink baseline toward league average non-pass TD rate with k=4 prior games
+            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 
+                                           # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
+    # Determine if we have a real baseline from scoring.csv
     gp_for_shrink = _nz(r.get("GP"))
     baseline_raw = _nz(r.get("baseline_nonpass_td_pg"))
+
+    have_baseline = (gp_for_shrink > 0) and (baseline_raw > 0 or baseline_raw == 0) and (not pd.isna(r.get("baseline_nonpass_td_pg")))
+
+    # League avg non-pass TDs per game (computed earlier), use only to shrink real baselines
     league_nonpass_td_pg = _nz(league_td_pg) if _nz(league_td_pg) > 0 else 0.25
-    baseline_shrunk = ((gp_for_shrink * baseline_raw) + (4.0 * league_nonpass_td_pg)) / (gp_for_shrink + 4.0) if gp_for_shrink > 0 else league_nonpass_td_pg
+
+    if have_baseline:
+        # Shrink real baseline toward league average with k=4 prior games
+        baseline_shrunk = ((gp_for_shrink * baseline_raw) + (4.0 * league_nonpass_td_pg)) / (gp_for_shrink + 4.0)
+    else:
+        # No scoring row for this player → don't inject league average; use 0
+        baseline_shrunk = 0.0
 
     # Per-component projected TDs
     comp_rush = _nz(out.get("proj_rush_td"))
@@ -394,14 +403,12 @@ for _, r in players.iterrows():
 
     # Weighted blend: 35% baseline, 65% components, then clamp λ to [0, 2]
     lam_raw = (0.35 * baseline_shrunk * pace_mult) + (0.65 * comp_sum)
-    lam = min(max(lam_raw, 0.0), 2.0)
+
+    # If there's neither a baseline nor any component signal, force λ=0
+    if baseline_shrunk == 0.0 and comp_sum == 0.0:
+        lam = 0.0
+    else:
+        lam = min(max(lam_raw, 0.0), 2.0)
 
     out["expected_anytime_td"] = round(lam, 4)
     out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
-
-    rows.append(out)
-
-out_df = pd.DataFrame(rows)
-P_OUT.parent.mkdir(parents=True, exist_ok=True)
-out_df.to_csv(P_OUT, index=False)
-print(f"Wrote {P_OUT} with {len(out_df)} player rows.")
