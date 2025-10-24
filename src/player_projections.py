@@ -248,7 +248,7 @@ if punt_df is not None:
 else:
     punt_avg = pd.DataFrame(columns=["PLAYER","TEAM","KO_pg","K_YDS_pg","K_AVG","TB","TB_pct","PUNTS_pg","P_YDS_pg","P_AVG","NET_AVG","IN20","IN20_pct"])
 
-# Scoring (baseline non-passing TD rate)
+# Scoring (baseline non-passing TD rate) + carry GP for shrinkage + league baseline
 score_df = _read_csv(P_SCORE)
 if score_df is not None:
     score_df = _norm(score_df, {"PLAYER":["PLAYER","Player","Name"], "TEAM":["TEAM","Team"]})
@@ -256,12 +256,16 @@ if score_df is not None:
         if c in score_df.columns:
             score_df[c] = pd.to_numeric(score_df[c], errors="coerce").fillna(0)
     score_df["GP_safe"] = score_df["GP"].replace({0: 1})
-    score_df["baseline_nonpass_td_pg"] = (
-        score_df["RUSH_TD"] + score_df["REC_TD"] + score_df["K_RET_TD"] + score_df["P_RET_TD"] + score_df["INT_TD"]
-    ) / score_df["GP_safe"]
-    score_avg = score_df[["PLAYER","TEAM","baseline_nonpass_td_pg"]].copy()
+    nonpass_td = score_df[["RUSH_TD","REC_TD","K_RET_TD","P_RET_TD","INT_TD"]].sum(axis=1)
+    score_df["baseline_nonpass_td_pg"] = nonpass_td / score_df["GP_safe"]
+    # league average non-pass TD per game across players with GP>0
+    league_td_pg = (nonpass_td[score_df["GP"] > 0] / score_df.loc[score_df["GP"] > 0, "GP"]).mean()
+    if pd.isna(league_td_pg) or league_td_pg <= 0:
+        league_td_pg = 0.25  # fallback
+    score_avg = score_df[["PLAYER","TEAM","baseline_nonpass_td_pg","GP"]].copy()
 else:
-    score_avg = pd.DataFrame(columns=["PLAYER","TEAM","baseline_nonpass_td_pg"])
+    league_td_pg = 0.25
+    score_avg = pd.DataFrame(columns=["PLAYER","TEAM","baseline_nonpass_td_pg","GP"])
 
 # ---------- Build player universe ----------
 players = pass_avg.merge(rush_avg, on=["PLAYER","TEAM"], how="outer")
@@ -275,6 +279,9 @@ players = players.merge(score_avg, on=["PLAYER","TEAM"], how="left")
 # Attach matchup row (team/opponent/weather/dome/home)
 players = players.merge(matchups, left_on="TEAM", right_on="team", how="left")
 players = players[players["opponent"].notna()].copy()
+
+league_avg_pass_def = metrics["defense_PYDS/G"].mean()
+league_avg_rush_def = metrics["defense_RYDS/G"].mean()
 
 # ---------- Projections (per-game) ----------
 rows = []
@@ -339,7 +346,8 @@ for _, r in players.iterrows():
     if pd.notna(r.get("FGA_pg")):
         fga_pg = _nz(r.get("FGA_pg")); fgm_pg = _nz(r.get("FGM_pg"))
         xpa_pg = _nz(r.get("XPA_pg")); xpm_pg = _nz(r.get("XPM_pg"))
-        fg_pct = _nz(r.get("FG_PCT")) if _nz(r.get("FG_PCT")) > 0 else (_nz(fgm_pg) / fga_pg * 100 if fga_pg > 0 else 0.0)
+        fg_pct_val = _nz(r.get("FG_PCT"))
+        fg_pct = fg_pct_val if fg_pct_val > 0 else (_nz(fgm_pg) / fga_pg * 100 if fga_pg > 0 else 0.0)
         adj_fg_pct = max(0.0, min(100.0, fg_pct + (wb["fg_pct_delta"] * 100)))
         out["proj_fga"] = round(fga_pg * (0.97 + 0.03*wb["drives_mult"]), 2)
         out["proj_fgm"] = round(out["proj_fga"] * (adj_fg_pct / 100.0), 2)
@@ -364,14 +372,16 @@ for _, r in players.iterrows():
         if pd.notna(r.get("K_AVG")):
             out["proj_kick_avg"] = round(_nz(r.get("K_AVG")) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
         if pd.notna(r.get("TB_pct")):
-            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")),     # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
-    # shrink baseline toward league average 0.25 TD/game with k=4 prior weight
-    baseline_raw = _nz(r.get("baseline_nonpass_td_pg"))
-    gp = _nz(r.get("GP")) if "GP" in r else 0.0
-    league_td_pg = 0.25
-    baseline_shrunk = ((gp * baseline_raw) + (4 * league_td_pg)) / (gp + 4) if gp > 0 else league_td_pg
+            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 1)
 
-    # per-component TDs
+    # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
+    # Shrink baseline toward league average non-pass TD rate with k=4 prior games
+    gp_for_shrink = _nz(r.get("GP"))
+    baseline_raw = _nz(r.get("baseline_nonpass_td_pg"))
+    league_nonpass_td_pg = _nz(league_td_pg) if _nz(league_td_pg) > 0 else 0.25
+    baseline_shrunk = ((gp_for_shrink * baseline_raw) + (4.0 * league_nonpass_td_pg)) / (gp_for_shrink + 4.0) if gp_for_shrink > 0 else league_nonpass_td_pg
+
+    # Per-component projected TDs
     comp_rush = _nz(out.get("proj_rush_td"))
     comp_rec  = _nz(out.get("proj_rec_td"))
     comp_kr   = _nz(out.get("proj_kr_td"))
@@ -379,15 +389,13 @@ for _, r in players.iterrows():
     comp_def  = 0.15 * _nz(out.get("proj_def_int"))
     comp_sum = comp_rush + comp_rec + comp_kr + comp_pr + comp_def
 
-    # drive tempo modifier
+    # Drive tempo modifier
     pace_mult = 0.97 + 0.03 * _nz(wb.get("drives_mult"))
 
-    # weighted blend: 35% baseline, 65% components
+    # Weighted blend: 35% baseline, 65% components, then clamp λ to [0, 2]
     lam_raw = (0.35 * baseline_shrunk * pace_mult) + (0.65 * comp_sum)
-    lam = min(max(lam_raw, 0.0), 2.0)  # clamp λ within [0, 2]
+    lam = min(max(lam_raw, 0.0), 2.0)
 
-    out["expected_anytime_td"] = round(lam, 4)
-    out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
     out["expected_anytime_td"] = round(lam, 4)
     out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
 
