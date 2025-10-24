@@ -372,22 +372,19 @@ for _, r in players.iterrows():
         if pd.notna(r.get("K_AVG")):
             out["proj_kick_avg"] = round(_nz(r.get("K_AVG")) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
         if pd.notna(r.get("TB_pct")):
-            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 
-                                           # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
-    # Determine if we have a real baseline from scoring.csv
+            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 1)
+
+    # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
     gp_for_shrink = _nz(r.get("GP"))
     baseline_raw = _nz(r.get("baseline_nonpass_td_pg"))
-
-    have_baseline = (gp_for_shrink > 0) and (baseline_raw > 0 or baseline_raw == 0) and (not pd.isna(r.get("baseline_nonpass_td_pg")))
-
-    # League avg non-pass TDs per game (computed earlier), use only to shrink real baselines
-    league_nonpass_td_pg = _nz(league_td_pg) if _nz(league_td_pg) > 0 else 0.25
+    # do we actually have this player in scoring.csv?
+    have_baseline = (gp_for_shrink > 0) and (not pd.isna(r.get("baseline_nonpass_td_pg")))
+    # league non-pass TD rate (computed earlier), only for shrinking real baselines
+    league_nonpass_td_pg = _nz(locals().get("league_td_pg", 0.25)) or 0.25
 
     if have_baseline:
-        # Shrink real baseline toward league average with k=4 prior games
         baseline_shrunk = ((gp_for_shrink * baseline_raw) + (4.0 * league_nonpass_td_pg)) / (gp_for_shrink + 4.0)
     else:
-        # No scoring row for this player → don't inject league average; use 0
         baseline_shrunk = 0.0
 
     # Per-component projected TDs
@@ -412,3 +409,10 @@ for _, r in players.iterrows():
 
     out["expected_anytime_td"] = round(lam, 4)
     out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
+
+    rows.append(out)
+
+out_df = pd.DataFrame(rows)
+P_OUT.parent.mkdir(parents=True, exist_ok=True)
+out_df.to_csv(P_OUT, index=False)
+print(f"Wrote {P_OUT} with {len(out_df)} player rows.")
