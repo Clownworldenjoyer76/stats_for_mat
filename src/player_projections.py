@@ -364,21 +364,30 @@ for _, r in players.iterrows():
         if pd.notna(r.get("K_AVG")):
             out["proj_kick_avg"] = round(_nz(r.get("K_AVG")) * (1.0 + (wb["fg_pct_delta"] * 0.5)), 1)
         if pd.notna(r.get("TB_pct")):
-            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")), 1)
+            out["proj_tb_pct"] = round(_nz(r.get("TB_pct")),     # ----- Anytime TD λ (per-game; shrunk + reweighted blend) -----
+    # shrink baseline toward league average 0.25 TD/game with k=4 prior weight
+    baseline_raw = _nz(r.get("baseline_nonpass_td_pg"))
+    gp = _nz(r.get("GP")) if "GP" in r else 0.0
+    league_td_pg = 0.25
+    baseline_shrunk = ((gp * baseline_raw) + (4 * league_td_pg)) / (gp + 4) if gp > 0 else league_td_pg
 
-    # ----- Anytime TD λ (per-game; hardened against None/NaN) -----
-    base_nonpass_pg = _nz(r.get("baseline_nonpass_td_pg"))
+    # per-component TDs
     comp_rush = _nz(out.get("proj_rush_td"))
     comp_rec  = _nz(out.get("proj_rec_td"))
     comp_kr   = _nz(out.get("proj_kr_td"))
     comp_pr   = _nz(out.get("proj_pr_td"))
     comp_def  = 0.15 * _nz(out.get("proj_def_int"))
-
     comp_sum = comp_rush + comp_rec + comp_kr + comp_pr + comp_def
-    pace_mult = (0.97 + 0.03 * _nz(wb.get("drives_mult")))
-    lam_raw = 0.5 * (base_nonpass_pg * pace_mult) + 0.5 * comp_sum
-    lam = lam_raw if lam_raw > 0 else 0.0
 
+    # drive tempo modifier
+    pace_mult = 0.97 + 0.03 * _nz(wb.get("drives_mult"))
+
+    # weighted blend: 35% baseline, 65% components
+    lam_raw = (0.35 * baseline_shrunk * pace_mult) + (0.65 * comp_sum)
+    lam = min(max(lam_raw, 0.0), 2.0)  # clamp λ within [0, 2]
+
+    out["expected_anytime_td"] = round(lam, 4)
+    out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
     out["expected_anytime_td"] = round(lam, 4)
     out["anytime_td_prob"] = round(1 - math.exp(-lam), 4) if lam > 0 else 0.0
 
