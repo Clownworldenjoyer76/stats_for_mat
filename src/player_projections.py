@@ -6,16 +6,15 @@ import math
 import pandas as pd
 from pathlib import Path
 
-# ---------- File locations ----------
+# ---------- Paths ----------
 DATA_DIR = Path("data")
 RAW_STATS = DATA_DIR / "raw" / "stats"
 PROCESSED_DIR = DATA_DIR / "processed"
 
 TEAM_STADIUMS_CSV = DATA_DIR / "team_stadiums.csv"
 GAMES_CSV = PROCESSED_DIR / "games.csv"
-NFL_TEAM_METRICS = PROCESSED_DIR / "nfl_unified_with_metrics.csv"  # used for opponent context
+NFL_TEAM_METRICS = PROCESSED_DIR / "nfl_unified_with_metrics.csv"
 
-# Player stat files provided
 PASSING_CSV = RAW_STATS / "passing.csv"
 RUSHING_CSV = RAW_STATS / "rushing.csv"
 RECEIVING_CSV = RAW_STATS / "receiving.csv"
@@ -28,90 +27,40 @@ SCORING_CSV = RAW_STATS / "scoring.csv"
 OUT_CSV = PROCESSED_DIR / "player_projections.csv"
 
 # ---------- Helpers ----------
-
 def safe_div(a, b):
     try:
-        if b and float(b) != 0:
-            return float(a) / float(b)
+        b = float(b)
+        if b != 0:
+            return float(a) / b
         return 0.0
     except Exception:
         return 0.0
 
-def get_col(df, row, col, default=0.0):
+def val(row, col, default=0.0):
+    if row is None:
+        return default
     try:
         v = row.get(col, default)
-        if pd.isna(v):
-            return default
-        return v
     except Exception:
+        v = default
+    if pd.isna(v):
         return default
+    return v
 
-def lower_cols(df: pd.DataFrame) -> pd.DataFrame:
-    """Return a copy with lower-cased, stripped column names (but keep original df intact for file integrity)."""
-    x = df.copy()
-    x.columns = [c.strip() for c in x.columns]
-    return x
+def load_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df.columns = [c.strip() for c in df.columns]
+    return df
 
-def load_csv_or_empty(path: Path) -> pd.DataFrame:
-    if path.exists():
-        df = pd.read_csv(path)
-        df = lower_cols(df)
-        return df
-    return pd.DataFrame()
-
-# Very light opponent adjustment scaffolding (kept simple and robust to columns present)
-def opponent_pass_factor(op_team_row: pd.Series) -> float:
-    # Use defense_PYDS/G if available (higher -> tougher on pass yards allowed? Inverse effect)
-    val = 0.0
-    if isinstance(op_team_row, pd.Series) and "defense_PYDS/G" in op_team_row.index:
-        try:
-            val = float(op_team_row["defense_PYDS/G"])
-        except Exception:
-            val = 0.0
-    # Normalize around a notional league mean ~220
-    if val <= 0:
-        return 1.0
-    return max(0.85, min(1.15, 220.0 / val))
-
-def opponent_rush_factor(op_team_row: pd.Series) -> float:
-    # Use defense_RYDS/G if available
-    val = 0.0
-    if isinstance(op_team_row, pd.Series) and "defense_RYDS/G" in op_team_row.index:
-        try:
-            val = float(op_team_row["defense_RYDS/G"])
-        except Exception:
-            val = 0.0
-    # Normalize around a notional league mean ~112
-    if val <= 0:
-        return 1.0
-    return max(0.85, min(1.15, 112.0 / val))
-
-def env_pass_factor(dome: bool, temp_f: float, wind_mph: float, chance_of_rain: float) -> float:
-    if dome:
-        return 1.0
-    f = 1.0
-    # wind penalties
-    if wind_mph >= 20: f *= 0.90
-    elif wind_mph >= 15: f *= 0.94
-    elif wind_mph >= 10: f *= 0.97
-    # cold penalty
-    if temp_f <= 32: f *= 0.94
-    elif temp_f <= 40: f *= 0.97
-    # rain chance penalty
-    if chance_of_rain >= 70: f *= 0.94
-    elif chance_of_rain >= 40: f *= 0.97
-    return f
-
-def env_rush_factor(dome: bool, temp_f: float, wind_mph: float, chance_of_rain: float) -> float:
-    if dome:
-        return 1.0
-    f = 1.0
-    # bad weather nudges run usage a bit
-    bump = 0.0
-    if wind_mph >= 15: bump += 0.03
-    if temp_f <= 40:   bump += 0.03
-    if chance_of_rain >= 50: bump += 0.02
-    return 1.0 + min(0.08, bump)
+def team_from_row(r: pd.Series) -> str:
+    if r is None: return ""
+    for c in ("TEAM", "Team", "team"):
+        if c in r.index:
+            v = r[c]
+            return "" if pd.isna(v) else str(v)
+    return ""
 
 def poisson_anytime_prob(lam: float) -> float:
     lam = max(0.0, float(lam))
@@ -120,422 +69,352 @@ def poisson_anytime_prob(lam: float) -> float:
     except OverflowError:
         return 1.0
 
-# ---------- Load inputs ----------
-passing = load_csv_or_empty(PASSING_CSV)
-rushing = load_csv_or_empty(RUSHING_CSV)
-receiving = load_csv_or_empty(RECEIVING_CSV)
-returning = load_csv_or_empty(RETURNING_CSV)
-defensive = load_csv_or_empty(DEFENSIVE_CSV)
-kicking = load_csv_or_empty(KICKING_CSV)
-kickpunts = load_csv_or_empty(KICKOFFS_PUNTS_CSV)
-scoring = load_csv_or_empty(SCORING_CSV)
+# Opponent/context factors (kept conservative)
+def opponent_pass_factor(team_row: pd.Series) -> float:
+    if isinstance(team_row, pd.Series) and "defense_PYDS/G" in team_row.index:
+        try:
+            ypg = float(team_row["defense_PYDS/G"])
+            if ypg > 0:
+                return max(0.85, min(1.15, 220.0 / ypg))
+        except Exception:
+            pass
+    return 1.0
 
-games = load_csv_or_empty(GAMES_CSV)
-team_stadiums = load_csv_or_empty(TEAM_STADIUMS_CSV)
-team_metrics = load_csv_or_empty(NFL_TEAM_METRICS)
+def opponent_rush_factor(team_row: pd.Series) -> float:
+    if isinstance(team_row, pd.Series) and "defense_RYDS/G" in team_row.index:
+        try:
+            ypg = float(team_row["defense_RYDS/G"])
+            if ypg > 0:
+                return max(0.85, min(1.15, 112.0 / ypg))
+        except Exception:
+            pass
+    return 1.0
 
-# Normalize TEAM lookups
-def norm_team_col(df: pd.DataFrame) -> pd.DataFrame:
-    if "TEAM" in df.columns:
-        df["TEAM"] = df["TEAM"].astype(str)
-    if "team" in df.columns:
-        df["team"] = df["team"].astype(str)
-    return df
+def env_pass_factor(dome: bool, temp_f: float, wind_mph: float, cor: float) -> float:
+    if dome: return 1.0
+    f = 1.0
+    # wind
+    if wind_mph >= 20: f *= 0.90
+    elif wind_mph >= 15: f *= 0.94
+    elif wind_mph >= 10: f *= 0.97
+    # cold
+    if temp_f <= 32: f *= 0.94
+    elif temp_f <= 40: f *= 0.97
+    # precip
+    if cor >= 70: f *= 0.94
+    elif cor >= 40: f *= 0.97
+    return f
 
-for d in (passing, rushing, receiving, returning, defensive, kicking, kickpunts, scoring, team_metrics, team_stadiums, games):
-    norm_team_col(d)
+def env_rush_factor(dome: bool, temp_f: float, wind_mph: float, cor: float) -> float:
+    if dome: return 1.0
+    bump = 0.0
+    if wind_mph >= 15: bump += 0.03
+    if temp_f <= 40:   bump += 0.03
+    if cor >= 50:      bump += 0.02
+    return 1.0 + min(0.08, bump)
 
-# Build schedule map from games.csv
-# Each row is one game; both teams share same environment (home stadium)
+# ---------- Load data ----------
+passing   = load_csv(PASSING_CSV)
+rushing   = load_csv(RUSHING_CSV)
+receiving = load_csv(RECEIVING_CSV)
+returning = load_csv(RETURNING_CSV)
+defensive = load_csv(DEFENSIVE_CSV)
+kicking   = load_csv(KICKING_CSV)
+kickpunts = load_csv(KICKOFFS_PUNTS_CSV)
+scoring   = load_csv(SCORING_CSV)
+
+games         = load_csv(GAMES_CSV)
+team_stadiums = load_csv(TEAM_STADIUMS_CSV)
+team_metrics  = load_csv(NFL_TEAM_METRICS)
+
+# ---------- Build schedule & dome map ----------
+domes_by_team = {}
+if not team_stadiums.empty and "TEAM" in team_stadiums.columns and "dome" in team_stadiums.columns:
+    t = team_stadiums[["TEAM", "dome"]].copy()
+    t["TEAM"] = t["TEAM"].astype(str)
+    t["dome"] = t["dome"].astype(str).str.strip().str.lower()
+    domes_by_team = dict(zip(t["TEAM"], t["dome"]))
+
 schedule = {}
 if not games.empty:
-    # ensure required columns exist with defaults if missing
-    for col in ["home_team", "away_team", "temp_f", "wind_mph", "chance_of_rain", "Stadium"]:
-        if col not in games.columns:
-            games[col] = None
-    # get dome from team_stadiums by STADIUM or TEAM
-    domes_by_team = {}
-    if not team_stadiums.empty:
-        # dome is "yes"/"no"
-        tmp = team_stadiums[["TEAM", "dome"]].copy()
-        tmp["TEAM"] = tmp["TEAM"].astype(str)
-        tmp["dome"] = tmp["dome"].astype(str).str.strip().str.lower()
-        domes_by_team = dict(zip(tmp["TEAM"], tmp["dome"]))
-
+    need_cols = ["home_team", "away_team", "temp_f", "wind_mph", "chance_of_rain"]
+    for c in need_cols:
+        if c not in games.columns:
+            games[c] = 0.0 if c != "home_team" and c != "away_team" else ""
     for _, g in games.iterrows():
         home = str(g.get("home_team", "") or "")
         away = str(g.get("away_team", "") or "")
         temp_f = float(g.get("temp_f", 0.0) or 0.0)
         wind_mph = float(g.get("wind_mph", 0.0) or 0.0)
         cor = float(g.get("chance_of_rain", 0.0) or 0.0)
-
-        # Dome rule: decide from home team dome status
-        dome_val = False
-        if home in domes_by_team:
-            dome_val = (domes_by_team[home] == "yes")
-
-        # map
+        dome = domes_by_team.get(home, "no") == "yes"
         if home:
-            schedule[home] = {"opponent": away, "is_home": 1, "temp_f": temp_f, "wind_mph": wind_mph, "dome": dome_val, "chance_of_rain": cor}
+            schedule[home] = {"opponent": away, "is_home": 1, "temp_f": temp_f, "wind_mph": wind_mph, "dome": dome, "cor": cor}
         if away:
-            schedule[away] = {"opponent": home, "is_home": 0, "temp_f": temp_f, "wind_mph": wind_mph, "dome": dome_val, "chance_of_rain": cor}
+            schedule[away] = {"opponent": home, "is_home": 0, "temp_f": temp_f, "wind_mph": wind_mph, "dome": dome, "cor": cor}
 
-# Opponent metrics by team
+# opponent metrics map
 team_metrics_map = {}
 if not team_metrics.empty and "TEAM" in team_metrics.columns:
     for _, r in team_metrics.iterrows():
         team_metrics_map[str(r["TEAM"])] = r
 
-# League means for shrinkage (non-pass TD rates)
-def league_means_for_nonpass():
-    # compute per-game means for the categories we actually use
-    rush_td_pg = 0.0
-    rec_td_pg = 0.0
-    kret_td_pg = 0.0
-    pret_td_pg = 0.0
-    def_td_pg = 0.0
+# ---------- League mean for shrinkage (non-passing) ----------
+def league_nonpass_td_pg():
+    vals = []
 
-    n_rush = len(rushing) if not rushing.empty else 0
-    if n_rush:
-        rush_td_pg = (rushing["RTD"] / rushing["GP"]).replace([pd.NA, pd.NaT], 0).fillna(0).astype(float).clip(lower=0).mean()
+    if not rushing.empty and "RTD" in rushing.columns and "GP" in rushing.columns:
+        vals.append((rushing["RTD"] / rushing["GP"]).fillna(0).clip(lower=0))
 
-    n_recv = len(receiving) if not receiving.empty else 0
-    if n_recv:
-        rec_td_pg = (receiving["RECTD"] / receiving["GP"]).replace([pd.NA, pd.NaT], 0).fillna(0).astype(float).clip(lower=0).mean()
+    if not receiving.empty and "RECTD" in receiving.columns and "GP" in receiving.columns:
+        vals.append((receiving["RECTD"] / receiving["GP"]).fillna(0).clip(lower=0))
 
-    n_ret = len(returning) if not returning.empty else 0
-    if n_ret:
-        kret_td_pg = (returning["K_RET_TD"] / returning["GP"]).replace([pd.NA, pd.NaT], 0).fillna(0).astype(float).clip(lower=0).mean()
-        pret_td_pg = (returning["P_RET_TD"] / returning["GP"]).replace([pd.NA, pd.NaT], 0).fillna(0).astype(float).clip(lower=0).mean()
+    if not returning.empty and "K_RET_TD" in returning.columns and "GP" in returning.columns:
+        vals.append((returning["K_RET_TD"] / returning["GP"]).fillna(0).clip(lower=0))
+    if not returning.empty and "P_RET_TD" in returning.columns and "GP" in returning.columns:
+        vals.append((returning["P_RET_TD"] / returning["GP"]).fillna(0).clip(lower=0))
 
-    # Defensive TDs: use INTTD + TD if present; otherwise 0
-    n_def = len(defensive) if not defensive.empty else 0
-    if n_def:
-        def_td_pg = ((defensive.get("INTTD", 0).fillna(0) + defensive.get("TD", 0).fillna(0)) / defensive["GP"]).astype(float).clip(lower=0).mean()
+    if not defensive.empty and "GP" in defensive.columns:
+        # best-effort defensive TD rate: INTTD + TD if present
+        d_inttd = defensive.get("INTTD", pd.Series([0]*len(defensive))).fillna(0)
+        d_td    = defensive.get("TD", pd.Series([0]*len(defensive))).fillna(0)
+        vals.append((d_inttd + d_td) / defensive["GP"])
 
-    league_nonpass_td_pg = rush_td_pg + rec_td_pg + kret_td_pg + pret_td_pg + def_td_pg
-    return max(0.0, float(league_nonpass_td_pg))
+    if not vals:
+        return 0.0
+    combo = pd.concat(vals, axis=0)
+    return float(combo.mean())
 
-LEAGUE_NONPASS_TD_PG = league_means_for_nonpass()
+LEAGUE_NONPASS_TD_PG = league_nonpass_td_pg()
 
-# Union of players across all files
+# ---------- Per-player lookups ----------
+def row_for(df: pd.DataFrame, player: str):
+    if df.empty or "PLAYER" not in df.columns: return None
+    m = df[df["PLAYER"] == player]
+    return None if m.empty else m.iloc[0]
+
+def per_game_from(row: pd.Series, num_col: str) -> float:
+    if row is None: return 0.0
+    gp = float(val(row, "GP", 0.0))
+    n  = float(val(row, num_col, 0.0))
+    return safe_div(n, gp) if gp > 0 else 0.0
+
+# fallback from scoring.csv for TD components
+def scoring_pg(player: str, col: str) -> float:
+    r = row_for(scoring, player)
+    if r is None or "GP" not in r.index or col not in r.index: return 0.0
+    return per_game_from(r, col)
+
+# ---------- Build player universe ----------
 all_players = set()
 for df in (passing, rushing, receiving, returning, defensive, kicking, kickpunts, scoring):
     if not df.empty and "PLAYER" in df.columns:
-        all_players.update(df["PLAYER"].astype(str).tolist())
+        all_players.update(df["PLAYER"].astype(str))
 
-def row_by_player(df: pd.DataFrame, player: str):
-    if df.empty or "PLAYER" not in df.columns:
-        return None
-    rows = df[df["PLAYER"] == player]
-    if rows.empty:
-        return None
-    return rows.iloc[0]
-
-def team_for_row(row: pd.Series) -> str:
-    if row is None:
-        return ""
-    # TEAM or Team columns (present in files you provided)
-    for c in ("TEAM", "Team", "team"):
-        if c in row.index:
-            return str(row[c])
-    return ""
-
-def per_game_vals(row: pd.Series, fields: dict) -> dict:
-    """
-    fields: { "output_name": "CSV_COLUMN_NAME" }
-    Returns per-game values: value_of_column / GP
-    """
-    out = {}
-    if row is None:
-        for k in fields.keys():
-            out[k] = 0.0
-        out["GP"] = 0.0
-        return out
-    gp = float(get_col(row, "GP", 0.0))
-    out["GP"] = gp
-    for out_name, col in fields.items():
-        v = float(get_col(row, col, 0.0))
-        out[out_name] = safe_div(v, gp) if gp > 0 else 0.0
-    return out
-
-# ---------- Build projections ----------
+# ---------- Projections ----------
 records = []
 
 for player in sorted(all_players):
-    # pull each row if present
-    prow = row_by_player(passing, player)
-    rrow = row_by_player(rushing, player)
-    recrow = row_by_player(receiving, player)
-    retrow = row_by_player(returning, player)
-    drow = row_by_player(defensive, player)
-    krow = row_by_player(kicking, player)
-    kprow = row_by_player(kickpunts, player)
-    scrow = row_by_player(scoring, player)
+    # rows
+    prow  = row_for(passing,   player)
+    rrow  = row_for(rushing,   player)
+    recrow= row_for(receiving, player)
+    retrow= row_for(returning, player)
+    drow  = row_for(defensive, player)
+    krow  = row_for(kicking,   player)
+    kprow = row_for(kickpunts, player)
 
-    # choose team: prefer the first row that has TEAM
+    # team
     team = ""
-    for rr in (prow, rrow, recrow, retrow, drow, krow, kprow, scrow):
-        t = team_for_row(rr)
+    for r in (prow, rrow, recrow, retrow, drow, krow, kprow):
+        t = team_from_row(r)
         if t:
             team = t
             break
 
-    # schedule / opponent & env
-    game_info = schedule.get(team, {})
-    opponent = str(game_info.get("opponent", ""))
-    is_home = int(game_info.get("is_home", 0))
-    temp_f = float(game_info.get("temp_f", 0.0))
-    wind_mph = float(game_info.get("wind_mph", 0.0))
-    dome = bool(game_info.get("dome", False))
-    chance_of_rain = float(game_info.get("chance_of_rain", 0.0))
+    # schedule/env
+    gi = schedule.get(team, {})
+    opponent = gi.get("opponent", "")
+    is_home  = int(gi.get("is_home", 0))
+    temp_f   = float(gi.get("temp_f", 0.0))
+    wind_mph = float(gi.get("wind_mph", 0.0))
+    cor      = float(gi.get("cor", 0.0))
+    dome     = bool(gi.get("dome", False))
 
-    # opponent metrics row
+    # opponent context row
     op_row = team_metrics_map.get(opponent, pd.Series(dtype=float))
 
-    # --- Passing per game ---
-    pass_pg = {"py_pg": 0.0, "ptd_pg": 0.0, "pint_pg": 0.0, "GP": 0.0}
-    if prow is not None:
-        pass_pg = per_game_vals(
-            prow,
-            {
-                "py_pg": "PYDS",
-                "ptd_pg": "PTD",
-                "pint_pg": "INT",
-            },
-        )
-        # For yards we prefer the per-game column if present (PYDS/G)
-        if "PYDS/G" in prow.index:
-            try:
-                pass_pg["py_pg"] = float(prow["PYDS/G"])
-            except Exception:
-                pass_pg["py_pg"] = pass_pg["py_pg"]
+    # per-game core stats
+    # Passing
+    py_pg  = per_game_from(prow, "PYDS")
+    ptd_pg = per_game_from(prow, "PTD")
+    pint_pg= per_game_from(prow, "INT")
+    # prefer explicit per-game if present
+    if prow is not None and "PYDS/G" in prow.index:
+        try: py_pg = float(prow["PYDS/G"])
+        except Exception: pass
 
-    # --- Rushing per game ---
-    rush_pg = {"ry_pg": 0.0, "rtd_pg": 0.0, "GP": 0.0}
-    if rrow is not None:
-        rush_pg = per_game_vals(
-            rrow,
-            {
-                "ry_pg": "RYDS",
-                "rtd_pg": "RTD",
-            },
-        )
-        if "RYDS/G" in rrow.index:
-            try:
-                rush_pg["ry_pg"] = float(rrow["RYDS/G"])
-            except Exception:
-                rush_pg["ry_pg"] = rush_pg["ry_pg"]
+    # Rushing
+    ry_pg  = per_game_from(rrow, "RYDS")
+    rtd_pg = per_game_from(rrow, "RTD")
+    if rrow is not None and "RYDS/G" in rrow.index:
+        try: ry_pg = float(rrow["RYDS/G"])
+        except Exception: pass
 
-    # --- Receiving per game ---
-    recv_pg = {"recy_pg": 0.0, "rectd_pg": 0.0, "tgt_pg": 0.0, "rec_pg": 0.0, "yac_pg": 0.0, "GP": 0.0}
-    if recrow is not None:
-        recv_pg = per_game_vals(
-            recrow,
-            {
-                "recy_pg": "RECYDS",
-                "rectd_pg": "RECTD",
-                "tgt_pg": "TGT",
-                "rec_pg": "REC",
-                "yac_pg": "YAC",
-            },
-        )
-        if "YDS/G" in recrow.index:
-            try:
-                recv_pg["recy_pg"] = float(recrow["YDS/G"])
-            except Exception:
-                recv_pg["recy_pg"] = recv_pg["recy_pg"]
+    # Receiving
+    recy_pg   = per_game_from(recrow, "RECYDS")
+    rectd_pg  = per_game_from(recrow, "RECTD")
+    tgt_pg    = per_game_from(recrow, "TGT")
+    rec_pg    = per_game_from(recrow, "REC")
+    yac_pg    = per_game_from(recrow, "YAC")
+    if recrow is not None and "YDS/G" in recrow.index:
+        try: recy_pg = float(recrow["YDS/G"])
+        except Exception: pass
 
-    # --- Returning per game ---
-    ret_pg = {"kr_yds_pg": 0.0, "kret_td_pg": 0.0, "pr_yds_pg": 0.0, "pret_td_pg": 0.0, "GP": 0.0}
-    if retrow is not None:
-        ret_pg = per_game_vals(
-            retrow,
-            {
-                "kr_yds_pg": "K_RET_YDS",
-                "kret_td_pg": "K_RET_TD",
-                "pr_yds_pg": "P_RET_YDS",
-                "pret_td_pg": "P_RET_TD",
-            },
-        )
+    # If we still have 0 receiving TDs per game but scoring has REC_TD, use that as fallback
+    if rectd_pg == 0.0:
+        rectd_pg = scoring_pg(player, "REC_TD")
 
-    # --- Defensive per game ---
-    def_pg = {"tackles_pg": 0.0, "sacks_pg": 0.0, "def_int_pg": 0.0, "def_td_pg": 0.0, "GP": 0.0}
-    if drow is not None:
-        def_pg = per_game_vals(
-            drow,
-            {
-                "tackles_pg": "TCKL",   # using total tackles column from your file
-                "sacks_pg": "SCK",
-                "def_int_pg": "DEF_INT",
-                # TD columns: INTTD and TD (total) may exist
-            },
-        )
-        gp_d = float(get_col(drow, "GP", 0.0))
-        inttd = float(get_col(drow, "INTTD", 0.0))
-        any_td = float(get_col(drow, "TD", 0.0))
-        def_td = 0.0
-        if gp_d > 0:
-            # Use provided INTTD and TD if present; TD may already include INTTD but we will sum conservatively
-            def_td = safe_div(inttd, gp_d) + safe_div(any_td, gp_d)
-        def_pg["def_td_pg"] = def_td
-
-    # --- Kicking per game ---
-    kick_pg = {"fgm_pg": 0.0, "fga_pg": 0.0, "xpm_pg": 0.0, "xpa_pg": 0.0, "fg_pct": None}
-    if krow is not None:
-        gp_k = float(get_col(krow, "GP", 0.0))
-        fgm = float(get_col(krow, "FGM", 0.0))
-        fga = float(get_col(krow, "FGA", 0.0))
-        xpm = float(get_col(krow, "XPM", 0.0))
-        xpa = float(get_col(krow, "XPA", 0.0))
-        fg_pct = get_col(krow, "FG_PCT", None)
-        kick_pg["fgm_pg"] = safe_div(fgm, gp_k)
-        kick_pg["fga_pg"] = safe_div(fga, gp_k)
-        kick_pg["xpm_pg"] = safe_div(xpm, gp_k)
-        kick_pg["xpa_pg"] = safe_div(xpa, gp_k)
-        try:
-            kick_pg["fg_pct"] = float(fg_pct) if fg_pct is not None and not pd.isna(fg_pct) else None
-        except Exception:
-            kick_pg["fg_pct"] = None
-
-    # --- Kickoffs/Punts (use as-is, not per-game for the %/avg columns) ---
-    tb_pct = None
-    net_avg = None
-    p_avg = None
-    k_avg = None
-    if kprow is not None:
-        # Column names exactly as provided (with spaces and hyphens)
-        if "TB %" in kprow.index:
-            tb_pct = kprow["TB %"]
-        if "NET AVG" in kprow.index:
-            net_avg = kprow["NET AVG"]
-        if "P-AVG" in kprow.index:
-            p_avg = kprow["P-AVG"]
-        if "K-AVG" in kprow.index:
-            k_avg = kprow["K-AVG"]
-
-    # ---------- Apply opponent + environment multipliers ----------
-    # Passing env/opp
-    pf = env_pass_factor(dome, temp_f, wind_mph, chance_of_rain) * opponent_pass_factor(op_row)
-    # Rushing env/opp
-    rf = env_rush_factor(dome, temp_f, wind_mph, chance_of_rain) * opponent_rush_factor(op_row)
-
-    proj_pass_yds = pass_pg["py_pg"] * pf
-    proj_pass_td  = pass_pg["ptd_pg"] * pf
-    proj_int      = pass_pg["pint_pg"]  # leave INT unadjusted by env (optional tweak)
-
-    proj_rush_yds = rush_pg["ry_pg"] * rf
-    proj_rush_td  = rush_pg["rtd_pg"] * rf
-
-    # Receiving yards/TDs can be slightly affected by pass environment as well
-    proj_rec_yards = recv_pg["recy_pg"] * pf
-    proj_rec_td    = recv_pg["rectd_pg"] * pf
-    proj_targets   = recv_pg["tgt_pg"]
-    proj_rec       = recv_pg["rec_pg"]
-    proj_yac       = recv_pg["yac_pg"]
+    # If rush TDs per game 0 but scoring has RUSH_TD, use it
+    if rtd_pg == 0.0:
+        rtd_pg = scoring_pg(player, "RUSH_TD")
 
     # Returns
-    proj_kr_yds = ret_pg["kr_yds_pg"]
-    proj_kr_td  = ret_pg["kret_td_pg"]
-    proj_pr_yds = ret_pg["pr_yds_pg"]
-    proj_pr_td  = ret_pg["pret_td_pg"]
+    kr_yds_pg  = per_game_from(retrow, "K_RET_YDS")
+    kret_td_pg = per_game_from(retrow, "K_RET_TD")
+    pr_yds_pg  = per_game_from(retrow, "P_RET_YDS")
+    pret_td_pg = per_game_from(retrow, "P_RET_TD")
 
-    # Defensive
-    proj_tackles = def_pg["tackles_pg"]
-    proj_sacks   = def_pg["sacks_pg"]
-    proj_def_int = def_pg["def_int_pg"]
+    # Defense
+    tackles_pg = per_game_from(drow, "TCKL")
+    sacks_pg   = per_game_from(drow, "SCK")
+    def_int_pg = per_game_from(drow, "DEF_INT")
+    # defensive TD best-effort: INTTD + TD columns if present
+    def_td_pg = 0.0
+    if drow is not None and "GP" in drow.index:
+        gp_d = float(val(drow, "GP", 0.0))
+        if gp_d > 0:
+            def_td_pg = safe_div(float(val(drow, "INTTD", 0.0)), gp_d) + safe_div(float(val(drow, "TD", 0.0)), gp_d)
 
-    # Kicking (already per game)
-    proj_fgm = kick_pg["fgm_pg"]
-    proj_fga = kick_pg["fga_pg"]
-    proj_xpm = kick_pg["xpm_pg"]
-    proj_xpa = kick_pg["xpa_pg"]
-    proj_fg_pct = kick_pg["fg_pct"]
+    # Kicking (per-game)
+    fgm_pg = fga_pg = xpm_pg = xpa_pg = 0.0
+    fg_pct = None
+    if krow is not None:
+        gp_k = float(val(krow, "GP", 0.0))
+        fgm_pg = safe_div(float(val(krow, "FGM", 0.0)), gp_k)
+        fga_pg = safe_div(float(val(krow, "FGA", 0.0)), gp_k)
+        xpm_pg = safe_div(float(val(krow, "XPM", 0.0)), gp_k)
+        xpa_pg = safe_div(float(val(krow, "XPA", 0.0)), gp_k)
+        fp = val(krow, "FG_PCT", None)
+        try:
+            fg_pct = float(fp) if fp is not None and not pd.isna(fp) else None
+        except Exception:
+            fg_pct = None
 
-    # Kickoffs/Punts point-in-time marks
-    proj_tb_pct = tb_pct
-    proj_net_avg = net_avg
-    proj_punt_avg = p_avg
-    proj_kick_avg = k_avg
+    # Kickoffs/Punts (single-game descriptors)
+    tb_pct = kickpunts.loc[kickpunts["PLAYER"] == player, "TB %"].iloc[0] if (not kickpunts.empty and "PLAYER" in kickpunts.columns and "TB %" in kickpunts.columns and not kickpunts[kickpunts["PLAYER"] == player].empty) else ""
+    net_avg = kickpunts.loc[kickpunts["PLAYER"] == player, "NET AVG"].iloc[0] if (not kickpunts.empty and "NET AVG" in kickpunts.columns and not kickpunts[kickpunts["PLAYER"] == player].empty) else ""
+    p_avg = kickpunts.loc[kickpunts["PLAYER"] == player, "P-AVG"].iloc[0] if (not kickpunts.empty and "P-AVG" in kickpunts.columns and not kickpunts[kickpunts["PLAYER"] == player].empty) else ""
+    k_avg = kickpunts.loc[kickpunts["PLAYER"] == player, "K-AVG"].iloc[0] if (not kickpunts.empty and "K-AVG" in kickpunts.columns and not kickpunts[kickpunts["PLAYER"] == player].empty) else ""
 
-    # ---------- Anytime TD model ----------
-    # Baseline non-pass TD per-game from components the player actually has
-    baseline_components = []
-    if rrow is not None:
-        baseline_components.append(proj_rush_td)
-    if recrow is not None:
-        baseline_components.append(proj_rec_td)
-    if retrow is not None:
-        baseline_components.append(proj_kr_td + proj_pr_td)
-    if drow is not None:
-        baseline_components.append(def_pg["def_td_pg"])
+    # ---------- Environment & opponent adjustments ----------
+    pf = env_pass_factor(dome, temp_f, wind_mph, cor) * opponent_pass_factor(op_row)
+    rf = env_rush_factor(dome, temp_f, wind_mph, cor) * opponent_rush_factor(op_row)
 
-    baseline_raw = sum([c for c in baseline_components if pd.notna(c)])
-    # Shrink toward league mean ONLY if baseline_raw > 0 (do NOT lift true zeros)
-    gp_for_shrink = 4.0  # small sample prior
+    proj_pass_yds = py_pg * pf
+    proj_pass_td  = ptd_pg * pf
+    proj_int      = pint_pg  # can later blend env if desired
+
+    proj_rush_yds = ry_pg * rf
+    proj_rush_td  = rtd_pg * rf
+
+    proj_rec_yards = recy_pg * pf
+    proj_rec_td    = rectd_pg * pf
+    proj_targets   = tgt_pg
+    proj_rec       = rec_pg
+    proj_yac       = yac_pg
+
+    proj_kr_yds = kr_yds_pg
+    proj_kr_td  = kret_td_pg
+    proj_pr_yds = pr_yds_pg
+    proj_pr_td  = pret_td_pg
+
+    # ---------- Anytime TD λ (non-passing only) ----------
+    baseline_raw = 0.0
+    baseline_raw += max(0.0, proj_rush_td)
+    baseline_raw += max(0.0, proj_rec_td)
+    baseline_raw += max(0.0, proj_kr_td + proj_pr_td)
+    baseline_raw += max(0.0, def_td_pg)
+
+    # DO NOT lift true zeros
     if baseline_raw > 0:
-        baseline_shrunk = ((gp_for_shrink * baseline_raw) + (4.0 * LEAGUE_NONPASS_TD_PG)) / (gp_for_shrink + 4.0)
+        prior_weight = 4.0
+        baseline_shrunk = ((prior_weight * baseline_raw) + (4.0 * LEAGUE_NONPASS_TD_PG)) / (prior_weight + 4.0)
     else:
         baseline_shrunk = 0.0
 
-    # Very light home edge (skill players) – only if not a kicker/defender only
-    is_skillish = (rrow is not None) or (recrow is not None) or (retrow is not None)
-    home_mult = 1.05 if (is_skillish and is_home == 1) else 1.0
+    # mild home boost for skill roles
+    is_skill = (rrow is not None) or (recrow is not None) or (retrow is not None)
+    home_mult = 1.05 if (is_skill and is_home == 1) else 1.0
 
-    # Final lambda for anytime TD (non-passing only)
     expected_anytime_td = max(0.0, baseline_shrunk) * home_mult
     anytime_td_prob = poisson_anytime_prob(expected_anytime_td)
 
-    # ---------- Assemble row ----------
-    rec = {
+    # ---------- Build record (always numeric; no empty strings) ----------
+    def r1(x):  return round(float(x), 1)
+    def r2(x):  return round(float(x), 2)
+    def r3(x):  return round(float(x), 3)
+    def rN(x):  return float(x)
+
+    rec_out = {
         "player": player,
         "team": team,
         "opponent": opponent,
-        "is_home": is_home,
-        "temp_f": round(temp_f, 1),
-        "wind_mph": round(wind_mph, 1),
+        "is_home": int(is_home),
+        "temp_f": r1(temp_f),
+        "wind_mph": r1(wind_mph),
         "dome": "yes" if dome else "no",
 
-        "proj_pass_yds": round(proj_pass_yds, 1) if proj_pass_yds else "",
-        "proj_pass_td": round(proj_pass_td, 3) if proj_pass_td else "",
-        "proj_int": round(proj_int, 3) if proj_int else "",
+        "proj_pass_yds": r1(proj_pass_yds),
+        "proj_pass_td": r3(proj_pass_td),
+        "proj_int": r3(proj_int),
 
-        "proj_rush_yds": round(proj_rush_yds, 1) if proj_rush_yds else "",
-        "proj_rush_td": round(proj_rush_td, 3) if proj_rush_td else "",
+        "proj_rush_yds": r1(proj_rush_yds),
+        "proj_rush_td": r3(proj_rush_td),
 
-        "proj_rec_yards": round(proj_rec_yards, 1) if proj_rec_yards else "",
-        "proj_rec_td": round(proj_rec_td, 3) if proj_rec_td else "",
-        "proj_targets": round(proj_targets, 1) if proj_targets else "",
-        "proj_rec": round(proj_rec, 1) if proj_rec else "",
-        "proj_yac": round(proj_yac, 1) if proj_yac else "",
+        "proj_rec_yards": r1(proj_rec_yards),
+        "proj_rec_td": r3(proj_rec_td),
+        "proj_targets": r1(proj_targets),
+        "proj_rec": r1(proj_rec),
+        "proj_yac": r1(proj_yac),
 
-        "proj_kr_yds": round(proj_kr_yds, 1) if proj_kr_yds else "",
-        "proj_kr_td": round(proj_kr_td, 3) if proj_kr_td else "",
-        "proj_pr_yds": round(proj_pr_yds, 1) if proj_pr_yds else "",
-        "proj_pr_td": round(proj_pr_td, 3) if proj_pr_td else "",
+        "proj_kr_yds": r1(proj_kr_yds),
+        "proj_kr_td": r3(proj_kr_td),
+        "proj_pr_yds": r1(proj_pr_yds),
+        "proj_pr_td": r3(proj_pr_td),
 
-        "proj_fgm": round(proj_fgm, 2) if proj_fgm else "",
-        "proj_fga": round(proj_fga, 2) if proj_fga else "",
-        "proj_xpm": round(proj_xpm, 2) if proj_xpm else "",
-        "proj_xpa": round(proj_xpa, 2) if proj_xpa else "",
-        "proj_fg_pct": round(proj_fg_pct, 1) if (proj_fg_pct is not None and proj_fg_pct != "") else "",
+        "proj_fgm": r2(fgm_pg),
+        "proj_fga": r2(fga_pg),
+        "proj_xpm": r2(xpm_pg),
+        "proj_xpa": r2(xpa_pg),
+        "proj_fg_pct": (round(fg_pct, 1) if fg_pct is not None else 0.0),
 
-        "proj_tackles": round(proj_tackles, 2) if proj_tackles else "",
-        "proj_sacks": round(proj_sacks, 2) if proj_sacks else "",
-        "proj_def_int": round(proj_def_int, 2) if proj_def_int else "",
+        "proj_tackles": r2(tackles_pg),
+        "proj_sacks": r2(sacks_pg),
+        "proj_def_int": r2(def_int_pg),
 
-        "proj_tb_pct": proj_tb_pct if (proj_tb_pct is not None and proj_tb_pct != "") else "",
-        "proj_net_avg": proj_net_avg if (proj_net_avg is not None and proj_net_avg != "") else "",
-        "proj_punt_avg": proj_punt_avg if (proj_punt_avg is not None and proj_punt_avg != "") else "",
-        "proj_kick_avg": proj_kick_avg if (proj_kick_avg is not None and proj_kick_avg != "") else "",
+        "proj_tb_pct": rN(tb_pct) if tb_pct != "" else 0.0,
+        "proj_net_avg": rN(net_avg) if net_avg != "" else 0.0,
+        "proj_punt_avg": rN(p_avg) if p_avg != "" else 0.0,
+        "proj_kick_avg": rN(k_avg) if k_avg != "" else 0.0,
 
         "expected_anytime_td": round(expected_anytime_td, 4),
         "anytime_td_prob": round(anytime_td_prob, 4),
     }
 
-    records.append(rec)
+    records.append(rec_out)
 
-# ---------- Output ----------
+# ---------- Save ----------
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 cols = [
     "player","team","opponent","is_home","temp_f","wind_mph","dome",
@@ -548,6 +427,5 @@ cols = [
     "proj_tb_pct","proj_net_avg","proj_punt_avg","proj_kick_avg",
     "expected_anytime_td","anytime_td_prob",
 ]
-
 pd.DataFrame.from_records(records, columns=cols).to_csv(OUT_CSV, index=False)
 print(f"Wrote {OUT_CSV}")
