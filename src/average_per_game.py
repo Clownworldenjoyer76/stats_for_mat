@@ -3,123 +3,97 @@ import os
 import re
 import glob
 import pandas as pd
+import numpy as np
 
 RAW_DIR = "data/raw/stats"
 OUT_DIR = "data/processed"
 os.makedirs(OUT_DIR, exist_ok=True)
 
-# Columns that should NEVER be divided by GP (identifiers / meta)
+# Columns that should never be divided
 ID_COLS = {
     "PLAYER","TEAM","OPPONENT","POS","POSITION","IS_HOME","HOME","AWAY",
     "DOME","STADIUM","WEEK","SEASON","YEAR","DATE","TEMP_F","WIND_MPH"
 }
 
-# Regex rules: columns to SKIP dividing by GP (already rates/averages/percentages)
-SKIP_DIVIDE_PATTERNS = [
-    r"/G$",                 # ends with per-game already
-    r"AVG$",                # averages (RECAVG, RAVG, PAVG, etc.)
-    r"AVERAGE$",            # any explicit AVERAGE
-    r"PCT$",                # FG_PCT, XP_PCT, CMP_PCT, etc.
-    r"%$",                  # columns literally ending with %
-    r"RATE$",               # passer rating etc.
-    r"QB\s*RAT(ING)?$",     # QB rating variants
-    r"Y/R$|Y/T$|Y/A$|Y/ATT$",  # yards per X
-    r"ATT/G$|YDS/G$|TD/G$", # common per-game composites
-]
+# Heuristics to detect columns that are already per-game or averages
+AVG_LIKE_PAT = re.compile(
+    r"(?:/G|_PER_GAME|AVG$|AVERAGE$|RATE$|RATING$|Y/ATT$|Y/A$|Y/R$|Y/T$|"
+    r"ATT/G$|YDS/G$|TD/G$|NET_AVG$|PUNT_AVG$|KICK_AVG$|RECAVG$|RAVG$|PAVG$)",
+    re.IGNORECASE
+)
 
-# Columns that are clearly PERCENT/PROPORTION and need 0-1 → 0-100 scaling
-PERCENT_HINT_PATTERNS = [
-    r"%$", r"PCT$", r"TB_%$", r"IN20_%$", r"P-TB_%$", r"TB_PCT$", r"XP_PCT$", r"FG_PCT$"
-]
+# Percent-like columns (leave as-is; do NOT divide)
+PCT_LIKE_PAT = re.compile(r"(?:%$|_PCT$|PCT$)", re.IGNORECASE)
 
-# Strings that should be treated as zeros when cleaning numerics
+# Treat these strings as zeros when converting to numeric
 ZERO_LIKE = {"", " ", "-", "—", "NA", "N/A", "na", "n/a"}
 
-# Helper: is this column name matching any of the given regex patterns?
-def col_matches(name: str, patterns) -> bool:
-    for pat in patterns:
-        if re.search(pat, name, flags=re.IGNORECASE):
-            return True
-    return False
+def is_avg_like(col: str) -> bool:
+    return bool(AVG_LIKE_PAT.search(col))
 
-# Helper: coerce a series to numeric safely, mapping zero-like to 0
-def to_numeric_clean(s: pd.Series) -> pd.Series:
-    if s.dtype.kind in "biufc":  # already numeric-ish
-        return pd.to_numeric(s, errors="coerce").fillna(0)
-    # map zero-like strings to '0'
-    s2 = s.astype(str).str.strip().replace({z: "0" for z in ZERO_LIKE})
-    return pd.to_numeric(s2, errors="coerce").fillna(0)
+def is_pct_like(col: str) -> bool:
+    return bool(PCT_LIKE_PAT.search(col))
 
-# Decide if a column is "percentage-like"
-def is_percent_col(name: str) -> bool:
-    return col_matches(name, PERCENT_HINT_PATTERNS)
+def to_numeric_clean(series: pd.Series) -> pd.Series:
+    """Coerce to numeric; map zero-like strings to 0 first."""
+    if pd.api.types.is_numeric_dtype(series):
+        return pd.to_numeric(series, errors="coerce").fillna(0)
+    s = series.astype(str).str.strip()
+    s = s.replace({z: "0" for z in ZERO_LIKE})
+    return pd.to_numeric(s, errors="coerce").fillna(0)
 
-# Decide if a column is already a rate/avg (skip dividing by GP)
-def is_skip_divide_col(name: str) -> bool:
-    if name.upper() in ID_COLS:
-        return True
-    return col_matches(name, SKIP_DIVIDE_PATTERNS)
-
-# Build output filename with _per_game
-def out_name_from(path: str) -> str:
+def out_name(path: str) -> str:
     base = os.path.basename(path)
     stem = os.path.splitext(base)[0]
     return os.path.join(OUT_DIR, f"{stem}_per_game.csv")
 
-def process_file(fp: str):
-    df = pd.read_csv(fp)
-
-    # Normalize column names: strip spaces
+def process_csv(path: str):
+    df = pd.read_csv(path)
     df.columns = [c.strip() for c in df.columns]
 
-    # Ensure GP column exists and is numeric
     if "GP" not in df.columns:
-        raise ValueError(f"{fp}: Missing required 'GP' column.")
-    df["GP"] = to_numeric_clean(df["GP"]).replace(0, pd.NA)
+        raise ValueError(f"{path}: Missing required 'GP' column.")
 
-    # Clean all numeric-like columns first
+    # Clean GP and guard against division by 0
+    df["GP"] = to_numeric_clean(df["GP"]).astype(float)
+    safe_gp = df["GP"].replace(0, np.nan)
+
+    # Work column-by-column
+    out = df.copy()
     for col in df.columns:
-        if col.upper() in ID_COLS:
+        col_up = col.upper()
+        if col_up in ID_COLS or col == "GP":
             continue
-        # Keep strings for clearly categorical columns only (PLAYER/TEAM handled above)
-        df[col] = to_numeric_clean(df[col])
 
-    # Divide by GP for appropriate columns
-    for col in df.columns:
-        if col in ("GP",) or col.upper() in ID_COLS:
+        # Try to make it numeric; if it isn't numeric after cleaning, leave as-is
+        cleaned = to_numeric_clean(df[col])
+        if not pd.api.types.is_numeric_dtype(cleaned):
+            out[col] = df[col]
             continue
-        if is_skip_divide_col(col):
-            # Do not divide per-game / average / percent columns again
+
+        # Skip dividing for averages/rates and percentages
+        if is_avg_like(col) or is_pct_like(col):
+            out[col] = cleaned.fillna(0)
             continue
-        # divide totals by GP (row-wise), preserving 0 if GP is NA/0
-        df[col] = (df[col] / df["GP"]).fillna(0)
 
-    # Percent scaling fix: if values look like proportions (<=1), scale to percent
-    for col in df.columns:
-        if is_percent_col(col):
-            ser = df[col]
-            # If many values are in [0,1], interpret as proportions → scale by 100
-            # Use a heuristic: at least half of non-zero values <= 1
-            nonzero = ser[ser > 0]
-            if len(nonzero) > 0 and (nonzero.le(1).sum() / len(nonzero)) >= 0.5:
-                df[col] = ser * 100
+        # Divide totals by GP (per-game); rows with GP==0 become 0
+        out[col] = (cleaned / safe_gp).fillna(0)
 
-    # Replace any remaining NaNs with 0 for numeric columns
-    for col in df.columns:
-        if pd.api.types.is_numeric_dtype(df[col]):
-            df[col] = df[col].fillna(0)
+    # Ensure numeric NaNs are 0
+    for col in out.columns:
+        if pd.api.types.is_numeric_dtype(out[col]):
+            out[col] = out[col].fillna(0)
 
-    # Save
-    out_fp = out_name_from(fp)
-    df.to_csv(out_fp, index=False)
-    print(f"✓ Wrote {out_fp}")
+    out_path = out_name(path)
+    out.to_csv(out_path, index=False)
+    print(f"✓ Wrote {out_path}")
 
 def main():
     files = sorted(glob.glob(os.path.join(RAW_DIR, "*.csv")))
     if not files:
         raise SystemExit(f"No CSV files found in {RAW_DIR}")
     for fp in files:
-        process_file(fp)
+        process_csv(fp)
 
 if __name__ == "__main__":
     main()
