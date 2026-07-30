@@ -1,0 +1,14 @@
+ONE-TIME / WHEN HISTORICAL DATA CHANGES
+1. python build_data_registry.py --data-dir baseball_projector --out model/raw_data_registry.csv
+2. python build_full_features.py --data-dir baseball_projector --out-dir model
+3. python train_all_models.py --features model/full_features.csv --out-dir model --profile quick --max-features 250
+4. python measure_feature_impact.py --features model/full_features.csv --lineage model/feature_lineage.csv --out-dir model --models winner --resume
+
+DAILY
+1. Existing intake updates current season files and writes model/upcoming_games.csv using upcoming_games_template.csv.
+2. python build_full_features.py --data-dir baseball_projector --out-dir model --mode live --upcoming-csv model/upcoming_games.csv
+3. python train_all_models.py --predict-only --features model/live_features.csv --model model/winning_model.joblib --prediction-output docs/win/baseball/00_intake/predictions/YYYY-MM-DD_MLB.csv
+
+GITHUB
+Set repository variable MLB_INTAKE_COMMAND to the existing command that updates current data and writes model/upcoming_games.csv.
+Run the workflow manually once with retrain=true. Scheduled runs then create and commit the daily prediction CSV.
