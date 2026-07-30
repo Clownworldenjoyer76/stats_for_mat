@@ -19,7 +19,7 @@ env:
   REQUIREMENTS_FILE: docs/win/baseball/mlb/requirements-mlb-model.txt
 
 jobs:
-  build-features:
+  build-features-and-train-models:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -69,11 +69,29 @@ jobs:
             --data-dir "$DATA_DIR" \
             --out-dir "$MODEL_DIR"
 
-      - name: Verify output files
+      - name: Verify feature outputs
         run: |
           test -s "$MODEL_DIR/full_features.csv"
           test -s "$MODEL_DIR/feature_lineage.csv"
           test -s "$MODEL_DIR/feature_manifest.json"
+
+      - name: Train all models
+        run: |
+          python "$SCRIPT_DIR/train_all_models.py" \
+            --features "$MODEL_DIR/full_features.csv" \
+            --out-dir "$MODEL_DIR" \
+            --max-features 0
+
+      - name: Verify model outputs
+        run: |
+          test -s "$MODEL_DIR/winning_model.joblib"
+          test -s "$MODEL_DIR/model_manifest.json"
+          test -s "$MODEL_DIR/model_fold_metrics.csv"
+          test -s "$MODEL_DIR/model_cv_predictions.csv"
+          test -s "$MODEL_DIR/model_skipped.csv"
+          test -s "$MODEL_DIR/model_leaderboard.csv"
+          test -s "$MODEL_DIR/feature_screening_scores.csv"
+          test -s "$MODEL_DIR/feature_eligibility.csv"
 
       - name: Upload full feature matrix
         uses: actions/upload-artifact@v4
@@ -84,19 +102,34 @@ jobs:
           retention-days: 30
           compression-level: 9
 
-      - name: Commit repository-safe feature files
+      - name: Commit feature and model outputs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add \
             "$MODEL_DIR/feature_lineage.csv" \
-            "$MODEL_DIR/feature_manifest.json"
+            "$MODEL_DIR/feature_manifest.json" \
+            "$MODEL_DIR/winning_model.joblib" \
+            "$MODEL_DIR/model_manifest.json" \
+            "$MODEL_DIR/model_fold_metrics.csv" \
+            "$MODEL_DIR/model_cv_predictions.csv" \
+            "$MODEL_DIR/model_skipped.csv" \
+            "$MODEL_DIR/model_leaderboard.csv" \
+            "$MODEL_DIR/feature_screening_scores.csv" \
+            "$MODEL_DIR/feature_eligibility.csv"
+
+          find "$MODEL_DIR" \
+            -maxdepth 1 \
+            -type f \
+            -name "model_*.joblib" \
+            -print0 |
+            xargs -0 -r git add --
 
           if git diff --cached --quiet; then
-            echo "No changed repository-safe feature files to commit."
+            echo "No changed feature or model files to commit."
           else
-            git commit -m "Build MLB historical feature metadata"
+            git commit -m "Build MLB features and train models"
             git pull --rebase
             git push
           fi
