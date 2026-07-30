@@ -27,8 +27,8 @@ env:
   HF_REPO: Clownworldenjoyer76/baseball_projector
   HF_DOWNLOAD_DIR: docs/win/baseball/mlb
   DATA_DIR: docs/win/baseball/mlb/baseball_projector
-  MODEL_DIR: model
-  UPCOMING_CSV: model/upcoming_games.csv
+  MODEL_DIR: docs/win/baseball/mlb/model
+  UPCOMING_CSV: docs/win/baseball/mlb/model/upcoming_games.csv
   PREDICTION_DIR: docs/win/baseball/00_intake/predictions
 
 jobs:
@@ -153,11 +153,11 @@ jobs:
         with:
           name: mlb-model-diagnostics-${{ github.run_id }}
           path: |
-            model/model_*.csv
-            model/feature_*.csv
-            model/raw_data_registry.csv
-            model/model_manifest.json
-            model/model_skipped.csv
+            docs/win/baseball/mlb/model/model_*.csv
+            docs/win/baseball/mlb/model/feature_*.csv
+            docs/win/baseball/mlb/model/raw_data_registry.csv
+            docs/win/baseball/mlb/model/model_manifest.json
+            docs/win/baseball/mlb/model/model_skipped.csv
           if-no-files-found: warn
           retention-days: 30
 
