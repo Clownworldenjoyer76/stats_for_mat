@@ -1,14 +1,8 @@
-name: MLB model training and prediction
+name: MLB model training
 
 on:
   workflow_dispatch:
     inputs:
-      retrain:
-        description: Rebuild historical features and retrain every model
-        required: true
-        type: boolean
-        default: false
-
       measure_impact:
         description: Recompute feature_impact.csv after training
         required: true
@@ -28,8 +22,6 @@ env:
   HF_DOWNLOAD_DIR: docs/win/baseball/mlb
   DATA_DIR: docs/win/baseball/mlb/baseball_projector
   MODEL_DIR: docs/win/baseball/mlb/model
-  UPCOMING_CSV: docs/win/baseball/mlb/model/upcoming_games.csv
-  PREDICTION_DIR: docs/win/baseball/00_intake/predictions
 
 jobs:
   model:
@@ -73,35 +65,19 @@ jobs:
             exit 1
           fi
 
-      - name: Update current MLB data and upcoming-game input
-        env:
-          MLB_INTAKE_COMMAND: ${{ vars.MLB_INTAKE_COMMAND }}
-        run: |
-          if [ -n "$MLB_INTAKE_COMMAND" ]; then
-            bash -lc "$MLB_INTAKE_COMMAND"
-          fi
-
-          if [ ! -f "$UPCOMING_CSV" ]; then
-            echo "::error::$UPCOMING_CSV was not created. Set the repository variable MLB_INTAKE_COMMAND to the existing intake command that updates current data and writes this file."
-            exit 1
-          fi
-
       - name: Build raw-data registry
-        if: ${{ inputs.retrain }}
         run: |
           python "$SCRIPT_DIR/build_data_registry.py" \
             --data-dir "$DATA_DIR" \
             --out "$MODEL_DIR/raw_data_registry.csv"
 
       - name: Build historical features
-        if: ${{ inputs.retrain }}
         run: |
           python "$SCRIPT_DIR/build_full_features.py" \
             --data-dir "$DATA_DIR" \
             --out-dir "$MODEL_DIR"
 
       - name: Train and compare all models
-        if: ${{ inputs.retrain }}
         run: |
           python "$SCRIPT_DIR/train_all_models.py" \
             --features "$MODEL_DIR/full_features.csv" \
@@ -110,7 +86,7 @@ jobs:
             --max-features 250
 
       - name: Measure feature impact
-        if: ${{ inputs.retrain && inputs.measure_impact }}
+        if: ${{ inputs.measure_impact }}
         run: |
           python "$SCRIPT_DIR/measure_feature_impact.py" \
             --features "$MODEL_DIR/full_features.csv" \
@@ -122,33 +98,11 @@ jobs:
       - name: Verify trained model exists
         run: |
           if [ ! -f "$MODEL_DIR/winning_model.joblib" ]; then
-            echo "::error::Run this workflow manually once with retrain=true."
+            echo "::error::Training did not create $MODEL_DIR/winning_model.joblib."
             exit 1
           fi
 
-      - name: Build upcoming-game features
-        run: |
-          python "$SCRIPT_DIR/build_full_features.py" \
-            --data-dir "$DATA_DIR" \
-            --out-dir "$MODEL_DIR" \
-            --mode live \
-            --upcoming-csv "$UPCOMING_CSV"
-
-      - name: Predict upcoming games
-        run: |
-          GAME_DATE=$(TZ=America/New_York date +%F)
-          PREDICTION_FILE="$PREDICTION_DIR/${GAME_DATE}_MLB.csv"
-
-          python "$SCRIPT_DIR/train_all_models.py" \
-            --predict-only \
-            --features "$MODEL_DIR/live_features.csv" \
-            --model "$MODEL_DIR/winning_model.joblib" \
-            --prediction-output "$PREDICTION_FILE"
-
-          echo "PREDICTION_FILE=$PREDICTION_FILE" >> "$GITHUB_ENV"
-
       - name: Upload training diagnostics
-        if: ${{ inputs.retrain }}
         uses: actions/upload-artifact@v4
         with:
           name: mlb-model-diagnostics-${{ github.run_id }}
@@ -161,29 +115,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Commit model and prediction output
+      - name: Commit trained model output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "$PREDICTION_FILE"
+          git add \
+            "$MODEL_DIR/winning_model.joblib" \
+            "$MODEL_DIR/model_manifest.json" \
+            "$MODEL_DIR/model_leaderboard.csv" \
+            "$MODEL_DIR/feature_lineage.csv" \
+            "$MODEL_DIR/raw_data_registry.csv"
 
-          if [ "${{ inputs.retrain }}" = "true" ]; then
-            git add \
-              "$MODEL_DIR/winning_model.joblib" \
-              "$MODEL_DIR/model_manifest.json" \
-              "$MODEL_DIR/model_leaderboard.csv" \
-              "$MODEL_DIR/feature_lineage.csv"
-
-            if [ -f "$MODEL_DIR/feature_impact.csv" ]; then
-              git add "$MODEL_DIR/feature_impact.csv"
-            fi
+          if [ -f "$MODEL_DIR/feature_impact.csv" ]; then
+            git add "$MODEL_DIR/feature_impact.csv"
           fi
 
           if git diff --cached --quiet; then
-            echo "No changed output to commit."
+            echo "No changed training output to commit."
           else
-            git commit -m "Update MLB model output ${PREDICTION_FILE##*/}"
+            git commit -m "Update MLB trained model"
             git pull --rebase
             git push
           fi
