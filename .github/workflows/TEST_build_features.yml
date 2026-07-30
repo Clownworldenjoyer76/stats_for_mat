@@ -73,24 +73,30 @@ jobs:
         run: |
           test -s "$MODEL_DIR/full_features.csv"
           test -s "$MODEL_DIR/feature_lineage.csv"
+          test -s "$MODEL_DIR/feature_manifest.json"
 
-      - name: Commit feature files
+      - name: Upload full feature matrix
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlb-full-features-${{ github.run_id }}
+          path: docs/win/baseball/mlb/model/full_features.csv
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
+
+      - name: Commit repository-safe feature files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add \
-            "$MODEL_DIR/full_features.csv" \
-            "$MODEL_DIR/feature_lineage.csv"
-
-          if [ -f "$MODEL_DIR/feature_manifest.json" ]; then
-            git add "$MODEL_DIR/feature_manifest.json"
-          fi
+            "$MODEL_DIR/feature_lineage.csv" \
+            "$MODEL_DIR/feature_manifest.json"
 
           if git diff --cached --quiet; then
-            echo "No changed feature files to commit."
+            echo "No changed repository-safe feature files to commit."
           else
-            git commit -m "Build MLB historical features"
+            git commit -m "Build MLB historical feature metadata"
             git pull --rebase
             git push
           fi
