@@ -426,7 +426,12 @@ def build_play_history(plays: pd.DataFrame, windows: Sequence[int], lineage: Lin
         keep_levels = counts[counts >= min_category_games].index[:30]
         for lv in keep_levels:
             safe = re.sub(r"[^A-Za-z0-9]+", "_", str(lv)).strip("_")[:32] or "blank"
-            col = f"cat_{c}_{safe}"
+            base_col = f"cat_{c}_{safe}"
+            col = base_col
+            suffix = 2
+            while col in cat_features or col in value_cols:
+                col = f"{base_col}_{suffix}"
+                suffix += 1
             cat_features[col] = values_as_text.eq(str(lv)).astype(float)
             value_cols.append(col)
             lineage.add(f"plays_off_{col}_rolling", "{season}plays.csv", c,
