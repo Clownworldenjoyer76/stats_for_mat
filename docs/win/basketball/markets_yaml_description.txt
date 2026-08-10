@@ -1,0 +1,67 @@
+# docs/win/basketball/config/markets.yaml
+#
+# Per-league × per-market × per-side filter configuration.
+# Defaults are intentionally wide-open so all qualifying bets pass through.
+# Tighten bands as the bucketed analysis tells you which slices profit.
+#
+# Filter structure (each side):
+#   odds_bands           : list of [american_min, american_max] inclusive
+#   line_bands           : list of [line_min, line_max]  (spread/total only)
+#   ev_bands             : list of [ev_min, ev_max]      (decimal, e.g. 0.02 = 2%)
+#   kelly_bands          : list of [kelly_min, kelly_max] (decimal fraction)
+#   model_prob_bands     : list of [prob_min, prob_max]   (decimal probability)
+#   edge_vs_market_bands : list of [pp_min, pp_max]       (percentage points)
+#
+# Date filters per side (empty/missing = no restriction):
+#   months                 : list of ints 1-12 to BET IN
+#   exclude_days_of_week   : list of ints 0-6 (Mon=0, Sun=6) to SKIP
+#
+# Per-market:
+#   pick_preference.metric    : one of [ev, kelly, model_prob, edge_vs_market]
+#   pick_preference.direction : one of [max, min]
+#   selection_mode            : one of [pick_one, all_qualifying]
+#                               pick_one  -> one side per game using preference
+#                               all_qualifying -> emit every passing side
+#
+# Top-level:
+#   stake_sizing.kelly_fraction : multiplier on raw Kelly (e.g., 0.25 for ¼ Kelly)
+#   stake_sizing.kelly_cap      : maximum stake as fraction of bankroll
+#
+#   ml_vs_spread_tiebreak       : when both ML and spread qualify on the same
+#                                 game, keep only one. Tiebreak by:
+#                                   ev             -> higher EV wins
+#                                   kelly          -> higher Kelly wins
+#                                   edge_vs_market -> higher edge_vs_market (pp) wins
+#                                 The losing market is dropped entirely for that game.
+#                                 Total bets are not affected by this rule.
+
+# docs/win/basketball/config/markets.yaml
+#
+# NBA filters tuned from NBA_final.csv backtest (1,544 bets):
+#   Combined filter: 528 bets, 61.04% win rate, +17.63% ROI, +$93.08 P&L.
+#
+# NCAAM and WNBA remain wide-open until tuned with their own backtests.
+
+# docs/win/basketball/config/markets.yaml
+#
+# All three leagues tuned from per-league backtests.
+#
+# Combined backtest results (each filter pass):
+#   NBA   : 1,544 -> 528 bets,   wr=61.0%, ROI=+17.6%, P&L=+$93
+#   NCAAM : 5,321 -> 982 bets,   wr=59.2%, ROI=+17.4%, P&L=+$171
+#   WNBA  :   421 -> 250 bets,   wr=59.3%, ROI=+32.1%, P&L=+$80
+#
+# Per-slice details inline below each league.
+
+
+
+
+###################################################################################################
+# NBA — TUNED #####################################################################################
+###################################################################################################
+#   ML home    (EV 1.84-3.99%)                            n=49   wr=59.2%   roi=+21.1%
+#   ML away    (Kelly <2.5% AND model_prob >=30%)         n=32   wr=62.5%   roi=+28.7%
+#   Spread home (|line| 6-9)                              n=13   wr=61.5%   roi=+17.2%   [small]
+#   Spread away (EV >=3% AND Kelly >=2.5% AND |line|<=9)  n=142  wr=64.3%   roi=+22.4%
+#   Total under (Kelly <20% AND mp <60% AND line outside 225-230)  n=292 wr=59.6% roi=+13.5%
+#   Total over: disabled
