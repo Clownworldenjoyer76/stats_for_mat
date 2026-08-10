@@ -1,0 +1,54 @@
+name: Odds Basketball NBA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  nba-odds:
+    runs-on: ubuntu-latest
+
+    env:
+      API_ODDS: ${{ secrets.API_ODDS }}
+      TZ: America/New_York
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Create NBA odds output folders
+        run: |
+          mkdir -p docs/win/basketball/odds/nba
+          mkdir -p docs/win/basketball/errors/00_intake
+
+      - name: Run NBA odds pull
+        run: |
+          python docs/win/basketball/scripts/00_parsing/nba_odds.py
+
+      - name: Show NBA odds outputs
+        run: |
+          echo "=== NBA odds JSON outputs ==="
+          find docs/win/basketball/odds/nba -maxdepth 1 -type f -name "*.json" -print
+
+      - name: Commit NBA odds outputs
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add docs/win/basketball/odds/nba/
+          git add docs/win/basketball/errors/00_intake/nba_odds_api.txt
+
+          git diff --cached --quiet && echo "No NBA odds output changes to commit." || git commit -m "Update NBA odds outputs"
+          git push
