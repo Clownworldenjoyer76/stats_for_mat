@@ -24,7 +24,7 @@ jobs:
 
       - name: Commit and push odds files
         run: |
-          git add docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/
+          git add docs/win/basketball/00_intake/sportsbook/
 
           if git diff --cached --quiet; then
             echo "No odds file changes to commit."
