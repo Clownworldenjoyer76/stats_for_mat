@@ -19,21 +19,21 @@ LEAGUES = {
         "label": "NBA",
         "espn_slug": "nba",
         "output_dir": Path(
-            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba"
+            "docs/win/basketball/00_intake/sportsbook/nba"
         ),
     },
     "wnba": {
         "label": "WNBA",
         "espn_slug": "wnba",
         "output_dir": Path(
-            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba"
+            "docs/win/basketball/00_intake/sportsbook/wnba"
         ),
     },
     "ncaam": {
         "label": "NCAAM",
         "espn_slug": "mens-college-basketball",
         "output_dir": Path(
-            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam"
+            "docs/win/basketball/00_intake/sportsbook/ncaam"
         ),
     },
 }
