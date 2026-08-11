@@ -1,45 +1,57 @@
-
-
-`/.github/workflows/basketball_odds.yml`
-
-[Download `basketball_odds.yml`](sandbox:/mnt/data/basketball_odds.yml)
+### `/.github/workflows/basketball_odds.yml`
 
 ### Workflow behavior
 
-* **Manual only** — uses only `workflow_dispatch`; no schedule or automatic trigger.
-* Lets you select:
-
-  * `all`
-  * `nba`
-  * `wnba`
-  * `ncaam`
-* Optional start date; blank means current date in `America/New_York`.
-* Lets you specify number of days to fetch.
-* Runs `docs/win/basketball/scripts/00_intake/basketball_odds.py`.
+* **Manual only** — uses `workflow_dispatch`; no schedule or automatic trigger.
+* Has **no manual inputs or required selections**.
+* Runs:
+  `docs/win/basketball/scripts/00_intake/basketball_odds.py`
+* The Python script determines the leagues and date window automatically.
 * Stages only:
   `docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/`
 * Commits changes as `github-actions[bot]`.
-* Pushes generated/updated odds CSVs directly back to `main`.
-* If nothing changed, it exits without making an empty commit.
+* Pushes generated/updated odds CSVs back to the repository.
+* If no cleaned odds files changed, it exits without creating an empty commit.
 
 ### `basketball_odds.py` summary
 
-The Python script is a single standardized odds intake script for **NBA, WNBA, and NCAAM**.
+The Python script is the standardized odds intake process for **NBA, WNBA, and NCAAM**.
 
 It:
 
-1. Uses ESPN's CDN scoreboard to discover games for the requested date(s).
-2. Gets each ESPN event/competition ID.
-3. Calls ESPN's Core odds endpoint for each game.
-4. Prefers **DraftKings** when ESPN supplies it; otherwise it uses the first available sportsbook provider.
-5. Uses ESPN's **current** spread, moneyline, total, American odds, and decimal odds.
-6. Uses the script execution time in UTC for `odds_last_update`.
-7. Converts ESPN game times into `America/New_York`.
-8. Skips games for which ESPN has not posted odds.
-9. Deduplicates games by league/date/game ID.
-10. Produces the exact established **23-column schema in the same order**.
+1. Processes **all three leagues on every run**:
 
-Outputs are:
+   * NBA
+   * WNBA
+   * NCAAM
+2. Uses the time the script is run as the beginning of the collection window.
+3. Pulls games scheduled from that moment through the **next 7 days**.
+4. Uses ESPN's CDN scoreboard to discover games and obtain ESPN event/competition IDs.
+5. Calls ESPN's Core odds endpoint for each eligible game.
+6. Prefers **DraftKings** when ESPN supplies DraftKings odds; otherwise it uses the first available sportsbook provider.
+7. Pulls ESPN's **current**:
+
+   * spread
+   * total
+   * moneyline
+   * American prices
+   * decimal prices
+8. Converts game dates/times to `America/New_York`.
+9. Uses the script-run UTC timestamp for `odds_last_update` when new odds values are received.
+10. Creates a row for a newly discovered game **even when odds have not been posted yet**. Odds fields remain blank until values become available.
+11. If the game already exists, updates that existing row with newly pulled odds.
+12. **Never replaces an existing nonblank value with a blank value.**
+13. If ESPN has only some markets available, updates the available fields while preserving existing values in fields ESPN currently returns blank.
+14. Skips completed games rather than updating them.
+15. **Never deletes an existing game row.**
+16. Preserves existing rows even when they are no longer returned in the current 7-day pull.
+17. Maintains **one row per game**.
+18. If duplicate rows with the same `game_id` already exist, consolidates them into one row, retaining the newest available odds while preserving older nonblank values where the newer row is blank.
+19. Uses ESPN numeric game IDs for newly created rows, such as:
+    `401857134`
+20. Produces the established **23-column schema in the same order**.
+
+### Output files
 
 ```text
 docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba/YYYY_MM_DD_NBA_odds.csv
@@ -49,8 +61,40 @@ docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba/YYYY_MM_DD_WNBA
 docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/YYYY_MM_DD_NCAAM_odds.csv
 ```
 
-It also writes its runtime/error log to:
+Each file is **updated in place** on subsequent runs rather than being rebuilt solely from the latest API response.
+
+### Output schema
+
+```text
+sport
+league
+game_date
+game_id
+odds_last_update
+game_time
+home_team
+away_team
+home_spread
+away_spread
+total
+home_dk_moneyline_american
+away_dk_moneyline_american
+home_dk_spread_american
+away_dk_spread_american
+dk_total_over_american
+dk_total_under_american
+home_dk_moneyline_decimal
+away_dk_moneyline_decimal
+home_dk_spread_decimal
+away_dk_spread_decimal
+dk_total_over_decimal
+dk_total_under_decimal
+```
+
+### Logging
+
+Runtime and error information is written to:
 
 `docs/win/basketball/errors/00_intake/basketball_odds.txt`
 
-The workflow deliberately **does not commit that log**; it commits only the cleaned odds outputs.
+The workflow **does not commit this log**. It commits only changes under the cleaned sportsbook output directories.
