@@ -12,26 +12,37 @@ from datetime import datetime, timezone
 # =========================
 
 def audit(log_path, stage, status, msg="", df=None):
-    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_path = Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(log_path, "a") as f:
+    with open(log_path, "a", encoding="utf-8") as f:
         f.write(f"\n[{ts}] [{stage}] {status}\n")
+
         if msg:
             f.write(f"  MSG: {msg}\n")
+
         if df is not None and isinstance(df, pd.DataFrame):
             f.write(f"  STATS: {len(df)} rows | {len(df.columns)} cols\n")
             f.write(f"  NULLS: {df.isnull().sum().sum()} total\n")
-            f.write(f"  SAMPLE:\n{df.head(3).to_string(index=False)}\n")
+            f.write(
+                f"  SAMPLE:\n"
+                f"{df.head(3).to_string(index=False)}\n"
+            )
+
         f.write("-" * 40 + "\n")
 
     if df is not None and isinstance(df, pd.DataFrame):
         summary_path = log_path.parent / "condensed_summary.txt"
 
         play_cols = [
-            c for c in
-            ['home_play', 'away_play', 'over_play', 'under_play']
+            c
+            for c in [
+                "home_play",
+                "away_play",
+                "over_play",
+                "under_play",
+            ]
             if c in df.columns
         ]
 
@@ -39,18 +50,25 @@ def audit(log_path, stage, status, msg="", df=None):
             signals = df[df[play_cols].any(axis=1)].copy()
 
             if not signals.empty:
-                with open(summary_path, "a") as f:
-                    f.write(f"\n--- BETTING SIGNALS: {ts} ---\n")
+                with open(
+                    summary_path,
+                    "a",
+                    encoding="utf-8",
+                ) as f:
+                    f.write(
+                        f"\n--- BETTING SIGNALS: {ts} ---\n"
+                    )
 
                     base_cols = [
-                        'game_date',
-                        'home_team',
-                        'away_team',
+                        "game_date",
+                        "home_team",
+                        "away_team",
                     ]
 
                     edge_cols = [
-                        c for c in df.columns
-                        if 'edge_pct' in c
+                        c
+                        for c in df.columns
+                        if "edge_pct" in c
                     ]
 
                     final_cols = [
@@ -60,9 +78,14 @@ def audit(log_path, stage, status, msg="", df=None):
                     ]
 
                     f.write(
-                        signals[final_cols].to_string(index=False)
+                        signals[
+                            final_cols
+                        ].to_string(index=False)
                     )
-                    f.write("\n" + "=" * 30 + "\n")
+
+                    f.write(
+                        "\n" + "=" * 30 + "\n"
+                    )
 
 
 # =========================
@@ -159,7 +182,7 @@ def load_map(map_file: Path):
         reader = csv.DictReader(f)
 
         for row in reader:
-            market = (
+            league = (
                 row.get("league", "")
                 .strip()
                 .lower()
@@ -176,9 +199,9 @@ def load_map(map_file: Path):
                 .strip()
             )
 
-            if market and alias and canonical:
+            if league and alias and canonical:
                 team_map[
-                    (market, alias)
+                    (league, alias)
                 ] = canonical
 
 
@@ -255,8 +278,8 @@ for csv_file in target_files:
         for row in reader:
             rows_processed += 1
 
-            market = (
-                row.get("market", "")
+            league = (
+                row.get("league", "")
                 .strip()
                 .lower()
             )
@@ -274,7 +297,7 @@ for csv_file in target_files:
                     continue
 
                 key = (
-                    market,
+                    league,
                     team.lower(),
                 )
 
@@ -288,7 +311,7 @@ for csv_file in target_files:
 
                 else:
                     unmapped.add(
-                        (market, team)
+                        (league, team)
                     )
 
             updated_rows.append(row)
@@ -338,21 +361,21 @@ if NO_MAP_FILE.exists():
 
         if (
             reader.fieldnames
-            and "market" in reader.fieldnames
+            and "league" in reader.fieldnames
             and "team" in reader.fieldnames
         ):
             for row in reader:
-                m = (
-                    row.get("market") or ""
+                league = (
+                    row.get("league") or ""
                 ).strip().lower()
 
-                t = (
+                team = (
                     row.get("team") or ""
                 ).strip()
 
-                if m and t:
+                if league and team:
                     existing.add(
-                        (m, t)
+                        (league, team)
                     )
 
 new_only = unmapped - existing
@@ -367,13 +390,13 @@ with open(
     writer = csv.writer(f)
 
     writer.writerow([
-        "market",
+        "league",
         "team",
     ])
 
-    for market, team in sorted(combined):
+    for league, team in sorted(combined):
         writer.writerow([
-            market,
+            league,
             team,
         ])
 
