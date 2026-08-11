@@ -1,183 +1,183 @@
-=== clean_basketball_inputs RUN 2026-08-11T22:53:54.537475 ===
+=== clean_basketball_inputs RUN 2026-08-11T23:18:00.784795 ===
 === LEAGUE LOG: NCAAM ===
-2026-08-11T22:53:54.538247 | INFO | Starting league cleanup
-2026-08-11T22:53:54.538267 | INFO | Odds cleanup active: blanks only the affected market; does not drop entire games
-2026-08-11T22:53:54.538286 | INFO | Missing market odds are treated as unavailable market, not bad game
-2026-08-11T22:53:54.538304 | INFO | Hold-based odds filtering removed
-2026-08-11T22:53:54.538322 | INFO | Spread outlier fix active: compare model home-away margin to -book_home_spread
-2026-08-11T22:53:54.538340 | INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained
-2026-08-11T22:53:54.551989 | LOADED | folder=docs/win/basketball/00_intake/predictions/ncaam files=9
-2026-08-11T22:53:54.604481 | LOADED | folder=docs/win/basketball/00_intake/sportsbook/ncaam files=127
-2026-08-11T22:53:54.646787 | OUTLIER SUMMARY | spread_outliers=0 total_outliers=0
-2026-08-11T22:53:54.649532 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_26_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
-2026-08-11T22:53:54.649571 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_27_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
-2026-08-11T22:53:54.649600 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_28_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
-2026-08-11T22:53:54.649638 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_29_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=2 skipped_already_flagged=0
-2026-08-11T22:53:54.649667 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_01_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=2 skipped_already_flagged=0
-2026-08-11T22:53:54.649701 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_02_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
-2026-08-11T22:53:54.649734 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_04_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=3 skipped_already_flagged=0
-2026-08-11T22:53:54.649760 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_05_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
-2026-08-11T22:53:54.649787 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_06_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
-2026-08-11T22:53:54.664339 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_26_NCAAM_predictions.csv | rows=4
-2026-08-11T22:53:54.664515 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_27_NCAAM_predictions.csv | rows=4
-2026-08-11T22:53:54.664684 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_28_NCAAM_predictions.csv | rows=1
-2026-08-11T22:53:54.664858 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_29_NCAAM_predictions.csv | rows=2
-2026-08-11T22:53:54.665046 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_01_NCAAM_predictions.csv | rows=2
-2026-08-11T22:53:54.665226 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_02_NCAAM_predictions.csv | rows=4
-2026-08-11T22:53:54.665403 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_04_NCAAM_predictions.csv | rows=3
-2026-08-11T22:53:54.665570 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_05_NCAAM_predictions.csv | rows=1
-2026-08-11T22:53:54.665737 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_06_NCAAM_predictions.csv | rows=1
-2026-08-11T22:53:54.727924 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_04_NCAAM_odds.csv | rows=18
-2026-08-11T22:53:54.728166 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_05_NCAAM_odds.csv | rows=9
-2026-08-11T22:53:54.728413 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_06_NCAAM_odds.csv | rows=17
-2026-08-11T22:53:54.728823 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_07_NCAAM_odds.csv | rows=41
-2026-08-11T22:53:54.729168 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_10_NCAAM_odds.csv | rows=26
-2026-08-11T22:53:54.729641 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_11_NCAAM_odds.csv | rows=54
-2026-08-11T22:53:54.730030 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_12_NCAAM_odds.csv | rows=36
-2026-08-11T22:53:54.730272 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_13_NCAAM_odds.csv | rows=14
-2026-08-11T22:53:54.730651 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_14_NCAAM_odds.csv | rows=38
-2026-08-11T22:53:54.731208 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_15_NCAAM_odds.csv | rows=68
-2026-08-11T22:53:54.731638 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_18_NCAAM_odds.csv | rows=47
-2026-08-11T22:53:54.732019 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_19_NCAAM_odds.csv | rows=34
-2026-08-11T22:53:54.732345 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_20_NCAAM_odds.csv | rows=29
-2026-08-11T22:53:54.732845 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_21_NCAAM_odds.csv | rows=59
-2026-08-11T22:53:54.733218 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_22_NCAAM_odds.csv | rows=33
-2026-08-11T22:53:54.733599 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_23_NCAAM_odds.csv | rows=38
-2026-08-11T22:53:54.734048 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_24_NCAAM_odds.csv | rows=48
-2026-08-11T22:53:54.734532 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_25_NCAAM_odds.csv | rows=57
-2026-08-11T22:53:54.735022 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_26_NCAAM_odds.csv | rows=56
-2026-08-11T22:53:54.735261 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_27_NCAAM_odds.csv | rows=18
-2026-08-11T22:53:54.735676 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_28_NCAAM_odds.csv | rows=45
-2026-08-11T22:53:54.736138 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_29_NCAAM_odds.csv | rows=49
-2026-08-11T22:53:54.736418 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_30_NCAAM_odds.csv | rows=26
-2026-08-11T22:53:54.736637 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_01_NCAAM_odds.csv | rows=10
-2026-08-11T22:53:54.737079 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_02_NCAAM_odds.csv | rows=42
-2026-08-11T22:53:54.737599 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_03_NCAAM_odds.csv | rows=64
-2026-08-11T22:53:54.737822 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_04_NCAAM_odds.csv | rows=8
-2026-08-11T22:53:54.738123 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_05_NCAAM_odds.csv | rows=16
-2026-08-11T22:53:54.738812 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_06_NCAAM_odds.csv | rows=95
-2026-08-11T22:53:54.739217 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_07_NCAAM_odds.csv | rows=38
-2026-08-11T22:53:54.739415 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_08_NCAAM_odds.csv | rows=4
-2026-08-11T22:53:54.739689 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_09_NCAAM_odds.csv | rows=19
-2026-08-11T22:53:54.740020 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_10_NCAAM_odds.csv | rows=26
-2026-08-11T22:53:54.740231 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_12_NCAAM_odds.csv | rows=7
-2026-08-11T22:53:54.740820 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_13_NCAAM_odds.csv | rows=79
-2026-08-11T22:53:54.741141 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_14_NCAAM_odds.csv | rows=24
-2026-08-11T22:53:54.741320 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_15_NCAAM_odds.csv | rows=7
-2026-08-11T22:53:54.741742 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_17_NCAAM_odds.csv | rows=43
-2026-08-11T22:53:54.742074 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_18_NCAAM_odds.csv | rows=26
-2026-08-11T22:53:54.742338 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_19_NCAAM_odds.csv | rows=16
-2026-08-11T22:53:54.742819 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_20_NCAAM_odds.csv | rows=57
-2026-08-11T22:53:54.743194 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_22_NCAAM_odds.csv | rows=31
-2026-08-11T22:53:54.743410 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_23_NCAAM_odds.csv | rows=9
-2026-08-11T22:53:54.743586 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_27_NCAAM_odds.csv | rows=1
-2026-08-11T22:53:54.743858 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_28_NCAAM_odds.csv | rows=19
-2026-08-11T22:53:54.744199 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_30_NCAAM_odds.csv | rows=29
-2026-08-11T22:53:54.744607 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_31_NCAAM_odds.csv | rows=44
-2026-08-11T22:53:54.745017 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_01_NCAAM_odds.csv | rows=38
-2026-08-11T22:53:54.745348 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_02_NCAAM_odds.csv | rows=29
-2026-08-11T22:53:54.746129 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_03_NCAAM_odds.csv | rows=108
-2026-08-11T22:53:54.746523 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_04_NCAAM_odds.csv | rows=40
-2026-08-11T22:53:54.746792 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_05_NCAAM_odds.csv | rows=17
-2026-08-11T22:53:54.747101 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_06_NCAAM_odds.csv | rows=23
-2026-08-11T22:53:54.747628 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_07_NCAAM_odds.csv | rows=48
-2026-08-11T22:53:54.748395 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_08_NCAAM_odds.csv | rows=57
-2026-08-11T22:53:54.748658 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_09_NCAAM_odds.csv | rows=14
-2026-08-11T22:53:54.749603 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_10_NCAAM_odds.csv | rows=136
-2026-08-11T22:53:54.749973 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_13_NCAAM_odds.csv | rows=30
-2026-08-11T22:53:54.750459 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_14_NCAAM_odds.csv | rows=56
-2026-08-11T22:53:54.750890 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_15_NCAAM_odds.csv | rows=48
-2026-08-11T22:53:54.751123 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_16_NCAAM_odds.csv | rows=7
-2026-08-11T22:53:54.751364 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_18_NCAAM_odds.csv | rows=12
-2026-08-11T22:53:54.751751 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_19_NCAAM_odds.csv | rows=39
-2026-08-11T22:53:54.752084 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_23_NCAAM_odds.csv | rows=25
-2026-08-11T22:53:54.752917 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_24_NCAAM_odds.csv | rows=124
-2026-08-11T22:53:54.753129 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_25_NCAAM_odds.csv | rows=5
-2026-08-11T22:53:54.753343 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_26_NCAAM_odds.csv | rows=8
-2026-08-11T22:53:54.753681 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_27_NCAAM_odds.csv | rows=30
-2026-08-11T22:53:54.754147 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_28_NCAAM_odds.csv | rows=51
-2026-08-11T22:53:54.754618 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_29_NCAAM_odds.csv | rows=54
-2026-08-11T22:53:54.754927 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_30_NCAAM_odds.csv | rows=22
-2026-08-11T22:53:54.755212 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_02_NCAAM_odds.csv | rows=16
-2026-08-11T22:53:54.755532 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_03_NCAAM_odds.csv | rows=28
-2026-08-11T22:53:54.756034 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_04_NCAAM_odds.csv | rows=57
-2026-08-11T22:53:54.756481 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_05_NCAAM_odds.csv | rows=51
-2026-08-11T22:53:54.756689 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_06_NCAAM_odds.csv | rows=8
-2026-08-11T22:53:54.757648 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_07_NCAAM_odds.csv | rows=143
-2026-08-11T22:53:54.757892 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_08_NCAAM_odds.csv | rows=10
-2026-08-11T22:53:54.758226 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_09_NCAAM_odds.csv | rows=25
-2026-08-11T22:53:54.758470 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_10_NCAAM_odds.csv | rows=13
-2026-08-11T22:53:54.758923 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_11_NCAAM_odds.csv | rows=51
-2026-08-11T22:53:54.759434 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_12_NCAAM_odds.csv | rows=57
-2026-08-11T22:53:54.759675 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_13_NCAAM_odds.csv | rows=14
-2026-08-11T22:53:54.760508 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_14_NCAAM_odds.csv | rows=120
-2026-08-11T22:53:54.760855 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_15_NCAAM_odds.csv | rows=32
-2026-08-11T22:53:54.761169 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_16_NCAAM_odds.csv | rows=22
-2026-08-11T22:53:54.761458 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_17_NCAAM_odds.csv | rows=22
-2026-08-11T22:53:54.761907 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_18_NCAAM_odds.csv | rows=51
-2026-08-11T22:53:54.762391 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_19_NCAAM_odds.csv | rows=52
-2026-08-11T22:53:54.762634 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_20_NCAAM_odds.csv | rows=14
-2026-08-11T22:53:54.763575 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_21_NCAAM_odds.csv | rows=139
-2026-08-11T22:53:54.763866 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_22_NCAAM_odds.csv | rows=21
-2026-08-11T22:53:54.764081 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_23_NCAAM_odds.csv | rows=6
-2026-08-11T22:53:54.764433 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_24_NCAAM_odds.csv | rows=35
-2026-08-11T22:53:54.764919 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_26_NCAAM_odds.csv | rows=55
-2026-08-11T22:53:54.765209 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_27_NCAAM_odds.csv | rows=18
-2026-08-11T22:53:54.765529 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_01_NCAAM_odds.csv | rows=23
-2026-08-11T22:53:54.765788 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_02_NCAAM_odds.csv | rows=15
-2026-08-11T22:53:54.766300 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_03_NCAAM_odds.csv | rows=52
-2026-08-11T22:53:54.766696 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_04_NCAAM_odds.csv | rows=41
-2026-08-11T22:53:54.767108 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_05_NCAAM_odds.csv | rows=40
-2026-08-11T22:53:54.767433 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_06_NCAAM_odds.csv | rows=28
-2026-08-11T22:53:54.768084 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_07_NCAAM_odds.csv | rows=87
-2026-08-11T22:53:54.768417 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_08_NCAAM_odds.csv | rows=30
-2026-08-11T22:53:54.768660 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_09_NCAAM_odds.csv | rows=13
-2026-08-11T22:53:54.768959 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_10_NCAAM_odds.csv | rows=20
-2026-08-11T22:53:54.769350 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_11_NCAAM_odds.csv | rows=38
-2026-08-11T22:53:54.769671 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_12_NCAAM_odds.csv | rows=27
-2026-08-11T22:53:54.770044 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_13_NCAAM_odds.csv | rows=33
-2026-08-11T22:53:54.770326 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_14_NCAAM_odds.csv | rows=21
-2026-08-11T22:53:54.770521 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_15_NCAAM_odds.csv | rows=5
-2026-08-11T22:53:54.770701 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_17_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.770880 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_18_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.771151 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_19_NCAAM_odds.csv | rows=16
-2026-08-11T22:53:54.771414 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_20_NCAAM_odds.csv | rows=16
-2026-08-11T22:53:54.771634 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_21_NCAAM_odds.csv | rows=10
-2026-08-11T22:53:54.771831 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_22_NCAAM_odds.csv | rows=7
-2026-08-11T22:53:54.772026 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_24_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.772207 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_25_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.772398 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_26_NCAAM_odds.csv | rows=4
-2026-08-11T22:53:54.772592 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_27_NCAAM_odds.csv | rows=4
-2026-08-11T22:53:54.772804 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_29_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.772991 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_01_NCAAM_odds.csv | rows=2
-2026-08-11T22:53:54.773206 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_02_NCAAM_odds.csv | rows=4
-2026-08-11T22:53:54.773383 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_04_NCAAM_odds.csv | rows=3
-2026-08-11T22:53:54.773572 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_05_NCAAM_odds.csv | rows=1
-2026-08-11T22:53:54.773744 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_06_NCAAM_odds.csv | rows=1
-2026-08-11T22:53:54.806457 | 
-2026-08-11T22:53:54.806473 | ============================================================
-2026-08-11T22:53:54.806489 | SUMMARY
-2026-08-11T22:53:54.806505 | ============================================================
-2026-08-11T22:53:54.806522 | prediction_files_loaded              : 9
-2026-08-11T22:53:54.806539 | sportsbook_files_loaded              : 127
-2026-08-11T22:53:54.806555 | bad_ml_market_rows_blanked           : 0
-2026-08-11T22:53:54.806571 | bad_total_market_rows_blanked        : 0
-2026-08-11T22:53:54.806588 | bad_spread_market_rows_blanked       : 0
-2026-08-11T22:53:54.806604 | bad_odds_market_rows_blanked_total   : 0
-2026-08-11T22:53:54.806620 | bad_total_line_rows_blanked          : 0
-2026-08-11T22:53:54.806636 | bad_spread_line_rows_blanked         : 0
-2026-08-11T22:53:54.806653 | bad_line_rows_blanked_total          : 0
-2026-08-11T22:53:54.806669 | spread_outlier_events_found          : 0
-2026-08-11T22:53:54.806685 | total_outlier_events_found           : 0
-2026-08-11T22:53:54.806701 | sportsbook_outlier_market_rows_blanked: 0
-2026-08-11T22:53:54.806723 | prediction_rows_removed              : 0
-2026-08-11T22:53:54.806740 | sportsbook_rows_removed              : 0
-2026-08-11T22:53:54.806758 | bias_files_with_adjusted_rows        : 9
-2026-08-11T22:53:54.806775 | bias_rows_adjusted                   : 22
-2026-08-11T22:53:54.806792 | bias_rows_skipped_already_flagged    : 0
-2026-08-11T22:53:54.806809 | prediction_files_written             : 9
-2026-08-11T22:53:54.806825 | prediction_rows_written              : 22
-2026-08-11T22:53:54.806841 | sportsbook_files_written             : 127
-2026-08-11T22:53:54.806858 | sportsbook_rows_written              : 4206
-2026-08-11T22:53:54.806874 | STATUS: SUCCESS
-2026-08-11T22:53:54.806890 | ============================================================
+2026-08-11T23:18:00.785373 | INFO | Starting league cleanup
+2026-08-11T23:18:00.785390 | INFO | Odds cleanup active: blanks only the affected market; does not drop entire games
+2026-08-11T23:18:00.785405 | INFO | Missing market odds are treated as unavailable market, not bad game
+2026-08-11T23:18:00.785421 | INFO | Hold-based odds filtering removed
+2026-08-11T23:18:00.785436 | INFO | Spread outlier fix active: compare model home-away margin to -book_home_spread
+2026-08-11T23:18:00.785450 | INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained
+2026-08-11T23:18:00.803187 | LOADED | folder=docs/win/basketball/00_intake/predictions/ncaam files=9
+2026-08-11T23:18:00.843329 | LOADED | folder=docs/win/basketball/00_intake/sportsbook/ncaam files=127
+2026-08-11T23:18:00.876502 | OUTLIER SUMMARY | spread_outliers=0 total_outliers=0
+2026-08-11T23:18:00.878502 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_26_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
+2026-08-11T23:18:00.878555 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_27_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
+2026-08-11T23:18:00.878581 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_28_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
+2026-08-11T23:18:00.878603 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_03_29_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=2 skipped_already_flagged=0
+2026-08-11T23:18:00.878623 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_01_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=2 skipped_already_flagged=0
+2026-08-11T23:18:00.878648 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_02_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=4 skipped_already_flagged=0
+2026-08-11T23:18:00.878672 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_04_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=3 skipped_already_flagged=0
+2026-08-11T23:18:00.878691 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_05_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
+2026-08-11T23:18:00.878710 | BIASED | docs/win/basketball/00_intake/predictions/ncaam/2026_04_06_NCAAM_predictions.csv | league=NCAAM margin_bias=0.6 total_bias=1.2 adjusted=1 skipped_already_flagged=0
+2026-08-11T23:18:00.888675 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_26_NCAAM_predictions.csv | rows=4
+2026-08-11T23:18:00.888803 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_27_NCAAM_predictions.csv | rows=4
+2026-08-11T23:18:00.888920 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_28_NCAAM_predictions.csv | rows=1
+2026-08-11T23:18:00.889027 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_03_29_NCAAM_predictions.csv | rows=2
+2026-08-11T23:18:00.889153 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_01_NCAAM_predictions.csv | rows=2
+2026-08-11T23:18:00.889277 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_02_NCAAM_predictions.csv | rows=4
+2026-08-11T23:18:00.889376 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_04_NCAAM_predictions.csv | rows=3
+2026-08-11T23:18:00.889460 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_05_NCAAM_predictions.csv | rows=1
+2026-08-11T23:18:00.889555 | WROTE | PREDICTIONS | docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_04_06_NCAAM_predictions.csv | rows=1
+2026-08-11T23:18:00.929119 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_04_NCAAM_odds.csv | rows=18
+2026-08-11T23:18:00.929241 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_05_NCAAM_odds.csv | rows=9
+2026-08-11T23:18:00.929398 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_06_NCAAM_odds.csv | rows=17
+2026-08-11T23:18:00.929674 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_07_NCAAM_odds.csv | rows=41
+2026-08-11T23:18:00.929879 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_10_NCAAM_odds.csv | rows=26
+2026-08-11T23:18:00.930187 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_11_NCAAM_odds.csv | rows=54
+2026-08-11T23:18:00.930425 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_12_NCAAM_odds.csv | rows=36
+2026-08-11T23:18:00.930586 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_13_NCAAM_odds.csv | rows=14
+2026-08-11T23:18:00.930836 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_14_NCAAM_odds.csv | rows=38
+2026-08-11T23:18:00.931199 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_15_NCAAM_odds.csv | rows=68
+2026-08-11T23:18:00.931477 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_18_NCAAM_odds.csv | rows=47
+2026-08-11T23:18:00.931732 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_19_NCAAM_odds.csv | rows=34
+2026-08-11T23:18:00.931941 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_20_NCAAM_odds.csv | rows=29
+2026-08-11T23:18:00.932268 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_21_NCAAM_odds.csv | rows=59
+2026-08-11T23:18:00.932497 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_22_NCAAM_odds.csv | rows=33
+2026-08-11T23:18:00.932765 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_23_NCAAM_odds.csv | rows=38
+2026-08-11T23:18:00.933049 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_24_NCAAM_odds.csv | rows=48
+2026-08-11T23:18:00.933373 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_25_NCAAM_odds.csv | rows=57
+2026-08-11T23:18:00.933706 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_26_NCAAM_odds.csv | rows=56
+2026-08-11T23:18:00.933872 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_27_NCAAM_odds.csv | rows=18
+2026-08-11T23:18:00.934142 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_28_NCAAM_odds.csv | rows=45
+2026-08-11T23:18:00.934434 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_29_NCAAM_odds.csv | rows=49
+2026-08-11T23:18:00.934641 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_11_30_NCAAM_odds.csv | rows=26
+2026-08-11T23:18:00.934767 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_01_NCAAM_odds.csv | rows=10
+2026-08-11T23:18:00.935027 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_02_NCAAM_odds.csv | rows=42
+2026-08-11T23:18:00.935377 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_03_NCAAM_odds.csv | rows=64
+2026-08-11T23:18:00.935499 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_04_NCAAM_odds.csv | rows=8
+2026-08-11T23:18:00.935678 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_05_NCAAM_odds.csv | rows=16
+2026-08-11T23:18:00.936156 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_06_NCAAM_odds.csv | rows=95
+2026-08-11T23:18:00.936401 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_07_NCAAM_odds.csv | rows=38
+2026-08-11T23:18:00.936504 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_08_NCAAM_odds.csv | rows=4
+2026-08-11T23:18:00.936686 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_09_NCAAM_odds.csv | rows=19
+2026-08-11T23:18:00.936880 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_10_NCAAM_odds.csv | rows=26
+2026-08-11T23:18:00.936992 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_12_NCAAM_odds.csv | rows=7
+2026-08-11T23:18:00.964079 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_13_NCAAM_odds.csv | rows=79
+2026-08-11T23:18:00.964374 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_14_NCAAM_odds.csv | rows=24
+2026-08-11T23:18:00.964556 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_15_NCAAM_odds.csv | rows=7
+2026-08-11T23:18:00.964870 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_17_NCAAM_odds.csv | rows=43
+2026-08-11T23:18:00.965076 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_18_NCAAM_odds.csv | rows=26
+2026-08-11T23:18:00.965266 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_19_NCAAM_odds.csv | rows=16
+2026-08-11T23:18:00.965648 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_20_NCAAM_odds.csv | rows=57
+2026-08-11T23:18:00.965874 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_22_NCAAM_odds.csv | rows=31
+2026-08-11T23:18:00.965998 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_23_NCAAM_odds.csv | rows=9
+2026-08-11T23:18:00.966086 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_27_NCAAM_odds.csv | rows=1
+2026-08-11T23:18:00.966305 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_28_NCAAM_odds.csv | rows=19
+2026-08-11T23:18:00.966518 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_30_NCAAM_odds.csv | rows=29
+2026-08-11T23:18:00.966840 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2025_12_31_NCAAM_odds.csv | rows=44
+2026-08-11T23:18:00.967129 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_01_NCAAM_odds.csv | rows=38
+2026-08-11T23:18:00.967374 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_02_NCAAM_odds.csv | rows=29
+2026-08-11T23:18:00.967967 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_03_NCAAM_odds.csv | rows=108
+2026-08-11T23:18:00.968232 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_04_NCAAM_odds.csv | rows=40
+2026-08-11T23:18:00.968428 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_05_NCAAM_odds.csv | rows=17
+2026-08-11T23:18:00.968666 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_06_NCAAM_odds.csv | rows=23
+2026-08-11T23:18:00.968992 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_07_NCAAM_odds.csv | rows=48
+2026-08-11T23:18:00.969327 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_08_NCAAM_odds.csv | rows=57
+2026-08-11T23:18:00.969471 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_09_NCAAM_odds.csv | rows=14
+2026-08-11T23:18:00.970211 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_10_NCAAM_odds.csv | rows=136
+2026-08-11T23:18:00.970428 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_13_NCAAM_odds.csv | rows=30
+2026-08-11T23:18:00.970799 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_14_NCAAM_odds.csv | rows=56
+2026-08-11T23:18:00.971127 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_15_NCAAM_odds.csv | rows=48
+2026-08-11T23:18:00.971271 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_16_NCAAM_odds.csv | rows=7
+2026-08-11T23:18:00.971443 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_18_NCAAM_odds.csv | rows=12
+2026-08-11T23:18:00.971727 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_19_NCAAM_odds.csv | rows=39
+2026-08-11T23:18:00.971927 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_23_NCAAM_odds.csv | rows=25
+2026-08-11T23:18:00.972577 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_24_NCAAM_odds.csv | rows=124
+2026-08-11T23:18:00.972725 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_25_NCAAM_odds.csv | rows=5
+2026-08-11T23:18:00.972880 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_26_NCAAM_odds.csv | rows=8
+2026-08-11T23:18:00.973095 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_27_NCAAM_odds.csv | rows=30
+2026-08-11T23:18:00.973427 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_28_NCAAM_odds.csv | rows=51
+2026-08-11T23:18:00.973811 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_29_NCAAM_odds.csv | rows=54
+2026-08-11T23:18:00.974025 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_01_30_NCAAM_odds.csv | rows=22
+2026-08-11T23:18:00.974218 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_02_NCAAM_odds.csv | rows=16
+2026-08-11T23:18:00.974453 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_03_NCAAM_odds.csv | rows=28
+2026-08-11T23:18:00.974825 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_04_NCAAM_odds.csv | rows=57
+2026-08-11T23:18:00.975212 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_05_NCAAM_odds.csv | rows=51
+2026-08-11T23:18:00.975351 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_06_NCAAM_odds.csv | rows=8
+2026-08-11T23:18:00.976111 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_07_NCAAM_odds.csv | rows=143
+2026-08-11T23:18:00.976283 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_08_NCAAM_odds.csv | rows=10
+2026-08-11T23:18:00.976518 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_09_NCAAM_odds.csv | rows=25
+2026-08-11T23:18:00.976714 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_10_NCAAM_odds.csv | rows=13
+2026-08-11T23:18:00.977056 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_11_NCAAM_odds.csv | rows=51
+2026-08-11T23:18:00.977421 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_12_NCAAM_odds.csv | rows=57
+2026-08-11T23:18:00.977627 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_13_NCAAM_odds.csv | rows=14
+2026-08-11T23:18:00.978261 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_14_NCAAM_odds.csv | rows=120
+2026-08-11T23:18:00.978488 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_15_NCAAM_odds.csv | rows=32
+2026-08-11T23:18:00.978740 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_16_NCAAM_odds.csv | rows=22
+2026-08-11T23:18:00.978962 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_17_NCAAM_odds.csv | rows=22
+2026-08-11T23:18:00.979306 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_18_NCAAM_odds.csv | rows=51
+2026-08-11T23:18:00.979667 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_19_NCAAM_odds.csv | rows=52
+2026-08-11T23:18:00.979841 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_20_NCAAM_odds.csv | rows=14
+2026-08-11T23:18:00.980557 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_21_NCAAM_odds.csv | rows=139
+2026-08-11T23:18:00.980774 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_22_NCAAM_odds.csv | rows=21
+2026-08-11T23:18:00.980915 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_23_NCAAM_odds.csv | rows=6
+2026-08-11T23:18:00.981190 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_24_NCAAM_odds.csv | rows=35
+2026-08-11T23:18:00.981582 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_26_NCAAM_odds.csv | rows=55
+2026-08-11T23:18:00.981769 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_02_27_NCAAM_odds.csv | rows=18
+2026-08-11T23:18:00.981967 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_01_NCAAM_odds.csv | rows=23
+2026-08-11T23:18:00.982142 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_02_NCAAM_odds.csv | rows=15
+2026-08-11T23:18:00.982509 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_03_NCAAM_odds.csv | rows=52
+2026-08-11T23:18:00.982811 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_04_NCAAM_odds.csv | rows=41
+2026-08-11T23:18:00.983089 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_05_NCAAM_odds.csv | rows=40
+2026-08-11T23:18:00.983306 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_06_NCAAM_odds.csv | rows=28
+2026-08-11T23:18:00.983783 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_07_NCAAM_odds.csv | rows=87
+2026-08-11T23:18:00.984010 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_08_NCAAM_odds.csv | rows=30
+2026-08-11T23:18:00.984164 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_09_NCAAM_odds.csv | rows=13
+2026-08-11T23:18:00.984345 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_10_NCAAM_odds.csv | rows=20
+2026-08-11T23:18:00.984621 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_11_NCAAM_odds.csv | rows=38
+2026-08-11T23:18:00.984838 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_12_NCAAM_odds.csv | rows=27
+2026-08-11T23:18:00.985074 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_13_NCAAM_odds.csv | rows=33
+2026-08-11T23:18:00.985261 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_14_NCAAM_odds.csv | rows=21
+2026-08-11T23:18:00.985379 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_15_NCAAM_odds.csv | rows=5
+2026-08-11T23:18:00.985485 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_17_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.985606 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_18_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.985776 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_19_NCAAM_odds.csv | rows=16
+2026-08-11T23:18:00.985949 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_20_NCAAM_odds.csv | rows=16
+2026-08-11T23:18:00.986087 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_21_NCAAM_odds.csv | rows=10
+2026-08-11T23:18:00.986211 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_22_NCAAM_odds.csv | rows=7
+2026-08-11T23:18:00.986315 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_24_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.986418 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_25_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.986541 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_26_NCAAM_odds.csv | rows=4
+2026-08-11T23:18:00.986658 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_27_NCAAM_odds.csv | rows=4
+2026-08-11T23:18:00.986763 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_03_29_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.986866 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_01_NCAAM_odds.csv | rows=2
+2026-08-11T23:18:00.986977 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_02_NCAAM_odds.csv | rows=4
+2026-08-11T23:18:00.987085 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_04_NCAAM_odds.csv | rows=3
+2026-08-11T23:18:00.987230 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_05_NCAAM_odds.csv | rows=1
+2026-08-11T23:18:00.987371 | WROTE | SPORTSBOOK | docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_04_06_NCAAM_odds.csv | rows=1
+2026-08-11T23:18:01.010023 | 
+2026-08-11T23:18:01.010037 | ============================================================
+2026-08-11T23:18:01.010050 | SUMMARY
+2026-08-11T23:18:01.010064 | ============================================================
+2026-08-11T23:18:01.010078 | prediction_files_loaded              : 9
+2026-08-11T23:18:01.010091 | sportsbook_files_loaded              : 127
+2026-08-11T23:18:01.010105 | bad_ml_market_rows_blanked           : 0
+2026-08-11T23:18:01.010119 | bad_total_market_rows_blanked        : 0
+2026-08-11T23:18:01.010132 | bad_spread_market_rows_blanked       : 0
+2026-08-11T23:18:01.010146 | bad_odds_market_rows_blanked_total   : 0
+2026-08-11T23:18:01.010159 | bad_total_line_rows_blanked          : 0
+2026-08-11T23:18:01.010173 | bad_spread_line_rows_blanked         : 0
+2026-08-11T23:18:01.010186 | bad_line_rows_blanked_total          : 0
+2026-08-11T23:18:01.010200 | spread_outlier_events_found          : 0
+2026-08-11T23:18:01.010213 | total_outlier_events_found           : 0
+2026-08-11T23:18:01.010228 | sportsbook_outlier_market_rows_blanked: 0
+2026-08-11T23:18:01.010245 | prediction_rows_removed              : 0
+2026-08-11T23:18:01.010259 | sportsbook_rows_removed              : 0
+2026-08-11T23:18:01.010274 | bias_files_with_adjusted_rows        : 9
+2026-08-11T23:18:01.010288 | bias_rows_adjusted                   : 22
+2026-08-11T23:18:01.010302 | bias_rows_skipped_already_flagged    : 0
+2026-08-11T23:18:01.010316 | prediction_files_written             : 9
+2026-08-11T23:18:01.010329 | prediction_rows_written              : 22
+2026-08-11T23:18:01.010343 | sportsbook_files_written             : 127
+2026-08-11T23:18:01.010357 | sportsbook_rows_written              : 4206
+2026-08-11T23:18:01.010370 | STATUS: SUCCESS
+2026-08-11T23:18:01.010384 | ============================================================
