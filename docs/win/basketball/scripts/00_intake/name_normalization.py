@@ -104,8 +104,8 @@ NBA_MAP_FILE = Path(
     "docs/win/basketball/maps/team_map_nba.csv"
 )
 
-NCAAB_MAP_FILE = Path(
-    "docs/win/basketball/maps/team_map_ncaab.csv"
+NCAAM_MAP_FILE = Path(
+    "docs/win/basketball/maps/team_map_ncaam.csv"
 )
 
 WNBA_MAP_FILE = Path(
@@ -206,7 +206,7 @@ def load_map(map_file: Path):
 
 
 load_map(NBA_MAP_FILE)
-load_map(NCAAB_MAP_FILE)
+load_map(NCAAM_MAP_FILE)
 load_map(WNBA_MAP_FILE)
 
 
