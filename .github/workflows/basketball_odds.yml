@@ -1,0 +1,78 @@
+name: Basketball Odds
+
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: "League to fetch"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - nba
+          - wnba
+          - ncaam
+      date:
+        description: "Start date (YYYY-MM-DD or YYYYMMDD). Leave blank for today in America/New_York."
+        required: false
+        type: string
+      days:
+        description: "Number of calendar days to fetch"
+        required: true
+        default: "1"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  basketball-odds:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run basketball odds
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=(
+            --league "${{ inputs.league }}"
+            --days "${{ inputs.days }}"
+          )
+
+          if [[ -n "${{ inputs.date }}" ]]; then
+            args+=(--date "${{ inputs.date }}")
+          fi
+
+          python docs/win/basketball/scripts/00_intake/basketball_odds.py "${args[@]}"
+
+      - name: Commit and push odds files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git add docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/
+
+          if git diff --cached --quiet; then
+            echo "No odds file changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git commit -m "Update basketball odds"
+          git pull --rebase origin main
+          git push origin main
