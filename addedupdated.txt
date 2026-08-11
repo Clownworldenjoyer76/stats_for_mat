@@ -1,0 +1,56 @@
+
+
+`/.github/workflows/basketball_odds.yml`
+
+[Download `basketball_odds.yml`](sandbox:/mnt/data/basketball_odds.yml)
+
+### Workflow behavior
+
+* **Manual only** — uses only `workflow_dispatch`; no schedule or automatic trigger.
+* Lets you select:
+
+  * `all`
+  * `nba`
+  * `wnba`
+  * `ncaam`
+* Optional start date; blank means current date in `America/New_York`.
+* Lets you specify number of days to fetch.
+* Runs `docs/win/basketball/scripts/00_intake/basketball_odds.py`.
+* Stages only:
+  `docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/`
+* Commits changes as `github-actions[bot]`.
+* Pushes generated/updated odds CSVs directly back to `main`.
+* If nothing changed, it exits without making an empty commit.
+
+### `basketball_odds.py` summary
+
+The Python script is a single standardized odds intake script for **NBA, WNBA, and NCAAM**.
+
+It:
+
+1. Uses ESPN's CDN scoreboard to discover games for the requested date(s).
+2. Gets each ESPN event/competition ID.
+3. Calls ESPN's Core odds endpoint for each game.
+4. Prefers **DraftKings** when ESPN supplies it; otherwise it uses the first available sportsbook provider.
+5. Uses ESPN's **current** spread, moneyline, total, American odds, and decimal odds.
+6. Uses the script execution time in UTC for `odds_last_update`.
+7. Converts ESPN game times into `America/New_York`.
+8. Skips games for which ESPN has not posted odds.
+9. Deduplicates games by league/date/game ID.
+10. Produces the exact established **23-column schema in the same order**.
+
+Outputs are:
+
+```text
+docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba/YYYY_MM_DD_NBA_odds.csv
+
+docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba/YYYY_MM_DD_WNBA_odds.csv
+
+docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/YYYY_MM_DD_NCAAM_odds.csv
+```
+
+It also writes its runtime/error log to:
+
+`docs/win/basketball/errors/00_intake/basketball_odds.txt`
+
+The workflow deliberately **does not commit that log**; it commits only the cleaned odds outputs.
