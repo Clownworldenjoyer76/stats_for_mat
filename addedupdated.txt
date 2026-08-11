@@ -8,10 +8,10 @@
   `docs/win/basketball/scripts/00_intake/basketball_odds.py`
 * The Python script determines the leagues and date window automatically.
 * Stages only:
-  `docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/`
+  `docs/win/basketball/00_intake/sportsbook/`
 * Commits changes as `github-actions[bot]`.
 * Pushes generated/updated odds CSVs back to the repository.
-* If no cleaned odds files changed, it exits without creating an empty commit.
+* If no odds files changed, it exits without creating an empty commit.
 
 ### `basketball_odds.py` summary
 
@@ -54,11 +54,11 @@ It:
 ### Output files
 
 ```text
-docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba/YYYY_MM_DD_NBA_odds.csv
+docs/win/basketball/00_intake/sportsbook/nba/YYYY_MM_DD_NBA_odds.csv
 
-docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba/YYYY_MM_DD_WNBA_odds.csv
+docs/win/basketball/00_intake/sportsbook/wnba/YYYY_MM_DD_WNBA_odds.csv
 
-docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/YYYY_MM_DD_NCAAM_odds.csv
+docs/win/basketball/00_intake/sportsbook/ncaam/YYYY_MM_DD_NCAAM_odds.csv
 ```
 
 Each file is **updated in place** on subsequent runs rather than being rebuilt solely from the latest API response.
@@ -97,4 +97,4 @@ Runtime and error information is written to:
 
 `docs/win/basketball/errors/00_intake/basketball_odds.txt`
 
-The workflow **does not commit this log**. It commits only changes under the cleaned sportsbook output directories.
+The workflow **does not commit this log**. It commits only changes under the sportsbook output directories.
