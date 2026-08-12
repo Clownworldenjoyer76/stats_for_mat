@@ -53,10 +53,6 @@ jobs:
           mkdir -p docs/win/basketball/00_intake/sportsbook/ncaam
           mkdir -p docs/win/basketball/00_intake/sportsbook/wnba
 
-          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba
-          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam
-          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba
-
           mkdir -p docs/win/basketball/daily_games/nba
           mkdir -p docs/win/basketball/daily_games/ncaam
           mkdir -p docs/win/basketball/daily_games/wnba
@@ -77,11 +73,11 @@ jobs:
             echo ""
           } > docs/win/basketball/errors/00_intake/output_checks.txt
 
-      - name: Basketball Odds Parse WNBA
-        run: python docs/win/basketball/scripts/00_intake/basketball_odds_parse_wnba.py
+     # - name: Basketball Odds Parse WNBA
+     #   run: python docs/win/basketball/scripts/00_intake/basketball_odds_parse_wnba.py
 
-      - name: Basketball Odds Parse NBA
-        run: python docs/win/basketball/scripts/00_intake/basketball_odds_parse_nba.py
+     # - name: Basketball Odds Parse NBA
+     #   run: python docs/win/basketball/scripts/00_intake/basketball_odds_parse_nba.py
 
       - name: Basketball Drat Scraper
         run: python docs/win/basketball/scripts/00_intake/basketball_drat_scraper.py
@@ -137,7 +133,7 @@ jobs:
           echo "" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
 
       - name: Basketball Name Normalization
-        run: python docs/win/basketball/scripts/00_intake/basketball_name_normalization.py
+        run: python docs/win/basketball/scripts/00_intake/name_normalization.py
 
       - name: Basketball Daily Games
         run: python docs/win/basketball/scripts/00_intake/basketball_daily_games.py
