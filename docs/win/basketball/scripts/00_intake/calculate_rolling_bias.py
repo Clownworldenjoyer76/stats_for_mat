@@ -21,8 +21,9 @@
 #
 # IMPORTANT:
 # - Prediction input is the RAW predictions folder, never predictions_cleaned.
-# - Historical combined-file projected scores are treated as RAW/pre-bias,
-#   per the pipeline data definition supplied for those files.
+# - Historical combined-file rows with bias_applied=1 are converted back to
+#   RAW/pre-bias projected scores before rolling errors are calculated.
+# - Current-season predictions are already RAW and are never bias-reversed.
 # - Current predictions and finals are matched by game_id first, with
 #   game_date + home_team + away_team as a fallback.
 # - Rolling windows cross season boundaries automatically by using the most
@@ -74,6 +75,15 @@ LOG_PATH = ERROR_DIR / "calculate_rolling_bias.txt"
 
 SUPPORTED_LEAGUES = ("nba", "ncaam", "wnba")
 
+# Bias values that were historically applied by clean_basketball_inputs.py.
+# These are used ONLY to reverse rows from historical combined files when
+# bias_applied=1. They are never applied to current-season raw predictions.
+LEGACY_HISTORICAL_BIAS = {
+    "nba": {"margin": 0.4, "total": 0.4},
+    "ncaam": {"margin": 0.6, "total": 1.2},
+    "wnba": {"margin": 0.5, "total": 0.0},
+}
+
 
 # ============================================================================
 # REQUIRED COLUMNS
@@ -103,6 +113,7 @@ HISTORICAL_REQUIRED = {
     "away_team",
     "home_projected_points",
     "away_projected_points",
+    "bias_applied",
     "home_score",
     "away_score",
 }
@@ -290,6 +301,47 @@ def league_upper(league: str) -> str:
     return league.strip().upper()
 
 
+def bias_was_applied(value: Any) -> bool:
+    """Return True only when the historical row explicitly indicates bias was applied."""
+    if value is None:
+        return False
+    text = str(value).strip()
+    if text == "":
+        return False
+    try:
+        return float(text) == 1.0
+    except ValueError:
+        return text.lower() in {"true", "yes", "y"}
+
+
+def reverse_historical_bias(
+    league: str,
+    home_projected_points: float,
+    away_projected_points: float,
+    total_projected_points: float,
+) -> tuple[float, float, float]:
+    """
+    Convert historical post-bias projections back to the original raw projection.
+
+    Historical cleaner formula:
+      adjusted_home  = raw_home - margin_bias/2 - total_bias/2
+      adjusted_away  = raw_away + margin_bias/2 - total_bias/2
+      adjusted_total = raw_total - total_bias
+    """
+    legacy = LEGACY_HISTORICAL_BIAS.get(league.lower())
+    if legacy is None:
+        raise ValueError(f"No legacy historical bias configured for {league_upper(league)}")
+
+    margin_bias = float(legacy["margin"])
+    total_bias = float(legacy["total"])
+
+    raw_home = home_projected_points + (margin_bias / 2.0) + (total_bias / 2.0)
+    raw_away = away_projected_points - (margin_bias / 2.0) + (total_bias / 2.0)
+    raw_total = total_projected_points + total_bias
+
+    return raw_home, raw_away, raw_total
+
+
 # ============================================================================
 # CONFIG
 # ============================================================================
@@ -383,6 +435,18 @@ def load_historical_completed_games(league: str) -> list[CompletedGame]:
 
             if total_proj is None:
                 total_proj = home_proj + away_proj
+
+            # Historical combined rows marked bias_applied=1 are previous-season
+            # post-bias projections. Convert those rows back to raw before
+            # calculating rolling projected-minus-actual error. Current-season
+            # files do not pass through this function.
+            if bias_was_applied(row.get("bias_applied")):
+                home_proj, away_proj, total_proj = reverse_historical_bias(
+                    league,
+                    home_proj,
+                    away_proj,
+                    total_proj,
+                )
 
             game_date = normalize_date(row.get("game_date"))
             home_team = str(row.get("home_team", "")).strip()
