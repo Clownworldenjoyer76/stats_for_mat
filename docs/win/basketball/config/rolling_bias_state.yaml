@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at_utc: '2026-08-13T17:48:41+00:00'
+generated_at_utc: '2026-08-13T20:50:40+00:00'
 source_config: docs/win/basketball/config/model_config.yaml
 leagues:
   nba:
@@ -24,15 +24,30 @@ leagues:
       last_game_date: '2026-06-08'
       mean_error_definition: projected_minus_actual
     history:
+      historical_files_scanned: 1
+      historical_rows: 1268
       historical_usable_games: 1268
-      current_matched_games: 0
-      duplicates_removed: 0
-      unique_completed_games: 1268
-      final_rows: 1326
+      historical_incomplete_rows: 0
+      historical_rows_bias_reversed: 1268
+      historical_rows_raw_unadjusted: 0
+      prediction_rows: 3
+      prediction_rows_missing_game_id: 3
+      prediction_rows_missing_composite: 0
+      duplicate_prediction_game_ids: 0
+      duplicate_prediction_composites: 0
+      conflicting_prediction_game_ids: 0
+      conflicting_prediction_composites: 0
+      final_rows_scanned: 1320
+      finals_already_covered_by_historical: 1262
+      current_finals_to_match: 58
       matched_by_game_id: 0
       matched_by_composite: 0
-      unmatched_finals: 1326
-      invalid_rows: 0
+      ambiguous_prediction_matches: 0
+      true_unmatched_current_finals: 58
+      invalid_current_matches: 0
+      current_matched_games: 0
+      duplicates_removed_from_completed_history: 0
+      unique_completed_games: 1268
       first_game_date: '2025-10-21'
       last_game_date: '2026-06-08'
   ncaam:
