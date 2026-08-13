@@ -1,0 +1,112 @@
+# Basketball model configuration
+# Permanent league-level rules only.
+# Dynamic rolling bias values should be calculated separately and are not stored here.
+
+schema_version: 1
+
+leagues:
+
+  nba:
+    status: active
+
+    edge:
+      moneyline: 0.020
+      spread: 0.015
+      total: 0.000
+
+    std:
+      spread:
+        mode: fixed
+        value: 14.4581
+      total:
+        mode: fixed
+        value: 18.7672
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 100
+      total:
+        method: rolling
+        window_games: 50
+
+    calibration:
+      moneyline:
+        home: none
+        away: none
+      spread:
+        home: none
+        away: none
+      total:
+        over: none
+        under: none
+
+  wnba:
+    status: pending_testing
+
+    edge:
+      moneyline: null
+      spread: null
+      total: null
+
+    std:
+      spread:
+        mode: null
+        value: null
+      total:
+        mode: null
+        value: null
+
+    bias:
+      margin:
+        method: null
+        window_games: null
+      total:
+        method: null
+        window_games: null
+
+    calibration:
+      moneyline:
+        home: null
+        away: null
+      spread:
+        home: null
+        away: null
+      total:
+        over: null
+        under: null
+
+  ncaam:
+    status: pending_testing
+
+    edge:
+      moneyline: null
+      spread: null
+      total: null
+
+    std:
+      spread:
+        mode: null
+        value: null
+      total:
+        mode: null
+        value: null
+
+    bias:
+      margin:
+        method: null
+        window_games: null
+      total:
+        method: null
+        window_games: null
+
+    calibration:
+      moneyline:
+        home: null
+        away: null
+      spread:
+        home: null
+        away: null
+      total:
+        over: null
+        under: null
