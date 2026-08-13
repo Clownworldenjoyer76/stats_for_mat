@@ -1,33 +1,32 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
 #
-# Builds current league bias values from RAW pre-bias projected scores and
-# completed final scores.
+# Calculates current league bias values from completed games.
 #
-# Permanent rules are read from:
+# Permanent bias rules:
 #   docs/win/basketball/config/model_config.yaml
 #
-# Historical completed games are read from:
+# Historical completed games:
 #   docs/win/basketball/00_intake/final_combined_files/combined/{season}_{LEAGUE}.csv
 #
-# Current-season RAW predictions are read from:
+# Current-season RAW predictions:
 #   docs/win/basketball/00_intake/predictions/{league}/*_{LEAGUE}_predictions.csv
 #
-# Current-season final scores are read from:
+# Current-season final scores:
 #   docs/win/basketball/05_final_scores/results/{league}/*_final_scores_{LEAGUE}.csv
 #
-# Current bias state is written to:
+# Generated state:
 #   docs/win/basketball/config/rolling_bias_state.yaml
 #
 # IMPORTANT:
-# - Prediction input is the RAW predictions folder, never predictions_cleaned.
-# - Historical combined-file rows with bias_applied=1 are converted back to
-#   RAW/pre-bias projected scores before rolling errors are calculated.
-# - Current-season predictions are already RAW and are never bias-reversed.
-# - Current predictions and finals are matched by game_id first, with
-#   game_date + home_team + away_team as a fallback.
-# - Rolling windows cross season boundaries automatically by using the most
-#   recent completed games available across historical and current sources.
+# - Current-season prediction files are raw/pre-bias and are NEVER adjusted here.
+# - Historical combined rows with bias_applied=1 are converted back to raw using
+#   the legacy bias values that created those historical adjusted projections.
+# - Current finals already represented in historical combined files are reported
+#   as historical coverage, not as unmatched current-season finals.
+# - Current predictions/finals match by game_id first, then by the complete
+#   game_date + home_team + away_team composite key.
+# - Rolling windows cross season boundaries automatically.
 # - A rolling value is not produced unless the full configured window exists.
 
 from __future__ import annotations
@@ -49,12 +48,6 @@ import yaml
 # ============================================================================
 
 SCRIPT_PATH = Path(__file__).resolve()
-
-# Expected repository placement:
-# docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
-# parents[5] is the repository root. If the file is executed from somewhere
-# else, fall back to the current working directory when model_config.yaml is
-# present there under docs/win/basketball/config/.
 _EXPECTED_REPO_ROOT = SCRIPT_PATH.parents[5] if len(SCRIPT_PATH.parents) > 5 else Path.cwd()
 _CWD_REPO_ROOT = Path.cwd().resolve()
 
@@ -75,13 +68,20 @@ LOG_PATH = ERROR_DIR / "calculate_rolling_bias.txt"
 
 SUPPORTED_LEAGUES = ("nba", "ncaam", "wnba")
 
-# Bias values that were historically applied by clean_basketball_inputs.py.
-# These are used ONLY to reverse rows from historical combined files when
-# bias_applied=1. They are never applied to current-season raw predictions.
-LEGACY_HISTORICAL_BIAS = {
-    "nba": {"margin": 0.4, "total": 0.4},
-    "ncaam": {"margin": 0.6, "total": 1.2},
-    "wnba": {"margin": 0.5, "total": 0.0},
+
+# ============================================================================
+# LEGACY HISTORICAL BIASES
+# ============================================================================
+
+# These are the biases that were applied when the historical combined-file
+# projections were produced by clean_basketball_inputs.py.
+#
+# Historical reversal is ONLY performed when the row explicitly has
+# bias_applied=1. Current raw prediction files never use this mapping.
+HISTORICAL_APPLIED_BIAS = {
+    ("nba", 2025): {"margin": 0.4, "total": 0.4},
+    ("ncaam", 2025): {"margin": 0.6, "total": 1.2},
+    ("wnba", 2025): {"margin": 0.5, "total": 0.0},
 }
 
 
@@ -113,7 +113,6 @@ HISTORICAL_REQUIRED = {
     "away_team",
     "home_projected_points",
     "away_projected_points",
-    "bias_applied",
     "home_score",
     "away_score",
 }
@@ -149,9 +148,6 @@ class CompletedGame:
 
     @property
     def margin_error(self) -> float:
-        # This is intentionally projected - actual.
-        # clean_basketball_inputs subtracts positive bias from projected margin,
-        # so this value can be used directly as MARGIN_BIAS.
         return self.projected_margin - self.actual_margin
 
     @property
@@ -160,8 +156,6 @@ class CompletedGame:
 
     @property
     def total_error(self) -> float:
-        # Same sign convention as the existing TOTAL_BIAS application:
-        # new_total = raw_total - total_bias.
         return self.total_projected_points - self.actual_total
 
     @property
@@ -208,15 +202,13 @@ def log(message: str, level: str = "INFO") -> None:
 def normalize_text(value: Any) -> str:
     text = "" if value is None else str(value)
     text = text.strip().lower()
-    text = re.sub(r"\s+", " ", text)
-    return text
+    return re.sub(r"\s+", " ", text)
 
 
 def canonical_game_id(value: Any) -> str:
     text = "" if value is None else str(value).strip()
     if not text:
         return ""
-    # Protect against spreadsheet/pandas-style numeric IDs serialized as 123.0.
     if re.fullmatch(r"\d+\.0", text):
         text = text[:-2]
     return text
@@ -239,13 +231,14 @@ def normalize_date(value: Any) -> str:
 
 
 def composite_key(game_date: Any, home_team: Any, away_team: Any) -> str:
-    return "|".join(
-        [
-            normalize_date(game_date),
-            normalize_text(home_team),
-            normalize_text(away_team),
-        ]
-    )
+    date = normalize_date(game_date)
+    home = normalize_text(home_team)
+    away = normalize_text(away_team)
+
+    if not date or not home or not away:
+        return ""
+
+    return f"{date}|{home}|{away}"
 
 
 def to_float(value: Any) -> float | None:
@@ -258,6 +251,11 @@ def to_float(value: Any) -> float | None:
         return float(text)
     except (TypeError, ValueError):
         return None
+
+
+def flag_is_applied(value: Any) -> bool:
+    text = normalize_text(value)
+    return text in {"1", "1.0", "true", "yes", "y"}
 
 
 def parse_game_datetime(game_date: Any, game_time: Any = "") -> datetime:
@@ -274,8 +272,8 @@ def parse_game_datetime(game_date: Any, game_time: Any = "") -> datetime:
     cleaned = re.sub(r"\s+", " ", time_text.upper())
     for fmt in ("%I:%M %p", "%I %p", "%H:%M", "%H:%M:%S"):
         try:
-            t = datetime.strptime(cleaned, fmt).time()
-            return datetime.combine(base.date(), t)
+            parsed_time = datetime.strptime(cleaned, fmt).time()
+            return datetime.combine(base.date(), parsed_time)
         except ValueError:
             pass
 
@@ -301,45 +299,16 @@ def league_upper(league: str) -> str:
     return league.strip().upper()
 
 
-def bias_was_applied(value: Any) -> bool:
-    """Return True only when the historical row explicitly indicates bias was applied."""
-    if value is None:
-        return False
-    text = str(value).strip()
-    if text == "":
-        return False
-    try:
-        return float(text) == 1.0
-    except ValueError:
-        return text.lower() in {"true", "yes", "y"}
-
-
-def reverse_historical_bias(
-    league: str,
-    home_projected_points: float,
-    away_projected_points: float,
-    total_projected_points: float,
-) -> tuple[float, float, float]:
-    """
-    Convert historical post-bias projections back to the original raw projection.
-
-    Historical cleaner formula:
-      adjusted_home  = raw_home - margin_bias/2 - total_bias/2
-      adjusted_away  = raw_away + margin_bias/2 - total_bias/2
-      adjusted_total = raw_total - total_bias
-    """
-    legacy = LEGACY_HISTORICAL_BIAS.get(league.lower())
-    if legacy is None:
-        raise ValueError(f"No legacy historical bias configured for {league_upper(league)}")
-
-    margin_bias = float(legacy["margin"])
-    total_bias = float(legacy["total"])
-
-    raw_home = home_projected_points + (margin_bias / 2.0) + (total_bias / 2.0)
-    raw_away = away_projected_points - (margin_bias / 2.0) + (total_bias / 2.0)
-    raw_total = total_projected_points + total_bias
-
-    return raw_home, raw_away, raw_total
+def prediction_signature(row: dict[str, str]) -> tuple:
+    return (
+        normalize_date(row.get("game_date")),
+        normalize_text(row.get("game_time")),
+        normalize_text(row.get("home_team")),
+        normalize_text(row.get("away_team")),
+        to_float(row.get("home_projected_points")),
+        to_float(row.get("away_projected_points")),
+        to_float(row.get("total_projected_points")),
+    )
 
 
 # ============================================================================
@@ -372,7 +341,6 @@ def resolve_bias_rule(league_cfg: dict[str, Any], component: str) -> dict[str, A
     window = rule.get("window_games")
     value = rule.get("value")
 
-    # Also support a future compact form such as method: rolling_100.
     if method and method.startswith("rolling_") and window in (None, ""):
         suffix = method.split("_", 1)[1]
         if suffix.isdigit():
@@ -403,24 +371,99 @@ def historical_files_for_league(league: str) -> list[Path]:
         return []
 
     suffix = f"_{league_upper(league)}.csv"
-    files = [p for p in HISTORICAL_DIR.glob("*.csv") if p.name.upper().endswith(suffix.upper())]
+    files = [
+        path
+        for path in HISTORICAL_DIR.glob("*.csv")
+        if path.name.upper().endswith(suffix.upper())
+    ]
 
     def season_key(path: Path) -> tuple[int, str]:
-        m = re.match(r"^(\d{4})_", path.name)
-        return (int(m.group(1)) if m else -1, path.name)
+        match = re.match(r"^(\d{4})_", path.name)
+        return (int(match.group(1)) if match else -1, path.name)
 
     return sorted(files, key=season_key)
 
 
-def load_historical_completed_games(league: str) -> list[CompletedGame]:
+def historical_season_from_path(path: Path) -> int | None:
+    match = re.match(r"^(\d{4})_", path.name)
+    return int(match.group(1)) if match else None
+
+
+def reverse_historical_projection_bias(
+    league: str,
+    historical_season: int | None,
+    home_projected_points: float,
+    away_projected_points: float,
+    total_projected_points: float,
+    bias_applied: Any,
+) -> tuple[float, float, float, bool]:
+    """
+    Convert a historical adjusted projection back to the raw projection.
+
+    Historical cleaner formula:
+        adjusted_home  = raw_home - margin_bias/2 - total_bias/2
+        adjusted_away  = raw_away + margin_bias/2 - total_bias/2
+        adjusted_total = raw_total - total_bias
+
+    Therefore:
+        raw_home  = adjusted_home + margin_bias/2 + total_bias/2
+        raw_away  = adjusted_away - margin_bias/2 + total_bias/2
+        raw_total = adjusted_total + total_bias
+    """
+    if not flag_is_applied(bias_applied):
+        return (
+            home_projected_points,
+            away_projected_points,
+            total_projected_points,
+            False,
+        )
+
+    legacy = HISTORICAL_APPLIED_BIAS.get((league.lower(), historical_season))
+    if legacy is None:
+        raise ValueError(
+            f"Cannot safely reverse bias_applied=1 for {league_upper(league)} "
+            f"historical season {historical_season!r}. Add that season's exact applied "
+            "bias values or preserve raw/per-game applied-bias fields before using it."
+        )
+
+    margin_bias = float(legacy["margin"])
+    total_bias = float(legacy["total"])
+
+    raw_home = home_projected_points + (margin_bias / 2.0) + (total_bias / 2.0)
+    raw_away = away_projected_points - (margin_bias / 2.0) + (total_bias / 2.0)
+    raw_total = total_projected_points + total_bias
+
+    return raw_home, raw_away, raw_total, True
+
+
+def load_historical_completed_games(
+    league: str,
+) -> tuple[list[CompletedGame], dict[str, int]]:
     games: list[CompletedGame] = []
+    stats = {
+        "historical_files_scanned": 0,
+        "historical_rows": 0,
+        "historical_usable_games": 0,
+        "historical_incomplete_rows": 0,
+        "historical_rows_bias_reversed": 0,
+        "historical_rows_raw_unadjusted": 0,
+    }
 
     for path in historical_files_for_league(league):
         fieldnames, rows = read_csv_rows(path)
         require_columns(path, fieldnames, HISTORICAL_REQUIRED)
+        if "bias_applied" not in set(fieldnames):
+            raise ValueError(
+                f"{path} is missing required historical bias flag column: bias_applied"
+            )
+        historical_season = historical_season_from_path(path)
+        stats["historical_files_scanned"] += 1
+        stats["historical_rows"] += len(rows)
 
-        used = 0
-        skipped_incomplete = 0
+        file_used = 0
+        file_skipped = 0
+        file_reversed = 0
+        file_raw = 0
 
         for row in rows:
             home_proj = to_float(row.get("home_projected_points"))
@@ -430,31 +473,37 @@ def load_historical_completed_games(league: str) -> list[CompletedGame]:
             away_score = to_float(row.get("away_score"))
 
             if home_proj is None or away_proj is None or home_score is None or away_score is None:
-                skipped_incomplete += 1
+                file_skipped += 1
+                stats["historical_incomplete_rows"] += 1
                 continue
 
             if total_proj is None:
                 total_proj = home_proj + away_proj
-
-            # Historical combined rows marked bias_applied=1 are previous-season
-            # post-bias projections. Convert those rows back to raw before
-            # calculating rolling projected-minus-actual error. Current-season
-            # files do not pass through this function.
-            if bias_was_applied(row.get("bias_applied")):
-                home_proj, away_proj, total_proj = reverse_historical_bias(
-                    league,
-                    home_proj,
-                    away_proj,
-                    total_proj,
-                )
 
             game_date = normalize_date(row.get("game_date"))
             home_team = str(row.get("home_team", "")).strip()
             away_team = str(row.get("away_team", "")).strip()
 
             if not game_date or not home_team or not away_team:
-                skipped_incomplete += 1
+                file_skipped += 1
+                stats["historical_incomplete_rows"] += 1
                 continue
+
+            home_proj, away_proj, total_proj, was_reversed = reverse_historical_projection_bias(
+                league=league,
+                historical_season=historical_season,
+                home_projected_points=home_proj,
+                away_projected_points=away_proj,
+                total_projected_points=total_proj,
+                bias_applied=row.get("bias_applied"),
+            )
+
+            if was_reversed:
+                file_reversed += 1
+                stats["historical_rows_bias_reversed"] += 1
+            else:
+                file_raw += 1
+                stats["historical_rows_raw_unadjusted"] += 1
 
             games.append(
                 CompletedGame(
@@ -473,14 +522,16 @@ def load_historical_completed_games(league: str) -> list[CompletedGame]:
                     source_priority=1,
                 )
             )
-            used += 1
+            file_used += 1
+            stats["historical_usable_games"] += 1
 
         log(
             f"{league_upper(league)} | HISTORICAL | {path.name} | "
-            f"rows={len(rows)} completed_usable={used} skipped={skipped_incomplete}"
+            f"rows={len(rows)} usable={file_used} skipped={file_skipped} "
+            f"bias_reversed={file_reversed} raw_unadjusted={file_raw}"
         )
 
-    return games
+    return games, stats
 
 
 # ============================================================================
@@ -491,22 +542,23 @@ def current_prediction_files(league: str) -> list[Path]:
     folder = RAW_PREDICTIONS_ROOT / league.lower()
     if not folder.exists():
         return []
-
-    # Direct children only. This intentionally excludes predictions_cleaned/.
-    return sorted(folder.glob("*.csv"))
+    pattern = f"*_{league_upper(league)}_predictions.csv"
+    return sorted(folder.glob(pattern))
 
 
 def current_final_files(league: str) -> list[Path]:
     folder = FINAL_SCORES_ROOT / league.lower()
     if not folder.exists():
         return []
-    return sorted(folder.glob("*.csv"))
+    pattern = f"*_final_scores_{league_upper(league)}.csv"
+    return sorted(folder.glob(pattern))
 
 
 def load_raw_prediction_rows(league: str) -> list[dict[str, str]]:
     rows_out: list[dict[str, str]] = []
+    files = current_prediction_files(league)
 
-    for path in current_prediction_files(league):
+    for path in files:
         fieldnames, rows = read_csv_rows(path)
         require_columns(path, fieldnames, PREDICTION_REQUIRED)
 
@@ -517,15 +569,16 @@ def load_raw_prediction_rows(league: str) -> list[dict[str, str]]:
 
     log(
         f"{league_upper(league)} | CURRENT RAW PREDICTIONS | "
-        f"files={len(current_prediction_files(league))} rows={len(rows_out)}"
+        f"files={len(files)} rows={len(rows_out)}"
     )
     return rows_out
 
 
 def load_final_score_rows(league: str) -> list[dict[str, str]]:
     rows_out: list[dict[str, str]] = []
+    files = current_final_files(league)
 
-    for path in current_final_files(league):
+    for path in files:
         fieldnames, rows = read_csv_rows(path)
         require_columns(path, fieldnames, FINAL_REQUIRED)
 
@@ -536,61 +589,194 @@ def load_final_score_rows(league: str) -> list[dict[str, str]]:
 
     log(
         f"{league_upper(league)} | CURRENT FINAL SCORES | "
-        f"files={len(current_final_files(league))} rows={len(rows_out)}"
+        f"files={len(files)} rows={len(rows_out)}"
     )
     return rows_out
 
 
+def add_prediction_index_entry(
+    index: dict[str, dict[str, str]],
+    ambiguous: set[str],
+    key: str,
+    row: dict[str, str],
+) -> tuple[bool, bool]:
+    """
+    Returns (duplicate_seen, conflict_seen).
+
+    Identical duplicate rows keep the first row.
+    Conflicting duplicate keys are removed from the usable index and marked
+    ambiguous so they can never be matched silently.
+    """
+    if not key:
+        return False, False
+
+    if key in ambiguous:
+        return True, True
+
+    existing = index.get(key)
+    if existing is None:
+        index[key] = row
+        return False, False
+
+    if prediction_signature(existing) == prediction_signature(row):
+        return True, False
+
+    del index[key]
+    ambiguous.add(key)
+    return True, True
+
+
 def build_prediction_indexes(
     prediction_rows: list[dict[str, str]],
-) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
+) -> tuple[
+    dict[str, dict[str, str]],
+    dict[str, dict[str, str]],
+    set[str],
+    set[str],
+    dict[str, int],
+]:
     by_id: dict[str, dict[str, str]] = {}
     by_composite: dict[str, dict[str, str]] = {}
+    ambiguous_ids: set[str] = set()
+    ambiguous_composites: set[str] = set()
+
+    stats = {
+        "prediction_rows": len(prediction_rows),
+        "prediction_rows_missing_game_id": 0,
+        "prediction_rows_missing_composite": 0,
+        "duplicate_prediction_game_ids": 0,
+        "duplicate_prediction_composites": 0,
+        "conflicting_prediction_game_ids": 0,
+        "conflicting_prediction_composites": 0,
+    }
 
     for row in prediction_rows:
         gid = canonical_game_id(row.get("game_id"))
         comp = composite_key(row.get("game_date"), row.get("home_team"), row.get("away_team"))
 
         if gid:
-            by_id[gid] = row
-        if comp and comp.count("|") == 2:
-            by_composite[comp] = row
+            duplicate, conflict = add_prediction_index_entry(
+                by_id, ambiguous_ids, gid, row
+            )
+            if duplicate:
+                stats["duplicate_prediction_game_ids"] += 1
+            if conflict:
+                stats["conflicting_prediction_game_ids"] += 1
+        else:
+            stats["prediction_rows_missing_game_id"] += 1
 
-    return by_id, by_composite
+        if comp:
+            duplicate, conflict = add_prediction_index_entry(
+                by_composite, ambiguous_composites, comp, row
+            )
+            if duplicate:
+                stats["duplicate_prediction_composites"] += 1
+            if conflict:
+                stats["conflicting_prediction_composites"] += 1
+        else:
+            stats["prediction_rows_missing_composite"] += 1
+
+    return by_id, by_composite, ambiguous_ids, ambiguous_composites, stats
 
 
-def load_current_completed_games(league: str) -> tuple[list[CompletedGame], dict[str, int]]:
+def historical_coverage_sets(
+    historical_games: list[CompletedGame],
+) -> tuple[set[str], set[str]]:
+    game_ids = {
+        canonical_game_id(game.game_id)
+        for game in historical_games
+        if canonical_game_id(game.game_id)
+    }
+    composites = {
+        game.match_key
+        for game in historical_games
+        if game.match_key
+    }
+    return game_ids, composites
+
+
+def final_is_covered_by_history(
+    final: dict[str, str],
+    historical_ids: set[str],
+    historical_composites: set[str],
+) -> bool:
+    gid = canonical_game_id(final.get("game_id"))
+    comp = composite_key(final.get("game_date"), final.get("home_team"), final.get("away_team"))
+
+    if gid and gid in historical_ids:
+        return True
+    if comp and comp in historical_composites:
+        return True
+    return False
+
+
+def load_current_completed_games(
+    league: str,
+    historical_games: list[CompletedGame],
+) -> tuple[list[CompletedGame], dict[str, int]]:
     predictions = load_raw_prediction_rows(league)
     finals = load_final_score_rows(league)
-    pred_by_id, pred_by_composite = build_prediction_indexes(predictions)
+
+    (
+        pred_by_id,
+        pred_by_composite,
+        ambiguous_ids,
+        ambiguous_composites,
+        prediction_stats,
+    ) = build_prediction_indexes(predictions)
+
+    historical_ids, historical_composites = historical_coverage_sets(historical_games)
 
     games: list[CompletedGame] = []
     stats = {
-        "final_rows": len(finals),
+        **prediction_stats,
+        "final_rows_scanned": len(finals),
+        "finals_already_covered_by_historical": 0,
+        "current_finals_to_match": 0,
         "matched_by_game_id": 0,
         "matched_by_composite": 0,
-        "unmatched_finals": 0,
-        "invalid_rows": 0,
+        "ambiguous_prediction_matches": 0,
+        "true_unmatched_current_finals": 0,
+        "invalid_current_matches": 0,
     }
 
     for final in finals:
+        if final_is_covered_by_history(final, historical_ids, historical_composites):
+            stats["finals_already_covered_by_historical"] += 1
+            continue
+
+        stats["current_finals_to_match"] += 1
+
         gid = canonical_game_id(final.get("game_id"))
         comp = composite_key(final.get("game_date"), final.get("home_team"), final.get("away_team"))
 
         pred = pred_by_id.get(gid) if gid else None
         match_method = "game_id"
 
-        if pred is None:
+        if pred is None and comp:
             pred = pred_by_composite.get(comp)
             match_method = "composite"
 
         if pred is None:
-            stats["unmatched_finals"] += 1
-            log(
-                f"{league_upper(league)} | UNMATCHED FINAL | game_id={gid!r} "
-                f"key={comp!r} source={final.get('_source_file', '')}",
-                "WARN",
+            is_ambiguous = (
+                (bool(gid) and gid in ambiguous_ids)
+                or (bool(comp) and comp in ambiguous_composites)
             )
+
+            if is_ambiguous:
+                stats["ambiguous_prediction_matches"] += 1
+                log(
+                    f"{league_upper(league)} | AMBIGUOUS CURRENT FINAL | "
+                    f"game_id={gid!r} key={comp!r} source={final.get('_source_file', '')}",
+                    "WARN",
+                )
+            else:
+                stats["true_unmatched_current_finals"] += 1
+                log(
+                    f"{league_upper(league)} | TRUE UNMATCHED CURRENT FINAL | "
+                    f"game_id={gid!r} key={comp!r} source={final.get('_source_file', '')}",
+                    "WARN",
+                )
             continue
 
         home_proj = to_float(pred.get("home_projected_points"))
@@ -600,9 +786,10 @@ def load_current_completed_games(league: str) -> tuple[list[CompletedGame], dict
         away_score = to_float(final.get("away_score"))
 
         if home_proj is None or away_proj is None or home_score is None or away_score is None:
-            stats["invalid_rows"] += 1
+            stats["invalid_current_matches"] += 1
             log(
-                f"{league_upper(league)} | INVALID MATCHED GAME | game_id={gid!r} key={comp!r}",
+                f"{league_upper(league)} | INVALID CURRENT MATCH | "
+                f"game_id={gid!r} key={comp!r}",
                 "WARN",
             )
             continue
@@ -615,7 +802,12 @@ def load_current_completed_games(league: str) -> tuple[list[CompletedGame], dict
         away_team = str(final.get("away_team") or pred.get("away_team") or "").strip()
 
         if not game_date or not home_team or not away_team:
-            stats["invalid_rows"] += 1
+            stats["invalid_current_matches"] += 1
+            log(
+                f"{league_upper(league)} | INVALID CURRENT IDENTIFIERS | "
+                f"game_id={gid!r} key={comp!r}",
+                "WARN",
+            )
             continue
 
         source = f"{pred.get('_source_file', '')} + {final.get('_source_file', '')}"
@@ -642,11 +834,18 @@ def load_current_completed_games(league: str) -> tuple[list[CompletedGame], dict
         else:
             stats["matched_by_composite"] += 1
 
+    stats["current_matched_games"] = len(games)
+
     log(
         f"{league_upper(league)} | CURRENT MATCH SUMMARY | "
+        f"final_rows_scanned={stats['final_rows_scanned']} "
+        f"covered_by_historical={stats['finals_already_covered_by_historical']} "
+        f"current_to_match={stats['current_finals_to_match']} "
         f"matched_by_game_id={stats['matched_by_game_id']} "
         f"matched_by_composite={stats['matched_by_composite']} "
-        f"unmatched_finals={stats['unmatched_finals']} invalid={stats['invalid_rows']}"
+        f"ambiguous={stats['ambiguous_prediction_matches']} "
+        f"true_unmatched={stats['true_unmatched_current_finals']} "
+        f"invalid={stats['invalid_current_matches']}"
     )
 
     return games, stats
@@ -656,18 +855,20 @@ def load_current_completed_games(league: str) -> tuple[list[CompletedGame], dict
 # UNIFIED COMPLETED-GAME HISTORY
 # ============================================================================
 
-def deduplicate_completed_games(games: list[CompletedGame]) -> tuple[list[CompletedGame], int]:
-    # Deduplicate by date + home + away rather than game_id because historical
-    # combined files and live current-season feeds may use different game_id
-    # formats. Higher source_priority wins; current raw+final rows therefore
-    # replace historical combined rows when the same matchup exists in both.
+def deduplicate_completed_games(
+    games: list[CompletedGame],
+) -> tuple[list[CompletedGame], int]:
     chosen: dict[str, CompletedGame] = {}
     duplicates = 0
 
     for game in games:
         key = game.match_key
-        existing = chosen.get(key)
+        if not key:
+            raise ValueError(
+                f"Cannot deduplicate completed game with incomplete composite key: {game}"
+            )
 
+        existing = chosen.get(key)
         if existing is None:
             chosen[key] = game
             continue
@@ -679,21 +880,20 @@ def deduplicate_completed_games(games: list[CompletedGame]) -> tuple[list[Comple
         elif game.source_priority == existing.source_priority and game.sort_key >= existing.sort_key:
             chosen[key] = game
 
-    unique = sorted(chosen.values(), key=lambda g: g.sort_key)
+    unique = sorted(chosen.values(), key=lambda game: game.sort_key)
     return unique, duplicates
 
 
 def build_completed_history(league: str) -> tuple[list[CompletedGame], dict[str, Any]]:
-    historical = load_historical_completed_games(league)
-    current, current_stats = load_current_completed_games(league)
+    historical, historical_stats = load_historical_completed_games(league)
+    current, current_stats = load_current_completed_games(league, historical)
     combined, duplicates = deduplicate_completed_games(historical + current)
 
     meta = {
-        "historical_usable_games": len(historical),
-        "current_matched_games": len(current),
-        "duplicates_removed": duplicates,
-        "unique_completed_games": len(combined),
+        **historical_stats,
         **current_stats,
+        "duplicates_removed_from_completed_history": duplicates,
+        "unique_completed_games": len(combined),
     }
 
     if combined:
@@ -704,8 +904,9 @@ def build_completed_history(league: str) -> tuple[list[CompletedGame], dict[str,
         meta["last_game_date"] = None
 
     log(
-        f"{league_upper(league)} | UNIFIED HISTORY | historical={len(historical)} "
-        f"current={len(current)} duplicates_removed={duplicates} unique={len(combined)} "
+        f"{league_upper(league)} | UNIFIED HISTORY | "
+        f"historical={len(historical)} current={len(current)} "
+        f"duplicates_removed={duplicates} unique={len(combined)} "
         f"range={meta['first_game_date']}..{meta['last_game_date']}"
     )
 
@@ -753,7 +954,10 @@ def calculate_component_bias(
     if method == "fixed":
         value = rule.get("value")
         if value is None:
-            raise ValueError(f"{league_upper(league)} {component} fixed bias requires bias.{component}.value")
+            raise ValueError(
+                f"{league_upper(league)} {component} fixed bias requires "
+                f"bias.{component}.value"
+            )
         return {
             "status": "ready",
             "method": "fixed",
@@ -772,7 +976,9 @@ def calculate_component_bias(
 
     window = rule.get("window_games")
     if window is None or window <= 0:
-        raise ValueError(f"{league_upper(league)} {component} rolling bias requires window_games > 0")
+        raise ValueError(
+            f"{league_upper(league)} {component} rolling bias requires window_games > 0"
+        )
 
     if len(history) < window:
         raise ValueError(
@@ -783,9 +989,9 @@ def calculate_component_bias(
     selected = history[-window:]
 
     if component == "margin":
-        errors = [g.margin_error for g in selected]
+        errors = [game.margin_error for game in selected]
     elif component == "total":
-        errors = [g.total_error for g in selected]
+        errors = [game.total_error for game in selected]
     else:
         raise ValueError(f"Unsupported bias component: {component}")
 
@@ -822,9 +1028,12 @@ def write_state(state: dict[str, Any]) -> None:
 # LEAGUE PROCESSOR
 # ============================================================================
 
-def process_league(league: str, league_cfg: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+def process_league(
+    league: str,
+    league_cfg: dict[str, Any],
+) -> tuple[dict[str, Any], bool]:
     upper = league_upper(league)
-    status = str(league_cfg.get("status", "")).strip().lower()
+    config_status = str(league_cfg.get("status", "")).strip().lower()
 
     margin_rule = resolve_bias_rule(league_cfg, "margin")
     total_rule = resolve_bias_rule(league_cfg, "total")
@@ -837,7 +1046,7 @@ def process_league(league: str, league_cfg: dict[str, Any]) -> tuple[dict[str, A
         return (
             {
                 "status": "skipped_no_bias_rules",
-                "config_status": status or None,
+                "config_status": config_status or None,
                 "margin_bias": {
                     "status": "skipped_no_rule",
                     "method": None,
@@ -863,15 +1072,16 @@ def process_league(league: str, league_cfg: dict[str, Any]) -> tuple[dict[str, A
 
         league_state = {
             "status": "ready",
-            "config_status": status or None,
+            "config_status": config_status or None,
             "margin_bias": margin,
             "total_bias": total,
             "history": history_meta,
         }
 
         log(
-            f"{upper} | READY | margin_bias={margin.get('value')} "
-            f"margin_method={margin.get('method')} margin_games={margin.get('games_used')} | "
+            f"{upper} | READY | "
+            f"margin_bias={margin.get('value')} margin_method={margin.get('method')} "
+            f"margin_games={margin.get('games_used')} | "
             f"total_bias={total.get('value')} total_method={total.get('method')} "
             f"total_games={total.get('games_used')}"
         )
@@ -882,7 +1092,7 @@ def process_league(league: str, league_cfg: dict[str, Any]) -> tuple[dict[str, A
         return (
             {
                 "status": "error",
-                "config_status": status or None,
+                "config_status": config_status or None,
                 "error": str(exc),
                 "margin_bias": {
                     "method": margin_rule.get("method"),
@@ -926,8 +1136,6 @@ def main() -> int:
             if not ok:
                 configured_failures += 1
 
-        # Preserve any additional league keys in the config as explicit skips
-        # rather than silently processing an unknown structure.
         for league in config_leagues:
             league_key = str(league).strip().lower()
             if league_key not in SUPPORTED_LEAGUES:
@@ -935,16 +1143,24 @@ def main() -> int:
                     "status": "skipped_unsupported_league",
                     "error": f"Unsupported league key: {league}",
                 }
-                log(f"{str(league).upper()} | SKIPPED | unsupported league key", "WARN")
+                log(
+                    f"{str(league).upper()} | SKIPPED | unsupported league key",
+                    "WARN",
+                )
 
-        state["run_status"] = "success" if configured_failures == 0 else "completed_with_errors"
+        state["run_status"] = (
+            "success" if configured_failures == 0 else "completed_with_errors"
+        )
         write_state(state)
 
         print("basketball rolling-bias calculation complete.")
         print(f"state: {STATE_PATH}")
 
         if configured_failures:
-            print(f"configured league failures: {configured_failures}", file=sys.stderr)
+            print(
+                f"configured league failures: {configured_failures}",
+                file=sys.stderr,
+            )
             return 1
 
         return 0
