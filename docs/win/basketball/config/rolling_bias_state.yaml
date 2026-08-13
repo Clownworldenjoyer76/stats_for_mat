@@ -1,0 +1,68 @@
+schema_version: 1
+generated_at_utc: '2026-08-13T16:03:47+00:00'
+source_config: docs/win/basketball/config/model_config.yaml
+leagues:
+  nba:
+    status: ready
+    config_status: active
+    margin_bias:
+      status: ready
+      method: rolling
+      value: -2.849
+      window_games: 100
+      games_used: 100
+      first_game_date: '2026-04-10'
+      last_game_date: '2026-06-08'
+      mean_error_definition: projected_minus_actual
+    total_bias:
+      status: ready
+      method: rolling
+      value: -2.898
+      window_games: 50
+      games_used: 50
+      first_game_date: '2026-04-26'
+      last_game_date: '2026-06-08'
+      mean_error_definition: projected_minus_actual
+    history:
+      historical_usable_games: 1268
+      current_matched_games: 0
+      duplicates_removed: 0
+      unique_completed_games: 1268
+      final_rows: 1326
+      matched_by_game_id: 0
+      matched_by_composite: 0
+      unmatched_finals: 1326
+      invalid_rows: 0
+      first_game_date: '2025-10-21'
+      last_game_date: '2026-06-08'
+  ncaam:
+    status: skipped_no_bias_rules
+    config_status: pending_testing
+    margin_bias:
+      status: skipped_no_rule
+      method: null
+      value: null
+      window_games: null
+      games_used: 0
+    total_bias:
+      status: skipped_no_rule
+      method: null
+      value: null
+      window_games: null
+      games_used: 0
+  wnba:
+    status: skipped_no_bias_rules
+    config_status: pending_testing
+    margin_bias:
+      status: skipped_no_rule
+      method: null
+      value: null
+      window_games: null
+      games_used: 0
+    total_bias:
+      status: skipped_no_rule
+      method: null
+      value: null
+      window_games: null
+      games_used: 0
+run_status: success
