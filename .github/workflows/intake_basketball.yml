@@ -32,6 +32,7 @@ jobs:
       - name: Create output directories
         run: |
           mkdir -p docs/win/basketball/errors/00_intake
+          mkdir -p docs/win/basketball/config
 
           mkdir -p docs/win/basketball/odds/nba
           mkdir -p docs/win/basketball/odds/ncaam
@@ -168,6 +169,9 @@ jobs:
 
       - name: Basketball Game ID
         run: python docs/win/basketball/scripts/00_intake/basketball_game_id.py
+
+      - name: Calculate Rolling Bias
+        run: python docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
 
       - name: Basketball Clean Inputs
         run: python docs/win/basketball/scripts/00_intake/clean_basketball_inputs.py
