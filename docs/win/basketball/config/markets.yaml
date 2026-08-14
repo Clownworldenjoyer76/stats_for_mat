@@ -249,7 +249,7 @@ markets:
     spread:
       enabled: true
       selection_mode: pick_one
-      pick_preference: { metric: model_prob, direction: max }
+      pick_preference: { metric: ev, direction: min }
 
       home:
         enabled: true
@@ -284,7 +284,7 @@ markets:
 
       over:
         enabled: true
-        line_bands:           [[100.0, 300.0]]
+        line_bands:           [[155.0, 300.0]]
         odds_bands:           [[-1000, 1000]]
         ev_bands:             [[0.0001, 1.00]]
         kelly_bands:          [[0.0001, 1.00]]
@@ -296,7 +296,7 @@ markets:
 
       under:
         enabled: true
-        line_bands:           [[100.0, 300.0]]
+        line_bands:           [[165.0, 300.0]]
         odds_bands:           [[-1000, 1000]]
         ev_bands:             [[0.0001, 1.00]]
         kelly_bands:          [[0.0001, 1.00]]
