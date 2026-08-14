@@ -4,7 +4,7 @@
 # Historical replay/backtest runner for the basketball pipeline.
 #
 # Expected layout:
-#   docs/win/basketball/BACKTEST/
+#   docs/win/basketball/backtest/
 #       configs/markets_test.yaml
 #       input/2025_NBA.csv
 #       input/2025_NCAAM.csv
@@ -29,7 +29,7 @@
 #   basketball_select_bets.py
 #   01_basketball_results_grade.py
 #
-# All generated files remain inside BACKTEST/.
+# All generated files remain inside backtest/.
 #
 # Final-score columns are removed before probability, EV/Kelly, and selection
 # processing. They are joined back by game_id only after bets have been
@@ -71,7 +71,7 @@ MARKETS = ["moneyline", "spread", "total"]
 
 BASKETBALL_ROOT = Path("docs/win/basketball")
 
-DEFAULT_BACKTEST_DIR = BASKETBALL_ROOT / "BACKTEST"
+DEFAULT_BACKTEST_DIR = BASKETBALL_ROOT / "backtest"
 
 DEFAULT_MODEL_CONFIG = (
     BASKETBALL_ROOT
