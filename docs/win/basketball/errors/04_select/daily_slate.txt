@@ -1,96 +1,94 @@
-=== basketball daily_slate RUN 2026-08-14T18:31:14.035550+00:00 ===
-2026-08-14T18:31:14.035657+00:00 | INFO  | SELECT_DIR      : docs/win/basketball/04_select
-2026-08-14T18:31:14.035693+00:00 | INFO  | DAILY_SLATE_DIR : docs/win/basketball/04_select/daily_slate
-2026-08-14T18:31:14.035719+00:00 | INFO  | LOG_FILE        : docs/win/basketball/errors/04_select/daily_slate.txt
-2026-08-14T18:31:14.035742+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: nba ---
-2026-08-14T18:31:14.035828+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/nba_selected.csv
-2026-08-14T18:31:14.035895+00:00 | WARN  | INPUT DIR MISSING: docs/win/basketball/04_select/nba/daily_picks
-2026-08-14T18:31:14.036046+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/nba_selected.csv (0 rows)
-2026-08-14T18:31:14.036089+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: wnba ---
-2026-08-14T18:31:14.036180+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/wnba_selected.csv
-2026-08-14T18:31:14.046662+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.047063+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv (8 rows)
-2026-08-14T18:31:14.047359+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.047600+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_13_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.047874+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.048098+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_23_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.048321+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.048582+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.048816+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.049018+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_29_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.049246+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.049558+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.049819+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.050028+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_03_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.050241+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.050560+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.050774+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_06_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.050981+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.051207+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.051406+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.051684+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.051912+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_11_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.052225+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv (6 rows)
-2026-08-14T18:31:14.052465+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_16_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.052699+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.052968+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.053215+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.053460+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.053781+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv (6 rows)
-2026-08-14T18:31:14.053979+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_23_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.054210+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.054412+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_25_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.054675+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_26_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.054948+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.055187+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_28_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.055465+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.055726+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.055953+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.056174+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_05_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.056451+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.056654+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_07_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.056993+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv (7 rows)
-2026-08-14T18:31:14.057266+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.057540+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.057820+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.058138+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv (6 rows)
-2026-08-14T18:31:14.058348+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.058611+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.058952+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv (6 rows)
-2026-08-14T18:31:14.059181+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_16_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.059563+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv (7 rows)
-2026-08-14T18:31:14.059820+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_18_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.060127+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv (5 rows)
-2026-08-14T18:31:14.060492+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv (7 rows)
-2026-08-14T18:31:14.060751+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.060983+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.061212+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.061458+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_01_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.061740+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.061966+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_03_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.062179+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.062509+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv (4 rows)
-2026-08-14T18:31:14.062774+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.063000+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_07_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.063225+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.063479+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.063711+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.063911+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_11_wnba_selected.csv (1 rows)
-2026-08-14T18:31:14.064160+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv (3 rows)
-2026-08-14T18:31:14.064383+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv (2 rows)
-2026-08-14T18:31:14.067661+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/wnba_selected.csv (189 rows)
-2026-08-14T18:31:14.067866+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: ncaam ---
-2026-08-14T18:31:14.067955+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/ncaam_selected.csv
-2026-08-14T18:31:14.068022+00:00 | WARN  | INPUT DIR MISSING: docs/win/basketball/04_select/ncaam/daily_picks
-2026-08-14T18:31:14.068148+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/ncaam_selected.csv (0 rows)
+=== basketball daily_slate RUN 2026-08-14T18:35:58.318713+00:00 ===
+2026-08-14T18:35:58.318835+00:00 | INFO  | SELECT_DIR      : docs/win/basketball/04_select
+2026-08-14T18:35:58.318874+00:00 | INFO  | DAILY_SLATE_DIR : docs/win/basketball/04_select/daily_slate
+2026-08-14T18:35:58.318900+00:00 | INFO  | LOG_FILE        : docs/win/basketball/errors/04_select/daily_slate.txt
+2026-08-14T18:35:58.318923+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: nba ---
+2026-08-14T18:35:58.319069+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/nba_selected.csv
+2026-08-14T18:35:58.319144+00:00 | WARN  | INPUT DIR MISSING: docs/win/basketball/04_select/nba/daily_picks
+2026-08-14T18:35:58.319313+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/nba_selected.csv (0 rows)
+2026-08-14T18:35:58.319359+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: wnba ---
+2026-08-14T18:35:58.319459+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/wnba_selected.csv
+2026-08-14T18:35:58.323141+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv (4 rows)
+2026-08-14T18:35:58.323509+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv (6 rows)
+2026-08-14T18:35:58.323810+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.324034+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_13_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.324252+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.324466+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.324703+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.324962+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.325176+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_29_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.325411+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.325716+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.325963+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.326180+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_03_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.326385+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.326656+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.326915+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.327126+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.327342+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.327627+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.327871+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_11_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.328174+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv (5 rows)
+2026-08-14T18:35:58.328384+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_16_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.328663+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.329010+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv (4 rows)
+2026-08-14T18:35:58.329269+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.329521+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.329889+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv (6 rows)
+2026-08-14T18:35:58.330104+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_23_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.330332+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.330543+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_25_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.330786+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_26_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.331042+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.331265+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_06_28_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.331523+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.331800+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.332034+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.332274+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_05_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.332513+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.332737+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_07_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.333073+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv (6 rows)
+2026-08-14T18:35:58.333333+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.333598+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.333868+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.334145+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv (4 rows)
+2026-08-14T18:35:58.334359+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.334605+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.334920+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv (5 rows)
+2026-08-14T18:35:58.335155+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_16_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.335477+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv (6 rows)
+2026-08-14T18:35:58.335761+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_18_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.336068+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv (5 rows)
+2026-08-14T18:35:58.336421+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv (7 rows)
+2026-08-14T18:35:58.336702+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.336942+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.337190+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.337421+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_01_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.337744+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv (4 rows)
+2026-08-14T18:35:58.337981+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_03_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.338185+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.338466+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv (4 rows)
+2026-08-14T18:35:58.338746+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.338983+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_07_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.339213+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.339442+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.339709+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.339913+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_11_wnba_selected.csv (1 rows)
+2026-08-14T18:35:58.340166+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv (3 rows)
+2026-08-14T18:35:58.340403+00:00 | INFO  | READ: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv (2 rows)
+2026-08-14T18:35:58.343460+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/wnba_selected.csv (168 rows)
+2026-08-14T18:35:58.343719+00:00 | INFO  | --- BUILD LEAGUE DAILY SLATE: ncaam ---
+2026-08-14T18:35:58.343852+00:00 | INFO  | CLEARED EXISTING OUTPUT FILE: docs/win/basketball/04_select/daily_slate/ncaam_selected.csv
+2026-08-14T18:35:58.343925+00:00 | WARN  | INPUT DIR MISSING: docs/win/basketball/04_select/ncaam/daily_picks
+2026-08-14T18:35:58.344062+00:00 | INFO  | WROTE OUTPUT FILE: docs/win/basketball/04_select/daily_slate/ncaam_selected.csv (0 rows)
 
 ======================================================================
-SUMMARY 2026-08-14T18:31:14.068169+00:00
+SUMMARY 2026-08-14T18:35:58.344085+00:00
 ======================================================================
   leagues_processed          : 3
-  input_files                : 70
-  input_rows                 : 189
-  output_rows                : 189
+  input_files                : 68
+  input_rows                 : 168
+  output_rows                : 168
   missing_input_dirs         : 2
   files_with_missing_headers : 0
   files_with_extra_headers   : 0
@@ -98,7 +96,7 @@ SUMMARY 2026-08-14T18:31:14.068169+00:00
 
   league   input_files  input_rows  output_rows   errors     status
   nba                0           0            0        0         ok
-  wnba              70         189          189        0         ok
+  wnba              68         168          168        0         ok
   ncaam              0           0            0        0         ok
 
 STATUS: SUCCESS
