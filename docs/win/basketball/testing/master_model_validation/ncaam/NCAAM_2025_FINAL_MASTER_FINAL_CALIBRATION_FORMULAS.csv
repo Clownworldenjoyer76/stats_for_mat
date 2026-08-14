@@ -1,0 +1,7 @@
+market,side,method,formula,intercept,slope,coef_log_p,coef_log_1mp,isotonic_points
+moneyline,HOME,raw,NO ADJUSTMENT,,,,,0
+moneyline,AWAY,raw,NO ADJUSTMENT,,,,,0
+spread,HOME,beta,p_adj = logistic(0.59787618 + 0.59540409*ln(p_raw) + 0.36284251*ln(1-p_raw)),0.5978761848385358,,0.5954040893876391,0.36284251211932145,0
+spread,AWAY,raw,NO ADJUSTMENT,,,,,0
+total,OVER,raw,NO ADJUSTMENT,,,,,0
+total,UNDER,temperature,p_adj = logistic(0.00000000 + 0.05000000 * logit(p_raw)),0.0,0.05,,,0
