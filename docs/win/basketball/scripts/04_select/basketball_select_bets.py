@@ -1,39 +1,10 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/04_select/basketball_select_bets.py
 #
-# Reads stage-3 EV/Kelly outputs and applies per-league × per-market × per-side
-# filters from markets.yaml. Picks bet(s) per game according to the configured
+# Reads stage-3 EV/Kelly outputs and applies the per-league market EDGE from
+# model_config.yaml first, then the per-league × per-market × per-side filters
+# from markets.yaml. Picks bet(s) per game according to the configured
 # selection_mode and pick_preference. Adds fractional-Kelly stake sizing.
-#
-# Input layout (matches stage-3 output):
-#   docs/win/basketball/03_edges/ev_kelly/{league}/{market}/*.csv
-#   where league in {nba, ncaam, wnba}, market in {moneyline, spread, total}
-#
-# Outputs:
-#   docs/win/basketball/04_select/{league}/daily_picks/{YYYY_MM_DD}_{league}_selected.csv
-#
-# Filters per side (each is a list of [lo, hi] bands; pass = value falls in any band):
-#   odds_bands           (american odds)
-#   line_bands           (book spread or total line; spread/total only)
-#   ev_bands             (decimal EV)
-#   kelly_bands          (decimal Kelly fraction)
-#   model_prob_bands     (decimal probability)
-#   edge_vs_market_bands (percentage points: model_prob - market_prob, scaled *100)
-#
-# Date filters per side:
-#   months                (list of ints 1-12; empty = all months allowed)
-#   exclude_days_of_week  (list of ints 0=Mon ... 6=Sun)
-#
-# Per-market:
-#   selection_mode: pick_one | all_qualifying
-#   pick_preference: { metric: ev|kelly|model_prob|edge_vs_market, direction: max|min }
-#
-# Top-level:
-#   stake_sizing.kelly_fraction      (multiplier on raw Kelly)
-#   stake_sizing.kelly_cap           (max stake as fraction of bankroll)
-#   ml_vs_spread_tiebreak            (ev | kelly | edge_vs_market; default ev)
-#                                    Reconciliation function remains available,
-#                                    but ML/spread reconciliation is skipped in main.
 
 import re
 import sys
@@ -45,23 +16,26 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-INPUT_DIR   = Path("docs/win/basketball/03_edges/ev_kelly")
-SELECT_DIR  = Path("docs/win/basketball/04_select")
-CONFIG_PATH = Path("docs/win/basketball/config/markets.yaml")
-ERROR_DIR   = Path("docs/win/basketball/errors/04_select")
-LOG_FILE    = ERROR_DIR / "select_bets.txt"
+INPUT_DIR        = Path("docs/win/basketball/03_edges/ev_kelly")
+SELECT_DIR       = Path("docs/win/basketball/04_select")
+CONFIG_PATH      = Path("docs/win/basketball/config/markets.yaml")
+MODEL_CONFIG_PATH = Path("docs/win/basketball/config/model_config.yaml")
+ERROR_DIR        = Path("docs/win/basketball/errors/04_select")
+LOG_FILE         = ERROR_DIR / "select_bets.txt"
 
 SELECT_DIR.mkdir(parents=True, exist_ok=True)
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    CONFIG = yaml.safe_load(f)
+    CONFIG = yaml.safe_load(f) or {}
+
+with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
+    MODEL_CONFIG = yaml.safe_load(f) or {}
 
 STAKE = CONFIG.get("stake_sizing", {}) or {}
 KELLY_FRACTION = float(STAKE.get("kelly_fraction", 1.0))
 KELLY_CAP      = float(STAKE.get("kelly_cap", 1.0))
 
-# Allowed metrics: ev, kelly, edge_vs_market
 ML_VS_SPREAD_TIEBREAK = str(CONFIG.get("ml_vs_spread_tiebreak", "ev")).strip().lower()
 TIEBREAK_COL_MAP = {
     "ev":              "bet_ev",
@@ -69,13 +43,55 @@ TIEBREAK_COL_MAP = {
     "edge_vs_market":  "bet_edge_vs_market",
 }
 if ML_VS_SPREAD_TIEBREAK not in TIEBREAK_COL_MAP:
-    # Fall back to ev if mis-configured; we'll log later in main().
     ML_VS_SPREAD_TIEBREAK = "ev"
 
 LEAGUES = ["nba", "ncaam", "wnba"]
 MARKETS = ["moneyline", "spread", "total"]
 
 DEBUG_COUNTS = defaultdict(int)
+
+
+# =========================
+# MODEL EDGE CONFIG
+# =========================
+
+def load_model_edges() -> dict:
+    leagues_cfg = MODEL_CONFIG.get("leagues")
+    if not isinstance(leagues_cfg, dict):
+        raise ValueError("model_config.yaml must contain a top-level 'leagues' mapping")
+
+    edges = {}
+    for league in LEAGUES:
+        league_cfg = leagues_cfg.get(league)
+        if not isinstance(league_cfg, dict):
+            raise ValueError(f"Missing model config for league={league}")
+
+        if str(league_cfg.get("status", "")).strip().lower() != "active":
+            raise ValueError(f"League {league.upper()} is not active in model_config.yaml")
+
+        edge_cfg = league_cfg.get("edge") or {}
+        edges[league] = {}
+        for market in MARKETS:
+            value = edge_cfg.get(market)
+            try:
+                value = float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Invalid model EDGE for league={league} market={market}: {value!r}"
+                ) from exc
+            edges[league][market] = value
+
+    return edges
+
+
+MODEL_EDGES = load_model_edges()
+
+
+def model_edge(league: str, market: str) -> float:
+    try:
+        return MODEL_EDGES[league.lower()][market]
+    except KeyError as exc:
+        raise KeyError(f"No model EDGE: league={league!r} market={market!r}") from exc
 
 
 # =========================
@@ -133,7 +149,6 @@ def _write_summary(summary: dict, per_file: list) -> None:
 # =========================
 
 def fv(x):
-    """Float-or-None from any cell."""
     try:
         if x is None or pd.isna(x):
             return None
@@ -143,7 +158,6 @@ def fv(x):
 
 
 def in_any_band(value, bands):
-    """True if value falls inside any [lo, hi] band (inclusive)."""
     if value is None or bands is None:
         return False
     return any(lo <= value <= hi for lo, hi in bands)
@@ -157,7 +171,6 @@ def parse_date(s):
 
 
 def date_ok(game_date, months, exclude_dow):
-    """Date filter: passes if month is allowed and dow is not excluded."""
     if not months and not exclude_dow:
         return True
     dt = parse_date(game_date) if isinstance(game_date, str) else None
@@ -199,6 +212,14 @@ def passes_filters(values: dict, scfg: dict, game_date: str) -> bool:
             return False
     if not date_ok(game_date, scfg.get("months", []) or [],
                    scfg.get("exclude_days_of_week", []) or []):
+        return False
+    return True
+
+
+def passes_model_edge(ev, league: str, market: str) -> bool:
+    threshold = model_edge(league, market)
+    if ev is None or ev < threshold:
+        DEBUG_COUNTS[f"fail_model_edge_{market}"] += 1
         return False
     return True
 
@@ -255,10 +276,6 @@ def clear_old_select_outputs() -> None:
 
 
 def write_daily_pick_files(league: str, out_df: pd.DataFrame) -> None:
-    """
-    Writes one selected-picks file per league per game_date to:
-      docs/win/basketball/04_select/{league}/daily_picks/{YYYY_MM_DD}_{league}_selected.csv
-    """
     daily_pick_dir = SELECT_DIR / league / "daily_picks"
     daily_pick_dir.mkdir(parents=True, exist_ok=True)
 
@@ -279,12 +296,6 @@ def write_daily_pick_files(league: str, out_df: pd.DataFrame) -> None:
 # =========================
 
 def reconcile_ml_vs_spread(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
-    """
-    Available but not used in main. Kept for reference only.
-
-    For each game, if both moneyline AND spread bets are present, keep only
-    one market and drop the other entirely.
-    """
     if df.empty:
         return df, 0
 
@@ -359,6 +370,10 @@ def build_ml_sides(row, league, game_date, cfg):
             mp = fv(row.get(f"{side}_prob"))
         evm   = fv(row.get(f"{side}_ml_edge_vs_market_pct"))
 
+        if not passes_model_edge(ev, league, "moneyline"):
+            DEBUG_COUNTS["rejected_ml"] += 1
+            continue
+
         values = {"odds": odds, "ev": ev, "kelly": kelly,
                   "model_prob": mp, "edge_vs_market_pct": evm}
         if passes_filters(values, scfg, game_date):
@@ -385,6 +400,10 @@ def build_spread_sides(row, league, game_date, cfg):
         mp    = fv(row.get(f"{side}_spread_model_prob"))
         evm   = fv(row.get(f"{side}_spread_edge_vs_market_pct"))
 
+        if not passes_model_edge(ev, league, "spread"):
+            DEBUG_COUNTS["rejected_spread"] += 1
+            continue
+
         values = {"odds": odds, "line": line, "ev": ev, "kelly": kelly,
                   "model_prob": mp, "edge_vs_market_pct": evm}
         if passes_filters(values, scfg, game_date):
@@ -410,6 +429,10 @@ def build_total_sides(row, league, game_date, cfg):
         kelly = fv(row.get(f"{side}_kelly"))
         mp    = fv(row.get(f"{side}_model_prob"))
         evm   = fv(row.get(f"{side}_edge_vs_market_pct"))
+
+        if not passes_model_edge(ev, league, "total"):
+            DEBUG_COUNTS["rejected_total"] += 1
+            continue
 
         values = {"odds": odds, "line": line, "ev": ev, "kelly": kelly,
                   "model_prob": mp, "edge_vs_market_pct": evm}
@@ -451,7 +474,10 @@ def process_file(file: Path, league: str, market_type: str):
     builder        = SIDE_BUILDERS[market_type]
     file_date      = extract_date(file.name)
 
-    _log(f"--- FILE: {file.name}  league={league} market={market_type} rows={len(df)} mode={selection_mode}")
+    _log(
+        f"--- FILE: {file.name} league={league} market={market_type} "
+        f"rows={len(df)} mode={selection_mode} model_edge={model_edge(league, market_type)}"
+    )
 
     out_rows = []
     for _, row in df.iterrows():
@@ -511,8 +537,16 @@ def main():
 
     _log(f"INPUT_DIR : {INPUT_DIR}")
     _log(f"OUTPUT_DIR: {SELECT_DIR}")
+    _log(f"MODEL_CONFIG: {MODEL_CONFIG_PATH}")
     _log(f"stake_sizing: kelly_fraction={KELLY_FRACTION} kelly_cap={KELLY_CAP}")
     _log(f"ml_vs_spread_tiebreak: {ML_VS_SPREAD_TIEBREAK}")
+    for league in LEAGUES:
+        _log(
+            f"{league.upper()} model edges: "
+            f"moneyline={model_edge(league, 'moneyline')} "
+            f"spread={model_edge(league, 'spread')} "
+            f"total={model_edge(league, 'total')}"
+        )
 
     league_dfs = {lg: [] for lg in LEAGUES}
 
@@ -550,7 +584,6 @@ def main():
                         summary["errors"] += 1
                     per_file.append(pf)
 
-        # Per-league: concat selected rows and write daily pick outputs.
         for league in LEAGUES:
             dfs = league_dfs[league]
             if not dfs:
@@ -559,11 +592,9 @@ def main():
 
             out_df = pd.concat(dfs, ignore_index=True)
 
-            # Keep moneyline and spread selections for all leagues.
             dropped = 0
             _log(f"RECONCILE {league}: skipped ML/spread reconciliation; dropped 0 rows")
 
-            # Per-date daily pick files only.
             write_daily_pick_files(league, out_df)
 
     except Exception as e:
