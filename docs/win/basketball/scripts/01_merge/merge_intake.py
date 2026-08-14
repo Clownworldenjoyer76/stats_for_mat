@@ -34,11 +34,16 @@ def log(msg: str) -> None:
 # OUTPUT FIELDNAMES
 # =========================
 
+PROVENANCE_FIELDS = [
+    "bias_applied", "margin_bias", "total_bias",
+]
+
 MONEYLINE_FIELDS = [
     "sport", "league", "game_id", "game_date", "game_time",
     "home_team", "away_team",
     "home_prob", "away_prob",
     "away_projected_points", "home_projected_points", "total_projected_points",
+    *PROVENANCE_FIELDS,
     "total",
     "home_dk_moneyline_american", "away_dk_moneyline_american",
     "home_dk_moneyline_decimal", "away_dk_moneyline_decimal",
@@ -49,6 +54,7 @@ SPREAD_FIELDS = [
     "home_team", "away_team",
     "home_prob", "away_prob",
     "away_projected_points", "home_projected_points", "total_projected_points",
+    *PROVENANCE_FIELDS,
     "total",
     "home_spread", "away_spread",
     "home_dk_spread_american", "away_dk_spread_american",
@@ -60,6 +66,7 @@ TOTAL_FIELDS = [
     "home_team", "away_team",
     "home_prob", "away_prob",
     "away_projected_points", "home_projected_points", "total_projected_points",
+    *PROVENANCE_FIELDS,
     "total",
     "dk_total_over_american", "dk_total_under_american",
     "dk_total_over_decimal", "dk_total_under_decimal",
@@ -179,6 +186,9 @@ def main():
                         "away_projected_points":   p.get("away_projected_points", ""),
                         "home_projected_points":   p.get("home_projected_points", ""),
                         "total_projected_points":  p.get("total_projected_points", ""),
+                        "bias_applied":             p.get("bias_applied", ""),
+                        "margin_bias":             p.get("margin_bias", ""),
+                        "total_bias":              p.get("total_bias", ""),
                         "total":                   b.get("total", ""),
                     }
 
