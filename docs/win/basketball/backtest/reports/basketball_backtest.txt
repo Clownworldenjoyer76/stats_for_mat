@@ -1,0 +1,30 @@
+=== basketball_backtest RUN 2026-08-14T16:35:26.585727+00:00 ===
+2026-08-14T16:35:26.585752+00:00 | INFO  | run_id=20260814_163526Z
+2026-08-14T16:35:26.585790+00:00 | INFO  | backtest_dir=docs/win/basketball/backtest
+2026-08-14T16:35:26.585805+00:00 | INFO  | model_config=docs/win/basketball/config/model_config.yaml
+2026-08-14T16:35:26.585818+00:00 | INFO  | filter_config=docs/win/basketball/backtest/configs/markets_test.yaml
+2026-08-14T16:35:26.610667+00:00 | WARN  | markets.ncaam.moneyline.home.ev_bands[1] has min > max (0.4 > 0.05); it will match nothing
+2026-08-14T16:35:26.610728+00:00 | WARN  | markets.ncaam.spread.pick_preference.metric='win_prob' is not a production candidate key; production falls back to first qualifying side on ties
+2026-08-14T16:35:26.610753+00:00 | WARN  | markets.ncaam.total.over.ev_bands[1] has min > max (0.075 > 0.01); it will match nothing
+2026-08-14T16:35:26.611150+00:00 | INFO  | [NBA] reading docs/win/basketball/backtest/input/2025_NBA.csv
+2026-08-14T16:35:27.018909+00:00 | INFO  | [NBA] 2025_NBA moneyline: rows=1268 selected=52
+2026-08-14T16:35:27.128512+00:00 | INFO  | [NBA] 2025_NBA spread: rows=1268 selected=138
+2026-08-14T16:35:27.232970+00:00 | INFO  | [NBA] 2025_NBA total: rows=1268 selected=133
+2026-08-14T16:35:27.279445+00:00 | INFO  | [NBA] 2025_NBA: historical_rows=1268 selected=323 graded=323
+2026-08-14T16:35:27.280098+00:00 | INFO  | [NCAAM] reading docs/win/basketball/backtest/input/2025_NCAAM.csv
+2026-08-14T16:35:28.515904+00:00 | INFO  | [NCAAM] 2025_NCAAM moneyline: rows=4032 selected=33
+2026-08-14T16:35:28.859919+00:00 | INFO  | [NCAAM] 2025_NCAAM spread: rows=4032 selected=445
+2026-08-14T16:35:29.162318+00:00 | INFO  | [NCAAM] 2025_NCAAM total: rows=4032 selected=127
+2026-08-14T16:35:29.243972+00:00 | INFO  | [NCAAM] 2025_NCAAM: historical_rows=4032 selected=605 graded=605
+2026-08-14T16:35:29.245369+00:00 | INFO  | [WNBA] reading docs/win/basketball/backtest/input/2025_WNBA.csv
+2026-08-14T16:35:29.344625+00:00 | INFO  | [WNBA] 2025_WNBA moneyline: rows=262 selected=15
+2026-08-14T16:35:29.367268+00:00 | INFO  | [WNBA] 2025_WNBA spread: rows=262 selected=13
+2026-08-14T16:35:29.392874+00:00 | INFO  | [WNBA] 2025_WNBA total: rows=262 selected=61
+2026-08-14T16:35:29.410411+00:00 | INFO  | [WNBA] 2025_WNBA: historical_rows=262 selected=89 graded=89
+2026-08-14T16:35:29.551253+00:00 | INFO  | --- FINAL SUMMARY ---
+2026-08-14T16:35:29.551294+00:00 | INFO  | historical_rows=5562
+2026-08-14T16:35:29.551328+00:00 | INFO  | selected_bets=1017
+2026-08-14T16:35:29.551347+00:00 | INFO  | graded_bets=1017
+2026-08-14T16:35:29.551528+00:00 | INFO  | W/L/P/U=651/357/9/0 profit_units=+236.8175 roi_units=+23.2859%
+2026-08-14T16:35:29.551565+00:00 | INFO  | run_snapshot=docs/win/basketball/backtest/runs/20260814_163526Z
+2026-08-14T16:35:29.551590+00:00 | INFO  | STATUS: SUCCESS
