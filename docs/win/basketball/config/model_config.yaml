@@ -1,6 +1,18 @@
 # Basketball model configuration
 # Permanent league-level rules only.
 # Dynamic rolling bias values should be calculated separately and are not stored here.
+#
+# Bias schema:
+#   method: rolling -> window_games required, value must be null
+#   method: fixed   -> value required, window_games must be null
+#
+# Calibration schema:
+#   method: none -> no probability adjustment
+#   method: beta -> p_adj = logistic(
+#                       intercept
+#                       + coef_log_p * ln(p_raw)
+#                       + coef_log_1mp * ln(1 - p_raw)
+#                   )
 
 schema_version: 1
 
@@ -26,87 +38,122 @@ leagues:
       margin:
         method: rolling
         window_games: 100
+        value: null
       total:
         method: rolling
         window_games: 50
+        value: null
 
     calibration:
       moneyline:
-        home: none
-        away: none
+        home:
+          method: none
+        away:
+          method: none
+
       spread:
-        home: none
-        away: none
+        home:
+          method: none
+        away:
+          method: none
+
       total:
-        over: none
-        under: none
+        over:
+          method: none
+        under:
+          method: none
+
 
   wnba:
-    status: pending_testing
+    status: active
 
     edge:
-      moneyline: null
-      spread: null
-      total: null
+      moneyline: 0.000
+      spread: 0.050
+      total: 0.030
 
     std:
       spread:
-        mode: null
-        value: null
+        mode: fixed
+        value: 13.0424
       total:
-        mode: null
-        value: null
+        mode: fixed
+        value: 16.6675
 
     bias:
       margin:
-        method: null
+        method: fixed
         window_games: null
+        value: 0.500
       total:
-        method: null
+        method: fixed
         window_games: null
+        value: 0.000
 
     calibration:
       moneyline:
-        home: null
-        away: null
+        home:
+          method: none
+        away:
+          method: none
+
       spread:
-        home: null
-        away: null
+        home:
+          method: none
+        away:
+          method: none
+
       total:
-        over: null
-        under: null
+        over:
+          method: none
+        under:
+          method: none
+
 
   ncaam:
-    status: pending_testing
+    status: active
 
     edge:
-      moneyline: null
-      spread: null
-      total: null
+      moneyline: 0.015
+      spread: 0.015
+      total: 0.030
 
     std:
       spread:
-        mode: null
-        value: null
+        mode: fixed
+        value: 11.3946
       total:
-        mode: null
-        value: null
+        mode: fixed
+        value: 17.7495
 
     bias:
       margin:
-        method: null
-        window_games: null
+        method: rolling
+        window_games: 500
+        value: null
       total:
-        method: null
+        method: fixed
         window_games: null
+        value: 1.200
 
     calibration:
       moneyline:
-        home: null
-        away: null
+        home:
+          method: none
+        away:
+          method: none
+
       spread:
-        home: null
-        away: null
+        home:
+          method: beta
+          intercept: 0.59787618
+          coef_log_p: 0.59540409
+          coef_log_1mp: 0.36284251
+        away:
+          method: none
+
       total:
-        over: null
-        under: null
+        over:
+          method: none
+        under:
+          method: none
