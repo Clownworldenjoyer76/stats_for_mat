@@ -1,640 +1,298 @@
-=== basketball_daily_games RUN 2026-08-14T15:39:06.530823 ===
-2026-08-14T15:39:06.531093 | NO INPUT FILES: docs/win/basketball/00_intake/sportsbook/nba
-2026-08-14T15:39:06.531164 | NO INPUT FILES: docs/win/basketball/00_intake/sportsbook/ncaam
-2026-08-14T15:39:06.532199 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_16_WNBA_odds.csv
-2026-08-14T15:39:06.532322 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_17_WNBA_odds.csv
-2026-08-14T15:39:06.532412 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_18_WNBA_odds.csv
-2026-08-14T15:39:06.532491 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_19_WNBA_odds.csv
-2026-08-14T15:39:06.532555 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_20_WNBA_odds.csv
-2026-08-14T15:39:06.532624 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_21_WNBA_odds.csv
-2026-08-14T15:39:06.532721 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_22_WNBA_odds.csv
-2026-08-14T15:39:06.532789 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_23_WNBA_odds.csv
-2026-08-14T15:39:06.532861 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_24_WNBA_odds.csv
-2026-08-14T15:39:06.532926 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_25_WNBA_odds.csv
-2026-08-14T15:39:06.532995 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_27_WNBA_odds.csv
-2026-08-14T15:39:06.533079 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_28_WNBA_odds.csv
-2026-08-14T15:39:06.533134 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_29_WNBA_odds.csv
-2026-08-14T15:39:06.533195 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_30_WNBA_odds.csv
-2026-08-14T15:39:06.533262 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_05_31_WNBA_odds.csv
-2026-08-14T15:39:06.533315 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_01_WNBA_odds.csv
-2026-08-14T15:39:06.533385 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_03_WNBA_odds.csv
-2026-08-14T15:39:06.533453 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_05_WNBA_odds.csv
-2026-08-14T15:39:06.533514 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_06_WNBA_odds.csv
-2026-08-14T15:39:06.533574 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_07_WNBA_odds.csv
-2026-08-14T15:39:06.533634 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_08_WNBA_odds.csv
-2026-08-14T15:39:06.533710 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_09_WNBA_odds.csv
-2026-08-14T15:39:06.533767 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_10_WNBA_odds.csv
-2026-08-14T15:39:06.533826 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_11_WNBA_odds.csv
-2026-08-14T15:39:06.533887 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_13_WNBA_odds.csv
-2026-08-14T15:39:06.533941 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_14_WNBA_odds.csv
-2026-08-14T15:39:06.534012 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_15_WNBA_odds.csv
-2026-08-14T15:39:06.534073 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_17_WNBA_odds.csv
-2026-08-14T15:39:06.534153 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_18_WNBA_odds.csv
-2026-08-14T15:39:06.534209 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_19_WNBA_odds.csv
-2026-08-14T15:39:06.534269 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_20_WNBA_odds.csv
-2026-08-14T15:39:06.534327 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_21_WNBA_odds.csv
-2026-08-14T15:39:06.534389 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_22_WNBA_odds.csv
-2026-08-14T15:39:06.534460 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_24_WNBA_odds.csv
-2026-08-14T15:39:06.534540 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_25_WNBA_odds.csv
-2026-08-14T15:39:06.534604 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_26_WNBA_odds.csv
-2026-08-14T15:39:06.534671 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_27_WNBA_odds.csv
-2026-08-14T15:39:06.534753 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_28_WNBA_odds.csv
-2026-08-14T15:39:06.534812 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_06_29_WNBA_odds.csv
-2026-08-14T15:39:06.534895 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_01_WNBA_odds.csv
-2026-08-14T15:39:06.534947 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_03_WNBA_odds.csv
-2026-08-14T15:39:06.535024 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_05_WNBA_odds.csv
-2026-08-14T15:39:06.535086 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_06_WNBA_odds.csv
-2026-08-14T15:39:06.535146 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_07_WNBA_odds.csv
-2026-08-14T15:39:06.535211 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_08_WNBA_odds.csv
-2026-08-14T15:39:06.535276 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_09_WNBA_odds.csv
-2026-08-14T15:39:06.535348 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_10_WNBA_odds.csv
-2026-08-14T15:39:06.535404 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_11_WNBA_odds.csv
-2026-08-14T15:39:06.535462 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_12_WNBA_odds.csv
-2026-08-14T15:39:06.535513 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_13_WNBA_odds.csv
-2026-08-14T15:39:06.535588 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_14_WNBA_odds.csv
-2026-08-14T15:39:06.535651 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_15_WNBA_odds.csv
-2026-08-14T15:39:06.535761 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_16_WNBA_odds.csv
-2026-08-14T15:39:06.535852 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_22_WNBA_odds.csv
-2026-08-14T15:39:06.535927 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_23_WNBA_odds.csv
-2026-08-14T15:39:06.535982 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_24_WNBA_odds.csv
-2026-08-14T15:39:06.536040 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_25_WNBA_odds.csv
-2026-08-14T15:39:06.536104 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_26_WNBA_odds.csv
-2026-08-14T15:39:06.536166 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_27_WNBA_odds.csv
-2026-08-14T15:39:06.536241 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_28_WNBA_odds.csv
-2026-08-14T15:39:06.536300 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_29_WNBA_odds.csv
-2026-08-14T15:39:06.536361 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_30_WNBA_odds.csv
-2026-08-14T15:39:06.536426 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_07_31_WNBA_odds.csv
-2026-08-14T15:39:06.536482 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_01_WNBA_odds.csv
-2026-08-14T15:39:06.536567 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_03_WNBA_odds.csv
-2026-08-14T15:39:06.536645 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_05_WNBA_odds.csv
-2026-08-14T15:39:06.536748 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_07_WNBA_odds.csv
-2026-08-14T15:39:06.536818 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_08_WNBA_odds.csv
-2026-08-14T15:39:06.536877 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_09_WNBA_odds.csv
-2026-08-14T15:39:06.536935 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_10_WNBA_odds.csv
-2026-08-14T15:39:06.537019 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_11_WNBA_odds.csv
-2026-08-14T15:39:06.537074 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_12_WNBA_odds.csv
-2026-08-14T15:39:06.537142 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_13_WNBA_odds.csv
-2026-08-14T15:39:06.537201 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_15_WNBA_odds.csv
-2026-08-14T15:39:06.537275 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_16_WNBA_odds.csv
-2026-08-14T15:39:06.537333 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_17_WNBA_odds.csv
-2026-08-14T15:39:06.537398 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_19_WNBA_odds.csv
-2026-08-14T15:39:06.537471 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_20_WNBA_odds.csv
-2026-08-14T15:39:06.537522 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_21_WNBA_odds.csv
-2026-08-14T15:39:06.537587 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_22_WNBA_odds.csv
-2026-08-14T15:39:06.537675 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_23_WNBA_odds.csv
-2026-08-14T15:39:06.537791 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_24_WNBA_odds.csv
-2026-08-14T15:39:06.537863 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_25_WNBA_odds.csv
-2026-08-14T15:39:06.537915 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_26_WNBA_odds.csv
-2026-08-14T15:39:06.537973 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_27_WNBA_odds.csv
-2026-08-14T15:39:06.538025 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_28_WNBA_odds.csv
-2026-08-14T15:39:06.538094 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_29_WNBA_odds.csv
-2026-08-14T15:39:06.538157 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_30_WNBA_odds.csv
-2026-08-14T15:39:06.538232 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_08_31_WNBA_odds.csv
-2026-08-14T15:39:06.538294 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_01_WNBA_odds.csv
-2026-08-14T15:39:06.538360 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_02_WNBA_odds.csv
-2026-08-14T15:39:06.538419 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_03_WNBA_odds.csv
-2026-08-14T15:39:06.538479 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_04_WNBA_odds.csv
-2026-08-14T15:39:06.538534 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_05_WNBA_odds.csv
-2026-08-14T15:39:06.538602 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_06_WNBA_odds.csv
-2026-08-14T15:39:06.538675 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_07_WNBA_odds.csv
-2026-08-14T15:39:06.538737 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_08_WNBA_odds.csv
-2026-08-14T15:39:06.538788 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_09_WNBA_odds.csv
-2026-08-14T15:39:06.538856 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_10_WNBA_odds.csv
-2026-08-14T15:39:06.538911 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_11_WNBA_odds.csv
-2026-08-14T15:39:06.538987 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_14_WNBA_odds.csv
-2026-08-14T15:39:06.539063 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_16_WNBA_odds.csv
-2026-08-14T15:39:06.539122 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_17_WNBA_odds.csv
-2026-08-14T15:39:06.539180 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_18_WNBA_odds.csv
-2026-08-14T15:39:06.539243 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_19_WNBA_odds.csv
-2026-08-14T15:39:06.539295 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_21_WNBA_odds.csv
-2026-08-14T15:39:06.539354 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_23_WNBA_odds.csv
-2026-08-14T15:39:06.539418 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_26_WNBA_odds.csv
-2026-08-14T15:39:06.539479 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_28_WNBA_odds.csv
-2026-08-14T15:39:06.539544 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_09_30_WNBA_odds.csv
-2026-08-14T15:39:06.539596 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_10_03_WNBA_odds.csv
-2026-08-14T15:39:06.539651 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_10_05_WNBA_odds.csv
-2026-08-14T15:39:06.539755 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_10_08_WNBA_odds.csv
-2026-08-14T15:39:06.539813 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2025_10_10_WNBA_odds.csv
-2026-08-14T15:39:06.539866 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_08_WNBA_odds.csv
-2026-08-14T15:39:06.539932 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_09_WNBA_odds.csv
-2026-08-14T15:39:06.540008 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_10_WNBA_odds.csv
-2026-08-14T15:39:06.540085 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_12_WNBA_odds.csv
-2026-08-14T15:39:06.540146 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_13_WNBA_odds.csv
-2026-08-14T15:39:06.540198 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_14_WNBA_odds.csv
-2026-08-14T15:39:06.540257 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_15_WNBA_odds.csv
-2026-08-14T15:39:06.540327 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_17_WNBA_odds.csv
-2026-08-14T15:39:06.540405 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_18_WNBA_odds.csv
-2026-08-14T15:39:06.540465 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_19_WNBA_odds.csv
-2026-08-14T15:39:06.540516 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_20_WNBA_odds.csv
-2026-08-14T15:39:06.540593 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_21_WNBA_odds.csv
-2026-08-14T15:39:06.540676 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_22_WNBA_odds.csv
-2026-08-14T15:39:06.540759 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_23_WNBA_odds.csv
-2026-08-14T15:39:06.540823 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_24_WNBA_odds.csv
-2026-08-14T15:39:06.540892 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_25_WNBA_odds.csv
-2026-08-14T15:39:06.540950 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_27_WNBA_odds.csv
-2026-08-14T15:39:06.541036 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_28_WNBA_odds.csv
-2026-08-14T15:39:06.541094 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_29_WNBA_odds.csv
-2026-08-14T15:39:06.541168 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_30_WNBA_odds.csv
-2026-08-14T15:39:06.541235 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_31_WNBA_odds.csv
-2026-08-14T15:39:06.541287 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_01_WNBA_odds.csv
-2026-08-14T15:39:06.541347 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_02_WNBA_odds.csv
-2026-08-14T15:39:06.541419 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_03_WNBA_odds.csv
-2026-08-14T15:39:06.541480 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_04_WNBA_odds.csv
-2026-08-14T15:39:06.541543 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_05_WNBA_odds.csv
-2026-08-14T15:39:06.541607 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_06_WNBA_odds.csv
-2026-08-14T15:39:06.541718 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_07_WNBA_odds.csv
-2026-08-14T15:39:06.541787 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_08_WNBA_odds.csv
-2026-08-14T15:39:06.541855 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_09_WNBA_odds.csv
-2026-08-14T15:39:06.541918 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_10_WNBA_odds.csv
-2026-08-14T15:39:06.541980 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_11_WNBA_odds.csv
-2026-08-14T15:39:06.542058 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_12_WNBA_odds.csv
-2026-08-14T15:39:06.542121 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_13_WNBA_odds.csv
-2026-08-14T15:39:06.542192 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_14_WNBA_odds.csv
-2026-08-14T15:39:06.542253 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_15_WNBA_odds.csv
-2026-08-14T15:39:06.542317 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_16_WNBA_odds.csv
-2026-08-14T15:39:06.542373 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_17_WNBA_odds.csv
-2026-08-14T15:39:06.542461 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_18_WNBA_odds.csv
-2026-08-14T15:39:06.542515 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_19_WNBA_odds.csv
-2026-08-14T15:39:06.542579 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_20_WNBA_odds.csv
-2026-08-14T15:39:06.542643 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_21_WNBA_odds.csv
-2026-08-14T15:39:06.542727 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_22_WNBA_odds.csv
-2026-08-14T15:39:06.542801 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_23_WNBA_odds.csv
-2026-08-14T15:39:06.542856 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_24_WNBA_odds.csv
-2026-08-14T15:39:06.542932 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_25_WNBA_odds.csv
-2026-08-14T15:39:06.543004 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_26_WNBA_odds.csv
-2026-08-14T15:39:06.543069 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_27_WNBA_odds.csv
-2026-08-14T15:39:06.543135 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_28_WNBA_odds.csv
-2026-08-14T15:39:06.543209 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_02_WNBA_odds.csv
-2026-08-14T15:39:06.543278 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_03_WNBA_odds.csv
-2026-08-14T15:39:06.543339 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_04_WNBA_odds.csv
-2026-08-14T15:39:06.543405 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_05_WNBA_odds.csv
-2026-08-14T15:39:06.543462 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_06_WNBA_odds.csv
-2026-08-14T15:39:06.543525 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_07_WNBA_odds.csv
-2026-08-14T15:39:06.543585 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_08_WNBA_odds.csv
-2026-08-14T15:39:06.543650 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_09_WNBA_odds.csv
-2026-08-14T15:39:06.543771 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_10_WNBA_odds.csv
-2026-08-14T15:39:06.543845 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_11_WNBA_odds.csv
-2026-08-14T15:39:06.543916 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_12_WNBA_odds.csv
-2026-08-14T15:39:06.543988 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_13_WNBA_odds.csv
-2026-08-14T15:39:06.544049 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_14_WNBA_odds.csv
-2026-08-14T15:39:06.544107 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_15_WNBA_odds.csv
-2026-08-14T15:39:06.544171 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_16_WNBA_odds.csv
-2026-08-14T15:39:06.544232 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_17_WNBA_odds.csv
-2026-08-14T15:39:06.544305 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_18_WNBA_odds.csv
-2026-08-14T15:39:06.544419 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_19_WNBA_odds.csv
-2026-08-14T15:39:06.544485 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_20_WNBA_odds.csv
-2026-08-14T15:39:06.544566 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_22_WNBA_odds.csv
-2026-08-14T15:39:06.544690 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_28_WNBA_odds.csv
-2026-08-14T15:39:06.544780 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_29_WNBA_odds.csv
-2026-08-14T15:39:06.544839 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_30_WNBA_odds.csv
-2026-08-14T15:39:06.544907 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_31_WNBA_odds.csv
-2026-08-14T15:39:06.544971 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_01_WNBA_odds.csv
-2026-08-14T15:39:06.545032 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_02_WNBA_odds.csv
-2026-08-14T15:39:06.545101 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_03_WNBA_odds.csv
-2026-08-14T15:39:06.545167 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_04_WNBA_odds.csv
-2026-08-14T15:39:06.545221 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_05_WNBA_odds.csv
-2026-08-14T15:39:06.545294 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_06_WNBA_odds.csv
-2026-08-14T15:39:06.545365 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_07_WNBA_odds.csv
-2026-08-14T15:39:06.545429 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_08_WNBA_odds.csv
-2026-08-14T15:39:06.545495 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_09_WNBA_odds.csv
-2026-08-14T15:39:06.545569 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_10_WNBA_odds.csv
-2026-08-14T15:39:06.545631 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_11_WNBA_odds.csv
-2026-08-14T15:39:06.545743 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_12_WNBA_odds.csv
-2026-08-14T15:39:06.545833 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_13_WNBA_odds.csv
-2026-08-14T15:39:06.545922 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_14_WNBA_odds.csv
-2026-08-14T15:39:06.545995 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_15_WNBA_odds.csv
-2026-08-14T15:39:06.546088 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_16_WNBA_odds.csv
-2026-08-14T15:39:06.546170 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_17_WNBA_odds.csv
-2026-08-14T15:39:06.546228 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_18_WNBA_odds.csv
-2026-08-14T15:39:06.546324 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_19_WNBA_odds.csv
-2026-08-14T15:39:06.546395 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_20_WNBA_odds.csv
-2026-08-14T15:39:06.546474 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_21_WNBA_odds.csv
-2026-08-14T15:39:06.546539 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_22_WNBA_odds.csv
-2026-08-14T15:39:06.546602 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_23_WNBA_odds.csv
-2026-08-14T15:39:06.546869 | WROTE docs/win/basketball/daily_games/wnba/2025_05_16_WNBA.csv (3 rows)
-2026-08-14T15:39:06.547059 | WROTE docs/win/basketball/daily_games/wnba/2025_05_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.547221 | WROTE docs/win/basketball/daily_games/wnba/2025_05_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.547372 | WROTE docs/win/basketball/daily_games/wnba/2025_05_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.547523 | WROTE docs/win/basketball/daily_games/wnba/2025_05_20_WNBA.csv (2 rows)
-2026-08-14T15:39:06.547706 | WROTE docs/win/basketball/daily_games/wnba/2025_05_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.547839 | WROTE docs/win/basketball/daily_games/wnba/2025_05_22_WNBA.csv (2 rows)
-2026-08-14T15:39:06.547970 | WROTE docs/win/basketball/daily_games/wnba/2025_05_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.548077 | WROTE docs/win/basketball/daily_games/wnba/2025_05_24_WNBA.csv (2 rows)
-2026-08-14T15:39:06.548180 | WROTE docs/win/basketball/daily_games/wnba/2025_05_25_WNBA.csv (3 rows)
-2026-08-14T15:39:06.548286 | WROTE docs/win/basketball/daily_games/wnba/2025_05_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.548382 | WROTE docs/win/basketball/daily_games/wnba/2025_05_28_WNBA.csv (1 rows)
-2026-08-14T15:39:06.548503 | WROTE docs/win/basketball/daily_games/wnba/2025_05_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.548648 | WROTE docs/win/basketball/daily_games/wnba/2025_05_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.548816 | WROTE docs/win/basketball/daily_games/wnba/2025_05_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.548966 | WROTE docs/win/basketball/daily_games/wnba/2025_06_01_WNBA.csv (3 rows)
-2026-08-14T15:39:06.549134 | WROTE docs/win/basketball/daily_games/wnba/2025_06_03_WNBA.csv (3 rows)
-2026-08-14T15:39:06.549281 | WROTE docs/win/basketball/daily_games/wnba/2025_06_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.549435 | WROTE docs/win/basketball/daily_games/wnba/2025_06_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.549582 | WROTE docs/win/basketball/daily_games/wnba/2025_06_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.549752 | WROTE docs/win/basketball/daily_games/wnba/2025_06_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.549895 | WROTE docs/win/basketball/daily_games/wnba/2025_06_09_WNBA.csv (1 rows)
-2026-08-14T15:39:06.550045 | WROTE docs/win/basketball/daily_games/wnba/2025_06_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.550191 | WROTE docs/win/basketball/daily_games/wnba/2025_06_11_WNBA.csv (2 rows)
-2026-08-14T15:39:06.550321 | WROTE docs/win/basketball/daily_games/wnba/2025_06_13_WNBA.csv (1 rows)
-2026-08-14T15:39:06.550477 | WROTE docs/win/basketball/daily_games/wnba/2025_06_14_WNBA.csv (3 rows)
-2026-08-14T15:39:06.550625 | WROTE docs/win/basketball/daily_games/wnba/2025_06_15_WNBA.csv (2 rows)
-2026-08-14T15:39:06.550801 | WROTE docs/win/basketball/daily_games/wnba/2025_06_17_WNBA.csv (5 rows)
-2026-08-14T15:39:06.550937 | WROTE docs/win/basketball/daily_games/wnba/2025_06_18_WNBA.csv (1 rows)
-2026-08-14T15:39:06.551057 | WROTE docs/win/basketball/daily_games/wnba/2025_06_19_WNBA.csv (2 rows)
-2026-08-14T15:39:06.551231 | WROTE docs/win/basketball/daily_games/wnba/2025_06_20_WNBA.csv (2 rows)
-2026-08-14T15:39:06.551375 | WROTE docs/win/basketball/daily_games/wnba/2025_06_21_WNBA.csv (2 rows)
-2026-08-14T15:39:06.551532 | WROTE docs/win/basketball/daily_games/wnba/2025_06_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.551700 | WROTE docs/win/basketball/daily_games/wnba/2025_06_24_WNBA.csv (4 rows)
-2026-08-14T15:39:06.551846 | WROTE docs/win/basketball/daily_games/wnba/2025_06_25_WNBA.csv (1 rows)
-2026-08-14T15:39:06.551989 | WROTE docs/win/basketball/daily_games/wnba/2025_06_26_WNBA.csv (1 rows)
-2026-08-14T15:39:06.552147 | WROTE docs/win/basketball/daily_games/wnba/2025_06_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.552289 | WROTE docs/win/basketball/daily_games/wnba/2025_06_28_WNBA.csv (1 rows)
-2026-08-14T15:39:06.552442 | WROTE docs/win/basketball/daily_games/wnba/2025_06_29_WNBA.csv (4 rows)
-2026-08-14T15:39:06.552582 | WROTE docs/win/basketball/daily_games/wnba/2025_07_01_WNBA.csv (1 rows)
-2026-08-14T15:39:06.552766 | WROTE docs/win/basketball/daily_games/wnba/2025_07_03_WNBA.csv (4 rows)
-2026-08-14T15:39:06.552920 | WROTE docs/win/basketball/daily_games/wnba/2025_07_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.553063 | WROTE docs/win/basketball/daily_games/wnba/2025_07_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.553212 | WROTE docs/win/basketball/daily_games/wnba/2025_07_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.553352 | WROTE docs/win/basketball/daily_games/wnba/2025_07_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.553506 | WROTE docs/win/basketball/daily_games/wnba/2025_07_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.553653 | WROTE docs/win/basketball/daily_games/wnba/2025_07_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.553818 | WROTE docs/win/basketball/daily_games/wnba/2025_07_11_WNBA.csv (2 rows)
-2026-08-14T15:39:06.553960 | WROTE docs/win/basketball/daily_games/wnba/2025_07_12_WNBA.csv (1 rows)
-2026-08-14T15:39:06.554113 | WROTE docs/win/basketball/daily_games/wnba/2025_07_13_WNBA.csv (4 rows)
-2026-08-14T15:39:06.554258 | WROTE docs/win/basketball/daily_games/wnba/2025_07_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.554409 | WROTE docs/win/basketball/daily_games/wnba/2025_07_15_WNBA.csv (2 rows)
-2026-08-14T15:39:06.554565 | WROTE docs/win/basketball/daily_games/wnba/2025_07_16_WNBA.csv (5 rows)
-2026-08-14T15:39:06.554733 | WROTE docs/win/basketball/daily_games/wnba/2025_07_22_WNBA.csv (4 rows)
-2026-08-14T15:39:06.554864 | WROTE docs/win/basketball/daily_games/wnba/2025_07_23_WNBA.csv (1 rows)
-2026-08-14T15:39:06.555011 | WROTE docs/win/basketball/daily_games/wnba/2025_07_24_WNBA.csv (2 rows)
-2026-08-14T15:39:06.555152 | WROTE docs/win/basketball/daily_games/wnba/2025_07_25_WNBA.csv (2 rows)
-2026-08-14T15:39:06.555298 | WROTE docs/win/basketball/daily_games/wnba/2025_07_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.555449 | WROTE docs/win/basketball/daily_games/wnba/2025_07_27_WNBA.csv (4 rows)
-2026-08-14T15:39:06.555592 | WROTE docs/win/basketball/daily_games/wnba/2025_07_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.555749 | WROTE docs/win/basketball/daily_games/wnba/2025_07_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.555868 | WROTE docs/win/basketball/daily_games/wnba/2025_07_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.556029 | WROTE docs/win/basketball/daily_games/wnba/2025_07_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.556187 | WROTE docs/win/basketball/daily_games/wnba/2025_08_01_WNBA.csv (5 rows)
-2026-08-14T15:39:06.556341 | WROTE docs/win/basketball/daily_games/wnba/2025_08_03_WNBA.csv (4 rows)
-2026-08-14T15:39:06.556506 | WROTE docs/win/basketball/daily_games/wnba/2025_08_05_WNBA.csv (5 rows)
-2026-08-14T15:39:06.556682 | WROTE docs/win/basketball/daily_games/wnba/2025_08_07_WNBA.csv (3 rows)
-2026-08-14T15:39:06.556834 | WROTE docs/win/basketball/daily_games/wnba/2025_08_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.556979 | WROTE docs/win/basketball/daily_games/wnba/2025_08_09_WNBA.csv (2 rows)
-2026-08-14T15:39:06.557132 | WROTE docs/win/basketball/daily_games/wnba/2025_08_10_WNBA.csv (4 rows)
-2026-08-14T15:39:06.557273 | WROTE docs/win/basketball/daily_games/wnba/2025_08_11_WNBA.csv (1 rows)
-2026-08-14T15:39:06.557418 | WROTE docs/win/basketball/daily_games/wnba/2025_08_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.557563 | WROTE docs/win/basketball/daily_games/wnba/2025_08_13_WNBA.csv (2 rows)
-2026-08-14T15:39:06.557732 | WROTE docs/win/basketball/daily_games/wnba/2025_08_15_WNBA.csv (4 rows)
-2026-08-14T15:39:06.557876 | WROTE docs/win/basketball/daily_games/wnba/2025_08_16_WNBA.csv (1 rows)
-2026-08-14T15:39:06.558024 | WROTE docs/win/basketball/daily_games/wnba/2025_08_17_WNBA.csv (3 rows)
-2026-08-14T15:39:06.558173 | WROTE docs/win/basketball/daily_games/wnba/2025_08_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.558301 | WROTE docs/win/basketball/daily_games/wnba/2025_08_20_WNBA.csv (1 rows)
-2026-08-14T15:39:06.558453 | WROTE docs/win/basketball/daily_games/wnba/2025_08_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.558600 | WROTE docs/win/basketball/daily_games/wnba/2025_08_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.558769 | WROTE docs/win/basketball/daily_games/wnba/2025_08_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.558924 | WROTE docs/win/basketball/daily_games/wnba/2025_08_24_WNBA.csv (3 rows)
-2026-08-14T15:39:06.559065 | WROTE docs/win/basketball/daily_games/wnba/2025_08_25_WNBA.csv (1 rows)
-2026-08-14T15:39:06.559210 | WROTE docs/win/basketball/daily_games/wnba/2025_08_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.559346 | WROTE docs/win/basketball/daily_games/wnba/2025_08_27_WNBA.csv (1 rows)
-2026-08-14T15:39:06.559497 | WROTE docs/win/basketball/daily_games/wnba/2025_08_28_WNBA.csv (3 rows)
-2026-08-14T15:39:06.559644 | WROTE docs/win/basketball/daily_games/wnba/2025_08_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.559822 | WROTE docs/win/basketball/daily_games/wnba/2025_08_30_WNBA.csv (4 rows)
-2026-08-14T15:39:06.559962 | WROTE docs/win/basketball/daily_games/wnba/2025_08_31_WNBA.csv (2 rows)
-2026-08-14T15:39:06.560115 | WROTE docs/win/basketball/daily_games/wnba/2025_09_01_WNBA.csv (3 rows)
-2026-08-14T15:39:06.560259 | WROTE docs/win/basketball/daily_games/wnba/2025_09_02_WNBA.csv (2 rows)
-2026-08-14T15:39:06.560388 | WROTE docs/win/basketball/daily_games/wnba/2025_09_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.560539 | WROTE docs/win/basketball/daily_games/wnba/2025_09_04_WNBA.csv (1 rows)
-2026-08-14T15:39:06.560649 | WROTE docs/win/basketball/daily_games/wnba/2025_09_05_WNBA.csv (3 rows)
-2026-08-14T15:39:06.560819 | WROTE docs/win/basketball/daily_games/wnba/2025_09_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.560956 | WROTE docs/win/basketball/daily_games/wnba/2025_09_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.561103 | WROTE docs/win/basketball/daily_games/wnba/2025_09_08_WNBA.csv (1 rows)
-2026-08-14T15:39:06.561268 | WROTE docs/win/basketball/daily_games/wnba/2025_09_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.561397 | WROTE docs/win/basketball/daily_games/wnba/2025_09_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.561562 | WROTE docs/win/basketball/daily_games/wnba/2025_09_11_WNBA.csv (3 rows)
-2026-08-14T15:39:06.561728 | WROTE docs/win/basketball/daily_games/wnba/2025_09_14_WNBA.csv (4 rows)
-2026-08-14T15:39:06.561876 | WROTE docs/win/basketball/daily_games/wnba/2025_09_16_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562029 | WROTE docs/win/basketball/daily_games/wnba/2025_09_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562178 | WROTE docs/win/basketball/daily_games/wnba/2025_09_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562314 | WROTE docs/win/basketball/daily_games/wnba/2025_09_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.562461 | WROTE docs/win/basketball/daily_games/wnba/2025_09_21_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562606 | WROTE docs/win/basketball/daily_games/wnba/2025_09_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562770 | WROTE docs/win/basketball/daily_games/wnba/2025_09_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.562915 | WROTE docs/win/basketball/daily_games/wnba/2025_09_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.563058 | WROTE docs/win/basketball/daily_games/wnba/2025_09_30_WNBA.csv (1 rows)
-2026-08-14T15:39:06.563200 | WROTE docs/win/basketball/daily_games/wnba/2025_10_03_WNBA.csv (1 rows)
-2026-08-14T15:39:06.563338 | WROTE docs/win/basketball/daily_games/wnba/2025_10_05_WNBA.csv (1 rows)
-2026-08-14T15:39:06.563481 | WROTE docs/win/basketball/daily_games/wnba/2025_10_08_WNBA.csv (1 rows)
-2026-08-14T15:39:06.563619 | WROTE docs/win/basketball/daily_games/wnba/2025_10_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.563783 | WROTE docs/win/basketball/daily_games/wnba/2026_05_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.563937 | WROTE docs/win/basketball/daily_games/wnba/2026_05_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.564056 | WROTE docs/win/basketball/daily_games/wnba/2026_05_10_WNBA.csv (4 rows)
-2026-08-14T15:39:06.564224 | WROTE docs/win/basketball/daily_games/wnba/2026_05_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.564363 | WROTE docs/win/basketball/daily_games/wnba/2026_05_13_WNBA.csv (1 rows)
-2026-08-14T15:39:06.564493 | WROTE docs/win/basketball/daily_games/wnba/2026_05_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.564649 | WROTE docs/win/basketball/daily_games/wnba/2026_05_15_WNBA.csv (4 rows)
-2026-08-14T15:39:06.564829 | WROTE docs/win/basketball/daily_games/wnba/2026_05_17_WNBA.csv (4 rows)
-2026-08-14T15:39:06.564958 | WROTE docs/win/basketball/daily_games/wnba/2026_05_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.565096 | WROTE docs/win/basketball/daily_games/wnba/2026_05_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.565248 | WROTE docs/win/basketball/daily_games/wnba/2026_05_20_WNBA.csv (3 rows)
-2026-08-14T15:39:06.565362 | WROTE docs/win/basketball/daily_games/wnba/2026_05_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.565527 | WROTE docs/win/basketball/daily_games/wnba/2026_05_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.565680 | WROTE docs/win/basketball/daily_games/wnba/2026_05_23_WNBA.csv (3 rows)
-2026-08-14T15:39:06.565835 | WROTE docs/win/basketball/daily_games/wnba/2026_05_24_WNBA.csv (3 rows)
-2026-08-14T15:39:06.565975 | WROTE docs/win/basketball/daily_games/wnba/2026_05_25_WNBA.csv (2 rows)
-2026-08-14T15:39:06.566132 | WROTE docs/win/basketball/daily_games/wnba/2026_05_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.566273 | WROTE docs/win/basketball/daily_games/wnba/2026_05_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.566433 | WROTE docs/win/basketball/daily_games/wnba/2026_05_29_WNBA.csv (4 rows)
-2026-08-14T15:39:06.566579 | WROTE docs/win/basketball/daily_games/wnba/2026_05_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.566737 | WROTE docs/win/basketball/daily_games/wnba/2026_05_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.566880 | WROTE docs/win/basketball/daily_games/wnba/2026_06_01_WNBA.csv (2 rows)
-2026-08-14T15:39:06.567030 | WROTE docs/win/basketball/daily_games/wnba/2026_06_02_WNBA.csv (4 rows)
-2026-08-14T15:39:06.567174 | WROTE docs/win/basketball/daily_games/wnba/2026_06_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.567318 | WROTE docs/win/basketball/daily_games/wnba/2026_06_04_WNBA.csv (2 rows)
-2026-08-14T15:39:06.567472 | WROTE docs/win/basketball/daily_games/wnba/2026_06_05_WNBA.csv (3 rows)
-2026-08-14T15:39:06.567621 | WROTE docs/win/basketball/daily_games/wnba/2026_06_06_WNBA.csv (4 rows)
-2026-08-14T15:39:06.567787 | WROTE docs/win/basketball/daily_games/wnba/2026_06_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.567937 | WROTE docs/win/basketball/daily_games/wnba/2026_06_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.568085 | WROTE docs/win/basketball/daily_games/wnba/2026_06_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.568231 | WROTE docs/win/basketball/daily_games/wnba/2026_06_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.568380 | WROTE docs/win/basketball/daily_games/wnba/2026_06_11_WNBA.csv (4 rows)
-2026-08-14T15:39:06.568524 | WROTE docs/win/basketball/daily_games/wnba/2026_06_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.568701 | WROTE docs/win/basketball/daily_games/wnba/2026_06_13_WNBA.csv (4 rows)
-2026-08-14T15:39:06.568848 | WROTE docs/win/basketball/daily_games/wnba/2026_06_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.569001 | WROTE docs/win/basketball/daily_games/wnba/2026_06_15_WNBA.csv (3 rows)
-2026-08-14T15:39:06.569135 | WROTE docs/win/basketball/daily_games/wnba/2026_06_16_WNBA.csv (1 rows)
-2026-08-14T15:39:06.569296 | WROTE docs/win/basketball/daily_games/wnba/2026_06_17_WNBA.csv (6 rows)
-2026-08-14T15:39:06.569399 | WROTE docs/win/basketball/daily_games/wnba/2026_06_18_WNBA.csv (1 rows)
-2026-08-14T15:39:06.569555 | WROTE docs/win/basketball/daily_games/wnba/2026_06_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.569718 | WROTE docs/win/basketball/daily_games/wnba/2026_06_20_WNBA.csv (3 rows)
-2026-08-14T15:39:06.569867 | WROTE docs/win/basketball/daily_games/wnba/2026_06_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.570014 | WROTE docs/win/basketball/daily_games/wnba/2026_06_22_WNBA.csv (4 rows)
-2026-08-14T15:39:06.570150 | WROTE docs/win/basketball/daily_games/wnba/2026_06_23_WNBA.csv (1 rows)
-2026-08-14T15:39:06.570302 | WROTE docs/win/basketball/daily_games/wnba/2026_06_24_WNBA.csv (4 rows)
-2026-08-14T15:39:06.570447 | WROTE docs/win/basketball/daily_games/wnba/2026_06_25_WNBA.csv (3 rows)
-2026-08-14T15:39:06.570590 | WROTE docs/win/basketball/daily_games/wnba/2026_06_26_WNBA.csv (3 rows)
-2026-08-14T15:39:06.570758 | WROTE docs/win/basketball/daily_games/wnba/2026_06_27_WNBA.csv (3 rows)
-2026-08-14T15:39:06.570914 | WROTE docs/win/basketball/daily_games/wnba/2026_06_28_WNBA.csv (4 rows)
-2026-08-14T15:39:06.571062 | WROTE docs/win/basketball/daily_games/wnba/2026_07_02_WNBA.csv (3 rows)
-2026-08-14T15:39:06.571205 | WROTE docs/win/basketball/daily_games/wnba/2026_07_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.571349 | WROTE docs/win/basketball/daily_games/wnba/2026_07_04_WNBA.csv (2 rows)
-2026-08-14T15:39:06.571486 | WROTE docs/win/basketball/daily_games/wnba/2026_07_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.571642 | WROTE docs/win/basketball/daily_games/wnba/2026_07_06_WNBA.csv (3 rows)
-2026-08-14T15:39:06.571803 | WROTE docs/win/basketball/daily_games/wnba/2026_07_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.571951 | WROTE docs/win/basketball/daily_games/wnba/2026_07_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.572096 | WROTE docs/win/basketball/daily_games/wnba/2026_07_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.572265 | WROTE docs/win/basketball/daily_games/wnba/2026_07_10_WNBA.csv (3 rows)
-2026-08-14T15:39:06.572413 | WROTE docs/win/basketball/daily_games/wnba/2026_07_11_WNBA.csv (3 rows)
-2026-08-14T15:39:06.572552 | WROTE docs/win/basketball/daily_games/wnba/2026_07_12_WNBA.csv (4 rows)
-2026-08-14T15:39:06.572711 | WROTE docs/win/basketball/daily_games/wnba/2026_07_13_WNBA.csv (2 rows)
-2026-08-14T15:39:06.572861 | WROTE docs/win/basketball/daily_games/wnba/2026_07_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.573009 | WROTE docs/win/basketball/daily_games/wnba/2026_07_15_WNBA.csv (3 rows)
-2026-08-14T15:39:06.573153 | WROTE docs/win/basketball/daily_games/wnba/2026_07_16_WNBA.csv (2 rows)
-2026-08-14T15:39:06.573362 | WROTE docs/win/basketball/daily_games/wnba/2026_07_17_WNBA.csv (4 rows)
-2026-08-14T15:39:06.573513 | WROTE docs/win/basketball/daily_games/wnba/2026_07_18_WNBA.csv (3 rows)
-2026-08-14T15:39:06.573676 | WROTE docs/win/basketball/daily_games/wnba/2026_07_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.573832 | WROTE docs/win/basketball/daily_games/wnba/2026_07_20_WNBA.csv (5 rows)
-2026-08-14T15:39:06.573984 | WROTE docs/win/basketball/daily_games/wnba/2026_07_22_WNBA.csv (6 rows)
-2026-08-14T15:39:06.574107 | WROTE docs/win/basketball/daily_games/wnba/2026_07_28_WNBA.csv (5 rows)
-2026-08-14T15:39:06.574264 | WROTE docs/win/basketball/daily_games/wnba/2026_07_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.574413 | WROTE docs/win/basketball/daily_games/wnba/2026_07_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.574559 | WROTE docs/win/basketball/daily_games/wnba/2026_07_31_WNBA.csv (3 rows)
-2026-08-14T15:39:06.574709 | WROTE docs/win/basketball/daily_games/wnba/2026_08_01_WNBA.csv (2 rows)
-2026-08-14T15:39:06.574861 | WROTE docs/win/basketball/daily_games/wnba/2026_08_02_WNBA.csv (4 rows)
-2026-08-14T15:39:06.574998 | WROTE docs/win/basketball/daily_games/wnba/2026_08_03_WNBA.csv (3 rows)
-2026-08-14T15:39:06.575157 | WROTE docs/win/basketball/daily_games/wnba/2026_08_04_WNBA.csv (1 rows)
-2026-08-14T15:39:06.575301 | WROTE docs/win/basketball/daily_games/wnba/2026_08_05_WNBA.csv (4 rows)
-2026-08-14T15:39:06.575451 | WROTE docs/win/basketball/daily_games/wnba/2026_08_06_WNBA.csv (3 rows)
-2026-08-14T15:39:06.575599 | WROTE docs/win/basketball/daily_games/wnba/2026_08_07_WNBA.csv (3 rows)
-2026-08-14T15:39:06.575760 | WROTE docs/win/basketball/daily_games/wnba/2026_08_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.575909 | WROTE docs/win/basketball/daily_games/wnba/2026_08_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.576052 | WROTE docs/win/basketball/daily_games/wnba/2026_08_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.576212 | WROTE docs/win/basketball/daily_games/wnba/2026_08_11_WNBA.csv (6 rows)
-2026-08-14T15:39:06.576368 | WROTE docs/win/basketball/daily_games/wnba/2026_08_12_WNBA.csv (6 rows)
-2026-08-14T15:39:06.576530 | WROTE docs/win/basketball/daily_games/wnba/2026_08_13_WNBA.csv (6 rows)
-2026-08-14T15:39:06.576694 | WROTE docs/win/basketball/daily_games/wnba/2026_08_14_WNBA.csv (4 rows)
-2026-08-14T15:39:06.576851 | WROTE docs/win/basketball/daily_games/wnba/2026_08_15_WNBA.csv (6 rows)
-2026-08-14T15:39:06.577007 | WROTE docs/win/basketball/daily_games/wnba/2026_08_16_WNBA.csv (6 rows)
-2026-08-14T15:39:06.577143 | WROTE docs/win/basketball/daily_games/wnba/2026_08_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.577307 | WROTE docs/win/basketball/daily_games/wnba/2026_08_18_WNBA.csv (8 rows)
-2026-08-14T15:39:06.577420 | WROTE docs/win/basketball/daily_games/wnba/2026_08_19_WNBA.csv (4 rows)
-2026-08-14T15:39:06.577587 | WROTE docs/win/basketball/daily_games/wnba/2026_08_20_WNBA.csv (6 rows)
-2026-08-14T15:39:06.577740 | WROTE docs/win/basketball/daily_games/wnba/2026_08_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.577887 | WROTE docs/win/basketball/daily_games/wnba/2026_08_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578041 | WROTE docs/win/basketball/daily_games/wnba/2026_08_23_WNBA.csv (4 rows)
-2026-08-14T15:39:06.578091 | --- SUMMARY ---
-2026-08-14T15:39:06.578117 | Input files found: 210
-2026-08-14T15:39:06.578135 | Rows read: 568
-2026-08-14T15:39:06.578153 | Duplicate rows skipped: 0
-2026-08-14T15:39:06.578171 | Rows written: 568
-2026-08-14T15:39:06.578190 | Files written: 210
-2026-08-14T15:39:06.578208 | FILE: docs/win/basketball/daily_games/wnba/2025_05_16_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578232 | FILE: docs/win/basketball/daily_games/wnba/2025_05_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578249 | FILE: docs/win/basketball/daily_games/wnba/2025_05_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578266 | FILE: docs/win/basketball/daily_games/wnba/2025_05_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578284 | FILE: docs/win/basketball/daily_games/wnba/2025_05_20_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578302 | FILE: docs/win/basketball/daily_games/wnba/2025_05_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578319 | FILE: docs/win/basketball/daily_games/wnba/2025_05_22_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578337 | FILE: docs/win/basketball/daily_games/wnba/2025_05_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578354 | FILE: docs/win/basketball/daily_games/wnba/2025_05_24_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578372 | FILE: docs/win/basketball/daily_games/wnba/2025_05_25_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578389 | FILE: docs/win/basketball/daily_games/wnba/2025_05_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.578407 | FILE: docs/win/basketball/daily_games/wnba/2025_05_28_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578425 | FILE: docs/win/basketball/daily_games/wnba/2025_05_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578442 | FILE: docs/win/basketball/daily_games/wnba/2025_05_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578460 | FILE: docs/win/basketball/daily_games/wnba/2025_05_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578477 | FILE: docs/win/basketball/daily_games/wnba/2025_06_01_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578495 | FILE: docs/win/basketball/daily_games/wnba/2025_06_03_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578512 | FILE: docs/win/basketball/daily_games/wnba/2025_06_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578530 | FILE: docs/win/basketball/daily_games/wnba/2025_06_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578548 | FILE: docs/win/basketball/daily_games/wnba/2025_06_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578566 | FILE: docs/win/basketball/daily_games/wnba/2025_06_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578583 | FILE: docs/win/basketball/daily_games/wnba/2025_06_09_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578601 | FILE: docs/win/basketball/daily_games/wnba/2025_06_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578618 | FILE: docs/win/basketball/daily_games/wnba/2025_06_11_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578635 | FILE: docs/win/basketball/daily_games/wnba/2025_06_13_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578653 | FILE: docs/win/basketball/daily_games/wnba/2025_06_14_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578683 | FILE: docs/win/basketball/daily_games/wnba/2025_06_15_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578701 | FILE: docs/win/basketball/daily_games/wnba/2025_06_17_WNBA.csv (5 rows)
-2026-08-14T15:39:06.578718 | FILE: docs/win/basketball/daily_games/wnba/2025_06_18_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578736 | FILE: docs/win/basketball/daily_games/wnba/2025_06_19_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578753 | FILE: docs/win/basketball/daily_games/wnba/2025_06_20_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578770 | FILE: docs/win/basketball/daily_games/wnba/2025_06_21_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578788 | FILE: docs/win/basketball/daily_games/wnba/2025_06_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.578805 | FILE: docs/win/basketball/daily_games/wnba/2025_06_24_WNBA.csv (4 rows)
-2026-08-14T15:39:06.578823 | FILE: docs/win/basketball/daily_games/wnba/2025_06_25_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578840 | FILE: docs/win/basketball/daily_games/wnba/2025_06_26_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578857 | FILE: docs/win/basketball/daily_games/wnba/2025_06_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.578875 | FILE: docs/win/basketball/daily_games/wnba/2025_06_28_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578892 | FILE: docs/win/basketball/daily_games/wnba/2025_06_29_WNBA.csv (4 rows)
-2026-08-14T15:39:06.578909 | FILE: docs/win/basketball/daily_games/wnba/2025_07_01_WNBA.csv (1 rows)
-2026-08-14T15:39:06.578930 | FILE: docs/win/basketball/daily_games/wnba/2025_07_03_WNBA.csv (4 rows)
-2026-08-14T15:39:06.578951 | FILE: docs/win/basketball/daily_games/wnba/2025_07_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578969 | FILE: docs/win/basketball/daily_games/wnba/2025_07_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.578986 | FILE: docs/win/basketball/daily_games/wnba/2025_07_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579003 | FILE: docs/win/basketball/daily_games/wnba/2025_07_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579020 | FILE: docs/win/basketball/daily_games/wnba/2025_07_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579038 | FILE: docs/win/basketball/daily_games/wnba/2025_07_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579055 | FILE: docs/win/basketball/daily_games/wnba/2025_07_11_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579072 | FILE: docs/win/basketball/daily_games/wnba/2025_07_12_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579090 | FILE: docs/win/basketball/daily_games/wnba/2025_07_13_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579107 | FILE: docs/win/basketball/daily_games/wnba/2025_07_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579124 | FILE: docs/win/basketball/daily_games/wnba/2025_07_15_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579142 | FILE: docs/win/basketball/daily_games/wnba/2025_07_16_WNBA.csv (5 rows)
-2026-08-14T15:39:06.579159 | FILE: docs/win/basketball/daily_games/wnba/2025_07_22_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579177 | FILE: docs/win/basketball/daily_games/wnba/2025_07_23_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579194 | FILE: docs/win/basketball/daily_games/wnba/2025_07_24_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579211 | FILE: docs/win/basketball/daily_games/wnba/2025_07_25_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579229 | FILE: docs/win/basketball/daily_games/wnba/2025_07_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579246 | FILE: docs/win/basketball/daily_games/wnba/2025_07_27_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579263 | FILE: docs/win/basketball/daily_games/wnba/2025_07_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579281 | FILE: docs/win/basketball/daily_games/wnba/2025_07_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579298 | FILE: docs/win/basketball/daily_games/wnba/2025_07_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579316 | FILE: docs/win/basketball/daily_games/wnba/2025_07_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579333 | FILE: docs/win/basketball/daily_games/wnba/2025_08_01_WNBA.csv (5 rows)
-2026-08-14T15:39:06.579351 | FILE: docs/win/basketball/daily_games/wnba/2025_08_03_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579368 | FILE: docs/win/basketball/daily_games/wnba/2025_08_05_WNBA.csv (5 rows)
-2026-08-14T15:39:06.579386 | FILE: docs/win/basketball/daily_games/wnba/2025_08_07_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579403 | FILE: docs/win/basketball/daily_games/wnba/2025_08_08_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579420 | FILE: docs/win/basketball/daily_games/wnba/2025_08_09_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579438 | FILE: docs/win/basketball/daily_games/wnba/2025_08_10_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579455 | FILE: docs/win/basketball/daily_games/wnba/2025_08_11_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579472 | FILE: docs/win/basketball/daily_games/wnba/2025_08_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579490 | FILE: docs/win/basketball/daily_games/wnba/2025_08_13_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579507 | FILE: docs/win/basketball/daily_games/wnba/2025_08_15_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579524 | FILE: docs/win/basketball/daily_games/wnba/2025_08_16_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579542 | FILE: docs/win/basketball/daily_games/wnba/2025_08_17_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579559 | FILE: docs/win/basketball/daily_games/wnba/2025_08_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579577 | FILE: docs/win/basketball/daily_games/wnba/2025_08_20_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579594 | FILE: docs/win/basketball/daily_games/wnba/2025_08_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579612 | FILE: docs/win/basketball/daily_games/wnba/2025_08_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579629 | FILE: docs/win/basketball/daily_games/wnba/2025_08_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579646 | FILE: docs/win/basketball/daily_games/wnba/2025_08_24_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579678 | FILE: docs/win/basketball/daily_games/wnba/2025_08_25_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579696 | FILE: docs/win/basketball/daily_games/wnba/2025_08_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579713 | FILE: docs/win/basketball/daily_games/wnba/2025_08_27_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579730 | FILE: docs/win/basketball/daily_games/wnba/2025_08_28_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579748 | FILE: docs/win/basketball/daily_games/wnba/2025_08_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579765 | FILE: docs/win/basketball/daily_games/wnba/2025_08_30_WNBA.csv (4 rows)
-2026-08-14T15:39:06.579783 | FILE: docs/win/basketball/daily_games/wnba/2025_08_31_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579800 | FILE: docs/win/basketball/daily_games/wnba/2025_09_01_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579817 | FILE: docs/win/basketball/daily_games/wnba/2025_09_02_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579835 | FILE: docs/win/basketball/daily_games/wnba/2025_09_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579852 | FILE: docs/win/basketball/daily_games/wnba/2025_09_04_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579870 | FILE: docs/win/basketball/daily_games/wnba/2025_09_05_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579887 | FILE: docs/win/basketball/daily_games/wnba/2025_09_06_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579904 | FILE: docs/win/basketball/daily_games/wnba/2025_09_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.579922 | FILE: docs/win/basketball/daily_games/wnba/2025_09_08_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579939 | FILE: docs/win/basketball/daily_games/wnba/2025_09_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579956 | FILE: docs/win/basketball/daily_games/wnba/2025_09_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.579973 | FILE: docs/win/basketball/daily_games/wnba/2025_09_11_WNBA.csv (3 rows)
-2026-08-14T15:39:06.579991 | FILE: docs/win/basketball/daily_games/wnba/2025_09_14_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580008 | FILE: docs/win/basketball/daily_games/wnba/2025_09_16_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580025 | FILE: docs/win/basketball/daily_games/wnba/2025_09_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580042 | FILE: docs/win/basketball/daily_games/wnba/2025_09_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580060 | FILE: docs/win/basketball/daily_games/wnba/2025_09_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580077 | FILE: docs/win/basketball/daily_games/wnba/2025_09_21_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580095 | FILE: docs/win/basketball/daily_games/wnba/2025_09_23_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580112 | FILE: docs/win/basketball/daily_games/wnba/2025_09_26_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580129 | FILE: docs/win/basketball/daily_games/wnba/2025_09_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580146 | FILE: docs/win/basketball/daily_games/wnba/2025_09_30_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580163 | FILE: docs/win/basketball/daily_games/wnba/2025_10_03_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580181 | FILE: docs/win/basketball/daily_games/wnba/2025_10_05_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580198 | FILE: docs/win/basketball/daily_games/wnba/2025_10_08_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580215 | FILE: docs/win/basketball/daily_games/wnba/2025_10_10_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580233 | FILE: docs/win/basketball/daily_games/wnba/2026_05_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580250 | FILE: docs/win/basketball/daily_games/wnba/2026_05_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580267 | FILE: docs/win/basketball/daily_games/wnba/2026_05_10_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580284 | FILE: docs/win/basketball/daily_games/wnba/2026_05_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580302 | FILE: docs/win/basketball/daily_games/wnba/2026_05_13_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580319 | FILE: docs/win/basketball/daily_games/wnba/2026_05_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580336 | FILE: docs/win/basketball/daily_games/wnba/2026_05_15_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580354 | FILE: docs/win/basketball/daily_games/wnba/2026_05_17_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580374 | FILE: docs/win/basketball/daily_games/wnba/2026_05_18_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580391 | FILE: docs/win/basketball/daily_games/wnba/2026_05_19_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580408 | FILE: docs/win/basketball/daily_games/wnba/2026_05_20_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580426 | FILE: docs/win/basketball/daily_games/wnba/2026_05_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580443 | FILE: docs/win/basketball/daily_games/wnba/2026_05_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580461 | FILE: docs/win/basketball/daily_games/wnba/2026_05_23_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580478 | FILE: docs/win/basketball/daily_games/wnba/2026_05_24_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580496 | FILE: docs/win/basketball/daily_games/wnba/2026_05_25_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580513 | FILE: docs/win/basketball/daily_games/wnba/2026_05_27_WNBA.csv (5 rows)
-2026-08-14T15:39:06.580530 | FILE: docs/win/basketball/daily_games/wnba/2026_05_28_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580548 | FILE: docs/win/basketball/daily_games/wnba/2026_05_29_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580565 | FILE: docs/win/basketball/daily_games/wnba/2026_05_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580582 | FILE: docs/win/basketball/daily_games/wnba/2026_05_31_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580600 | FILE: docs/win/basketball/daily_games/wnba/2026_06_01_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580617 | FILE: docs/win/basketball/daily_games/wnba/2026_06_02_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580634 | FILE: docs/win/basketball/daily_games/wnba/2026_06_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580652 | FILE: docs/win/basketball/daily_games/wnba/2026_06_04_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580678 | FILE: docs/win/basketball/daily_games/wnba/2026_06_05_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580696 | FILE: docs/win/basketball/daily_games/wnba/2026_06_06_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580713 | FILE: docs/win/basketball/daily_games/wnba/2026_06_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580730 | FILE: docs/win/basketball/daily_games/wnba/2026_06_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580748 | FILE: docs/win/basketball/daily_games/wnba/2026_06_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580765 | FILE: docs/win/basketball/daily_games/wnba/2026_06_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580782 | FILE: docs/win/basketball/daily_games/wnba/2026_06_11_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580799 | FILE: docs/win/basketball/daily_games/wnba/2026_06_12_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580817 | FILE: docs/win/basketball/daily_games/wnba/2026_06_13_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580834 | FILE: docs/win/basketball/daily_games/wnba/2026_06_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.580851 | FILE: docs/win/basketball/daily_games/wnba/2026_06_15_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580869 | FILE: docs/win/basketball/daily_games/wnba/2026_06_16_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580886 | FILE: docs/win/basketball/daily_games/wnba/2026_06_17_WNBA.csv (6 rows)
-2026-08-14T15:39:06.580903 | FILE: docs/win/basketball/daily_games/wnba/2026_06_18_WNBA.csv (1 rows)
-2026-08-14T15:39:06.580921 | FILE: docs/win/basketball/daily_games/wnba/2026_06_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580938 | FILE: docs/win/basketball/daily_games/wnba/2026_06_20_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580955 | FILE: docs/win/basketball/daily_games/wnba/2026_06_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.580973 | FILE: docs/win/basketball/daily_games/wnba/2026_06_22_WNBA.csv (4 rows)
-2026-08-14T15:39:06.580990 | FILE: docs/win/basketball/daily_games/wnba/2026_06_23_WNBA.csv (1 rows)
-2026-08-14T15:39:06.581007 | FILE: docs/win/basketball/daily_games/wnba/2026_06_24_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581025 | FILE: docs/win/basketball/daily_games/wnba/2026_06_25_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581042 | FILE: docs/win/basketball/daily_games/wnba/2026_06_26_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581059 | FILE: docs/win/basketball/daily_games/wnba/2026_06_27_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581077 | FILE: docs/win/basketball/daily_games/wnba/2026_06_28_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581097 | FILE: docs/win/basketball/daily_games/wnba/2026_07_02_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581114 | FILE: docs/win/basketball/daily_games/wnba/2026_07_03_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581132 | FILE: docs/win/basketball/daily_games/wnba/2026_07_04_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581149 | FILE: docs/win/basketball/daily_games/wnba/2026_07_05_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581167 | FILE: docs/win/basketball/daily_games/wnba/2026_07_06_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581184 | FILE: docs/win/basketball/daily_games/wnba/2026_07_07_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581202 | FILE: docs/win/basketball/daily_games/wnba/2026_07_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581219 | FILE: docs/win/basketball/daily_games/wnba/2026_07_09_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581236 | FILE: docs/win/basketball/daily_games/wnba/2026_07_10_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581254 | FILE: docs/win/basketball/daily_games/wnba/2026_07_11_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581271 | FILE: docs/win/basketball/daily_games/wnba/2026_07_12_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581289 | FILE: docs/win/basketball/daily_games/wnba/2026_07_13_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581306 | FILE: docs/win/basketball/daily_games/wnba/2026_07_14_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581323 | FILE: docs/win/basketball/daily_games/wnba/2026_07_15_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581341 | FILE: docs/win/basketball/daily_games/wnba/2026_07_16_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581358 | FILE: docs/win/basketball/daily_games/wnba/2026_07_17_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581375 | FILE: docs/win/basketball/daily_games/wnba/2026_07_18_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581392 | FILE: docs/win/basketball/daily_games/wnba/2026_07_19_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581410 | FILE: docs/win/basketball/daily_games/wnba/2026_07_20_WNBA.csv (5 rows)
-2026-08-14T15:39:06.581427 | FILE: docs/win/basketball/daily_games/wnba/2026_07_22_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581445 | FILE: docs/win/basketball/daily_games/wnba/2026_07_28_WNBA.csv (5 rows)
-2026-08-14T15:39:06.581462 | FILE: docs/win/basketball/daily_games/wnba/2026_07_29_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581479 | FILE: docs/win/basketball/daily_games/wnba/2026_07_30_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581497 | FILE: docs/win/basketball/daily_games/wnba/2026_07_31_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581514 | FILE: docs/win/basketball/daily_games/wnba/2026_08_01_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581532 | FILE: docs/win/basketball/daily_games/wnba/2026_08_02_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581549 | FILE: docs/win/basketball/daily_games/wnba/2026_08_03_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581567 | FILE: docs/win/basketball/daily_games/wnba/2026_08_04_WNBA.csv (1 rows)
-2026-08-14T15:39:06.581584 | FILE: docs/win/basketball/daily_games/wnba/2026_08_05_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581601 | FILE: docs/win/basketball/daily_games/wnba/2026_08_06_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581619 | FILE: docs/win/basketball/daily_games/wnba/2026_08_07_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581636 | FILE: docs/win/basketball/daily_games/wnba/2026_08_08_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581663 | FILE: docs/win/basketball/daily_games/wnba/2026_08_09_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581680 | FILE: docs/win/basketball/daily_games/wnba/2026_08_10_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581698 | FILE: docs/win/basketball/daily_games/wnba/2026_08_11_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581715 | FILE: docs/win/basketball/daily_games/wnba/2026_08_12_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581733 | FILE: docs/win/basketball/daily_games/wnba/2026_08_13_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581750 | FILE: docs/win/basketball/daily_games/wnba/2026_08_14_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581767 | FILE: docs/win/basketball/daily_games/wnba/2026_08_15_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581785 | FILE: docs/win/basketball/daily_games/wnba/2026_08_16_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581805 | FILE: docs/win/basketball/daily_games/wnba/2026_08_17_WNBA.csv (2 rows)
-2026-08-14T15:39:06.581823 | FILE: docs/win/basketball/daily_games/wnba/2026_08_18_WNBA.csv (8 rows)
-2026-08-14T15:39:06.581840 | FILE: docs/win/basketball/daily_games/wnba/2026_08_19_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581857 | FILE: docs/win/basketball/daily_games/wnba/2026_08_20_WNBA.csv (6 rows)
-2026-08-14T15:39:06.581875 | FILE: docs/win/basketball/daily_games/wnba/2026_08_21_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581892 | FILE: docs/win/basketball/daily_games/wnba/2026_08_22_WNBA.csv (3 rows)
-2026-08-14T15:39:06.581909 | FILE: docs/win/basketball/daily_games/wnba/2026_08_23_WNBA.csv (4 rows)
-2026-08-14T15:39:06.581927 | STATUS: SUCCESS
+=== basketball_daily_games RUN 2026-08-14T17:44:29.863472 ===
+2026-08-14T17:44:29.863738 | NO INPUT FILES: docs/win/basketball/00_intake/sportsbook/nba
+2026-08-14T17:44:29.863811 | NO INPUT FILES: docs/win/basketball/00_intake/sportsbook/ncaam
+2026-08-14T17:44:29.864333 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_08_WNBA_odds.csv
+2026-08-14T17:44:29.864468 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_09_WNBA_odds.csv
+2026-08-14T17:44:29.864589 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_10_WNBA_odds.csv
+2026-08-14T17:44:29.864697 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_12_WNBA_odds.csv
+2026-08-14T17:44:29.864775 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_13_WNBA_odds.csv
+2026-08-14T17:44:29.864844 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_14_WNBA_odds.csv
+2026-08-14T17:44:29.864951 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_15_WNBA_odds.csv
+2026-08-14T17:44:29.865166 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_17_WNBA_odds.csv
+2026-08-14T17:44:29.865270 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_18_WNBA_odds.csv
+2026-08-14T17:44:29.865345 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_19_WNBA_odds.csv
+2026-08-14T17:44:29.865408 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_20_WNBA_odds.csv
+2026-08-14T17:44:29.865489 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_21_WNBA_odds.csv
+2026-08-14T17:44:29.865568 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_22_WNBA_odds.csv
+2026-08-14T17:44:29.865647 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_23_WNBA_odds.csv
+2026-08-14T17:44:29.865724 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_24_WNBA_odds.csv
+2026-08-14T17:44:29.865802 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_25_WNBA_odds.csv
+2026-08-14T17:44:29.865877 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_27_WNBA_odds.csv
+2026-08-14T17:44:29.866000 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_28_WNBA_odds.csv
+2026-08-14T17:44:29.866075 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_29_WNBA_odds.csv
+2026-08-14T17:44:29.866159 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_30_WNBA_odds.csv
+2026-08-14T17:44:29.866242 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_05_31_WNBA_odds.csv
+2026-08-14T17:44:29.866304 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_01_WNBA_odds.csv
+2026-08-14T17:44:29.866372 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_02_WNBA_odds.csv
+2026-08-14T17:44:29.866459 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_03_WNBA_odds.csv
+2026-08-14T17:44:29.866527 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_04_WNBA_odds.csv
+2026-08-14T17:44:29.866598 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_05_WNBA_odds.csv
+2026-08-14T17:44:29.866674 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_06_WNBA_odds.csv
+2026-08-14T17:44:29.866758 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_07_WNBA_odds.csv
+2026-08-14T17:44:29.866830 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_08_WNBA_odds.csv
+2026-08-14T17:44:29.866910 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_09_WNBA_odds.csv
+2026-08-14T17:44:29.867008 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_10_WNBA_odds.csv
+2026-08-14T17:44:29.867079 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_11_WNBA_odds.csv
+2026-08-14T17:44:29.867168 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_12_WNBA_odds.csv
+2026-08-14T17:44:29.867236 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_13_WNBA_odds.csv
+2026-08-14T17:44:29.867328 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_14_WNBA_odds.csv
+2026-08-14T17:44:29.867408 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_15_WNBA_odds.csv
+2026-08-14T17:44:29.867484 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_16_WNBA_odds.csv
+2026-08-14T17:44:29.867543 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_17_WNBA_odds.csv
+2026-08-14T17:44:29.867643 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_18_WNBA_odds.csv
+2026-08-14T17:44:29.867709 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_19_WNBA_odds.csv
+2026-08-14T17:44:29.867792 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_20_WNBA_odds.csv
+2026-08-14T17:44:29.867870 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_21_WNBA_odds.csv
+2026-08-14T17:44:29.867975 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_22_WNBA_odds.csv
+2026-08-14T17:44:29.868060 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_23_WNBA_odds.csv
+2026-08-14T17:44:29.868123 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_24_WNBA_odds.csv
+2026-08-14T17:44:29.868209 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_25_WNBA_odds.csv
+2026-08-14T17:44:29.868287 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_26_WNBA_odds.csv
+2026-08-14T17:44:29.868361 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_27_WNBA_odds.csv
+2026-08-14T17:44:29.868440 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_06_28_WNBA_odds.csv
+2026-08-14T17:44:29.868521 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_02_WNBA_odds.csv
+2026-08-14T17:44:29.868596 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_03_WNBA_odds.csv
+2026-08-14T17:44:29.868662 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_04_WNBA_odds.csv
+2026-08-14T17:44:29.868731 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_05_WNBA_odds.csv
+2026-08-14T17:44:29.868801 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_06_WNBA_odds.csv
+2026-08-14T17:44:29.868875 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_07_WNBA_odds.csv
+2026-08-14T17:44:29.868957 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_08_WNBA_odds.csv
+2026-08-14T17:44:29.869043 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_09_WNBA_odds.csv
+2026-08-14T17:44:29.869122 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_10_WNBA_odds.csv
+2026-08-14T17:44:29.869203 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_11_WNBA_odds.csv
+2026-08-14T17:44:29.869282 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_12_WNBA_odds.csv
+2026-08-14T17:44:29.869365 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_13_WNBA_odds.csv
+2026-08-14T17:44:29.869434 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_14_WNBA_odds.csv
+2026-08-14T17:44:29.869507 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_15_WNBA_odds.csv
+2026-08-14T17:44:29.869582 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_16_WNBA_odds.csv
+2026-08-14T17:44:29.869648 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_17_WNBA_odds.csv
+2026-08-14T17:44:29.869732 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_18_WNBA_odds.csv
+2026-08-14T17:44:29.869825 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_19_WNBA_odds.csv
+2026-08-14T17:44:29.869900 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_20_WNBA_odds.csv
+2026-08-14T17:44:29.870025 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_22_WNBA_odds.csv
+2026-08-14T17:44:29.870129 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_28_WNBA_odds.csv
+2026-08-14T17:44:29.870224 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_29_WNBA_odds.csv
+2026-08-14T17:44:29.870294 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_30_WNBA_odds.csv
+2026-08-14T17:44:29.870374 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_07_31_WNBA_odds.csv
+2026-08-14T17:44:29.870454 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_01_WNBA_odds.csv
+2026-08-14T17:44:29.870521 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_02_WNBA_odds.csv
+2026-08-14T17:44:29.870613 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_03_WNBA_odds.csv
+2026-08-14T17:44:29.870687 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_04_WNBA_odds.csv
+2026-08-14T17:44:29.870752 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_05_WNBA_odds.csv
+2026-08-14T17:44:29.870833 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_06_WNBA_odds.csv
+2026-08-14T17:44:29.870909 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_07_WNBA_odds.csv
+2026-08-14T17:44:29.871012 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_08_WNBA_odds.csv
+2026-08-14T17:44:29.871093 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_09_WNBA_odds.csv
+2026-08-14T17:44:29.871176 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_10_WNBA_odds.csv
+2026-08-14T17:44:29.871246 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_11_WNBA_odds.csv
+2026-08-14T17:44:29.871352 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_12_WNBA_odds.csv
+2026-08-14T17:44:29.871458 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_13_WNBA_odds.csv
+2026-08-14T17:44:29.871557 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_14_WNBA_odds.csv
+2026-08-14T17:44:29.871642 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_15_WNBA_odds.csv
+2026-08-14T17:44:29.871744 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_16_WNBA_odds.csv
+2026-08-14T17:44:29.871843 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_17_WNBA_odds.csv
+2026-08-14T17:44:29.871910 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_18_WNBA_odds.csv
+2026-08-14T17:44:29.872034 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_19_WNBA_odds.csv
+2026-08-14T17:44:29.872117 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_20_WNBA_odds.csv
+2026-08-14T17:44:29.872275 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_21_WNBA_odds.csv
+2026-08-14T17:44:29.872349 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_22_WNBA_odds.csv
+2026-08-14T17:44:29.872424 | PROCESSING docs/win/basketball/00_intake/sportsbook/wnba/2026_08_23_WNBA_odds.csv
+2026-08-14T17:44:29.872680 | WROTE docs/win/basketball/daily_games/wnba/2026_05_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.872832 | WROTE docs/win/basketball/daily_games/wnba/2026_05_09_WNBA.csv (4 rows)
+2026-08-14T17:44:29.872995 | WROTE docs/win/basketball/daily_games/wnba/2026_05_10_WNBA.csv (4 rows)
+2026-08-14T17:44:29.873129 | WROTE docs/win/basketball/daily_games/wnba/2026_05_12_WNBA.csv (2 rows)
+2026-08-14T17:44:29.873249 | WROTE docs/win/basketball/daily_games/wnba/2026_05_13_WNBA.csv (1 rows)
+2026-08-14T17:44:29.873370 | WROTE docs/win/basketball/daily_games/wnba/2026_05_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.873504 | WROTE docs/win/basketball/daily_games/wnba/2026_05_15_WNBA.csv (4 rows)
+2026-08-14T17:44:29.873638 | WROTE docs/win/basketball/daily_games/wnba/2026_05_17_WNBA.csv (4 rows)
+2026-08-14T17:44:29.873761 | WROTE docs/win/basketball/daily_games/wnba/2026_05_18_WNBA.csv (2 rows)
+2026-08-14T17:44:29.873875 | WROTE docs/win/basketball/daily_games/wnba/2026_05_19_WNBA.csv (1 rows)
+2026-08-14T17:44:29.874026 | WROTE docs/win/basketball/daily_games/wnba/2026_05_20_WNBA.csv (3 rows)
+2026-08-14T17:44:29.874151 | WROTE docs/win/basketball/daily_games/wnba/2026_05_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.874272 | WROTE docs/win/basketball/daily_games/wnba/2026_05_22_WNBA.csv (3 rows)
+2026-08-14T17:44:29.874392 | WROTE docs/win/basketball/daily_games/wnba/2026_05_23_WNBA.csv (3 rows)
+2026-08-14T17:44:29.874516 | WROTE docs/win/basketball/daily_games/wnba/2026_05_24_WNBA.csv (3 rows)
+2026-08-14T17:44:29.874632 | WROTE docs/win/basketball/daily_games/wnba/2026_05_25_WNBA.csv (2 rows)
+2026-08-14T17:44:29.874759 | WROTE docs/win/basketball/daily_games/wnba/2026_05_27_WNBA.csv (5 rows)
+2026-08-14T17:44:29.874875 | WROTE docs/win/basketball/daily_games/wnba/2026_05_28_WNBA.csv (2 rows)
+2026-08-14T17:44:29.875022 | WROTE docs/win/basketball/daily_games/wnba/2026_05_29_WNBA.csv (4 rows)
+2026-08-14T17:44:29.875145 | WROTE docs/win/basketball/daily_games/wnba/2026_05_30_WNBA.csv (3 rows)
+2026-08-14T17:44:29.875257 | WROTE docs/win/basketball/daily_games/wnba/2026_05_31_WNBA.csv (1 rows)
+2026-08-14T17:44:29.875370 | WROTE docs/win/basketball/daily_games/wnba/2026_06_01_WNBA.csv (2 rows)
+2026-08-14T17:44:29.875493 | WROTE docs/win/basketball/daily_games/wnba/2026_06_02_WNBA.csv (4 rows)
+2026-08-14T17:44:29.875608 | WROTE docs/win/basketball/daily_games/wnba/2026_06_03_WNBA.csv (2 rows)
+2026-08-14T17:44:29.875723 | WROTE docs/win/basketball/daily_games/wnba/2026_06_04_WNBA.csv (2 rows)
+2026-08-14T17:44:29.875841 | WROTE docs/win/basketball/daily_games/wnba/2026_06_05_WNBA.csv (3 rows)
+2026-08-14T17:44:29.875989 | WROTE docs/win/basketball/daily_games/wnba/2026_06_06_WNBA.csv (4 rows)
+2026-08-14T17:44:29.876111 | WROTE docs/win/basketball/daily_games/wnba/2026_06_07_WNBA.csv (2 rows)
+2026-08-14T17:44:29.876231 | WROTE docs/win/basketball/daily_games/wnba/2026_06_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.876349 | WROTE docs/win/basketball/daily_games/wnba/2026_06_09_WNBA.csv (3 rows)
+2026-08-14T17:44:29.876463 | WROTE docs/win/basketball/daily_games/wnba/2026_06_10_WNBA.csv (2 rows)
+2026-08-14T17:44:29.876584 | WROTE docs/win/basketball/daily_games/wnba/2026_06_11_WNBA.csv (4 rows)
+2026-08-14T17:44:29.876698 | WROTE docs/win/basketball/daily_games/wnba/2026_06_12_WNBA.csv (2 rows)
+2026-08-14T17:44:29.876819 | WROTE docs/win/basketball/daily_games/wnba/2026_06_13_WNBA.csv (4 rows)
+2026-08-14T17:44:29.876951 | WROTE docs/win/basketball/daily_games/wnba/2026_06_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.877076 | WROTE docs/win/basketball/daily_games/wnba/2026_06_15_WNBA.csv (3 rows)
+2026-08-14T17:44:29.877185 | WROTE docs/win/basketball/daily_games/wnba/2026_06_16_WNBA.csv (1 rows)
+2026-08-14T17:44:29.877312 | WROTE docs/win/basketball/daily_games/wnba/2026_06_17_WNBA.csv (6 rows)
+2026-08-14T17:44:29.877421 | WROTE docs/win/basketball/daily_games/wnba/2026_06_18_WNBA.csv (1 rows)
+2026-08-14T17:44:29.877538 | WROTE docs/win/basketball/daily_games/wnba/2026_06_19_WNBA.csv (3 rows)
+2026-08-14T17:44:29.877655 | WROTE docs/win/basketball/daily_games/wnba/2026_06_20_WNBA.csv (3 rows)
+2026-08-14T17:44:29.877771 | WROTE docs/win/basketball/daily_games/wnba/2026_06_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.877890 | WROTE docs/win/basketball/daily_games/wnba/2026_06_22_WNBA.csv (4 rows)
+2026-08-14T17:44:29.878018 | WROTE docs/win/basketball/daily_games/wnba/2026_06_23_WNBA.csv (1 rows)
+2026-08-14T17:44:29.878141 | WROTE docs/win/basketball/daily_games/wnba/2026_06_24_WNBA.csv (4 rows)
+2026-08-14T17:44:29.878258 | WROTE docs/win/basketball/daily_games/wnba/2026_06_25_WNBA.csv (3 rows)
+2026-08-14T17:44:29.878375 | WROTE docs/win/basketball/daily_games/wnba/2026_06_26_WNBA.csv (3 rows)
+2026-08-14T17:44:29.878492 | WROTE docs/win/basketball/daily_games/wnba/2026_06_27_WNBA.csv (3 rows)
+2026-08-14T17:44:29.878608 | WROTE docs/win/basketball/daily_games/wnba/2026_06_28_WNBA.csv (4 rows)
+2026-08-14T17:44:29.878724 | WROTE docs/win/basketball/daily_games/wnba/2026_07_02_WNBA.csv (3 rows)
+2026-08-14T17:44:29.878845 | WROTE docs/win/basketball/daily_games/wnba/2026_07_03_WNBA.csv (2 rows)
+2026-08-14T17:44:29.878979 | WROTE docs/win/basketball/daily_games/wnba/2026_07_04_WNBA.csv (2 rows)
+2026-08-14T17:44:29.879099 | WROTE docs/win/basketball/daily_games/wnba/2026_07_05_WNBA.csv (2 rows)
+2026-08-14T17:44:29.879220 | WROTE docs/win/basketball/daily_games/wnba/2026_07_06_WNBA.csv (3 rows)
+2026-08-14T17:44:29.879335 | WROTE docs/win/basketball/daily_games/wnba/2026_07_07_WNBA.csv (2 rows)
+2026-08-14T17:44:29.879458 | WROTE docs/win/basketball/daily_games/wnba/2026_07_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.879575 | WROTE docs/win/basketball/daily_games/wnba/2026_07_09_WNBA.csv (3 rows)
+2026-08-14T17:44:29.879694 | WROTE docs/win/basketball/daily_games/wnba/2026_07_10_WNBA.csv (3 rows)
+2026-08-14T17:44:29.879812 | WROTE docs/win/basketball/daily_games/wnba/2026_07_11_WNBA.csv (3 rows)
+2026-08-14T17:44:29.879950 | WROTE docs/win/basketball/daily_games/wnba/2026_07_12_WNBA.csv (4 rows)
+2026-08-14T17:44:29.880070 | WROTE docs/win/basketball/daily_games/wnba/2026_07_13_WNBA.csv (2 rows)
+2026-08-14T17:44:29.880191 | WROTE docs/win/basketball/daily_games/wnba/2026_07_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.880309 | WROTE docs/win/basketball/daily_games/wnba/2026_07_15_WNBA.csv (3 rows)
+2026-08-14T17:44:29.880423 | WROTE docs/win/basketball/daily_games/wnba/2026_07_16_WNBA.csv (2 rows)
+2026-08-14T17:44:29.880544 | WROTE docs/win/basketball/daily_games/wnba/2026_07_17_WNBA.csv (4 rows)
+2026-08-14T17:44:29.880661 | WROTE docs/win/basketball/daily_games/wnba/2026_07_18_WNBA.csv (3 rows)
+2026-08-14T17:44:29.880781 | WROTE docs/win/basketball/daily_games/wnba/2026_07_19_WNBA.csv (3 rows)
+2026-08-14T17:44:29.880906 | WROTE docs/win/basketball/daily_games/wnba/2026_07_20_WNBA.csv (5 rows)
+2026-08-14T17:44:29.881057 | WROTE docs/win/basketball/daily_games/wnba/2026_07_22_WNBA.csv (6 rows)
+2026-08-14T17:44:29.881181 | WROTE docs/win/basketball/daily_games/wnba/2026_07_28_WNBA.csv (5 rows)
+2026-08-14T17:44:29.881296 | WROTE docs/win/basketball/daily_games/wnba/2026_07_29_WNBA.csv (2 rows)
+2026-08-14T17:44:29.881414 | WROTE docs/win/basketball/daily_games/wnba/2026_07_30_WNBA.csv (3 rows)
+2026-08-14T17:44:29.881532 | WROTE docs/win/basketball/daily_games/wnba/2026_07_31_WNBA.csv (3 rows)
+2026-08-14T17:44:29.881645 | WROTE docs/win/basketball/daily_games/wnba/2026_08_01_WNBA.csv (2 rows)
+2026-08-14T17:44:29.881764 | WROTE docs/win/basketball/daily_games/wnba/2026_08_02_WNBA.csv (4 rows)
+2026-08-14T17:44:29.881881 | WROTE docs/win/basketball/daily_games/wnba/2026_08_03_WNBA.csv (3 rows)
+2026-08-14T17:44:29.882010 | WROTE docs/win/basketball/daily_games/wnba/2026_08_04_WNBA.csv (1 rows)
+2026-08-14T17:44:29.882133 | WROTE docs/win/basketball/daily_games/wnba/2026_08_05_WNBA.csv (4 rows)
+2026-08-14T17:44:29.882250 | WROTE docs/win/basketball/daily_games/wnba/2026_08_06_WNBA.csv (3 rows)
+2026-08-14T17:44:29.882365 | WROTE docs/win/basketball/daily_games/wnba/2026_08_07_WNBA.csv (3 rows)
+2026-08-14T17:44:29.882481 | WROTE docs/win/basketball/daily_games/wnba/2026_08_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.882602 | WROTE docs/win/basketball/daily_games/wnba/2026_08_09_WNBA.csv (4 rows)
+2026-08-14T17:44:29.882717 | WROTE docs/win/basketball/daily_games/wnba/2026_08_10_WNBA.csv (2 rows)
+2026-08-14T17:44:29.882845 | WROTE docs/win/basketball/daily_games/wnba/2026_08_11_WNBA.csv (6 rows)
+2026-08-14T17:44:29.882995 | WROTE docs/win/basketball/daily_games/wnba/2026_08_12_WNBA.csv (6 rows)
+2026-08-14T17:44:29.883127 | WROTE docs/win/basketball/daily_games/wnba/2026_08_13_WNBA.csv (6 rows)
+2026-08-14T17:44:29.883250 | WROTE docs/win/basketball/daily_games/wnba/2026_08_14_WNBA.csv (4 rows)
+2026-08-14T17:44:29.883379 | WROTE docs/win/basketball/daily_games/wnba/2026_08_15_WNBA.csv (6 rows)
+2026-08-14T17:44:29.883507 | WROTE docs/win/basketball/daily_games/wnba/2026_08_16_WNBA.csv (6 rows)
+2026-08-14T17:44:29.883622 | WROTE docs/win/basketball/daily_games/wnba/2026_08_17_WNBA.csv (2 rows)
+2026-08-14T17:44:29.883758 | WROTE docs/win/basketball/daily_games/wnba/2026_08_18_WNBA.csv (8 rows)
+2026-08-14T17:44:29.883880 | WROTE docs/win/basketball/daily_games/wnba/2026_08_19_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884026 | WROTE docs/win/basketball/daily_games/wnba/2026_08_20_WNBA.csv (6 rows)
+2026-08-14T17:44:29.884145 | WROTE docs/win/basketball/daily_games/wnba/2026_08_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884264 | WROTE docs/win/basketball/daily_games/wnba/2026_08_22_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884389 | WROTE docs/win/basketball/daily_games/wnba/2026_08_23_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884417 | --- SUMMARY ---
+2026-08-14T17:44:29.884440 | Input files found: 96
+2026-08-14T17:44:29.884462 | Rows read: 306
+2026-08-14T17:44:29.884483 | Duplicate rows skipped: 0
+2026-08-14T17:44:29.884504 | Rows written: 306
+2026-08-14T17:44:29.884525 | Files written: 96
+2026-08-14T17:44:29.884546 | FILE: docs/win/basketball/daily_games/wnba/2026_05_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884567 | FILE: docs/win/basketball/daily_games/wnba/2026_05_09_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884588 | FILE: docs/win/basketball/daily_games/wnba/2026_05_10_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884609 | FILE: docs/win/basketball/daily_games/wnba/2026_05_12_WNBA.csv (2 rows)
+2026-08-14T17:44:29.884629 | FILE: docs/win/basketball/daily_games/wnba/2026_05_13_WNBA.csv (1 rows)
+2026-08-14T17:44:29.884650 | FILE: docs/win/basketball/daily_games/wnba/2026_05_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.884670 | FILE: docs/win/basketball/daily_games/wnba/2026_05_15_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884691 | FILE: docs/win/basketball/daily_games/wnba/2026_05_17_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884712 | FILE: docs/win/basketball/daily_games/wnba/2026_05_18_WNBA.csv (2 rows)
+2026-08-14T17:44:29.884732 | FILE: docs/win/basketball/daily_games/wnba/2026_05_19_WNBA.csv (1 rows)
+2026-08-14T17:44:29.884753 | FILE: docs/win/basketball/daily_games/wnba/2026_05_20_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884773 | FILE: docs/win/basketball/daily_games/wnba/2026_05_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884794 | FILE: docs/win/basketball/daily_games/wnba/2026_05_22_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884815 | FILE: docs/win/basketball/daily_games/wnba/2026_05_23_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884835 | FILE: docs/win/basketball/daily_games/wnba/2026_05_24_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884856 | FILE: docs/win/basketball/daily_games/wnba/2026_05_25_WNBA.csv (2 rows)
+2026-08-14T17:44:29.884876 | FILE: docs/win/basketball/daily_games/wnba/2026_05_27_WNBA.csv (5 rows)
+2026-08-14T17:44:29.884897 | FILE: docs/win/basketball/daily_games/wnba/2026_05_28_WNBA.csv (2 rows)
+2026-08-14T17:44:29.884917 | FILE: docs/win/basketball/daily_games/wnba/2026_05_29_WNBA.csv (4 rows)
+2026-08-14T17:44:29.884953 | FILE: docs/win/basketball/daily_games/wnba/2026_05_30_WNBA.csv (3 rows)
+2026-08-14T17:44:29.884974 | FILE: docs/win/basketball/daily_games/wnba/2026_05_31_WNBA.csv (1 rows)
+2026-08-14T17:44:29.884994 | FILE: docs/win/basketball/daily_games/wnba/2026_06_01_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885015 | FILE: docs/win/basketball/daily_games/wnba/2026_06_02_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885035 | FILE: docs/win/basketball/daily_games/wnba/2026_06_03_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885056 | FILE: docs/win/basketball/daily_games/wnba/2026_06_04_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885077 | FILE: docs/win/basketball/daily_games/wnba/2026_06_05_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885097 | FILE: docs/win/basketball/daily_games/wnba/2026_06_06_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885118 | FILE: docs/win/basketball/daily_games/wnba/2026_06_07_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885138 | FILE: docs/win/basketball/daily_games/wnba/2026_06_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885159 | FILE: docs/win/basketball/daily_games/wnba/2026_06_09_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885180 | FILE: docs/win/basketball/daily_games/wnba/2026_06_10_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885200 | FILE: docs/win/basketball/daily_games/wnba/2026_06_11_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885221 | FILE: docs/win/basketball/daily_games/wnba/2026_06_12_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885241 | FILE: docs/win/basketball/daily_games/wnba/2026_06_13_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885262 | FILE: docs/win/basketball/daily_games/wnba/2026_06_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885282 | FILE: docs/win/basketball/daily_games/wnba/2026_06_15_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885303 | FILE: docs/win/basketball/daily_games/wnba/2026_06_16_WNBA.csv (1 rows)
+2026-08-14T17:44:29.885327 | FILE: docs/win/basketball/daily_games/wnba/2026_06_17_WNBA.csv (6 rows)
+2026-08-14T17:44:29.885348 | FILE: docs/win/basketball/daily_games/wnba/2026_06_18_WNBA.csv (1 rows)
+2026-08-14T17:44:29.885368 | FILE: docs/win/basketball/daily_games/wnba/2026_06_19_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885389 | FILE: docs/win/basketball/daily_games/wnba/2026_06_20_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885409 | FILE: docs/win/basketball/daily_games/wnba/2026_06_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885430 | FILE: docs/win/basketball/daily_games/wnba/2026_06_22_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885450 | FILE: docs/win/basketball/daily_games/wnba/2026_06_23_WNBA.csv (1 rows)
+2026-08-14T17:44:29.885471 | FILE: docs/win/basketball/daily_games/wnba/2026_06_24_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885491 | FILE: docs/win/basketball/daily_games/wnba/2026_06_25_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885512 | FILE: docs/win/basketball/daily_games/wnba/2026_06_26_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885533 | FILE: docs/win/basketball/daily_games/wnba/2026_06_27_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885553 | FILE: docs/win/basketball/daily_games/wnba/2026_06_28_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885573 | FILE: docs/win/basketball/daily_games/wnba/2026_07_02_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885594 | FILE: docs/win/basketball/daily_games/wnba/2026_07_03_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885615 | FILE: docs/win/basketball/daily_games/wnba/2026_07_04_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885635 | FILE: docs/win/basketball/daily_games/wnba/2026_07_05_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885655 | FILE: docs/win/basketball/daily_games/wnba/2026_07_06_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885676 | FILE: docs/win/basketball/daily_games/wnba/2026_07_07_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885697 | FILE: docs/win/basketball/daily_games/wnba/2026_07_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885717 | FILE: docs/win/basketball/daily_games/wnba/2026_07_09_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885738 | FILE: docs/win/basketball/daily_games/wnba/2026_07_10_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885758 | FILE: docs/win/basketball/daily_games/wnba/2026_07_11_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885779 | FILE: docs/win/basketball/daily_games/wnba/2026_07_12_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885799 | FILE: docs/win/basketball/daily_games/wnba/2026_07_13_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885820 | FILE: docs/win/basketball/daily_games/wnba/2026_07_14_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885841 | FILE: docs/win/basketball/daily_games/wnba/2026_07_15_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885861 | FILE: docs/win/basketball/daily_games/wnba/2026_07_16_WNBA.csv (2 rows)
+2026-08-14T17:44:29.885882 | FILE: docs/win/basketball/daily_games/wnba/2026_07_17_WNBA.csv (4 rows)
+2026-08-14T17:44:29.885902 | FILE: docs/win/basketball/daily_games/wnba/2026_07_18_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885934 | FILE: docs/win/basketball/daily_games/wnba/2026_07_19_WNBA.csv (3 rows)
+2026-08-14T17:44:29.885955 | FILE: docs/win/basketball/daily_games/wnba/2026_07_20_WNBA.csv (5 rows)
+2026-08-14T17:44:29.885976 | FILE: docs/win/basketball/daily_games/wnba/2026_07_22_WNBA.csv (6 rows)
+2026-08-14T17:44:29.885996 | FILE: docs/win/basketball/daily_games/wnba/2026_07_28_WNBA.csv (5 rows)
+2026-08-14T17:44:29.886017 | FILE: docs/win/basketball/daily_games/wnba/2026_07_29_WNBA.csv (2 rows)
+2026-08-14T17:44:29.886037 | FILE: docs/win/basketball/daily_games/wnba/2026_07_30_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886058 | FILE: docs/win/basketball/daily_games/wnba/2026_07_31_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886078 | FILE: docs/win/basketball/daily_games/wnba/2026_08_01_WNBA.csv (2 rows)
+2026-08-14T17:44:29.886099 | FILE: docs/win/basketball/daily_games/wnba/2026_08_02_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886119 | FILE: docs/win/basketball/daily_games/wnba/2026_08_03_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886140 | FILE: docs/win/basketball/daily_games/wnba/2026_08_04_WNBA.csv (1 rows)
+2026-08-14T17:44:29.886160 | FILE: docs/win/basketball/daily_games/wnba/2026_08_05_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886184 | FILE: docs/win/basketball/daily_games/wnba/2026_08_06_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886205 | FILE: docs/win/basketball/daily_games/wnba/2026_08_07_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886225 | FILE: docs/win/basketball/daily_games/wnba/2026_08_08_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886246 | FILE: docs/win/basketball/daily_games/wnba/2026_08_09_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886266 | FILE: docs/win/basketball/daily_games/wnba/2026_08_10_WNBA.csv (2 rows)
+2026-08-14T17:44:29.886287 | FILE: docs/win/basketball/daily_games/wnba/2026_08_11_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886307 | FILE: docs/win/basketball/daily_games/wnba/2026_08_12_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886328 | FILE: docs/win/basketball/daily_games/wnba/2026_08_13_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886348 | FILE: docs/win/basketball/daily_games/wnba/2026_08_14_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886368 | FILE: docs/win/basketball/daily_games/wnba/2026_08_15_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886389 | FILE: docs/win/basketball/daily_games/wnba/2026_08_16_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886409 | FILE: docs/win/basketball/daily_games/wnba/2026_08_17_WNBA.csv (2 rows)
+2026-08-14T17:44:29.886430 | FILE: docs/win/basketball/daily_games/wnba/2026_08_18_WNBA.csv (8 rows)
+2026-08-14T17:44:29.886450 | FILE: docs/win/basketball/daily_games/wnba/2026_08_19_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886470 | FILE: docs/win/basketball/daily_games/wnba/2026_08_20_WNBA.csv (6 rows)
+2026-08-14T17:44:29.886491 | FILE: docs/win/basketball/daily_games/wnba/2026_08_21_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886511 | FILE: docs/win/basketball/daily_games/wnba/2026_08_22_WNBA.csv (3 rows)
+2026-08-14T17:44:29.886532 | FILE: docs/win/basketball/daily_games/wnba/2026_08_23_WNBA.csv (4 rows)
+2026-08-14T17:44:29.886552 | STATUS: SUCCESS

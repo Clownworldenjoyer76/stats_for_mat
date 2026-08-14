@@ -1,22 +1,24 @@
-=== 01_basketball_results_grade RUN 2026-08-14T15:39:17.671692+00:00 ===
-2026-08-14T15:39:17.671793+00:00 | INFO  | SELECT_BASE      : docs/win/basketball/04_select
-2026-08-14T15:39:17.671868+00:00 | INFO  | FINAL_SCORES_DIR : docs/win/basketball/05_final_scores/results
-2026-08-14T15:39:17.671909+00:00 | INFO  | ERROR_DIR        : docs/win/basketball/errors/05_final_scores
-2026-08-14T15:39:17.672208+00:00 | WARN  | [nba] no pick files in docs/win/basketball/04_select/nba/daily_picks
-2026-08-14T15:39:17.672526+00:00 | INFO  | [nba] no picks; skipping
-2026-08-14T15:39:17.672733+00:00 | WARN  | [ncaam] no pick files in docs/win/basketball/04_select/ncaam/daily_picks
-2026-08-14T15:39:17.672898+00:00 | INFO  | [ncaam] no picks; skipping
-2026-08-14T15:39:17.920926+00:00 | INFO  | [wnba] loaded 119 pick rows from 93 files
-2026-08-14T15:39:18.055798+00:00 | INFO  | [wnba] loaded 513 unique scored games from 201 files
-2026-08-14T15:39:18.083254+00:00 | INFO  | [wnba] graded 119 bets -> docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv
-2026-08-14T15:39:18.083360+00:00 | INFO  | [wnba] W/L/P/Unk = 86/30/3/0  PnL_unit=+41.21  PnL_kelly=+1.3340
-2026-08-14T15:39:18.084056+00:00 | INFO  | --- SUMMARY ---
-2026-08-14T15:39:18.084158+00:00 | INFO  |   errors               : 0
-2026-08-14T15:39:18.084211+00:00 | INFO  |   wnba_graded          : 119
-2026-08-14T15:39:18.084256+00:00 | INFO  |   wnba_losses          : 30
-2026-08-14T15:39:18.084299+00:00 | INFO  |   wnba_pnl_kelly       : 1.334
-2026-08-14T15:39:18.084345+00:00 | INFO  |   wnba_pnl_unit        : 41.2114
-2026-08-14T15:39:18.084383+00:00 | INFO  |   wnba_pushes          : 3
-2026-08-14T15:39:18.084422+00:00 | INFO  |   wnba_unknown         : 0
-2026-08-14T15:39:18.084457+00:00 | INFO  |   wnba_wins            : 86
-2026-08-14T15:39:18.084504+00:00 | INFO  | STATUS: SUCCESS
+=== 01_basketball_results_grade RUN 2026-08-14T17:44:38.010782+00:00 ===
+2026-08-14T17:44:38.010895+00:00 | INFO  | SELECT_BASE      : docs/win/basketball/04_select
+2026-08-14T17:44:38.010991+00:00 | INFO  | FINAL_SCORES_DIR : docs/win/basketball/05_final_scores/results
+2026-08-14T17:44:38.011041+00:00 | INFO  | ERROR_DIR        : docs/win/basketball/errors/05_final_scores
+2026-08-14T17:44:38.011364+00:00 | WARN  | [nba] no pick files in docs/win/basketball/04_select/nba/daily_picks
+2026-08-14T17:44:38.011711+00:00 | INFO  | [nba] no picks; skipping
+2026-08-14T17:44:38.011916+00:00 | WARN  | [ncaam] no pick files in docs/win/basketball/04_select/ncaam/daily_picks
+2026-08-14T17:44:38.012114+00:00 | INFO  | [ncaam] no picks; skipping
+2026-08-14T17:44:38.240194+00:00 | INFO  | [wnba] loaded 296 pick rows from 77 files
+2026-08-14T17:44:38.332742+00:00 | INFO  | [wnba] loaded 251 unique scored games from 98 files
+2026-08-14T17:44:38.342811+00:00 | INFO  | [wnba] 3 picks had no matching final score -> docs/win/basketball/errors/05_final_scores/wnba_game_id_no_match.csv
+2026-08-14T17:44:38.379959+00:00 | INFO  | [wnba] graded 293 bets -> docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv
+2026-08-14T17:44:38.380070+00:00 | INFO  | [wnba] W/L/P/Unk = 151/142/0/0  PnL_unit=-4.95  PnL_kelly=+0.0430
+2026-08-14T17:44:38.380723+00:00 | INFO  | --- SUMMARY ---
+2026-08-14T17:44:38.380811+00:00 | INFO  |   errors               : 0
+2026-08-14T17:44:38.380863+00:00 | INFO  |   wnba_graded          : 293
+2026-08-14T17:44:38.380909+00:00 | INFO  |   wnba_losses          : 142
+2026-08-14T17:44:38.380986+00:00 | INFO  |   wnba_pnl_kelly       : 0.043
+2026-08-14T17:44:38.381038+00:00 | INFO  |   wnba_pnl_unit        : -4.9525
+2026-08-14T17:44:38.381081+00:00 | INFO  |   wnba_pushes          : 0
+2026-08-14T17:44:38.381123+00:00 | INFO  |   wnba_unknown         : 0
+2026-08-14T17:44:38.381165+00:00 | INFO  |   wnba_unmatched       : 3
+2026-08-14T17:44:38.381206+00:00 | INFO  |   wnba_wins            : 151
+2026-08-14T17:44:38.381249+00:00 | INFO  | STATUS: SUCCESS
