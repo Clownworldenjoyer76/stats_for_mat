@@ -10,17 +10,18 @@
 #   docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/{league}/
 #
 # Originals are never mutated. Filenames are preserved.
-#
-# Logs:
-#   docs/win/basketball/errors/00_intake/clean_basketball_inputs.txt
-#   docs/win/basketball/errors/00_intake/clean_basketball_inputs_nba.txt
-#   docs/win/basketball/errors/00_intake/clean_basketball_inputs_ncaam.txt
-#   docs/win/basketball/errors/00_intake/clean_basketball_inputs_wnba.txt
+# Permanent bias rules come from model_config.yaml. Rolling bias values come
+# from rolling_bias_state.yaml. Past cleaned prediction files are preserved so
+# today's rolling bias is never retroactively applied to historical predictions.
 
 import csv
+import re
 import traceback
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import yaml
 
 # =========================
 # PATHS
@@ -50,6 +51,9 @@ CLEANED_SPORTSBOOK_DIRS = {
     "WNBA": Path("docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba"),
 }
 
+CONFIG_PATH = Path("docs/win/basketball/config/model_config.yaml")
+BIAS_STATE_PATH = Path("docs/win/basketball/config/rolling_bias_state.yaml")
+
 ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -60,6 +64,8 @@ LEAGUE_LOG_FILES = {
     "NCAAM": ERROR_DIR / "clean_basketball_inputs_ncaam.txt",
     "WNBA": ERROR_DIR / "clean_basketball_inputs_wnba.txt",
 }
+
+NY_TZ = ZoneInfo("America/New_York")
 
 # =========================
 # SETTINGS
@@ -100,20 +106,10 @@ MARKET_FIELDS = {
 SPREAD_OUTLIER_MAX = 25.0
 TOTAL_OUTLIER_MAX = 40.0
 
-MARGIN_BIAS = {
-    "NBA": 0.4,
-    "NCAAM": 0.6,
-    "WNBA": 0.5,
-}
-
-TOTAL_BIAS = {
-    "NBA": 0.4,
-    "NCAAM": 1.2,
-    "WNBA": 0.0,
-}
-
 BIAS_FLAG_COLUMN = "bias_applied"
 BIAS_FLAG_VALUE = "1"
+MARGIN_BIAS_COLUMN = "margin_bias"
+TOTAL_BIAS_COLUMN = "total_bias"
 
 # =========================
 # LOGGING
@@ -220,17 +216,6 @@ def csv_files(folder: Path, league: str):
 
 
 def book_home_spread_to_model_margin(home_spread):
-    """
-    Converts sportsbook home_spread into the same convention as:
-      model_spread = home_projected_points - away_projected_points
-
-    Example:
-      sportsbook home_spread = -17.0 means home favored by 17
-      model-margin equivalent = +17.0
-
-      sportsbook home_spread = +6.5 means home underdog by 6.5
-      model-margin equivalent = -6.5
-    """
     if home_spread is None:
         return None
     return -home_spread
@@ -254,6 +239,107 @@ def add_market_action(actions, league, path, key, market, reason):
     actions[league].setdefault(path, {})
     actions[league][path].setdefault(key, {})
     actions[league][path][key][market] = reason
+
+
+def load_yaml(path: Path) -> dict:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing config file: {path}")
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"Invalid YAML mapping: {path}")
+    return data
+
+
+def resolve_bias_values() -> dict:
+    model_cfg = load_yaml(CONFIG_PATH)
+    state_cfg = load_yaml(BIAS_STATE_PATH)
+
+    leagues_cfg = model_cfg.get("leagues")
+    state_leagues = state_cfg.get("leagues")
+    if not isinstance(leagues_cfg, dict):
+        raise ValueError("model_config.yaml missing top-level leagues mapping")
+    if not isinstance(state_leagues, dict):
+        raise ValueError("rolling_bias_state.yaml missing top-level leagues mapping")
+
+    resolved = {}
+
+    for league in ("NBA", "NCAAM", "WNBA"):
+        key = league.lower()
+        league_cfg = leagues_cfg.get(key)
+        if not isinstance(league_cfg, dict):
+            raise ValueError(f"Missing model config for {league}")
+        if str(league_cfg.get("status", "")).strip().lower() != "active":
+            raise ValueError(f"{league} is not active in model_config.yaml")
+
+        bias_cfg = league_cfg.get("bias") or {}
+        state_league = state_leagues.get(key) or {}
+        league_values = {}
+
+        for component in ("margin", "total"):
+            rule = bias_cfg.get(component)
+            if not isinstance(rule, dict):
+                raise ValueError(f"{league} bias.{component} must be configured")
+
+            method = str(rule.get("method", "")).strip().lower()
+
+            if method == "fixed":
+                value = to_float(rule.get("value"))
+                if value is None:
+                    raise ValueError(f"{league} fixed {component} bias requires numeric value")
+
+            elif method == "rolling":
+                state_name = f"{component}_bias"
+                state_component = state_league.get(state_name)
+                if not isinstance(state_component, dict):
+                    raise ValueError(f"{league} missing {state_name} in rolling_bias_state.yaml")
+                if str(state_component.get("status", "")).strip().lower() != "ready":
+                    raise ValueError(f"{league} {state_name} is not ready in rolling_bias_state.yaml")
+                if str(state_component.get("method", "")).strip().lower() != "rolling":
+                    raise ValueError(f"{league} {state_name} state method is not rolling")
+
+                configured_window = rule.get("window_games")
+                state_window = state_component.get("window_games")
+                if configured_window is not None and state_window is not None:
+                    if int(configured_window) != int(state_window):
+                        raise ValueError(
+                            f"{league} {component} rolling window mismatch: "
+                            f"config={configured_window} state={state_window}"
+                        )
+
+                value = to_float(state_component.get("value"))
+                if value is None:
+                    raise ValueError(f"{league} {state_name} has no numeric value")
+
+            elif method == "none":
+                value = 0.0
+
+            else:
+                raise ValueError(
+                    f"Unsupported {league} bias.{component}.method={method!r}"
+                )
+
+            league_values[component] = {
+                "method": method,
+                "value": float(value),
+                "window_games": rule.get("window_games"),
+            }
+
+        resolved[league] = league_values
+
+    return resolved
+
+
+def prediction_file_date(path: Path):
+    match = re.match(r"^(\d{4})_(\d{2})_(\d{2})_", path.name)
+    if not match:
+        return None
+    try:
+        return datetime(
+            int(match.group(1)), int(match.group(2)), int(match.group(3))
+        ).date()
+    except ValueError:
+        return None
 
 
 # =========================
@@ -566,10 +652,49 @@ def apply_market_outlier_actions(book_files, actions):
 
 
 # =========================
-# STEP 6: APPLY PREDICTION BIASES
+# STEP 6A: PRESERVE HISTORICAL CLEANED PREDICTIONS
 # =========================
 
-def apply_prediction_biases(pred_files):
+def preserve_past_cleaned_predictions(pred_files):
+    today = datetime.now(NY_TZ).date()
+    preserved = {league: 0 for league in pred_files}
+    skipped_missing = {league: 0 for league in pred_files}
+
+    for league, files in pred_files.items():
+        cleaned_root = CLEANED_PREDICTION_DIRS[league]
+
+        for raw_path in list(files.keys()):
+            file_date = prediction_file_date(raw_path)
+            if file_date is None or file_date >= today:
+                continue
+
+            cleaned_path = cleaned_root / raw_path.name
+            if not cleaned_path.exists():
+                del files[raw_path]
+                skipped_missing[league] += 1
+                log_league(
+                    league,
+                    f"WARN | Historical raw prediction has no existing cleaned copy; "
+                    f"not applying current bias retroactively: {raw_path}"
+                )
+                continue
+
+            fieldnames, rows = read_csv(cleaned_path)
+            files[raw_path] = [fieldnames, rows]
+            preserved[league] += 1
+            log_league(
+                league,
+                f"PRESERVED HISTORICAL CLEANED PREDICTION | {cleaned_path}"
+            )
+
+    return preserved, skipped_missing
+
+
+# =========================
+# STEP 6B: APPLY PREDICTION BIASES
+# =========================
+
+def apply_prediction_biases(pred_files, bias_values):
     stats = {
         league: {
             "files_with_biased_rows": 0,
@@ -586,8 +711,10 @@ def apply_prediction_biases(pred_files):
     }
 
     for league, files in pred_files.items():
-        margin_bias = MARGIN_BIAS[league]
-        total_bias = TOTAL_BIAS[league]
+        margin_info = bias_values[league]["margin"]
+        total_info = bias_values[league]["total"]
+        margin_bias = margin_info["value"]
+        total_bias = total_info["value"]
         margin_half = margin_bias / 2.0
         total_half = total_bias / 2.0
 
@@ -598,9 +725,11 @@ def apply_prediction_biases(pred_files):
                 log_league(league, f"WARN | Missing prediction columns, skipped: {path}")
                 continue
 
-            if BIAS_FLAG_COLUMN not in fieldnames:
-                fieldnames = list(fieldnames) + [BIAS_FLAG_COLUMN]
-                data[0] = fieldnames
+            fieldnames = list(fieldnames)
+            for col in (BIAS_FLAG_COLUMN, MARGIN_BIAS_COLUMN, TOTAL_BIAS_COLUMN):
+                if col not in fieldnames:
+                    fieldnames.append(col)
+            data[0] = fieldnames
 
             file_adjusted = 0
             file_skipped = 0
@@ -626,6 +755,8 @@ def apply_prediction_biases(pred_files):
                 row["away_projected_points"] = f"{new_away:.2f}"
                 row["total_projected_points"] = f"{new_total:.2f}"
                 row[BIAS_FLAG_COLUMN] = BIAS_FLAG_VALUE
+                row[MARGIN_BIAS_COLUMN] = f"{margin_bias:.3f}"
+                row[TOTAL_BIAS_COLUMN] = f"{total_bias:.3f}"
 
                 file_adjusted += 1
                 stats[league]["rows_adjusted"] += 1
@@ -635,7 +766,8 @@ def apply_prediction_biases(pred_files):
                 log_league(
                     league,
                     f"BIASED | {path} | league={league} "
-                    f"margin_bias={margin_bias} total_bias={total_bias} "
+                    f"margin_method={margin_info['method']} margin_bias={margin_bias} "
+                    f"total_method={total_info['method']} total_bias={total_bias} "
                     f"adjusted={file_adjusted} skipped_already_flagged={file_skipped}"
                 )
 
@@ -691,6 +823,8 @@ def write_league_summaries(
     bias_stats,
     pred_write_stats,
     book_write_stats,
+    preserved_historical,
+    skipped_historical_missing,
 ):
     for league in ("NBA", "NCAAM", "WNBA"):
         bad_ml = bad_odds_blanked.get(league, {}).get("ML", 0)
@@ -721,6 +855,8 @@ def write_league_summaries(
         log_league(league, f"spread_outlier_events_found          : {spread_outliers}")
         log_league(league, f"total_outlier_events_found           : {total_outliers}")
         log_league(league, f"sportsbook_outlier_market_rows_blanked: {sportsbook_outlier_market_blanked.get(league, 0)}")
+        log_league(league, f"historical_cleaned_files_preserved   : {preserved_historical.get(league, 0)}")
+        log_league(league, f"historical_raw_missing_cleaned_skipped: {skipped_historical_missing.get(league, 0)}")
         log_league(league, f"prediction_rows_removed              : 0")
         log_league(league, f"sportsbook_rows_removed              : 0")
         log_league(league, f"bias_files_with_adjusted_rows        : {sum_nested(bias_stats, league, 'files_with_biased_rows')}")
@@ -744,6 +880,8 @@ def write_master_summary(
     bias_stats,
     pred_write_stats,
     book_write_stats,
+    preserved_historical,
+    skipped_historical_missing,
 ):
     log_master("")
     log_master("============================================================")
@@ -777,6 +915,8 @@ def write_master_summary(
         log_master(f"spread_outlier_events_found          : {spread_outliers}")
         log_master(f"total_outlier_events_found           : {total_outliers}")
         log_master(f"sportsbook_outlier_market_rows_blanked: {sportsbook_outlier_market_blanked.get(league, 0)}")
+        log_master(f"historical_cleaned_files_preserved   : {preserved_historical.get(league, 0)}")
+        log_master(f"historical_raw_missing_cleaned_skipped: {skipped_historical_missing.get(league, 0)}")
         log_master(f"prediction_rows_removed              : 0")
         log_master(f"sportsbook_rows_removed              : 0")
         log_master(f"bias_files_with_adjusted_rows        : {sum_nested(bias_stats, league, 'files_with_biased_rows')}")
@@ -800,11 +940,14 @@ def main():
     init_logs()
 
     log_master("INFO | Starting basketball input cleanup")
+    log_master(f"INFO | Model config: {CONFIG_PATH}")
+    log_master(f"INFO | Rolling bias state: {BIAS_STATE_PATH}")
     log_master("INFO | Odds cleanup active: blanks only the affected market; does not drop entire games")
     log_master("INFO | Missing market odds are treated as unavailable market, not bad game")
     log_master("INFO | Hold-based odds filtering removed")
     log_master("INFO | Spread outlier fix active: sportsbook home_spread is converted to model-margin convention using -home_spread")
     log_master("INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained")
+    log_master("INFO | Historical cleaned predictions are preserved; current rolling bias is only applied to current/future raw predictions")
     log_master(f"INFO | League logs: {LEAGUE_LOG_FILES}")
 
     for league in ("NBA", "NCAAM", "WNBA"):
@@ -814,6 +957,16 @@ def main():
         log_league(league, "INFO | Hold-based odds filtering removed")
         log_league(league, "INFO | Spread outlier fix active: compare model home-away margin to -book_home_spread")
         log_league(league, "INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained")
+
+    bias_values = resolve_bias_values()
+    for league in ("NBA", "NCAAM", "WNBA"):
+        log_league(
+            league,
+            f"BIAS CONFIG | margin_method={bias_values[league]['margin']['method']} "
+            f"margin_value={bias_values[league]['margin']['value']} "
+            f"total_method={bias_values[league]['total']['method']} "
+            f"total_value={bias_values[league]['total']['value']}"
+        )
 
     pred_files = load_all(PREDICTION_DIRS)
     book_files = load_all(SPORTSBOOK_DIRS)
@@ -831,7 +984,8 @@ def main():
     market_outlier_actions, outlier_counts = find_market_outlier_actions(pred_index, book_index)
     sportsbook_outlier_market_blanked = apply_market_outlier_actions(book_files, market_outlier_actions)
 
-    bias_stats = apply_prediction_biases(pred_files)
+    preserved_historical, skipped_historical_missing = preserve_past_cleaned_predictions(pred_files)
+    bias_stats = apply_prediction_biases(pred_files, bias_values)
 
     pred_write_stats = write_cleaned(
         pred_files,
@@ -855,6 +1009,8 @@ def main():
         bias_stats=bias_stats,
         pred_write_stats=pred_write_stats,
         book_write_stats=book_write_stats,
+        preserved_historical=preserved_historical,
+        skipped_historical_missing=skipped_historical_missing,
     )
 
     write_master_summary(
@@ -867,6 +1023,8 @@ def main():
         bias_stats=bias_stats,
         pred_write_stats=pred_write_stats,
         book_write_stats=book_write_stats,
+        preserved_historical=preserved_historical,
+        skipped_historical_missing=skipped_historical_missing,
     )
 
     print("STATUS: SUCCESS")
