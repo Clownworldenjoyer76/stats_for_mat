@@ -34,19 +34,19 @@ jobs:
         if: always()
         run: |
           echo "=== BACKTEST reports ==="
-          find docs/win/basketball/BACKTEST/reports -type f | sort || true
+          find docs/win/basketball/backtest/reports -type f | sort || true
 
           echo ""
           echo "=== BACKTEST selections ==="
-          find docs/win/basketball/BACKTEST/selections -type f | sort || true
+          find docs/win/basketball/backtest/selections -type f | sort || true
 
           echo ""
           echo "=== BACKTEST graded ==="
-          find docs/win/basketball/BACKTEST/graded -type f | sort || true
+          find docs/win/basketball/backtest/graded -type f | sort || true
 
           echo ""
           echo "=== BACKTEST runs ==="
-          find docs/win/basketball/BACKTEST/runs -type f | sort || true
+          find docs/win/basketball/backtest/runs -type f | sort || true
 
       - name: Commit backtest outputs
         if: always()
@@ -54,7 +54,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -A docs/win/basketball/BACKTEST/
+          git add -A docs/win/basketball/backtest/
 
           echo "--- git status before commit ---"
           git status --short
