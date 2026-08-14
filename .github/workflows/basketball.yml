@@ -1,0 +1,379 @@
+name: Basketball Pipeline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  basketball:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ============================================================
+      # SETUP
+      # ============================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set date
+        run: echo "DATE=$(TZ='America/New_York' date +%Y_%m_%d)" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          playwright install-deps chromium
+          playwright install chromium
+
+      # ============================================================
+      # CREATE REQUIRED DIRECTORIES
+      # ============================================================
+
+      - name: Ensure output directories
+        run: |
+          mkdir -p docs/win/basketball/config
+
+          mkdir -p docs/win/basketball/errors/00_intake
+          mkdir -p docs/win/basketball/errors/01_merge
+          mkdir -p docs/win/basketball/errors/03_edges
+          mkdir -p docs/win/basketball/errors/04_select
+          mkdir -p docs/win/basketball/errors/05_final_scores
+
+          mkdir -p docs/win/basketball/00_intake/drat_raw/nba
+          mkdir -p docs/win/basketball/00_intake/drat_raw/ncaam
+          mkdir -p docs/win/basketball/00_intake/drat_raw/wnba
+
+          mkdir -p docs/win/basketball/00_intake/predictions/nba
+          mkdir -p docs/win/basketball/00_intake/predictions/ncaam
+          mkdir -p docs/win/basketball/00_intake/predictions/wnba
+
+          mkdir -p docs/win/basketball/00_intake/predictions/predictions_cleaned/nba
+          mkdir -p docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam
+          mkdir -p docs/win/basketball/00_intake/predictions/predictions_cleaned/wnba
+
+          mkdir -p docs/win/basketball/00_intake/sportsbook/nba
+          mkdir -p docs/win/basketball/00_intake/sportsbook/ncaam
+          mkdir -p docs/win/basketball/00_intake/sportsbook/wnba
+
+          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba
+          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam
+          mkdir -p docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba
+
+          mkdir -p docs/win/basketball/daily_games/nba
+          mkdir -p docs/win/basketball/daily_games/ncaam
+          mkdir -p docs/win/basketball/daily_games/wnba
+
+          mkdir -p docs/win/basketball/maps/no_map
+
+          mkdir -p docs/win/basketball/01_merge/nba/moneyline
+          mkdir -p docs/win/basketball/01_merge/nba/spread
+          mkdir -p docs/win/basketball/01_merge/nba/total
+
+          mkdir -p docs/win/basketball/01_merge/ncaam/moneyline
+          mkdir -p docs/win/basketball/01_merge/ncaam/spread
+          mkdir -p docs/win/basketball/01_merge/ncaam/total
+
+          mkdir -p docs/win/basketball/01_merge/wnba/moneyline
+          mkdir -p docs/win/basketball/01_merge/wnba/spread
+          mkdir -p docs/win/basketball/01_merge/wnba/total
+
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/nba/moneyline
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/nba/spread
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/nba/total
+
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/ncaam/moneyline
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/ncaam/spread
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/ncaam/total
+
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/wnba/moneyline
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/wnba/spread
+          mkdir -p docs/win/basketball/01_merge/01_merguiced/wnba/total
+
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/nba/moneyline
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/nba/spread
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/nba/total
+
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/ncaam/moneyline
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/ncaam/spread
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/ncaam/total
+
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/wnba/moneyline
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/wnba/spread
+          mkdir -p docs/win/basketball/03_edges/ev_kelly/wnba/total
+
+          mkdir -p docs/win/basketball/04_select/daily_slate
+          mkdir -p docs/win/basketball/04_select/nba/daily_picks
+          mkdir -p docs/win/basketball/04_select/ncaam/daily_picks
+          mkdir -p docs/win/basketball/04_select/wnba/daily_picks
+
+          mkdir -p docs/win/basketball/05_final_scores/results/nba
+          mkdir -p docs/win/basketball/05_final_scores/results/ncaam
+          mkdir -p docs/win/basketball/05_final_scores/results/wnba
+
+          mkdir -p docs/win/basketball/05_final_scores/results/nba/graded
+          mkdir -p docs/win/basketball/05_final_scores/results/ncaam/graded
+          mkdir -p docs/win/basketball/05_final_scores/results/wnba/graded
+
+          mkdir -p docs/win/basketball/05_final_scores/reports/nba/moneyline
+          mkdir -p docs/win/basketball/05_final_scores/reports/nba/spread
+          mkdir -p docs/win/basketball/05_final_scores/reports/nba/total
+          mkdir -p docs/win/basketball/05_final_scores/reports/nba/overview
+
+          mkdir -p docs/win/basketball/05_final_scores/reports/ncaam/moneyline
+          mkdir -p docs/win/basketball/05_final_scores/reports/ncaam/spread
+          mkdir -p docs/win/basketball/05_final_scores/reports/ncaam/total
+          mkdir -p docs/win/basketball/05_final_scores/reports/ncaam/overview
+
+          mkdir -p docs/win/basketball/05_final_scores/reports/wnba/moneyline
+          mkdir -p docs/win/basketball/05_final_scores/reports/wnba/spread
+          mkdir -p docs/win/basketball/05_final_scores/reports/wnba/total
+          mkdir -p docs/win/basketball/05_final_scores/reports/wnba/overview
+
+          mkdir -p docs
+
+      # ============================================================
+      # INTAKE LOG
+      # ============================================================
+
+      - name: Start intake output check log
+        run: |
+          {
+            echo "=== basketball 00 intake output checks ==="
+            echo "DATE=${DATE}"
+            echo "RUN_UTC=$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo ""
+          } > docs/win/basketball/errors/00_intake/output_checks.txt
+
+      # ============================================================
+      # 00 INTAKE - SPORTSBOOK ODDS
+      # ============================================================
+
+      - name: Run basketball odds
+        run: python docs/win/basketball/scripts/00_intake/basketball_odds.py
+
+      # ============================================================
+      # 00 INTAKE - MODEL PREDICTIONS
+      # ============================================================
+
+      - name: Basketball Drat Scraper
+        run: python docs/win/basketball/scripts/00_intake/basketball_drat_scraper.py
+
+      - name: Check today's Drat raw outputs
+        if: always()
+        run: |
+          echo "--- Drat raw output check ---" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+          for f in \
+            "docs/win/basketball/00_intake/drat_raw/nba/${DATE}_nba_raw.json" \
+            "docs/win/basketball/00_intake/drat_raw/ncaam/${DATE}_ncaam_raw.json" \
+            "docs/win/basketball/00_intake/drat_raw/wnba/${DATE}_wnba_raw.json"
+          do
+            if [ -f "$f" ]; then
+              echo "FOUND: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            else
+              echo "MISSING: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            fi
+          done
+
+          echo "" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+      - name: Basketball Transform
+        run: python docs/win/basketball/scripts/00_intake/transform_basketball.py
+
+      - name: Check today's prediction outputs
+        if: always()
+        run: |
+          echo "--- Prediction output check ---" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+          for f in \
+            "docs/win/basketball/00_intake/predictions/nba/${DATE}_NBA_predictions.csv" \
+            "docs/win/basketball/00_intake/predictions/ncaam/${DATE}_NCAAM_predictions.csv" \
+            "docs/win/basketball/00_intake/predictions/wnba/${DATE}_WNBA_predictions.csv"
+          do
+            if [ -f "$f" ]; then
+              echo "FOUND: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            else
+              echo "MISSING: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            fi
+          done
+
+          echo "" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+      - name: Basketball Name Normalization
+        run: python docs/win/basketball/scripts/00_intake/name_normalization.py
+
+      - name: Basketball Daily Games
+        run: python docs/win/basketball/scripts/00_intake/basketball_daily_games.py
+
+      - name: Check today's daily games outputs
+        if: always()
+        run: |
+          echo "--- Daily games output check ---" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+          for f in \
+            "docs/win/basketball/daily_games/nba/${DATE}_NBA.csv" \
+            "docs/win/basketball/daily_games/ncaam/${DATE}_NCAAM.csv" \
+            "docs/win/basketball/daily_games/wnba/${DATE}_WNBA.csv"
+          do
+            if [ -f "$f" ]; then
+              echo "FOUND: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            else
+              echo "MISSING: $f" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            fi
+          done
+
+          echo "" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+      - name: Basketball Game ID
+        run: python docs/win/basketball/scripts/00_intake/basketball_game_id.py
+
+      - name: Calculate Rolling Bias
+        run: python docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
+
+      - name: Basketball Clean Inputs
+        run: python docs/win/basketball/scripts/00_intake/clean_basketball_inputs.py
+
+      - name: Check cleaned outputs
+        if: always()
+        run: |
+          echo "--- Cleaned output check ---" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+          for d in \
+            "docs/win/basketball/00_intake/predictions/predictions_cleaned/nba" \
+            "docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam" \
+            "docs/win/basketball/00_intake/predictions/predictions_cleaned/wnba" \
+            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba" \
+            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam" \
+            "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba"
+          do
+            echo "--- $d ---" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+            ls -lah "$d" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt || true
+          done
+
+          echo "" | tee -a docs/win/basketball/errors/00_intake/output_checks.txt
+
+      # ============================================================
+      # 01 MERGE
+      # ============================================================
+
+      - name: Run merge intake
+        run: python docs/win/basketball/scripts/01_merge/merge_intake.py
+
+      - name: Run build juice files
+        run: python docs/win/basketball/scripts/01_merge/build_juice_files.py
+
+      # ============================================================
+      # 03 EDGES
+      # ============================================================
+
+      - name: Run EV and Kelly
+        run: python docs/win/basketball/scripts/03_edges/compute_ev_kelly.py
+
+      # ============================================================
+      # 04 SELECT
+      # ============================================================
+
+      - name: Run basketball bet selection
+        run: python docs/win/basketball/scripts/04_select/basketball_select_bets.py
+
+      - name: Run daily slate
+        run: python docs/win/basketball/scripts/04_select/daily_slate.py
+
+      # ============================================================
+      # 05 FINAL SCORES / REPORTING
+      # ============================================================
+
+      - name: Grade basketball results
+        run: python docs/win/basketball/scripts/05_final_scores/01_basketball_results_grade.py
+
+      - name: Analyze basketball results
+        run: python docs/win/basketball/scripts/05_final_scores/02_basketball_results_analyze.py
+
+      - name: Build basketball reports
+        run: python docs/win/basketball/scripts/05_final_scores/03_basketball_results_reports.py
+
+      - name: Build basketball dashboard
+        run: python docs/win/basketball/scripts/05_final_scores/04_basketball_results_dashboard.py
+
+      # ============================================================
+      # LOGS
+      # ============================================================
+
+      - name: Show logs
+        if: always()
+        run: |
+          echo "=== 00 Intake Logs ==="
+          cat docs/win/basketball/errors/00_intake/output_checks.txt || true
+          cat docs/win/basketball/errors/00_intake/clean_basketball_inputs.txt || true
+          cat docs/win/basketball/errors/00_intake/clean_basketball_inputs_nba.txt || true
+          cat docs/win/basketball/errors/00_intake/clean_basketball_inputs_ncaam.txt || true
+          cat docs/win/basketball/errors/00_intake/clean_basketball_inputs_wnba.txt || true
+
+          echo ""
+          echo "=== 01 Merge Logs ==="
+          cat docs/win/basketball/errors/01_merge/merge_intake.txt || true
+          cat docs/win/basketball/errors/01_merge/build_juice_files.txt || true
+
+          echo ""
+          echo "=== 03 Edges Logs ==="
+          cat docs/win/basketball/errors/03_edges/compute_ev_kelly.txt || true
+
+          echo ""
+          echo "=== 04 Select Logs ==="
+          cat docs/win/basketball/errors/04_select/select_bets.txt || true
+          cat docs/win/basketball/errors/04_select/daily_slate.txt || true
+
+          echo ""
+          echo "=== 05 Final Scores Logs ==="
+          cat docs/win/basketball/errors/05_final_scores/01_basketball_results_grade.txt || true
+
+          echo ""
+          echo "=== Basketball output files ==="
+          find docs/win/basketball/00_intake -type f | sort || true
+          find docs/win/basketball/01_merge -type f | sort || true
+          find docs/win/basketball/03_edges -type f | sort || true
+          find docs/win/basketball/04_select -type f | sort || true
+          find docs/win/basketball/05_final_scores -type f | sort || true
+
+      - name: Upload basketball logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: basketball-pipeline-logs
+          path: docs/win/basketball/errors/
+
+      # ============================================================
+      # SINGLE COMMIT / PUSH
+      # ============================================================
+
+      - name: Commit outputs
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A docs/win/basketball
+          git add -A docs/basketball_dashboard.html
+
+          echo "--- git status before commit ---"
+          git status --short
+
+          if git diff --cached --quiet; then
+            echo "No basketball changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: basketball full pipeline $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          git pull --rebase --autostash origin main
+          git push
