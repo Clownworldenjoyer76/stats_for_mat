@@ -1,617 +1,607 @@
-=== basketball select_bets RUN 2026-08-14T19:32:09.601742+00:00 ===
-2026-08-14T19:32:09.602237+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv
-2026-08-14T19:32:09.602328+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv
-2026-08-14T19:32:09.602402+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv
-2026-08-14T19:32:09.602472+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv
-2026-08-14T19:32:09.602543+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv
-2026-08-14T19:32:09.602609+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv
-2026-08-14T19:32:09.602674+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv
-2026-08-14T19:32:09.602740+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv
-2026-08-14T19:32:09.602804+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv
-2026-08-14T19:32:09.602867+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv
-2026-08-14T19:32:09.602931+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv
-2026-08-14T19:32:09.603043+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_28_wnba_selected.csv
-2026-08-14T19:32:09.603116+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv
-2026-08-14T19:32:09.603180+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv
-2026-08-14T19:32:09.603245+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv
-2026-08-14T19:32:09.603307+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv
-2026-08-14T19:32:09.603370+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv
-2026-08-14T19:32:09.603431+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv
-2026-08-14T19:32:09.603492+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv
-2026-08-14T19:32:09.603552+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_29_wnba_selected.csv
-2026-08-14T19:32:09.603613+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv
-2026-08-14T19:32:09.603676+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv
-2026-08-14T19:32:09.603736+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv
-2026-08-14T19:32:09.603796+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv
-2026-08-14T19:32:09.603857+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv
-2026-08-14T19:32:09.603923+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv
-2026-08-14T19:32:09.604006+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_06_wnba_selected.csv
-2026-08-14T19:32:09.604074+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_18_wnba_selected.csv
-2026-08-14T19:32:09.604145+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv
-2026-08-14T19:32:09.604206+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv
-2026-08-14T19:32:09.604266+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv
-2026-08-14T19:32:09.604324+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_25_wnba_selected.csv
-2026-08-14T19:32:09.604382+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv
-2026-08-14T19:32:09.604441+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_17_wnba_selected.csv
-2026-08-14T19:32:09.604499+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_18_wnba_selected.csv
-2026-08-14T19:32:09.604561+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv
-2026-08-14T19:32:09.604620+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv
-2026-08-14T19:32:09.604678+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_23_wnba_selected.csv
-2026-08-14T19:32:09.604736+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv
-2026-08-14T19:32:09.604794+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv
-2026-08-14T19:32:09.604853+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_07_wnba_selected.csv
-2026-08-14T19:32:09.604911+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv
-2026-08-14T19:32:09.604990+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv
-2026-08-14T19:32:09.605057+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv
-2026-08-14T19:32:09.605117+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_14_wnba_selected.csv
-2026-08-14T19:32:09.605177+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv
-2026-08-14T19:32:09.605237+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv
-2026-08-14T19:32:09.605295+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_11_wnba_selected.csv
-2026-08-14T19:32:09.605353+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv
-2026-08-14T19:32:09.605411+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv
-2026-08-14T19:32:09.605470+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv
-2026-08-14T19:32:09.605531+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv
-2026-08-14T19:32:09.605590+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv
-2026-08-14T19:32:09.605651+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv
-2026-08-14T19:32:09.605711+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv
-2026-08-14T19:32:09.605776+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_25_wnba_selected.csv
-2026-08-14T19:32:09.605836+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv
-2026-08-14T19:32:09.605895+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv
-2026-08-14T19:32:09.605953+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv
-2026-08-14T19:32:09.606039+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv
-2026-08-14T19:32:09.606102+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv
-2026-08-14T19:32:09.606160+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv
-2026-08-14T19:32:09.606219+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv
-2026-08-14T19:32:09.606251+00:00 | INFO  | Old basketball daily pick outputs deleted: daily_picks=63
-2026-08-14T19:32:09.606280+00:00 | INFO  | INPUT_DIR : docs/win/basketball/03_edges/ev_kelly
-2026-08-14T19:32:09.606303+00:00 | INFO  | OUTPUT_DIR: docs/win/basketball/04_select
-2026-08-14T19:32:09.606324+00:00 | INFO  | MODEL_CONFIG: docs/win/basketball/config/model_config.yaml
-2026-08-14T19:32:09.606350+00:00 | INFO  | stake_sizing: kelly_fraction=0.25 kelly_cap=0.05
-2026-08-14T19:32:09.606371+00:00 | INFO  | ml_vs_spread_tiebreak: ev
-2026-08-14T19:32:09.606397+00:00 | INFO  | NBA model edges: moneyline=0.02 spread=0.015 total=0.0
-2026-08-14T19:32:09.606421+00:00 | INFO  | NCAAM model edges: moneyline=0.015 spread=0.015 total=0.03
-2026-08-14T19:32:09.606446+00:00 | INFO  | WNBA model edges: moneyline=0.0 spread=0.05 total=0.03
-2026-08-14T19:32:09.606503+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/moneyline
-2026-08-14T19:32:09.606548+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/spread
-2026-08-14T19:32:09.606589+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/total
-2026-08-14T19:32:09.606639+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/moneyline
-2026-08-14T19:32:09.606680+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/spread
-2026-08-14T19:32:09.606718+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/total
-2026-08-14T19:32:09.609386+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.610287+00:00 | INFO  | 2026_05_08_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.612900+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.613591+00:00 | INFO  | 2026_05_09_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.615061+00:00 | INFO  | --- FILE: 2026_05_10_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.615752+00:00 | INFO  | 2026_05_10_WNBA_moneyline.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.618108+00:00 | INFO  | --- FILE: 2026_05_12_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.618577+00:00 | INFO  | 2026_05_12_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.619939+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.620372+00:00 | INFO  | 2026_05_13_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.621744+00:00 | INFO  | --- FILE: 2026_05_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.622387+00:00 | INFO  | 2026_05_14_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.623774+00:00 | INFO  | --- FILE: 2026_05_15_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.624395+00:00 | INFO  | 2026_05_15_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.625782+00:00 | INFO  | --- FILE: 2026_05_17_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.626380+00:00 | INFO  | 2026_05_17_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.627712+00:00 | INFO  | --- FILE: 2026_05_18_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.628191+00:00 | INFO  | 2026_05_18_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.629516+00:00 | INFO  | --- FILE: 2026_05_19_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.629879+00:00 | INFO  | 2026_05_19_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.631217+00:00 | INFO  | --- FILE: 2026_05_20_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.631723+00:00 | INFO  | 2026_05_20_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.633074+00:00 | INFO  | --- FILE: 2026_05_21_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.633569+00:00 | INFO  | 2026_05_21_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.634854+00:00 | INFO  | --- FILE: 2026_05_22_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.635409+00:00 | INFO  | 2026_05_22_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.636698+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.637233+00:00 | INFO  | 2026_05_23_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.638520+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.639057+00:00 | INFO  | 2026_05_24_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.640357+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.640799+00:00 | INFO  | 2026_05_25_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.642163+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_moneyline.csv league=wnba market=moneyline rows=5 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.642796+00:00 | INFO  | 2026_05_27_WNBA_moneyline.csv | 0 selected from 5 rows
-2026-08-14T19:32:09.644136+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.644569+00:00 | INFO  | 2026_05_28_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.645871+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.646477+00:00 | INFO  | 2026_05_29_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.647782+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.648324+00:00 | INFO  | 2026_05_30_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.649611+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.650000+00:00 | INFO  | 2026_05_31_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.651322+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.651757+00:00 | INFO  | 2026_06_01_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.653081+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.653656+00:00 | INFO  | 2026_06_02_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.654954+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.655425+00:00 | INFO  | 2026_06_03_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.656695+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.657726+00:00 | INFO  | 2026_06_04_WNBA_moneyline.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.660002+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.660631+00:00 | INFO  | 2026_06_05_WNBA_moneyline.csv | 2 selected from 3 rows
-2026-08-14T19:32:09.662865+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.663482+00:00 | INFO  | 2026_06_06_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.664769+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.665294+00:00 | INFO  | 2026_06_07_WNBA_moneyline.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.667497+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.668033+00:00 | INFO  | 2026_06_08_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.669351+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.669874+00:00 | INFO  | 2026_06_09_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.671206+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.671753+00:00 | INFO  | 2026_06_10_WNBA_moneyline.csv | 2 selected from 2 rows
-2026-08-14T19:32:09.674036+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.674616+00:00 | INFO  | 2026_06_11_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.675936+00:00 | INFO  | --- FILE: 2026_06_12_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.676401+00:00 | INFO  | 2026_06_12_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.677688+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.678392+00:00 | INFO  | 2026_06_13_WNBA_moneyline.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.680598+00:00 | INFO  | --- FILE: 2026_06_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.681072+00:00 | INFO  | 2026_06_14_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.682443+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.682814+00:00 | INFO  | 2026_06_15_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.684146+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.684514+00:00 | INFO  | 2026_06_16_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.685876+00:00 | INFO  | --- FILE: 2026_06_17_WNBA_moneyline.csv league=wnba market=moneyline rows=6 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.686716+00:00 | INFO  | 2026_06_17_WNBA_moneyline.csv | 2 selected from 6 rows
-2026-08-14T19:32:09.688937+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.689343+00:00 | INFO  | 2026_06_18_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.690669+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.691289+00:00 | INFO  | 2026_06_19_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.693551+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.694108+00:00 | INFO  | 2026_06_20_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.695682+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.696247+00:00 | INFO  | 2026_06_21_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.697567+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.698279+00:00 | INFO  | 2026_06_22_WNBA_moneyline.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.700521+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.700919+00:00 | INFO  | 2026_06_23_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.702288+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.702862+00:00 | INFO  | 2026_06_24_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.704212+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.704717+00:00 | INFO  | 2026_06_25_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.706060+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.706572+00:00 | INFO  | 2026_06_26_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.707933+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.708534+00:00 | INFO  | 2026_06_27_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.710802+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.711418+00:00 | INFO  | 2026_06_28_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.712744+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.713330+00:00 | INFO  | 2026_07_02_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.715580+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.716125+00:00 | INFO  | 2026_07_03_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.717452+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.717950+00:00 | INFO  | 2026_07_04_WNBA_moneyline.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.720120+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.720562+00:00 | INFO  | 2026_07_05_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.722030+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.722567+00:00 | INFO  | 2026_07_06_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.723886+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.724355+00:00 | INFO  | 2026_07_07_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.725682+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.726297+00:00 | INFO  | 2026_07_08_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.728464+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.729066+00:00 | INFO  | 2026_07_09_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.731305+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.731884+00:00 | INFO  | 2026_07_10_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.734100+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.734629+00:00 | INFO  | 2026_07_11_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.736000+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.736589+00:00 | INFO  | 2026_07_12_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.737898+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.738366+00:00 | INFO  | 2026_07_13_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.739660+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.740133+00:00 | INFO  | 2026_07_14_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.741437+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.742023+00:00 | INFO  | 2026_07_15_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.744188+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.744623+00:00 | INFO  | 2026_07_16_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.745934+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.746669+00:00 | INFO  | 2026_07_17_WNBA_moneyline.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.748931+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.749472+00:00 | INFO  | 2026_07_18_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.750759+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.751334+00:00 | INFO  | 2026_07_19_WNBA_moneyline.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.753528+00:00 | INFO  | --- FILE: 2026_07_20_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.754129+00:00 | INFO  | 2026_07_20_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.755452+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_moneyline.csv league=wnba market=moneyline rows=6 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.756295+00:00 | INFO  | 2026_07_22_WNBA_moneyline.csv | 2 selected from 6 rows
-2026-08-14T19:32:09.758466+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_moneyline.csv league=wnba market=moneyline rows=5 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.759132+00:00 | INFO  | 2026_07_28_WNBA_moneyline.csv | 0 selected from 5 rows
-2026-08-14T19:32:09.760408+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.760843+00:00 | INFO  | 2026_07_29_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.762162+00:00 | INFO  | --- FILE: 2026_07_30_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.762664+00:00 | INFO  | 2026_07_30_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.763944+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.764480+00:00 | INFO  | 2026_07_31_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.765752+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.766212+00:00 | INFO  | 2026_08_01_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.767499+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.768144+00:00 | INFO  | 2026_08_02_WNBA_moneyline.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.770343+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.770840+00:00 | INFO  | 2026_08_03_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.772135+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.772499+00:00 | INFO  | 2026_08_04_WNBA_moneyline.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.773788+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.774378+00:00 | INFO  | 2026_08_05_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.775654+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.776181+00:00 | INFO  | 2026_08_06_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.777454+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.777948+00:00 | INFO  | 2026_08_07_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.779264+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.779769+00:00 | INFO  | 2026_08_08_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.781093+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.781651+00:00 | INFO  | 2026_08_09_WNBA_moneyline.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.782929+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.783393+00:00 | INFO  | 2026_08_10_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.784645+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.785157+00:00 | INFO  | 2026_08_11_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.786417+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.786905+00:00 | INFO  | 2026_08_12_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.788190+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.788677+00:00 | INFO  | 2026_08_13_WNBA_moneyline.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.789931+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
-2026-08-14T19:32:09.790378+00:00 | INFO  | 2026_08_14_WNBA_moneyline.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.792065+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.792588+00:00 | INFO  | 2026_05_08_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.793884+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.794608+00:00 | INFO  | 2026_05_09_WNBA_spread.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.796781+00:00 | INFO  | --- FILE: 2026_05_10_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.797532+00:00 | INFO  | 2026_05_10_WNBA_spread.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.799749+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.800144+00:00 | INFO  | 2026_05_13_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.801474+00:00 | INFO  | --- FILE: 2026_05_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.801915+00:00 | INFO  | 2026_05_14_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.803239+00:00 | INFO  | --- FILE: 2026_05_17_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.803824+00:00 | INFO  | 2026_05_17_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.805134+00:00 | INFO  | --- FILE: 2026_05_18_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.805578+00:00 | INFO  | 2026_05_18_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.806858+00:00 | INFO  | --- FILE: 2026_05_20_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.807459+00:00 | INFO  | 2026_05_20_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.809597+00:00 | INFO  | --- FILE: 2026_05_21_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.810139+00:00 | INFO  | 2026_05_21_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.811420+00:00 | INFO  | --- FILE: 2026_05_22_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.811921+00:00 | INFO  | 2026_05_22_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.813247+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.813806+00:00 | INFO  | 2026_05_23_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.815934+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.816462+00:00 | INFO  | 2026_05_24_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.817736+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.818300+00:00 | INFO  | 2026_05_25_WNBA_spread.csv | 2 selected from 2 rows
-2026-08-14T19:32:09.820524+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_spread.csv league=wnba market=spread rows=5 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.821258+00:00 | INFO  | 2026_05_27_WNBA_spread.csv | 1 selected from 5 rows
-2026-08-14T19:32:09.823450+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.823930+00:00 | INFO  | 2026_05_28_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.825253+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.825833+00:00 | INFO  | 2026_05_29_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.827140+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.827703+00:00 | INFO  | 2026_05_30_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.829846+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.830244+00:00 | INFO  | 2026_05_31_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.831518+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.832043+00:00 | INFO  | 2026_06_01_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.834288+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.834947+00:00 | INFO  | 2026_06_02_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.837099+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.837539+00:00 | INFO  | 2026_06_03_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.838816+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.839288+00:00 | INFO  | 2026_06_04_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.840569+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.841166+00:00 | INFO  | 2026_06_05_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.843315+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.843911+00:00 | INFO  | 2026_06_06_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.845216+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.845711+00:00 | INFO  | 2026_06_07_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.847942+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.848556+00:00 | INFO  | 2026_06_08_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.850707+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.851312+00:00 | INFO  | 2026_06_09_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.853447+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.854015+00:00 | INFO  | 2026_06_10_WNBA_spread.csv | 2 selected from 2 rows
-2026-08-14T19:32:09.856207+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.856804+00:00 | INFO  | 2026_06_11_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.858116+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.858741+00:00 | INFO  | 2026_06_13_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.860889+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.861285+00:00 | INFO  | 2026_06_15_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.862574+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.862941+00:00 | INFO  | 2026_06_16_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.864410+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.864784+00:00 | INFO  | 2026_06_18_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.866099+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.866675+00:00 | INFO  | 2026_06_19_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.868840+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.869435+00:00 | INFO  | 2026_06_20_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.872194+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.872772+00:00 | INFO  | 2026_06_21_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.874938+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.875623+00:00 | INFO  | 2026_06_22_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.877765+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.878163+00:00 | INFO  | 2026_06_23_WNBA_spread.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.879477+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.880146+00:00 | INFO  | 2026_06_24_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.882357+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.882879+00:00 | INFO  | 2026_06_25_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.884217+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.884725+00:00 | INFO  | 2026_06_26_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.886021+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.886537+00:00 | INFO  | 2026_06_27_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.887827+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.888435+00:00 | INFO  | 2026_06_28_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.889719+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.890361+00:00 | INFO  | 2026_07_02_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.892509+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.893037+00:00 | INFO  | 2026_07_03_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.895166+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.895668+00:00 | INFO  | 2026_07_04_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.897873+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.898351+00:00 | INFO  | 2026_07_05_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.899634+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.900230+00:00 | INFO  | 2026_07_06_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.902398+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.902843+00:00 | INFO  | 2026_07_07_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.904144+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.904759+00:00 | INFO  | 2026_07_08_WNBA_spread.csv | 2 selected from 3 rows
-2026-08-14T19:32:09.906909+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.907504+00:00 | INFO  | 2026_07_09_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.909714+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.910257+00:00 | INFO  | 2026_07_10_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.911547+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.912227+00:00 | INFO  | 2026_07_11_WNBA_spread.csv | 2 selected from 3 rows
-2026-08-14T19:32:09.914413+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.915106+00:00 | INFO  | 2026_07_12_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.917278+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.917778+00:00 | INFO  | 2026_07_13_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.920000+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.920497+00:00 | INFO  | 2026_07_14_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.922644+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.923309+00:00 | INFO  | 2026_07_15_WNBA_spread.csv | 2 selected from 3 rows
-2026-08-14T19:32:09.925461+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.925908+00:00 | INFO  | 2026_07_16_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.927228+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.927868+00:00 | INFO  | 2026_07_17_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.930077+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.930604+00:00 | INFO  | 2026_07_18_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.931890+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.932477+00:00 | INFO  | 2026_07_19_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.934657+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_spread.csv league=wnba market=spread rows=6 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.935465+00:00 | INFO  | 2026_07_22_WNBA_spread.csv | 1 selected from 6 rows
-2026-08-14T19:32:09.937619+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_spread.csv league=wnba market=spread rows=5 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.938349+00:00 | INFO  | 2026_07_28_WNBA_spread.csv | 1 selected from 5 rows
-2026-08-14T19:32:09.940528+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.940993+00:00 | INFO  | 2026_07_29_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.942297+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.942858+00:00 | INFO  | 2026_07_31_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.945019+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.945468+00:00 | INFO  | 2026_08_01_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.946757+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.947468+00:00 | INFO  | 2026_08_02_WNBA_spread.csv | 2 selected from 4 rows
-2026-08-14T19:32:09.949629+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.950170+00:00 | INFO  | 2026_08_03_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.951527+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.951948+00:00 | INFO  | 2026_08_04_WNBA_spread.csv | 1 selected from 1 rows
-2026-08-14T19:32:09.954193+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.954779+00:00 | INFO  | 2026_08_05_WNBA_spread.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.956098+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.956677+00:00 | INFO  | 2026_08_06_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.958845+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.959391+00:00 | INFO  | 2026_08_07_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.960675+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.961213+00:00 | INFO  | 2026_08_08_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.962520+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.963182+00:00 | INFO  | 2026_08_09_WNBA_spread.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.965346+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.965854+00:00 | INFO  | 2026_08_10_WNBA_spread.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.968086+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.968593+00:00 | INFO  | 2026_08_11_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.969875+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.970458+00:00 | INFO  | 2026_08_12_WNBA_spread.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.972601+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.973131+00:00 | INFO  | 2026_08_13_WNBA_spread.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.974395+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
-2026-08-14T19:32:09.974833+00:00 | INFO  | 2026_08_14_WNBA_spread.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.976446+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.977007+00:00 | INFO  | 2026_05_08_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.978383+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.979051+00:00 | INFO  | 2026_05_09_WNBA_total.csv | 1 selected from 4 rows
-2026-08-14T19:32:09.981105+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.981472+00:00 | INFO  | 2026_05_13_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.982710+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.983236+00:00 | INFO  | 2026_05_23_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.984463+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.985031+00:00 | INFO  | 2026_05_24_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:09.987134+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.987567+00:00 | INFO  | 2026_05_25_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:09.988811+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_total.csv league=wnba market=total rows=5 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.989473+00:00 | INFO  | 2026_05_27_WNBA_total.csv | 0 selected from 5 rows
-2026-08-14T19:32:09.990704+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.991214+00:00 | INFO  | 2026_05_28_WNBA_total.csv | 1 selected from 2 rows
-2026-08-14T19:32:09.993268+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.993827+00:00 | INFO  | 2026_05_29_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:09.995071+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.995576+00:00 | INFO  | 2026_05_30_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:09.996788+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.997167+00:00 | INFO  | 2026_05_31_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:09.998384+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:09.998815+00:00 | INFO  | 2026_06_01_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.000067+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.000681+00:00 | INFO  | 2026_06_02_WNBA_total.csv | 1 selected from 4 rows
-2026-08-14T19:32:10.002714+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.003174+00:00 | INFO  | 2026_06_03_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.004391+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.004816+00:00 | INFO  | 2026_06_04_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.006052+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.006541+00:00 | INFO  | 2026_06_05_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.007767+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.008347+00:00 | INFO  | 2026_06_06_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:10.009567+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.010015+00:00 | INFO  | 2026_06_07_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.011267+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.011756+00:00 | INFO  | 2026_06_08_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.012996+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.013485+00:00 | INFO  | 2026_06_09_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.014705+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.015160+00:00 | INFO  | 2026_06_10_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.016393+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.016954+00:00 | INFO  | 2026_06_11_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:10.018203+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.018773+00:00 | INFO  | 2026_06_13_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:10.020007+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.020363+00:00 | INFO  | 2026_06_15_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:10.021617+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.021995+00:00 | INFO  | 2026_06_16_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:10.023226+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.023577+00:00 | INFO  | 2026_06_18_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:10.024806+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.025405+00:00 | INFO  | 2026_06_19_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.027451+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.027956+00:00 | INFO  | 2026_06_20_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.029209+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.029776+00:00 | INFO  | 2026_06_21_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.031832+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.032499+00:00 | INFO  | 2026_06_22_WNBA_total.csv | 1 selected from 4 rows
-2026-08-14T19:32:10.034652+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.035058+00:00 | INFO  | 2026_06_23_WNBA_total.csv | 0 selected from 1 rows
-2026-08-14T19:32:10.036321+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.036934+00:00 | INFO  | 2026_06_24_WNBA_total.csv | 1 selected from 4 rows
-2026-08-14T19:32:10.039002+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.039505+00:00 | INFO  | 2026_06_25_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.040735+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.041258+00:00 | INFO  | 2026_06_26_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.042493+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.043058+00:00 | INFO  | 2026_06_27_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.045102+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.045671+00:00 | INFO  | 2026_06_28_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:10.046902+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.047427+00:00 | INFO  | 2026_07_02_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.048648+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.049111+00:00 | INFO  | 2026_07_03_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.050341+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.050828+00:00 | INFO  | 2026_07_04_WNBA_total.csv | 1 selected from 2 rows
-2026-08-14T19:32:10.053452+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.053895+00:00 | INFO  | 2026_07_05_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.055138+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.055692+00:00 | INFO  | 2026_07_06_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.057724+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.058181+00:00 | INFO  | 2026_07_07_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.059401+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.059952+00:00 | INFO  | 2026_07_08_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.062012+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.062580+00:00 | INFO  | 2026_07_09_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.064675+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.065208+00:00 | INFO  | 2026_07_10_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.066437+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.066943+00:00 | INFO  | 2026_07_11_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.068225+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.068800+00:00 | INFO  | 2026_07_12_WNBA_total.csv | 0 selected from 4 rows
-2026-08-14T19:32:10.070037+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.070466+00:00 | INFO  | 2026_07_13_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.071685+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.072141+00:00 | INFO  | 2026_07_14_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.073368+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.073879+00:00 | INFO  | 2026_07_15_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.075117+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.075552+00:00 | INFO  | 2026_07_16_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.076783+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.077433+00:00 | INFO  | 2026_07_17_WNBA_total.csv | 1 selected from 4 rows
-2026-08-14T19:32:10.079479+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.080003+00:00 | INFO  | 2026_07_18_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.081238+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.081743+00:00 | INFO  | 2026_07_19_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.083045+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_total.csv league=wnba market=total rows=6 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.083822+00:00 | INFO  | 2026_07_22_WNBA_total.csv | 1 selected from 6 rows
-2026-08-14T19:32:10.085886+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_total.csv league=wnba market=total rows=5 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.086545+00:00 | INFO  | 2026_07_28_WNBA_total.csv | 0 selected from 5 rows
-2026-08-14T19:32:10.087775+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.088284+00:00 | INFO  | 2026_07_29_WNBA_total.csv | 1 selected from 2 rows
-2026-08-14T19:32:10.090371+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.090917+00:00 | INFO  | 2026_07_31_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.092990+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.093433+00:00 | INFO  | 2026_08_01_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.094674+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.095380+00:00 | INFO  | 2026_08_02_WNBA_total.csv | 2 selected from 4 rows
-2026-08-14T19:32:10.097410+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.097912+00:00 | INFO  | 2026_08_03_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.099178+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.099594+00:00 | INFO  | 2026_08_04_WNBA_total.csv | 1 selected from 1 rows
-2026-08-14T19:32:10.101738+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.102465+00:00 | INFO  | 2026_08_05_WNBA_total.csv | 2 selected from 4 rows
-2026-08-14T19:32:10.104500+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.105173+00:00 | INFO  | 2026_08_06_WNBA_total.csv | 3 selected from 3 rows
-2026-08-14T19:32:10.107227+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.107748+00:00 | INFO  | 2026_08_07_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.108998+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.109557+00:00 | INFO  | 2026_08_08_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.111674+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.112379+00:00 | INFO  | 2026_08_09_WNBA_total.csv | 2 selected from 4 rows
-2026-08-14T19:32:10.114411+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.114894+00:00 | INFO  | 2026_08_10_WNBA_total.csv | 1 selected from 2 rows
-2026-08-14T19:32:10.116924+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.117449+00:00 | INFO  | 2026_08_11_WNBA_total.csv | 0 selected from 3 rows
-2026-08-14T19:32:10.118662+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.119230+00:00 | INFO  | 2026_08_12_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.121255+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.121803+00:00 | INFO  | 2026_08_13_WNBA_total.csv | 1 selected from 3 rows
-2026-08-14T19:32:10.123868+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
-2026-08-14T19:32:10.124318+00:00 | INFO  | 2026_08_14_WNBA_total.csv | 0 selected from 2 rows
-2026-08-14T19:32:10.124444+00:00 | INFO  | NO SELECTED ROWS FOR LEAGUE: nba; daily pick files not written
-2026-08-14T19:32:10.124478+00:00 | INFO  | NO SELECTED ROWS FOR LEAGUE: ncaam; daily pick files not written
-2026-08-14T19:32:10.153303+00:00 | INFO  | RECONCILE wnba: skipped ML/spread reconciliation; dropped 0 rows
-2026-08-14T19:32:10.156279+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.157589+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.158914+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.160067+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.161177+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_23_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.162291+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.163485+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_25_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.164617+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.165704+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.166890+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.168002+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.169173+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.170260+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.171487+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.172655+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.173739+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.174883+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.176180+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.177410+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.178562+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.179771+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.180856+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.182025+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.183358+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.184517+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.185659+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.186800+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.187871+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.189099+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.190237+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.191578+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.192789+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.193867+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.195033+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.196110+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.197176+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.198248+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.199552+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.200827+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.202007+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.203281+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.204372+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.205455+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.206593+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.207962+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv (5 rows)
-2026-08-14T19:32:10.209190+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.210343+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.211616+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv (4 rows)
-2026-08-14T19:32:10.212712+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv (1 rows)
-2026-08-14T19:32:10.213908+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv (3 rows)
-2026-08-14T19:32:10.215057+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.216293+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv (2 rows)
-2026-08-14T19:32:10.217432+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv (1 rows)
+=== basketball select_bets RUN 2026-08-14T20:15:44.305502+00:00 ===
+2026-08-14T20:15:44.305891+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv
+2026-08-14T20:15:44.305966+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv
+2026-08-14T20:15:44.306032+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv
+2026-08-14T20:15:44.306095+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv
+2026-08-14T20:15:44.306158+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv
+2026-08-14T20:15:44.306216+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv
+2026-08-14T20:15:44.306274+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv
+2026-08-14T20:15:44.306368+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv
+2026-08-14T20:15:44.306437+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv
+2026-08-14T20:15:44.306493+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv
+2026-08-14T20:15:44.306549+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv
+2026-08-14T20:15:44.306604+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv
+2026-08-14T20:15:44.306659+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv
+2026-08-14T20:15:44.306716+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv
+2026-08-14T20:15:44.306769+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv
+2026-08-14T20:15:44.306823+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv
+2026-08-14T20:15:44.306876+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv
+2026-08-14T20:15:44.306929+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv
+2026-08-14T20:15:44.306984+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv
+2026-08-14T20:15:44.307037+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv
+2026-08-14T20:15:44.307090+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv
+2026-08-14T20:15:44.307154+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv
+2026-08-14T20:15:44.307215+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv
+2026-08-14T20:15:44.307270+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv
+2026-08-14T20:15:44.307348+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv
+2026-08-14T20:15:44.307404+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv
+2026-08-14T20:15:44.307458+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv
+2026-08-14T20:15:44.307510+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_25_wnba_selected.csv
+2026-08-14T20:15:44.307570+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv
+2026-08-14T20:15:44.307626+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv
+2026-08-14T20:15:44.307676+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv
+2026-08-14T20:15:44.307727+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_23_wnba_selected.csv
+2026-08-14T20:15:44.307778+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv
+2026-08-14T20:15:44.307830+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv
+2026-08-14T20:15:44.307881+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv
+2026-08-14T20:15:44.307931+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv
+2026-08-14T20:15:44.307981+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv
+2026-08-14T20:15:44.308035+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv
+2026-08-14T20:15:44.308084+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv
+2026-08-14T20:15:44.308135+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv
+2026-08-14T20:15:44.308185+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv
+2026-08-14T20:15:44.308236+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv
+2026-08-14T20:15:44.308307+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv
+2026-08-14T20:15:44.308365+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv
+2026-08-14T20:15:44.308419+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv
+2026-08-14T20:15:44.308470+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv
+2026-08-14T20:15:44.308520+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv
+2026-08-14T20:15:44.308572+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv
+2026-08-14T20:15:44.308622+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv
+2026-08-14T20:15:44.308674+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv
+2026-08-14T20:15:44.308726+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv
+2026-08-14T20:15:44.308776+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv
+2026-08-14T20:15:44.308826+00:00 | INFO  | DELETED OLD DAILY PICK FILE: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv
+2026-08-14T20:15:44.308855+00:00 | INFO  | Old basketball daily pick outputs deleted: daily_picks=53
+2026-08-14T20:15:44.308882+00:00 | INFO  | INPUT_DIR : docs/win/basketball/03_edges/ev_kelly
+2026-08-14T20:15:44.308904+00:00 | INFO  | OUTPUT_DIR: docs/win/basketball/04_select
+2026-08-14T20:15:44.308925+00:00 | INFO  | MODEL_CONFIG: docs/win/basketball/config/model_config.yaml
+2026-08-14T20:15:44.308956+00:00 | INFO  | stake_sizing: kelly_fraction=0.25 kelly_cap=0.05
+2026-08-14T20:15:44.308978+00:00 | INFO  | ml_vs_spread_tiebreak: ev
+2026-08-14T20:15:44.309003+00:00 | INFO  | NBA model edges: moneyline=0.02 spread=0.015 total=0.0
+2026-08-14T20:15:44.309027+00:00 | INFO  | NCAAM model edges: moneyline=0.015 spread=0.015 total=0.03
+2026-08-14T20:15:44.309052+00:00 | INFO  | WNBA model edges: moneyline=0.0 spread=0.05 total=0.03
+2026-08-14T20:15:44.309107+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/moneyline
+2026-08-14T20:15:44.309152+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/spread
+2026-08-14T20:15:44.309193+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/nba/total
+2026-08-14T20:15:44.309240+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/moneyline
+2026-08-14T20:15:44.309280+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/spread
+2026-08-14T20:15:44.309345+00:00 | WARN  | INPUT FOLDER MISSING: docs/win/basketball/03_edges/ev_kelly/ncaam/total
+2026-08-14T20:15:44.311803+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.312654+00:00 | INFO  | 2026_05_08_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.315174+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.315856+00:00 | INFO  | 2026_05_09_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.317316+00:00 | INFO  | --- FILE: 2026_05_10_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.317996+00:00 | INFO  | 2026_05_10_WNBA_moneyline.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.320283+00:00 | INFO  | --- FILE: 2026_05_12_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.320764+00:00 | INFO  | 2026_05_12_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.322092+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.322516+00:00 | INFO  | 2026_05_13_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.323881+00:00 | INFO  | --- FILE: 2026_05_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.324347+00:00 | INFO  | 2026_05_14_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.325695+00:00 | INFO  | --- FILE: 2026_05_15_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.326265+00:00 | INFO  | 2026_05_15_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.327705+00:00 | INFO  | --- FILE: 2026_05_17_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.328275+00:00 | INFO  | 2026_05_17_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.329607+00:00 | INFO  | --- FILE: 2026_05_18_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.330050+00:00 | INFO  | 2026_05_18_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.331411+00:00 | INFO  | --- FILE: 2026_05_19_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.331774+00:00 | INFO  | 2026_05_19_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.333091+00:00 | INFO  | --- FILE: 2026_05_20_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.333625+00:00 | INFO  | 2026_05_20_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.334921+00:00 | INFO  | --- FILE: 2026_05_21_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.335458+00:00 | INFO  | 2026_05_21_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.336753+00:00 | INFO  | --- FILE: 2026_05_22_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.337267+00:00 | INFO  | 2026_05_22_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.338585+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.339092+00:00 | INFO  | 2026_05_23_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.340389+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.340891+00:00 | INFO  | 2026_05_24_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.342174+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.342642+00:00 | INFO  | 2026_05_25_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.343975+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_moneyline.csv league=wnba market=moneyline rows=5 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.344640+00:00 | INFO  | 2026_05_27_WNBA_moneyline.csv | 0 selected from 5 rows
+2026-08-14T20:15:44.345929+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.346392+00:00 | INFO  | 2026_05_28_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.347701+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.348314+00:00 | INFO  | 2026_05_29_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.349723+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.350239+00:00 | INFO  | 2026_05_30_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.351568+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.351936+00:00 | INFO  | 2026_05_31_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.353227+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.353695+00:00 | INFO  | 2026_06_01_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.355014+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.355626+00:00 | INFO  | 2026_06_02_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.356930+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.357417+00:00 | INFO  | 2026_06_03_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.358717+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.359727+00:00 | INFO  | 2026_06_04_WNBA_moneyline.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.361927+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.362587+00:00 | INFO  | 2026_06_05_WNBA_moneyline.csv | 2 selected from 3 rows
+2026-08-14T20:15:44.364859+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.365488+00:00 | INFO  | 2026_06_06_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.366798+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.367340+00:00 | INFO  | 2026_06_07_WNBA_moneyline.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.369497+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.370029+00:00 | INFO  | 2026_06_08_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.371363+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.371889+00:00 | INFO  | 2026_06_09_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.373180+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.373772+00:00 | INFO  | 2026_06_10_WNBA_moneyline.csv | 2 selected from 2 rows
+2026-08-14T20:15:44.376045+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.376653+00:00 | INFO  | 2026_06_11_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.377975+00:00 | INFO  | --- FILE: 2026_06_12_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.378451+00:00 | INFO  | 2026_06_12_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.379790+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.380502+00:00 | INFO  | 2026_06_13_WNBA_moneyline.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.382721+00:00 | INFO  | --- FILE: 2026_06_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.383165+00:00 | INFO  | 2026_06_14_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.384492+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.384859+00:00 | INFO  | 2026_06_15_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.386141+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.386548+00:00 | INFO  | 2026_06_16_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.387917+00:00 | INFO  | --- FILE: 2026_06_17_WNBA_moneyline.csv league=wnba market=moneyline rows=6 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.388771+00:00 | INFO  | 2026_06_17_WNBA_moneyline.csv | 2 selected from 6 rows
+2026-08-14T20:15:44.390957+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.391368+00:00 | INFO  | 2026_06_18_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.392685+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.393253+00:00 | INFO  | 2026_06_19_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.395545+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.396054+00:00 | INFO  | 2026_06_20_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.397386+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.397891+00:00 | INFO  | 2026_06_21_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.399210+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.399918+00:00 | INFO  | 2026_06_22_WNBA_moneyline.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.402090+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.402478+00:00 | INFO  | 2026_06_23_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.403819+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.404425+00:00 | INFO  | 2026_06_24_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.405757+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.406259+00:00 | INFO  | 2026_06_25_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.407622+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.408125+00:00 | INFO  | 2026_06_26_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.409462+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.410016+00:00 | INFO  | 2026_06_27_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.412242+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.412863+00:00 | INFO  | 2026_06_28_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.414177+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.414765+00:00 | INFO  | 2026_07_02_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.417011+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.417508+00:00 | INFO  | 2026_07_03_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.418802+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.419341+00:00 | INFO  | 2026_07_04_WNBA_moneyline.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.421492+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.421931+00:00 | INFO  | 2026_07_05_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.423233+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.423813+00:00 | INFO  | 2026_07_06_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.425101+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.425585+00:00 | INFO  | 2026_07_07_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.426896+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.427526+00:00 | INFO  | 2026_07_08_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.429699+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.430256+00:00 | INFO  | 2026_07_09_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.432511+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.433113+00:00 | INFO  | 2026_07_10_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.435343+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.435862+00:00 | INFO  | 2026_07_11_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.437180+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.437835+00:00 | INFO  | 2026_07_12_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.439138+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.439643+00:00 | INFO  | 2026_07_13_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.440926+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.441418+00:00 | INFO  | 2026_07_14_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.442729+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.443339+00:00 | INFO  | 2026_07_15_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.445507+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.445947+00:00 | INFO  | 2026_07_16_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.447253+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.448036+00:00 | INFO  | 2026_07_17_WNBA_moneyline.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.450315+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.450839+00:00 | INFO  | 2026_07_18_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.452158+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.452746+00:00 | INFO  | 2026_07_19_WNBA_moneyline.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.454945+00:00 | INFO  | --- FILE: 2026_07_20_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.455573+00:00 | INFO  | 2026_07_20_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.456931+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_moneyline.csv league=wnba market=moneyline rows=6 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.457831+00:00 | INFO  | 2026_07_22_WNBA_moneyline.csv | 2 selected from 6 rows
+2026-08-14T20:15:44.460005+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_moneyline.csv league=wnba market=moneyline rows=5 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.460668+00:00 | INFO  | 2026_07_28_WNBA_moneyline.csv | 0 selected from 5 rows
+2026-08-14T20:15:44.461955+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.462419+00:00 | INFO  | 2026_07_29_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.463737+00:00 | INFO  | --- FILE: 2026_07_30_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.464236+00:00 | INFO  | 2026_07_30_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.465543+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.466053+00:00 | INFO  | 2026_07_31_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.467385+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.467829+00:00 | INFO  | 2026_08_01_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.469124+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.469781+00:00 | INFO  | 2026_08_02_WNBA_moneyline.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.471980+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.472509+00:00 | INFO  | 2026_08_03_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.473835+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_moneyline.csv league=wnba market=moneyline rows=1 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.474201+00:00 | INFO  | 2026_08_04_WNBA_moneyline.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.475517+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.476092+00:00 | INFO  | 2026_08_05_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.477408+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.477929+00:00 | INFO  | 2026_08_06_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.479209+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.479739+00:00 | INFO  | 2026_08_07_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.481021+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.481554+00:00 | INFO  | 2026_08_08_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.482844+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_moneyline.csv league=wnba market=moneyline rows=4 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.483439+00:00 | INFO  | 2026_08_09_WNBA_moneyline.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.484717+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.485157+00:00 | INFO  | 2026_08_10_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.486451+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.486943+00:00 | INFO  | 2026_08_11_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.488214+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.488749+00:00 | INFO  | 2026_08_12_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.490033+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_moneyline.csv league=wnba market=moneyline rows=3 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.490555+00:00 | INFO  | 2026_08_13_WNBA_moneyline.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.491829+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_moneyline.csv league=wnba market=moneyline rows=2 mode=pick_one model_edge=0.0
+2026-08-14T20:15:44.492254+00:00 | INFO  | 2026_08_14_WNBA_moneyline.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.493941+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.494494+00:00 | INFO  | 2026_05_08_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.495798+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.496522+00:00 | INFO  | 2026_05_09_WNBA_spread.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.498694+00:00 | INFO  | --- FILE: 2026_05_10_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.499413+00:00 | INFO  | 2026_05_10_WNBA_spread.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.501641+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.502014+00:00 | INFO  | 2026_05_13_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.503333+00:00 | INFO  | --- FILE: 2026_05_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.503777+00:00 | INFO  | 2026_05_14_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.505112+00:00 | INFO  | --- FILE: 2026_05_17_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.505735+00:00 | INFO  | 2026_05_17_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.507074+00:00 | INFO  | --- FILE: 2026_05_18_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.507553+00:00 | INFO  | 2026_05_18_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.508836+00:00 | INFO  | --- FILE: 2026_05_20_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.509442+00:00 | INFO  | 2026_05_20_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.511607+00:00 | INFO  | --- FILE: 2026_05_21_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.512127+00:00 | INFO  | 2026_05_21_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.513451+00:00 | INFO  | --- FILE: 2026_05_22_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.513965+00:00 | INFO  | 2026_05_22_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.515260+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.515844+00:00 | INFO  | 2026_05_23_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.517998+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.518549+00:00 | INFO  | 2026_05_24_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.519834+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.520421+00:00 | INFO  | 2026_05_25_WNBA_spread.csv | 2 selected from 2 rows
+2026-08-14T20:15:44.522704+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_spread.csv league=wnba market=spread rows=5 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.523435+00:00 | INFO  | 2026_05_27_WNBA_spread.csv | 1 selected from 5 rows
+2026-08-14T20:15:44.525583+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.526047+00:00 | INFO  | 2026_05_28_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.527368+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.527952+00:00 | INFO  | 2026_05_29_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.529242+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.529830+00:00 | INFO  | 2026_05_30_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.531985+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.532374+00:00 | INFO  | 2026_05_31_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.533667+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.534166+00:00 | INFO  | 2026_06_01_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.536449+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.537115+00:00 | INFO  | 2026_06_02_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.539311+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.539762+00:00 | INFO  | 2026_06_03_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.541052+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.541539+00:00 | INFO  | 2026_06_04_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.542839+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.543434+00:00 | INFO  | 2026_06_05_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.545708+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.546389+00:00 | INFO  | 2026_06_06_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.547768+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.548271+00:00 | INFO  | 2026_06_07_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.550542+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.551135+00:00 | INFO  | 2026_06_08_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.553423+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.554086+00:00 | INFO  | 2026_06_09_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.556312+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.556868+00:00 | INFO  | 2026_06_10_WNBA_spread.csv | 2 selected from 2 rows
+2026-08-14T20:15:44.559147+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.559801+00:00 | INFO  | 2026_06_11_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.561106+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.561802+00:00 | INFO  | 2026_06_13_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.563938+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.564329+00:00 | INFO  | 2026_06_15_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.565671+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.566037+00:00 | INFO  | 2026_06_16_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.567358+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.567727+00:00 | INFO  | 2026_06_18_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.569010+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.569649+00:00 | INFO  | 2026_06_19_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.571834+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.572424+00:00 | INFO  | 2026_06_20_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.575093+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.575695+00:00 | INFO  | 2026_06_21_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.577875+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.578564+00:00 | INFO  | 2026_06_22_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.580709+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.581081+00:00 | INFO  | 2026_06_23_WNBA_spread.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.582395+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.583073+00:00 | INFO  | 2026_06_24_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.585311+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.585840+00:00 | INFO  | 2026_06_25_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.587145+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.587700+00:00 | INFO  | 2026_06_26_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.588996+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.589553+00:00 | INFO  | 2026_06_27_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.590854+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.591485+00:00 | INFO  | 2026_06_28_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.592780+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.593366+00:00 | INFO  | 2026_07_02_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.595523+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.596037+00:00 | INFO  | 2026_07_03_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.598220+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.598767+00:00 | INFO  | 2026_07_04_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.600972+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.601540+00:00 | INFO  | 2026_07_05_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.603062+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.603685+00:00 | INFO  | 2026_07_06_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.605892+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.606360+00:00 | INFO  | 2026_07_07_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.607665+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.608311+00:00 | INFO  | 2026_07_08_WNBA_spread.csv | 2 selected from 3 rows
+2026-08-14T20:15:44.610461+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.611033+00:00 | INFO  | 2026_07_09_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.613321+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.613846+00:00 | INFO  | 2026_07_10_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.615201+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.615883+00:00 | INFO  | 2026_07_11_WNBA_spread.csv | 2 selected from 3 rows
+2026-08-14T20:15:44.618072+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.618758+00:00 | INFO  | 2026_07_12_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.620949+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.621481+00:00 | INFO  | 2026_07_13_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.623703+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.624206+00:00 | INFO  | 2026_07_14_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.626383+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.627027+00:00 | INFO  | 2026_07_15_WNBA_spread.csv | 2 selected from 3 rows
+2026-08-14T20:15:44.629190+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.629691+00:00 | INFO  | 2026_07_16_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.631010+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.631686+00:00 | INFO  | 2026_07_17_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.633904+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.634475+00:00 | INFO  | 2026_07_18_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.635803+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.636407+00:00 | INFO  | 2026_07_19_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.638654+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_spread.csv league=wnba market=spread rows=6 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.639480+00:00 | INFO  | 2026_07_22_WNBA_spread.csv | 1 selected from 6 rows
+2026-08-14T20:15:44.641668+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_spread.csv league=wnba market=spread rows=5 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.642414+00:00 | INFO  | 2026_07_28_WNBA_spread.csv | 1 selected from 5 rows
+2026-08-14T20:15:44.644618+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.645075+00:00 | INFO  | 2026_07_29_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.646417+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.646992+00:00 | INFO  | 2026_07_31_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.649164+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.649641+00:00 | INFO  | 2026_08_01_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.650941+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.651674+00:00 | INFO  | 2026_08_02_WNBA_spread.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.653837+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.654384+00:00 | INFO  | 2026_08_03_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.655685+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_spread.csv league=wnba market=spread rows=1 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.656108+00:00 | INFO  | 2026_08_04_WNBA_spread.csv | 1 selected from 1 rows
+2026-08-14T20:15:44.658487+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.659073+00:00 | INFO  | 2026_08_05_WNBA_spread.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.660407+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.661009+00:00 | INFO  | 2026_08_06_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.663194+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.663746+00:00 | INFO  | 2026_08_07_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.665040+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.665574+00:00 | INFO  | 2026_08_08_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.666885+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_spread.csv league=wnba market=spread rows=4 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.667610+00:00 | INFO  | 2026_08_09_WNBA_spread.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.670443+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.671104+00:00 | INFO  | 2026_08_10_WNBA_spread.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.673912+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.674592+00:00 | INFO  | 2026_08_11_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.676092+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.676723+00:00 | INFO  | 2026_08_12_WNBA_spread.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.678892+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_spread.csv league=wnba market=spread rows=3 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.679426+00:00 | INFO  | 2026_08_13_WNBA_spread.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.680763+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_spread.csv league=wnba market=spread rows=2 mode=pick_one model_edge=0.05
+2026-08-14T20:15:44.681205+00:00 | INFO  | 2026_08_14_WNBA_spread.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.682845+00:00 | INFO  | --- FILE: 2026_05_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.683463+00:00 | INFO  | 2026_05_08_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.685040+00:00 | INFO  | --- FILE: 2026_05_09_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.685736+00:00 | INFO  | 2026_05_09_WNBA_total.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.687808+00:00 | INFO  | --- FILE: 2026_05_13_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.688180+00:00 | INFO  | 2026_05_13_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.689456+00:00 | INFO  | --- FILE: 2026_05_23_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.689962+00:00 | INFO  | 2026_05_23_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.691202+00:00 | INFO  | --- FILE: 2026_05_24_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.691784+00:00 | INFO  | 2026_05_24_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.693938+00:00 | INFO  | --- FILE: 2026_05_25_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.694403+00:00 | INFO  | 2026_05_25_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.695666+00:00 | INFO  | --- FILE: 2026_05_27_WNBA_total.csv league=wnba market=total rows=5 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.696340+00:00 | INFO  | 2026_05_27_WNBA_total.csv | 0 selected from 5 rows
+2026-08-14T20:15:44.697691+00:00 | INFO  | --- FILE: 2026_05_28_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.698199+00:00 | INFO  | 2026_05_28_WNBA_total.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.700267+00:00 | INFO  | --- FILE: 2026_05_29_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.700866+00:00 | INFO  | 2026_05_29_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.702102+00:00 | INFO  | --- FILE: 2026_05_30_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.702631+00:00 | INFO  | 2026_05_30_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.703856+00:00 | INFO  | --- FILE: 2026_05_31_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.704214+00:00 | INFO  | 2026_05_31_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.705457+00:00 | INFO  | --- FILE: 2026_06_01_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.705891+00:00 | INFO  | 2026_06_01_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.707137+00:00 | INFO  | --- FILE: 2026_06_02_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.707812+00:00 | INFO  | 2026_06_02_WNBA_total.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.709894+00:00 | INFO  | --- FILE: 2026_06_03_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.710360+00:00 | INFO  | 2026_06_03_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.711597+00:00 | INFO  | --- FILE: 2026_06_04_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.712029+00:00 | INFO  | 2026_06_04_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.713262+00:00 | INFO  | --- FILE: 2026_06_05_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.713794+00:00 | INFO  | 2026_06_05_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.715042+00:00 | INFO  | --- FILE: 2026_06_06_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.715640+00:00 | INFO  | 2026_06_06_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.716862+00:00 | INFO  | --- FILE: 2026_06_07_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.717331+00:00 | INFO  | 2026_06_07_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.718581+00:00 | INFO  | --- FILE: 2026_06_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.719080+00:00 | INFO  | 2026_06_08_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.720322+00:00 | INFO  | --- FILE: 2026_06_09_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.720819+00:00 | INFO  | 2026_06_09_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.722043+00:00 | INFO  | --- FILE: 2026_06_10_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.722501+00:00 | INFO  | 2026_06_10_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.723776+00:00 | INFO  | --- FILE: 2026_06_11_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.724382+00:00 | INFO  | 2026_06_11_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.725637+00:00 | INFO  | --- FILE: 2026_06_13_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.726209+00:00 | INFO  | 2026_06_13_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.727462+00:00 | INFO  | --- FILE: 2026_06_15_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.727819+00:00 | INFO  | 2026_06_15_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.729080+00:00 | INFO  | --- FILE: 2026_06_16_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.729465+00:00 | INFO  | 2026_06_16_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.730713+00:00 | INFO  | --- FILE: 2026_06_18_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.731072+00:00 | INFO  | 2026_06_18_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.732333+00:00 | INFO  | --- FILE: 2026_06_19_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.732892+00:00 | INFO  | 2026_06_19_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.734953+00:00 | INFO  | --- FILE: 2026_06_20_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.735495+00:00 | INFO  | 2026_06_20_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.736734+00:00 | INFO  | --- FILE: 2026_06_21_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.737337+00:00 | INFO  | 2026_06_21_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.739440+00:00 | INFO  | --- FILE: 2026_06_22_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.740097+00:00 | INFO  | 2026_06_22_WNBA_total.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.742233+00:00 | INFO  | --- FILE: 2026_06_23_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.742629+00:00 | INFO  | 2026_06_23_WNBA_total.csv | 0 selected from 1 rows
+2026-08-14T20:15:44.743893+00:00 | INFO  | --- FILE: 2026_06_24_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.744553+00:00 | INFO  | 2026_06_24_WNBA_total.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.746644+00:00 | INFO  | --- FILE: 2026_06_25_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.747151+00:00 | INFO  | 2026_06_25_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.748435+00:00 | INFO  | --- FILE: 2026_06_26_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.748942+00:00 | INFO  | 2026_06_26_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.750182+00:00 | INFO  | --- FILE: 2026_06_27_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.750787+00:00 | INFO  | 2026_06_27_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.752875+00:00 | INFO  | --- FILE: 2026_06_28_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.753490+00:00 | INFO  | 2026_06_28_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.754753+00:00 | INFO  | --- FILE: 2026_07_02_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.755276+00:00 | INFO  | 2026_07_02_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.756543+00:00 | INFO  | --- FILE: 2026_07_03_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.756989+00:00 | INFO  | 2026_07_03_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.758247+00:00 | INFO  | --- FILE: 2026_07_04_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.758764+00:00 | INFO  | 2026_07_04_WNBA_total.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.761317+00:00 | INFO  | --- FILE: 2026_07_05_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.761773+00:00 | INFO  | 2026_07_05_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.763010+00:00 | INFO  | --- FILE: 2026_07_06_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.763603+00:00 | INFO  | 2026_07_06_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.765788+00:00 | INFO  | --- FILE: 2026_07_07_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.766404+00:00 | INFO  | 2026_07_07_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.767675+00:00 | INFO  | --- FILE: 2026_07_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.768244+00:00 | INFO  | 2026_07_08_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.770359+00:00 | INFO  | --- FILE: 2026_07_09_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.770930+00:00 | INFO  | 2026_07_09_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.773052+00:00 | INFO  | --- FILE: 2026_07_10_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.773590+00:00 | INFO  | 2026_07_10_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.774845+00:00 | INFO  | --- FILE: 2026_07_11_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.775385+00:00 | INFO  | 2026_07_11_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.776660+00:00 | INFO  | --- FILE: 2026_07_12_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.777258+00:00 | INFO  | 2026_07_12_WNBA_total.csv | 0 selected from 4 rows
+2026-08-14T20:15:44.778522+00:00 | INFO  | --- FILE: 2026_07_13_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.778962+00:00 | INFO  | 2026_07_13_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.780202+00:00 | INFO  | --- FILE: 2026_07_14_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.780664+00:00 | INFO  | 2026_07_14_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.782027+00:00 | INFO  | --- FILE: 2026_07_15_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.782575+00:00 | INFO  | 2026_07_15_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.783821+00:00 | INFO  | --- FILE: 2026_07_16_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.784273+00:00 | INFO  | 2026_07_16_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.785562+00:00 | INFO  | --- FILE: 2026_07_17_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.786205+00:00 | INFO  | 2026_07_17_WNBA_total.csv | 1 selected from 4 rows
+2026-08-14T20:15:44.788364+00:00 | INFO  | --- FILE: 2026_07_18_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.788895+00:00 | INFO  | 2026_07_18_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.790153+00:00 | INFO  | --- FILE: 2026_07_19_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.790706+00:00 | INFO  | 2026_07_19_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.792007+00:00 | INFO  | --- FILE: 2026_07_22_WNBA_total.csv league=wnba market=total rows=6 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.792823+00:00 | INFO  | 2026_07_22_WNBA_total.csv | 1 selected from 6 rows
+2026-08-14T20:15:44.794948+00:00 | INFO  | --- FILE: 2026_07_28_WNBA_total.csv league=wnba market=total rows=5 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.795635+00:00 | INFO  | 2026_07_28_WNBA_total.csv | 0 selected from 5 rows
+2026-08-14T20:15:44.796894+00:00 | INFO  | --- FILE: 2026_07_29_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.797459+00:00 | INFO  | 2026_07_29_WNBA_total.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.799615+00:00 | INFO  | --- FILE: 2026_07_31_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.800180+00:00 | INFO  | 2026_07_31_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.802258+00:00 | INFO  | --- FILE: 2026_08_01_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.802730+00:00 | INFO  | 2026_08_01_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.803995+00:00 | INFO  | --- FILE: 2026_08_02_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.804709+00:00 | INFO  | 2026_08_02_WNBA_total.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.806792+00:00 | INFO  | --- FILE: 2026_08_03_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.807341+00:00 | INFO  | 2026_08_03_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.808606+00:00 | INFO  | --- FILE: 2026_08_04_WNBA_total.csv league=wnba market=total rows=1 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.809024+00:00 | INFO  | 2026_08_04_WNBA_total.csv | 1 selected from 1 rows
+2026-08-14T20:15:44.811171+00:00 | INFO  | --- FILE: 2026_08_05_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.811899+00:00 | INFO  | 2026_08_05_WNBA_total.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.813985+00:00 | INFO  | --- FILE: 2026_08_06_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.814669+00:00 | INFO  | 2026_08_06_WNBA_total.csv | 3 selected from 3 rows
+2026-08-14T20:15:44.816764+00:00 | INFO  | --- FILE: 2026_08_07_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.817339+00:00 | INFO  | 2026_08_07_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.818628+00:00 | INFO  | --- FILE: 2026_08_08_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.819197+00:00 | INFO  | 2026_08_08_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.821370+00:00 | INFO  | --- FILE: 2026_08_09_WNBA_total.csv league=wnba market=total rows=4 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.822062+00:00 | INFO  | 2026_08_09_WNBA_total.csv | 2 selected from 4 rows
+2026-08-14T20:15:44.824149+00:00 | INFO  | --- FILE: 2026_08_10_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.824671+00:00 | INFO  | 2026_08_10_WNBA_total.csv | 1 selected from 2 rows
+2026-08-14T20:15:44.826768+00:00 | INFO  | --- FILE: 2026_08_11_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.827285+00:00 | INFO  | 2026_08_11_WNBA_total.csv | 0 selected from 3 rows
+2026-08-14T20:15:44.828561+00:00 | INFO  | --- FILE: 2026_08_12_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.829116+00:00 | INFO  | 2026_08_12_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.831188+00:00 | INFO  | --- FILE: 2026_08_13_WNBA_total.csv league=wnba market=total rows=3 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.831788+00:00 | INFO  | 2026_08_13_WNBA_total.csv | 1 selected from 3 rows
+2026-08-14T20:15:44.833883+00:00 | INFO  | --- FILE: 2026_08_14_WNBA_total.csv league=wnba market=total rows=2 mode=pick_one model_edge=0.03
+2026-08-14T20:15:44.834336+00:00 | INFO  | 2026_08_14_WNBA_total.csv | 0 selected from 2 rows
+2026-08-14T20:15:44.834463+00:00 | INFO  | NO SELECTED ROWS FOR LEAGUE: nba; daily pick files not written
+2026-08-14T20:15:44.834499+00:00 | INFO  | NO SELECTED ROWS FOR LEAGUE: ncaam; daily pick files not written
+2026-08-14T20:15:44.863582+00:00 | INFO  | RECONCILE wnba: skipped ML/spread reconciliation; dropped 0 rows
+2026-08-14T20:15:44.866671+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_08_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.868009+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_09_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.869370+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_10_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.870514+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_20_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.871646+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_23_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.872779+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_24_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.873988+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_25_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.875133+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_27_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.876232+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_28_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.877456+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_05_30_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.878553+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_01_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.879724+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_02_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.880864+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_04_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.882100+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_05_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.883261+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_07_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.884382+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_08_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.885537+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_09_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.886818+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_10_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.888051+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_13_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.889209+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_17_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.890441+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_19_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.891533+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_20_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.892687+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_21_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.894016+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_22_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.895184+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_24_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.896382+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_06_27_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.897537+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_02_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.898621+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_03_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.899846+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_04_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.901016+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_06_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.902360+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_08_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.903575+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_09_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.904675+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_10_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.905833+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_11_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.906905+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_12_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.907991+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_13_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.909058+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_14_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.910379+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_15_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.911680+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_17_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.912836+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_19_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.914100+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_22_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.915185+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_28_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.916261+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_29_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.917431+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_07_31_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.918826+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_02_wnba_selected.csv (5 rows)
+2026-08-14T20:15:44.919997+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_04_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.921133+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_05_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.922428+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_06_wnba_selected.csv (4 rows)
+2026-08-14T20:15:44.923519+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_08_wnba_selected.csv (1 rows)
+2026-08-14T20:15:44.924750+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_09_wnba_selected.csv (3 rows)
+2026-08-14T20:15:44.925941+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_10_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.927194+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_12_wnba_selected.csv (2 rows)
+2026-08-14T20:15:44.928319+00:00 | INFO  | WROTE DAILY PICKS: docs/win/basketball/04_select/wnba/daily_picks/2026_08_13_wnba_selected.csv (1 rows)
 
 ======================================================================
-SUMMARY  2026-08-14T19:32:10.217551+00:00
+SUMMARY  2026-08-14T20:15:44.928417+00:00
 ======================================================================
   files_processed       : 238
   total_selected        : 109
@@ -626,7 +616,7 @@ SUMMARY  2026-08-14T19:32:10.217551+00:00
   ml_vs_spread_tiebreak : ev
 
 --- Filter Reject Counts ---
-  deleted_old_daily_pick_files : 63
+  deleted_old_daily_pick_files : 53
   fail_ev                      : 2
   fail_kelly                   : 66
   fail_line                    : 85
