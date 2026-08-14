@@ -736,6 +736,18 @@ def apply_prediction_biases(pred_files, bias_values):
 
             for row in rows:
                 if str(row.get(BIAS_FLAG_COLUMN, "")).strip() == BIAS_FLAG_VALUE:
+                    if (
+                        str(row.get(MARGIN_BIAS_COLUMN, "")).strip() == ""
+                        and margin_info["method"] in ("fixed", "none")
+                    ):
+                        row[MARGIN_BIAS_COLUMN] = f"{margin_bias:.3f}"
+
+                    if (
+                        str(row.get(TOTAL_BIAS_COLUMN, "")).strip() == ""
+                        and total_info["method"] in ("fixed", "none")
+                    ):
+                        row[TOTAL_BIAS_COLUMN] = f"{total_bias:.3f}"
+
                     file_skipped += 1
                     stats[league]["rows_skipped_already_flagged"] += 1
                     continue
