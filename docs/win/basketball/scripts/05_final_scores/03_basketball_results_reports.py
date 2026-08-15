@@ -15,8 +15,13 @@
 #   docs/win/basketball/05_final_scores/{league}_summary_overall.csv
 #   docs/win/basketball/05_final_scores/{league}_summary_grand_total.csv
 #   docs/win/basketball/05_final_scores/reports/{league}/{moneyline,spread,total,overview}/*.csv
+#
+# Log:
+#   docs/win/basketball/errors/05_final_scores/03_basketball_results_reports.txt
 
+from datetime import datetime, UTC
 from pathlib import Path
+import traceback
 
 import numpy as np
 import pandas as pd
@@ -29,18 +34,83 @@ LEAGUES = ["nba", "ncaam", "wnba"]
 
 BASE       = Path("docs/win/basketball/05_final_scores")
 REPORT_DIR = BASE / "reports"
+ERROR_DIR  = Path("docs/win/basketball/errors/05_final_scores")
+LOG_FILE   = ERROR_DIR / "03_basketball_results_reports.txt"
 
 # Where work files live
 WORK_FILES = {lg: BASE / f"work_{lg}.csv" for lg in LEAGUES}
+
+ERROR_DIR.mkdir(parents=True, exist_ok=True)
+
+# =========================
+# LOGGING
+# =========================
+
+RUN_STARTED = datetime.now(UTC)
+WARNING_COUNT = 0
+ERROR_COUNT = 0
+INPUT_FILE_COUNT = 0
+INPUT_ROW_COUNT = 0
+OUTPUT_FILE_COUNT = 0
+OUTPUT_ROW_COUNT = 0
+
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write("=== 03_basketball_results_reports ===\n")
+    f.write(f"START_TIMESTAMP_UTC: {RUN_STARTED.isoformat()}\n")
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def log(level: str, message: str) -> None:
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{_now()} | {level} | {message}\n")
+
+
+def warn(message: str) -> None:
+    global WARNING_COUNT
+    WARNING_COUNT += 1
+    log("WARNING", message)
+
+
+def error(message: str) -> None:
+    global ERROR_COUNT
+    ERROR_COUNT += 1
+    log("ERROR", message)
+
+
+def log_input(path: Path, rows: int, exists: bool = True) -> None:
+    global INPUT_FILE_COUNT, INPUT_ROW_COUNT
+    INPUT_FILE_COUNT += 1
+    INPUT_ROW_COUNT += rows
+    log("INFO", f"INPUT | file={path} | exists={int(exists)} | rows={rows}")
+
+
+def write_csv(df: pd.DataFrame, path: Path) -> None:
+    global OUTPUT_FILE_COUNT, OUTPUT_ROW_COUNT
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
+    rows = len(df)
+    OUTPUT_FILE_COUNT += 1
+    OUTPUT_ROW_COUNT += rows
+    log("INFO", f"OUTPUT | file={path} | rows={rows}")
+
+
+def finish(status: str) -> None:
+    ended = datetime.now(UTC)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"INPUT_SUMMARY | files={INPUT_FILE_COUNT} | rows={INPUT_ROW_COUNT}\n")
+        f.write(f"OUTPUT_SUMMARY | files={OUTPUT_FILE_COUNT} | rows={OUTPUT_ROW_COUNT}\n")
+        f.write(f"WARNING_COUNT: {WARNING_COUNT}\n")
+        f.write(f"ERROR_COUNT: {ERROR_COUNT}\n")
+        f.write(f"END_TIMESTAMP_UTC: {ended.isoformat()}\n")
+        f.write(f"STATUS: {status}\n")
 
 
 # =========================
 # CANONICAL SCHEMA
 # =========================
-#
-# Every "by X" file uses these columns. Side-aware files insert side_group
-# right after market_type. The 'bucket_dimension' column lets multiple files
-# be unioned cleanly later.
 
 CANON_COLS_NO_SIDE = [
     "league", "market_type", "bucket_dimension", "bucket",
@@ -74,29 +144,19 @@ def to_num(series):
 def aggregate_block(df: pd.DataFrame, league: str, market_type: str | None,
                     bucket_dimension: str, bucket_col: str,
                     side_group_col: str | None = None) -> pd.DataFrame:
-    """
-    Build one canonical aggregation DataFrame.
-
-    df: already filtered to the appropriate market(s).
-    market_type: literal value to populate the column. If None, derive from df.
-    bucket_dimension: literal label (e.g. "ev", "kelly", "model_prob", "dow").
-    bucket_col: column in df that holds the bucket label.
-    side_group_col: if provided, also group by this column and include it in output.
-    """
+    """Build one canonical aggregation DataFrame."""
     if df.empty:
         cols = CANON_COLS_WITH_SIDE if side_group_col else CANON_COLS_NO_SIDE
         return pd.DataFrame(columns=cols)
 
     work = df.copy()
 
-    # Numeric coercion (defensive — these may already be numeric)
     for c in ("profit_unit", "profit_kelly", "bet_stake_pct",
               "bet_ev", "bet_edge_vs_market", "bet_kelly",
               "bet_model_prob", "bet_odds_american"):
         if c in work.columns:
             work[c] = to_num(work[c])
 
-    # Result flags
     res = work["bet_result"].astype(str).str.strip().str.lower() if "bet_result" in work.columns else pd.Series([""] * len(work))
     work["_is_win"]  = (res == "win").astype(int)
     work["_is_loss"] = (res == "loss").astype(int)
@@ -123,7 +183,6 @@ def aggregate_block(df: pd.DataFrame, league: str, market_type: str | None,
 
         roi_flat  = (units_flat  / bets) if bets > 0 else np.nan
         roi_kelly = (units_kelly / stake_total) if stake_total > 0 else np.nan
-
         win_pct = (wins / (wins + losses)) if (wins + losses) > 0 else np.nan
 
         avg_ev      = float(sub["bet_ev"].mean(skipna=True))             if "bet_ev"             in sub.columns else np.nan
@@ -132,7 +191,6 @@ def aggregate_block(df: pd.DataFrame, league: str, market_type: str | None,
         avg_mp      = float(sub["bet_model_prob"].mean(skipna=True))     if "bet_model_prob"     in sub.columns else np.nan
         avg_odds    = float(sub["bet_odds_american"].mean(skipna=True))  if "bet_odds_american"  in sub.columns else np.nan
 
-        # Resolve market_type for this row
         if market_type is not None:
             mt = market_type
         else:
@@ -177,8 +235,6 @@ def aggregate_block(df: pd.DataFrame, league: str, market_type: str | None,
 # PER-MARKET REPORTS
 # =========================
 
-# (bucket_dimension_label, bucket_col_in_work) tuples used for per-market buckets.
-# Note: 'win_prob' is sourced from model_prob_bucket (your stated mapping).
 COMMON_BUCKETS = [
     ("ev",             "ev_bucket"),
     ("kelly",          "kelly_bucket"),
@@ -189,19 +245,18 @@ COMMON_BUCKETS = [
     ("month",          "month_bucket"),
 ]
 
-# Side-naming convention (Option A)
+
 def side_suffix(market_type: str) -> str:
     return "over_under" if market_type == "total" else "home_away"
 
 
 def write_market_reports(work_df: pd.DataFrame, league: str, market_type: str,
                          out_dir: Path) -> None:
-    """Per-market: write all _by_X (no side) and _by_X_{home_away|over_under}_summary files."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     sub = work_df[work_df["market_type"].astype(str).str.lower() == market_type].copy()
     if sub.empty:
-        print(f"  [{league} / {market_type}] no rows; skipping per-market reports")
+        log("INFO", f"[{league} / {market_type}] no rows; skipping per-market reports")
         return
 
     side_col = "side_group" if "side_group" in sub.columns else None
@@ -209,50 +264,45 @@ def write_market_reports(work_df: pd.DataFrame, league: str, market_type: str,
 
     for label, bucket_col in COMMON_BUCKETS:
         if bucket_col not in sub.columns:
+            warn(f"[{league} / {market_type}] missing bucket column {bucket_col}; skipping {label}")
             continue
 
-        # No-side aggregate
         agg = aggregate_block(sub, league=league, market_type=market_type,
                               bucket_dimension=label, bucket_col=bucket_col)
-        agg.to_csv(out_dir / f"{league}_{market_type}_by_{label}.csv", index=False)
+        write_csv(agg, out_dir / f"{league}_{market_type}_by_{label}.csv")
 
-        # Side-aware aggregate
         if side_col:
             agg_s = aggregate_block(sub, league=league, market_type=market_type,
                                     bucket_dimension=label, bucket_col=bucket_col,
                                     side_group_col=side_col)
-            agg_s.to_csv(out_dir / f"{league}_{market_type}_by_{label}_{sfx}_summary.csv", index=False)
+            write_csv(agg_s, out_dir / f"{league}_{market_type}_by_{label}_{sfx}_summary.csv")
 
-    # Spread/total: by_side files (the side_group itself IS the bucket)
     if market_type in ("spread", "total") and side_col:
-        # _by_side: just bucket = side_group, no side column repeated
         agg = aggregate_block(sub, league=league, market_type=market_type,
                               bucket_dimension="side", bucket_col=side_col)
-        agg.to_csv(out_dir / f"{league}_{market_type}_by_side.csv", index=False)
-        # _by_side_{sfx}_summary: identical content but matches the naming pattern;
-        # included so the family is consistent. side_group column = bucket value.
+        write_csv(agg, out_dir / f"{league}_{market_type}_by_side.csv")
+
         agg_s = agg.copy()
         if not agg_s.empty:
             agg_s.insert(2, "side_group", agg_s["bucket"])
             agg_s = agg_s[CANON_COLS_WITH_SIDE]
         else:
             agg_s = pd.DataFrame(columns=CANON_COLS_WITH_SIDE)
-        agg_s.to_csv(out_dir / f"{league}_{market_type}_by_side_{sfx}_summary.csv", index=False)
+        write_csv(agg_s, out_dir / f"{league}_{market_type}_by_side_{sfx}_summary.csv")
 
-    # Total only: by_total_range (uses total_bucket which is the book total binning)
     if market_type == "total" and "total_bucket" in sub.columns:
         agg = aggregate_block(sub, league=league, market_type=market_type,
                               bucket_dimension="total_range", bucket_col="total_bucket")
-        agg.to_csv(out_dir / f"{league}_{market_type}_by_total_range.csv", index=False)
+        write_csv(agg, out_dir / f"{league}_{market_type}_by_total_range.csv")
         if side_col:
             agg_s = aggregate_block(sub, league=league, market_type=market_type,
                                     bucket_dimension="total_range", bucket_col="total_bucket",
                                     side_group_col=side_col)
-            agg_s.to_csv(out_dir / f"{league}_{market_type}_by_total_range_{sfx}_summary.csv", index=False)
+            write_csv(agg_s, out_dir / f"{league}_{market_type}_by_total_range_{sfx}_summary.csv")
 
 
 # =========================
-# CROSSES (single long-format file per market)
+# CROSSES
 # =========================
 
 CROSS_DIMS = [
@@ -336,8 +386,7 @@ def aggregate_cross(df: pd.DataFrame, league: str, market_type: str,
             "avg_odds_american":round(float(sub["bet_odds_american"].mean(skipna=True)), 1) if "bet_odds_american" in sub.columns and not sub["bet_odds_american"].dropna().empty else np.nan,
         })
 
-    out = pd.DataFrame(rows, columns=CROSS_COLS)
-    return out
+    return pd.DataFrame(rows, columns=CROSS_COLS)
 
 
 def write_market_crosses(work_df: pd.DataFrame, league: str, market_type: str,
@@ -360,7 +409,7 @@ def write_market_crosses(work_df: pd.DataFrame, league: str, market_type: str,
 
     if pieces:
         all_crosses = pd.concat(pieces, ignore_index=True)
-        all_crosses.to_csv(out_dir / f"{league}_{market_type}_crosses.csv", index=False)
+        write_csv(all_crosses, out_dir / f"{league}_{market_type}_crosses.csv")
 
 
 # =========================
@@ -371,10 +420,9 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
     overview_dir.mkdir(parents=True, exist_ok=True)
 
     if work_df.empty:
-        print(f"  [{league}] no rows; skipping overview")
+        log("INFO", f"[{league}] no rows; skipping overview")
         return
 
-    # by market
     by_mkt = []
     for mt, sub in work_df.groupby("market_type", dropna=False, observed=True):
         agg = aggregate_block(sub, league=league, market_type=str(mt).lower(),
@@ -382,21 +430,18 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
         by_mkt.append(agg)
     if by_mkt:
         out = pd.concat(by_mkt, ignore_index=True)
-        out.to_csv(overview_dir / f"{league}_summary_by_market.csv", index=False)
+        write_csv(out, overview_dir / f"{league}_summary_by_market.csv")
 
-    # by side_group
     if "side_group" in work_df.columns:
         agg = aggregate_block(work_df, league=league, market_type=None,
                               bucket_dimension="side_group", bucket_col="side_group")
-        agg.to_csv(overview_dir / f"{league}_summary_by_side_group.csv", index=False)
+        write_csv(agg, overview_dir / f"{league}_summary_by_side_group.csv")
 
-    # by date
     if "game_date" in work_df.columns:
         agg = aggregate_block(work_df, league=league, market_type=None,
                               bucket_dimension="game_date", bucket_col="game_date")
-        agg.to_csv(overview_dir / f"{league}_summary_by_date.csv", index=False)
+        write_csv(agg, overview_dir / f"{league}_summary_by_date.csv")
 
-    # bet log (per-bet listing using the new column names)
     log_cols = [
         "game_date", "league", "market_type", "side_group",
         "home_team", "away_team",
@@ -409,11 +454,10 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
         "bet_result", "profit_unit", "profit_kelly",
     ]
     existing = [c for c in log_cols if c in work_df.columns]
-    work_df[existing].to_csv(overview_dir / f"{league}_bet_log.csv", index=False)
+    write_csv(work_df[existing], overview_dir / f"{league}_bet_log.csv")
 
-    # local copy of summary_overall (also written at top level)
     overall = build_summary_overall(work_df, league)
-    overall.to_csv(overview_dir / f"{league}_summary_overall.csv", index=False)
+    write_csv(overall, overview_dir / f"{league}_summary_overall.csv")
 
 
 # =========================
@@ -421,8 +465,6 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
 # =========================
 
 def build_summary_overall(work_df: pd.DataFrame, league: str) -> pd.DataFrame:
-    """One row per market_type (per your schema:
-       league, market_type, Win, Loss, Push, Total, Win_Pct)."""
     rows = []
     if work_df.empty:
         return pd.DataFrame(columns=["league","market_type","Win","Loss","Push","Total","Win_Pct"])
@@ -448,7 +490,6 @@ def build_summary_overall(work_df: pd.DataFrame, league: str) -> pd.DataFrame:
 
 
 def build_summary_grand_total(work_df: pd.DataFrame, league: str) -> pd.DataFrame:
-    """Single-row roll-up across all markets."""
     if work_df.empty:
         return pd.DataFrame([{
             "league": league.upper(),
@@ -498,44 +539,59 @@ def build_summary_grand_total(work_df: pd.DataFrame, league: str) -> pd.DataFram
 def run_one(league: str) -> None:
     work_path = WORK_FILES[league]
     if not work_path.exists():
-        print(f"[{league}] missing work file: {work_path}")
+        log_input(work_path, 0, exists=False)
+        warn(f"[{league}] missing work file: {work_path}")
         return
 
     work = pd.read_csv(work_path)
+    log_input(work_path, len(work), exists=True)
     if work.empty:
-        print(f"[{league}] empty work file; skipping")
+        warn(f"[{league}] empty work file; skipping")
         return
 
-    # Normalize
     if "market_type" in work.columns:
         work["market_type"] = work["market_type"].astype(str).str.strip().str.lower()
     if "side_group" in work.columns:
         work["side_group"] = work["side_group"].astype(str).str.strip().str.upper()
 
-    # Top-level per-league summaries
-    build_summary_overall(work,    league).to_csv(BASE / f"{league}_summary_overall.csv",     index=False)
-    build_summary_grand_total(work,league).to_csv(BASE / f"{league}_summary_grand_total.csv", index=False)
+    write_csv(build_summary_overall(work, league), BASE / f"{league}_summary_overall.csv")
+    write_csv(build_summary_grand_total(work, league), BASE / f"{league}_summary_grand_total.csv")
 
-    # Per-market reports
     for mt in ["moneyline", "spread", "total"]:
         out_dir = REPORT_DIR / league / mt
         write_market_reports(work, league, mt, out_dir)
         write_market_crosses(work, league, mt, out_dir)
 
-    # Overview
     overview_dir = REPORT_DIR / league / "overview"
     write_overview(work, league, overview_dir)
 
-    print(f"[{league}] reports written under {REPORT_DIR / league}")
+    log("INFO", f"[{league}] reports written under {REPORT_DIR / league}")
 
 
-def run():
+def run() -> None:
     BASE.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     for league in LEAGUES:
         run_one(league)
-    print("Basketball reports complete.")
+    log("INFO", "Basketball reports complete.")
+
+
+def main() -> None:
+    status = "FAILED"
+    try:
+        run()
+        status = "SUCCESS"
+    except Exception as exc:
+        error(f"Unhandled exception: {type(exc).__name__}: {exc}")
+        trace = traceback.format_exc()
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(trace)
+            if not trace.endswith("\n"):
+                f.write("\n")
+        raise
+    finally:
+        finish(status)
 
 
 if __name__ == "__main__":
-    run()
+    main()
