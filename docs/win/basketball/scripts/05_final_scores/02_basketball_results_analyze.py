@@ -16,6 +16,9 @@
 #   docs/win/basketball/05_final_scores/work_ncaam.csv
 #   docs/win/basketball/05_final_scores/work_wnba.csv
 #
+# Log:
+#   docs/win/basketball/errors/05_final_scores/02_basketball_results_analyze.txt
+#
 # Buckets added per row:
 #   ev_bucket               (signed; pulls from bet_ev)
 #   edge_vs_market_bucket   (signed; pulls from bet_edge_vs_market in pp)
@@ -29,8 +32,9 @@
 #
 # profit_unit and profit_kelly carry through unchanged from script 01.
 
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
+import traceback
 
 import pandas as pd
 
@@ -43,12 +47,73 @@ LEAGUES = ["nba", "ncaam", "wnba"]
 BASE       = Path("docs/win/basketball")
 INPUT_DIR  = BASE / "05_final_scores/results"
 OUTPUT_DIR = BASE / "05_final_scores"
+ERROR_DIR  = BASE / "errors/05_final_scores"
+LOG_FILE   = ERROR_DIR / "02_basketball_results_analyze.txt"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
-# Wipe basketball intermediate outputs before regenerating
-for league in LEAGUES:
-    (OUTPUT_DIR / f"work_{league}.csv").unlink(missing_ok=True)
+# =========================
+# LOGGING
+# =========================
+
+RUN_STARTED = datetime.now(UTC)
+WARNING_COUNT = 0
+ERROR_COUNT = 0
+INPUT_FILE_COUNT = 0
+INPUT_ROW_COUNT = 0
+OUTPUT_FILE_COUNT = 0
+OUTPUT_ROW_COUNT = 0
+
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write("=== 02_basketball_results_analyze ===\n")
+    f.write(f"START_TIMESTAMP_UTC: {RUN_STARTED.isoformat()}\n")
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def log(level: str, message: str) -> None:
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{_now()} | {level} | {message}\n")
+
+
+def warn(message: str) -> None:
+    global WARNING_COUNT
+    WARNING_COUNT += 1
+    log("WARNING", message)
+
+
+def error(message: str) -> None:
+    global ERROR_COUNT
+    ERROR_COUNT += 1
+    log("ERROR", message)
+
+
+def log_input(path: Path, rows: int, exists: bool = True) -> None:
+    global INPUT_FILE_COUNT, INPUT_ROW_COUNT
+    INPUT_FILE_COUNT += 1
+    INPUT_ROW_COUNT += rows
+    log("INFO", f"INPUT | file={path} | exists={int(exists)} | rows={rows}")
+
+
+def log_output(path: Path, rows: int) -> None:
+    global OUTPUT_FILE_COUNT, OUTPUT_ROW_COUNT
+    OUTPUT_FILE_COUNT += 1
+    OUTPUT_ROW_COUNT += rows
+    log("INFO", f"OUTPUT | file={path} | rows={rows}")
+
+
+def finish(status: str) -> None:
+    ended = datetime.now(UTC)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"INPUT_SUMMARY | files={INPUT_FILE_COUNT} | rows={INPUT_ROW_COUNT}\n")
+        f.write(f"OUTPUT_SUMMARY | files={OUTPUT_FILE_COUNT} | rows={OUTPUT_ROW_COUNT}\n")
+        f.write(f"WARNING_COUNT: {WARNING_COUNT}\n")
+        f.write(f"ERROR_COUNT: {ERROR_COUNT}\n")
+        f.write(f"END_TIMESTAMP_UTC: {ended.isoformat()}\n")
+        f.write(f"STATUS: {status}\n")
 
 
 # =========================
@@ -359,25 +424,54 @@ def run_one(league: str) -> None:
     out_path = OUTPUT_DIR / f"work_{league}.csv"
 
     if not in_path.exists():
-        print(f"[{upper}] input missing: {in_path} — skipping")
+        log_input(in_path, 0, exists=False)
+        warn(f"[{upper}] input missing: {in_path} — skipping")
         return
 
     df = pd.read_csv(in_path)
+    log_input(in_path, len(df), exists=True)
+
     if df.empty:
-        print(f"[{upper}] input is empty: {in_path} — writing empty work file")
+        warn(f"[{upper}] input is empty: {in_path} — writing empty work file")
         df.to_csv(out_path, index=False)
+        log_output(out_path, 0)
         return
 
     work = prepare(df, upper)
     work.to_csv(out_path, index=False)
-    print(f"[{upper}] wrote {len(work)} rows -> {out_path}")
+    log_output(out_path, len(work))
+    log("INFO", f"[{upper}] wrote {len(work)} rows -> {out_path}")
 
 
-def run():
+def run() -> None:
+    # Wipe basketball intermediate outputs before regenerating, matching the
+    # previous behavior but after the run log has been initialized.
+    for league in LEAGUES:
+        out_path = OUTPUT_DIR / f"work_{league}.csv"
+        if out_path.exists():
+            out_path.unlink()
+            log("INFO", f"REMOVED_STALE_OUTPUT | file={out_path}")
+
     for league in LEAGUES:
         run_one(league)
-    print("Analyze complete.")
+    log("INFO", "Analyze complete.")
+
+
+def main() -> None:
+    status = "FAILED"
+    try:
+        run()
+        status = "SUCCESS"
+    except Exception as exc:
+        error(f"Unhandled exception: {type(exc).__name__}: {exc}")
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(traceback.format_exc())
+            if not traceback.format_exc().endswith("\n"):
+                f.write("\n")
+        raise
+    finally:
+        finish(status)
 
 
 if __name__ == "__main__":
-    run()
+    main()
