@@ -21,6 +21,7 @@ BASE = Path("docs/win/basketball")
 ERRORS = BASE / "errors"
 OUTPUT = BASE / "pipeline_health.json"
 LOG = ERRORS / "pipeline_health.txt"
+WNBA_DRIFT_REPORT = ERRORS / "99_validation/wnba_bias_drift.csv"
 NY = ZoneInfo("America/New_York")
 LEAGUES = ["nba", "ncaam", "wnba"]
 LABEL = {"nba": "NBA", "ncaam": "NCAAM", "wnba": "WNBA"}
@@ -257,6 +258,32 @@ def wnba_bias_drift() -> dict:
     return {"definition": "adjusted_projected_minus_actual", "warning_threshold_abs_points": DRIFT_WARN, "matched_games": len(residuals), "windows": windows, "warnings": warnings}
 
 
+def write_wnba_drift_report(drift: dict, generated_at_utc: str) -> None:
+    """Write a stable, machine-readable WNBA calibration drift report each run."""
+    WNBA_DRIFT_REPORT.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "generated_at_utc", "matched_games", "window_games", "sample_games",
+        "margin_mean_residual", "total_mean_residual", "threshold_points", "warning",
+    ]
+    tmp = WNBA_DRIFT_REPORT.with_suffix(WNBA_DRIFT_REPORT.suffix + ".tmp")
+    with open(tmp, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for n in DRIFT_WINDOWS:
+            vals = drift.get("windows", {}).get(str(n), {})
+            writer.writerow({
+                "generated_at_utc": generated_at_utc,
+                "matched_games": drift.get("matched_games", 0),
+                "window_games": n,
+                "sample_games": vals.get("games", 0),
+                "margin_mean_residual": vals.get("margin_mean_residual"),
+                "total_mean_residual": vals.get("total_mean_residual"),
+                "threshold_points": drift.get("warning_threshold_abs_points"),
+                "warning": bool(vals.get("warning", False)),
+            })
+    tmp.replace(WNBA_DRIFT_REPORT)
+
+
 def main() -> None:
     now = datetime.now(NY)
     stages, fatals = stage_health()
@@ -265,10 +292,13 @@ def main() -> None:
         item, errs = current_league_health(league, now)
         leagues[league] = item; fatals.extend(errs)
     drift = wnba_bias_drift()
+    generated_at_utc = datetime.now(UTC).isoformat()
+    write_wnba_drift_report(drift, generated_at_utc)
+    drift["report_path"] = str(WNBA_DRIFT_REPORT)
 
     payload = {
         "schema_version": 1,
-        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "generated_at_utc": generated_at_utc,
         "game_date_new_york": now.strftime("%Y_%m_%d"),
         "status": "failed" if fatals else "healthy",
         "fatal_errors": fatals,
@@ -290,6 +320,7 @@ def main() -> None:
             f"predictions={c['prediction_games']} sportsbook={c['sportsbook_games']} merged={c['merged_games']} "
             f"selected={c['selected_bets']} locked={c['locked_bets']}"
         )
+    lines.append(f"WNBA drift report: {WNBA_DRIFT_REPORT}")
     for n, vals in drift["windows"].items():
         lines.append(f"WNBA drift {n}: games={vals['games']} margin={vals['margin_mean_residual']} total={vals['total_mean_residual']} warning={vals['warning']}")
     for warning in drift["warnings"]:
