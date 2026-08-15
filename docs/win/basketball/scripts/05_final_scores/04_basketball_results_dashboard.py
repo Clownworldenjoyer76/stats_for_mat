@@ -12,12 +12,16 @@
 # Output (single file):
 #   docs/basketball_dashboard.html
 #
+# Log:
+#   docs/win/basketball/errors/05_final_scores/04_basketball_results_dashboard.txt
+#
 # No server required — open the file in a browser.
 
 from datetime import datetime, UTC
 from pathlib import Path
 import html
 import json
+import traceback
 
 import pandas as pd
 
@@ -27,6 +31,77 @@ MARKETS = ["moneyline", "spread", "total"]
 BASE        = Path("docs/win/basketball/05_final_scores")
 REPORT_DIR  = BASE / "reports"
 OUTPUT_FILE = Path("docs/basketball_dashboard.html")
+ERROR_DIR   = Path("docs/win/basketball/errors/05_final_scores")
+LOG_FILE    = ERROR_DIR / "04_basketball_results_dashboard.txt"
+
+ERROR_DIR.mkdir(parents=True, exist_ok=True)
+
+# =========================
+# LOGGING
+# =========================
+
+RUN_STARTED = datetime.now(UTC)
+WARNING_COUNT = 0
+ERROR_COUNT = 0
+INPUT_FILE_COUNT = 0
+INPUT_ROW_COUNT = 0
+OUTPUT_FILE_COUNT = 0
+OUTPUT_ROW_COUNT = 0
+INPUT_FILES_SEEN: set[str] = set()
+
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write("=== 04_basketball_results_dashboard ===\n")
+    f.write(f"START_TIMESTAMP_UTC: {RUN_STARTED.isoformat()}\n")
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def log(level: str, message: str) -> None:
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{_now()} | {level} | {message}\n")
+
+
+def warn(message: str) -> None:
+    global WARNING_COUNT
+    WARNING_COUNT += 1
+    log("WARNING", message)
+
+
+def error(message: str) -> None:
+    global ERROR_COUNT
+    ERROR_COUNT += 1
+    log("ERROR", message)
+
+
+def log_input(path: Path, rows: int, exists: bool) -> None:
+    global INPUT_FILE_COUNT, INPUT_ROW_COUNT
+    key = str(path)
+    if key in INPUT_FILES_SEEN:
+        return
+    INPUT_FILES_SEEN.add(key)
+    INPUT_FILE_COUNT += 1
+    INPUT_ROW_COUNT += rows
+    log("INFO", f"INPUT | file={path} | exists={int(exists)} | rows={rows}")
+
+
+def log_output(path: Path, rows: int, bytes_written: int) -> None:
+    global OUTPUT_FILE_COUNT, OUTPUT_ROW_COUNT
+    OUTPUT_FILE_COUNT += 1
+    OUTPUT_ROW_COUNT += rows
+    log("INFO", f"OUTPUT | file={path} | rows={rows} | bytes={bytes_written}")
+
+
+def finish(status: str) -> None:
+    ended = datetime.now(UTC)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"INPUT_SUMMARY | files={INPUT_FILE_COUNT} | rows={INPUT_ROW_COUNT}\n")
+        f.write(f"OUTPUT_SUMMARY | files={OUTPUT_FILE_COUNT} | rows={OUTPUT_ROW_COUNT}\n")
+        f.write(f"WARNING_COUNT: {WARNING_COUNT}\n")
+        f.write(f"ERROR_COUNT: {ERROR_COUNT}\n")
+        f.write(f"END_TIMESTAMP_UTC: {ended.isoformat()}\n")
+        f.write(f"STATUS: {status}\n")
 
 
 # =========================
@@ -187,7 +262,6 @@ function buildLeagueSection(lg, data) {
   const section = document.querySelector('.league-section[data-league="' + lg + '"]');
   if (!section) return;
 
-  // KPIs
   const gt = data.grand_total || {};
   const kpiHtml = (label, value, fmt) => {
     let disp = '\\u2014', cls = '';
@@ -213,7 +287,6 @@ function buildLeagueSection(lg, data) {
   ].join('');
   section.querySelector('.kpis').innerHTML = kpis;
 
-  // By-market summary table
   const byMarketCols = [
     { key: 'market_type', label: 'Market' },
     { key: 'Win', label: 'W', fmt: 'int' },
@@ -224,7 +297,6 @@ function buildLeagueSection(lg, data) {
   ];
   renderTable(data.by_market_summary, byMarketCols, section.querySelector('.by-market-summary'));
 
-  // Per-market drilldown
   ['moneyline', 'spread', 'total'].forEach(mt => {
     const wrap = section.querySelector('.panel-' + mt);
     const md = (data.markets && data.markets[mt]) || {by:{}, by_side:{}};
@@ -257,13 +329,11 @@ function buildLeagueSection(lg, data) {
     refresh();
   });
 
-  // Market tabs
   const marketArea = section.querySelector('.market-area');
   marketArea.querySelectorAll(':scope > .tabs .tab').forEach(t => {
     t.onclick = () => showTab(marketArea, t.dataset.key);
   });
 
-  // Overview
   renderTable(data.overview.by_market, [
     { key: 'market_type', label: 'Market' },
     ...STD_COLUMNS.filter(c => c.key !== 'bucket'),
@@ -297,12 +367,21 @@ def df_to_records(df: pd.DataFrame) -> list:
     return df.to_dict(orient="records")
 
 
-def safe_read(path: Path) -> pd.DataFrame:
+def safe_read(path: Path, *, required: bool = False) -> pd.DataFrame:
     if not path.exists():
+        log_input(path, 0, exists=False)
+        if required:
+            warn(f"Required dashboard input missing: {path}")
+        else:
+            log("INFO", f"Optional dashboard input missing: {path}")
         return pd.DataFrame()
     try:
-        return pd.read_csv(path)
-    except Exception:
+        df = pd.read_csv(path)
+        log_input(path, len(df), exists=True)
+        return df
+    except Exception as exc:
+        log_input(path, 0, exists=True)
+        warn(f"Unable to read dashboard input {path}: {type(exc).__name__}: {exc}")
         return pd.DataFrame()
 
 
@@ -316,8 +395,8 @@ def first_row_dict(df: pd.DataFrame) -> dict:
 def collect_league_data(league: str) -> dict:
     data = {
         "league": league.upper(),
-        "grand_total": first_row_dict(safe_read(BASE / f"{league}_summary_grand_total.csv")),
-        "by_market_summary": df_to_records(safe_read(BASE / f"{league}_summary_overall.csv")),
+        "grand_total": first_row_dict(safe_read(BASE / f"{league}_summary_grand_total.csv", required=True)),
+        "by_market_summary": df_to_records(safe_read(BASE / f"{league}_summary_overall.csv", required=True)),
         "overview": {
             "by_market":     df_to_records(safe_read(REPORT_DIR / league / "overview" / f"{league}_summary_by_market.csv")),
             "by_side_group": df_to_records(safe_read(REPORT_DIR / league / "overview" / f"{league}_summary_by_side_group.csv")),
@@ -446,12 +525,32 @@ document.addEventListener('DOMContentLoaded', () => {{
 </body></html>"""
 
 
-def run():
+def run() -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     page = build_dashboard()
     OUTPUT_FILE.write_text(page, encoding="utf-8")
-    print(f"dashboard -> {OUTPUT_FILE}")
+    rows = page.count("\n") + 1
+    bytes_written = len(page.encode("utf-8"))
+    log_output(OUTPUT_FILE, rows, bytes_written)
+    log("INFO", f"dashboard -> {OUTPUT_FILE}")
+
+
+def main() -> None:
+    status = "FAILED"
+    try:
+        run()
+        status = "SUCCESS"
+    except Exception as exc:
+        error(f"Unhandled exception: {type(exc).__name__}: {exc}")
+        trace = traceback.format_exc()
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(trace)
+            if not trace.endswith("\n"):
+                f.write("\n")
+        raise
+    finally:
+        finish(status)
 
 
 if __name__ == "__main__":
-    run()
+    main()
