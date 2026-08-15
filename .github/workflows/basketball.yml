@@ -87,6 +87,9 @@ jobs:
       - name: Run basketball odds
         run: python docs/win/basketball/scripts/00_intake/basketball_odds.py
 
+      - name: Consolidate sportsbook aliases
+        run: python docs/win/basketball/scripts/00_intake/consolidate_sportsbook_aliases.py
+
       - name: Basketball Drat Scraper
         run: python docs/win/basketball/scripts/00_intake/basketball_drat_scraper.py
 
@@ -101,6 +104,9 @@ jobs:
 
       - name: Basketball Game ID
         run: python docs/win/basketball/scripts/00_intake/basketball_game_id.py
+
+      - name: Sanitize historical basketball inputs
+        run: python docs/win/basketball/scripts/00_intake/sanitize_historical_inputs.py
 
       - name: Calculate Rolling Bias
         run: python docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
@@ -133,6 +139,10 @@ jobs:
       - name: Validate pipeline health
         if: always()
         run: python docs/win/basketball/scripts/pipeline_health.py
+
+      - name: Write WNBA bias drift warning
+        if: always()
+        run: python docs/win/basketball/scripts/write_wnba_bias_drift_warning.py
 
       - name: Analyze basketball results
         run: python docs/win/basketball/scripts/05_final_scores/02_basketball_results_analyze.py
