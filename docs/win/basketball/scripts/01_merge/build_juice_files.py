@@ -23,7 +23,11 @@ def load_core():
 def main():
     core=load_core()
     if truthy(os.getenv("BASKETBALL_FULL_REBUILD")):
-        core.main(); return
+        core.main()
+        text=core.LOG_FILE.read_text(encoding="utf-8", errors="replace")
+        if "STATUS: FAILED" in text or "ERROR processing" in text:
+            sys.exit(1)
+        return
     date=datetime.now(NY).strftime("%Y_%m_%d")
     with tempfile.TemporaryDirectory(prefix="basketball_juice_") as td:
         root=Path(td); inp=root/"input"; out=root/"output"
@@ -44,7 +48,7 @@ def main():
                 if src.exists(): shutil.copy2(src,dest)
                 else: dest.unlink(missing_ok=True)
     text=core.LOG_FILE.read_text(encoding="utf-8", errors="replace")
-    if "STATUS: FAILED" in text or "STATUS: COMPLETED WITH ERRORS" in text:
+    if "STATUS: FAILED" in text or "STATUS: COMPLETED WITH ERRORS" in text or "ERROR processing" in text:
         sys.exit(1)
 
 if __name__=="__main__": main()
