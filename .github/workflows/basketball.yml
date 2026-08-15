@@ -173,7 +173,7 @@ jobs:
           path: docs/win/basketball/errors/
 
       - name: Commit outputs
-        if: always()
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
