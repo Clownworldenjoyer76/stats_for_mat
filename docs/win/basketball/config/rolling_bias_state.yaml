@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at_utc: '2026-08-15T15:27:23+00:00'
+generated_at_utc: '2026-08-15T16:42:58+00:00'
 source_config: docs/win/basketball/config/model_config.yaml
 script_path: docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
 script_sha256: 21bbb60db2bcde852b55dc10931f62aa1af3d2ea20ac9bc84cccf625a96b7fdf
@@ -74,7 +74,7 @@ leagues:
       first_game_date: '2025-10-21'
       last_game_date: '2026-06-08'
   ncaam:
-    status: ready_with_warnings
+    status: ready
     config_status: active
     margin_bias:
       status: ready
@@ -95,11 +95,11 @@ leagues:
       last_game_date: null
     history:
       historical_files_scanned: 1
-      historical_rows: 4032
+      historical_rows: 4031
       historical_usable_games: 4031
       historical_incomplete_rows: 0
       historical_rows_invalid_date: 0
-      historical_invalid_bias_flag_rows: 1
+      historical_invalid_bias_flag_rows: 0
       historical_rows_bias_reversed: 4031
       historical_rows_bias_reversed_per_game: 0
       historical_rows_bias_reversed_legacy: 4031
@@ -208,4 +208,4 @@ leagues:
       unique_completed_games: 262
       first_game_date: '2025-05-16'
       last_game_date: '2025-10-10'
-run_status: success_with_warnings
+run_status: success
