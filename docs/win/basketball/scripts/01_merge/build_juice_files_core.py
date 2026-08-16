@@ -217,6 +217,7 @@ def devig_pair(p_a, p_b):
     """
     if p_a == "" or p_b == "" or pd.isna(p_a) or pd.isna(p_b):
         return "", ""
+
     try:
         a = float(p_a)
         b = float(p_b)
@@ -225,6 +226,13 @@ def devig_pair(p_a, p_b):
 
     if not math.isfinite(a) or not math.isfinite(b):
         return "", ""
+
+    s = a + b
+
+    if not math.isfinite(s) or s <= 0:
+        return "", ""
+
+    return a / s, b / s
 
     s = a + b
     if not math.isfinite(s) or s <= 0:
