@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at_utc: '2026-08-16T13:11:20+00:00'
+generated_at_utc: '2026-08-16T13:20:14+00:00'
 source_config: docs/win/basketball/config/model_config.yaml
 script_path: docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
 script_sha256: b487c34562d8b33509c51c98faad41258341f8249581fc057e337ba9af253607
@@ -146,20 +146,22 @@ leagues:
     config_status: active
     margin_bias:
       status: ready
-      method: fixed
-      value: 0.5
-      window_games: null
-      games_used: 0
-      first_game_date: null
-      last_game_date: null
+      method: rolling
+      value: -0.054
+      window_games: 100
+      games_used: 100
+      first_game_date: '2026-07-08'
+      last_game_date: '2026-08-15'
+      mean_error_definition: projected_minus_actual
     total_bias:
       status: ready
-      method: fixed
-      value: 0.0
-      window_games: null
-      games_used: 0
-      first_game_date: null
-      last_game_date: null
+      method: rolling
+      value: -0.89
+      window_games: 50
+      games_used: 50
+      first_game_date: '2026-07-29'
+      last_game_date: '2026-08-15'
+      mean_error_definition: projected_minus_actual
     history:
       historical_files_scanned: 1
       historical_rows: 262
