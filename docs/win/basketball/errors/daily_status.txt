@@ -1,61 +1,99 @@
 BASKETBALL DAILY STATUS
 =======================
-generated_at_utc: 2026-08-16T13:29:20Z
+generated_at_utc: 2026-08-16T13:44:23Z
 game_date_new_york: 2026_08_16
-github_run_id: 31949894880
+github_run_id: 31950620965
 github_run_attempt: 1
-workflow_status: success
+workflow_status: failure
+
+SEASON STATUS
+-------------
+nba: offseason
+ncaam: offseason
+wnba: in_season
 
 SUMMARY
 -------
-txt_files_checked_this_run: 26
-txt_files_with_issues: 8
-txt_issue_lines: 31
+txt_files_checked_this_run: 19
+txt_files_with_issues: 4
+txt_issue_lines: 73
+txt_issue_lines_suppressed_offseason: 0
 no_map_teams: 0
-system_issues: 0
+no_map_teams_suppressed_offseason: 0
+system_issues: 1
 overall: ISSUES FOUND
 
 CURRENT-RUN TXT ISSUES
 ----------------------
 [docs/win/basketball/errors/00_intake/calculate_rolling_bias.txt]
 run_change: REWRITTEN
-14:2026-08-16T13:29:14+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=-0.054 total=-0.89 warnings=2
+14:2026-08-16T13:44:19+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=-0.054 total=-0.89 warnings=2
 
-[docs/win/basketball/errors/03_edges/compute_ev_kelly.txt]
+[docs/win/basketball/errors/01_merge/build_juice_files.txt]
 run_change: REWRITTEN
-5:2026-08-16T13:29:16.087539+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/nba/moneyline
-6:2026-08-16T13:29:16.087585+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/nba/spread
-7:2026-08-16T13:29:16.087628+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/nba/total
-8:2026-08-16T13:29:16.087675+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/ncaam/moneyline
-9:2026-08-16T13:29:16.087720+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/ncaam/spread
-10:2026-08-16T13:29:16.087762+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_fa50on35/input/ncaam/total
-
-[docs/win/basketball/errors/04_select/select_bets.txt]
-run_change: REWRITTEN
-11:2026-08-16T13:29:16.483462+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/nba/moneyline
-12:2026-08-16T13:29:16.483506+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/nba/spread
-13:2026-08-16T13:29:16.483548+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/nba/total
-14:2026-08-16T13:29:16.483597+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/ncaam/moneyline
-15:2026-08-16T13:29:16.483638+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/ncaam/spread
-16:2026-08-16T13:29:16.483678+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_bv3i5mgw/input/ncaam/total
-
-[docs/win/basketball/errors/05_final_scores/01_basketball_results_grade.txt]
-run_change: REWRITTEN
-9:2026-08-16T13:29:16.880457+00:00 | WARN  | [wnba] LOCKED PICKS IMMUTABLE: regenerated daily file differs; preserved existing docs/win/basketball/04_select/wnba/locked_picks/2026_08_16_wnba_selected.csv
-10:2026-08-16T13:29:16.880640+00:00 | WARN  | [nba] no picks files in docs/win/basketball/04_select/nba/daily_picks
-12:2026-08-16T13:29:16.881131+00:00 | WARN  | [nba] no locked picks files in docs/win/basketball/04_select/nba/locked_picks
-14:2026-08-16T13:29:16.881488+00:00 | WARN  | [ncaam] no picks files in docs/win/basketball/04_select/ncaam/daily_picks
-16:2026-08-16T13:29:16.881834+00:00 | WARN  | [ncaam] no locked picks files in docs/win/basketball/04_select/ncaam/locked_picks
-
-[docs/win/basketball/errors/05_final_scores/02_basketball_results_analyze.txt]
-run_change: REWRITTEN
-5:2026-08-16T13:29:17.632059+00:00 | WARNING | [NBA] input missing: docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv — skipping
-7:2026-08-16T13:29:17.632169+00:00 | WARNING | [NCAAM] input missing: docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv — skipping
-
-[docs/win/basketball/errors/05_final_scores/03_basketball_results_reports.txt]
-run_change: REWRITTEN
-4:2026-08-16T13:29:17.982887+00:00 | WARNING | [nba] missing work file: docs/win/basketball/05_final_scores/work_nba.csv
-6:2026-08-16T13:29:17.982991+00:00 | WARNING | [ncaam] missing work file: docs/win/basketball/05_final_scores/work_ncaam.csv
+566:2026-08-16T13:44:21.328692 | ERROR processing 2026_05_12_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+567:Traceback (most recent call last)
+574:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+588:2026-08-16T13:44:21.339377 | ERROR processing 2026_05_15_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+589:Traceback (most recent call last)
+596:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+610:2026-08-16T13:44:21.350652 | ERROR processing 2026_05_19_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+611:Traceback (most recent call last)
+618:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+752:2026-08-16T13:44:21.454810 | ERROR processing 2026_06_12_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+753:Traceback (most recent call last)
+760:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+768:2026-08-16T13:44:21.461454 | ERROR processing 2026_06_14_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+769:Traceback (most recent call last)
+776:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+790:2026-08-16T13:44:21.471836 | ERROR processing 2026_06_17_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+791:Traceback (most recent call last)
+798:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+998:2026-08-16T13:44:21.629247 | ERROR processing 2026_07_30_WNBA_spread.csv: unsupported operand type(s) for /: 'int' and 'str'
+999:Traceback (most recent call last)
+1006:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1122:2026-08-16T13:44:21.719575 | ERROR processing 2026_05_10_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1123:Traceback (most recent call last)
+1130:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1132:2026-08-16T13:44:21.721153 | ERROR processing 2026_05_12_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1133:Traceback (most recent call last)
+1140:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1148:2026-08-16T13:44:21.726599 | ERROR processing 2026_05_14_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1149:Traceback (most recent call last)
+1156:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1158:2026-08-16T13:44:21.728130 | ERROR processing 2026_05_15_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1159:Traceback (most recent call last)
+1166:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1168:2026-08-16T13:44:21.729671 | ERROR processing 2026_05_17_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1169:Traceback (most recent call last)
+1176:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1178:2026-08-16T13:44:21.731170 | ERROR processing 2026_05_18_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1179:Traceback (most recent call last)
+1186:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1188:2026-08-16T13:44:21.732721 | ERROR processing 2026_05_19_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1189:Traceback (most recent call last)
+1196:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1198:2026-08-16T13:44:21.734242 | ERROR processing 2026_05_20_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1199:Traceback (most recent call last)
+1206:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1208:2026-08-16T13:44:21.735930 | ERROR processing 2026_05_21_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1209:Traceback (most recent call last)
+1216:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1218:2026-08-16T13:44:21.737466 | ERROR processing 2026_05_22_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1219:Traceback (most recent call last)
+1226:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1342:2026-08-16T13:44:21.817606 | ERROR processing 2026_06_12_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1343:Traceback (most recent call last)
+1350:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1358:2026-08-16T13:44:21.823624 | ERROR processing 2026_06_14_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1359:Traceback (most recent call last)
+1366:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1380:2026-08-16T13:44:21.832791 | ERROR processing 2026_06_17_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1381:Traceback (most recent call last)
+1388:TypeError: unsupported operand type(s) for /: 'int' and 'str'
+1588:2026-08-16T13:44:21.971882 | ERROR processing 2026_07_30_WNBA_total.csv: unsupported operand type(s) for /: 'int' and 'str'
+1589:Traceback (most recent call last)
+1596:TypeError: unsupported operand type(s) for /: 'int' and 'str'
 
 [docs/win/basketball/errors/pipeline_health.txt]
 run_change: REWRITTEN
@@ -78,5 +116,6 @@ None
 
 SYSTEM ISSUES
 -------------
-None
+[GITHUB WORKFLOW]
+ERROR: workflow status before daily-status generation is failure.
 
