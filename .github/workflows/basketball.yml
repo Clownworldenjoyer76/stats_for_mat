@@ -205,6 +205,20 @@ jobs:
       #
       # Reports only issues generated during THIS workflow run.
       #
+      # Operational season gate:
+      #
+      #   NBA / NCAAM
+      #     In season September 1 through July 1.
+      #     Offseason July 2 through August 31.
+      #
+      #   WNBA
+      #     In season May through October.
+      #     Offseason November through April.
+      #
+      # League-specific issue lines for an offseason league are suppressed.
+      # They automatically become reportable again when that league enters
+      # its operational season.
+      #
       # Existing logs are classified as follows:
       #
       #   UNCHANGED
@@ -250,13 +264,15 @@ jobs:
           TMP_SYSTEM_ISSUES="$(mktemp)"
           TMP_CURRENT_CONTENT="$(mktemp)"
           TMP_MATCHES="$(mktemp)"
+          TMP_FILTERED_MATCHES="$(mktemp)"
 
           trap 'rm -f \
             "$TMP_TXT_ISSUES" \
             "$TMP_NO_MAP" \
             "$TMP_SYSTEM_ISSUES" \
             "$TMP_CURRENT_CONTENT" \
-            "$TMP_MATCHES"' EXIT
+            "$TMP_MATCHES" \
+            "$TMP_FILTERED_MATCHES"' EXIT
 
           # daily_status.txt is rebuilt from scratch every run.
           : > "$STATUS_FILE"
@@ -264,10 +280,110 @@ jobs:
           TXT_FILES_CHECKED_THIS_RUN=0
           TXT_FILES_WITH_ISSUES=0
           TXT_ISSUE_LINES=0
+          TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON=0
           NO_MAP_TEAMS=0
+          NO_MAP_TEAMS_SUPPRESSED_OFFSEASON=0
           SYSTEM_ISSUES=0
 
           JOB_STATUS="${JOB_STATUS:-unknown}"
+
+          # ------------------------------------------------------------
+          # OPERATIONAL SEASON STATUS
+          # ------------------------------------------------------------
+          #
+          # Keep this aligned with basketball_odds.py.
+          #
+          # NBA / NCAAM:
+          #   Sep 1 through Jul 1 = in season
+          #   Jul 2 through Aug 31 = offseason
+          #
+          # WNBA:
+          #   May through Oct = in season
+          #   Nov through Apr = offseason
+          #
+          NY_MONTH="$(
+            TZ='America/New_York' date +%m
+          )"
+
+          NY_DAY="$(
+            TZ='America/New_York' date +%d
+          )"
+
+          NY_MONTH_NUM=$((10#$NY_MONTH))
+          NY_DAY_NUM=$((10#$NY_DAY))
+
+          NBA_SEASON_STATUS="offseason"
+          NCAAM_SEASON_STATUS="offseason"
+          WNBA_SEASON_STATUS="offseason"
+
+          if [ "$NY_MONTH_NUM" -ge 9 ] || \
+             [ "$NY_MONTH_NUM" -le 6 ] || \
+             { [ "$NY_MONTH_NUM" -eq 7 ] && [ "$NY_DAY_NUM" -eq 1 ]; }; then
+            NBA_SEASON_STATUS="in_season"
+            NCAAM_SEASON_STATUS="in_season"
+          fi
+
+          if [ "$NY_MONTH_NUM" -ge 5 ] && \
+             [ "$NY_MONTH_NUM" -le 10 ]; then
+            WNBA_SEASON_STATUS="in_season"
+          fi
+
+          season_status_for_league() {
+            case "${1,,}" in
+              nba)
+                printf '%s\n' "$NBA_SEASON_STATUS"
+                ;;
+              ncaam)
+                printf '%s\n' "$NCAAM_SEASON_STATUS"
+                ;;
+              wnba)
+                printf '%s\n' "$WNBA_SEASON_STATUS"
+                ;;
+              *)
+                printf '%s\n' "unknown"
+                ;;
+            esac
+          }
+
+          line_mentions_league() {
+            local TEXT="$1"
+            local LEAGUE="$2"
+
+            printf '%s\n' "$TEXT" \
+              | grep -Eiq \
+                "(^|[^[:alnum:]])${LEAGUE}([^[:alnum:]]|$)"
+          }
+
+          # Returns success only when:
+          #   - the line/path identifies at least one supported league, and
+          #   - every identified league is operationally offseason.
+          #
+          # Generic errors with no league identity are never suppressed.
+          should_suppress_offseason_issue() {
+            local TEXT="$1"
+            local LEAGUE=""
+            local STATUS=""
+            local FOUND_LEAGUE=0
+            local FOUND_IN_SEASON=0
+
+            for LEAGUE in nba ncaam wnba; do
+              if line_mentions_league "$TEXT" "$LEAGUE"; then
+                FOUND_LEAGUE=1
+                STATUS="$(season_status_for_league "$LEAGUE")"
+
+                if [ "$STATUS" != "offseason" ]; then
+                  FOUND_IN_SEASON=1
+                fi
+              fi
+            done
+
+            if [ "$FOUND_LEAGUE" -eq 1 ] && \
+               [ "$FOUND_IN_SEASON" -eq 0 ]; then
+              return 0
+            fi
+
+            return 1
+          }
 
           # Match actual warning/error/failure indicators while avoiding
           # normal lines such as "Errors: 0" and "STATUS: SUCCESS".
@@ -311,6 +427,7 @@ jobs:
             while IFS= read -r -d '' file; do
               : > "$TMP_CURRENT_CONTENT"
               : > "$TMP_MATCHES"
+              : > "$TMP_FILTERED_MATCHES"
 
               CURRENT_SIZE="$(stat -c '%s' "$file" 2>/dev/null || echo 0)"
               SCAN_MODE=""
@@ -403,11 +520,33 @@ jobs:
               grep -Ein "$ISSUE_RE" "$TMP_CURRENT_CONTENT" \
                 > "$TMP_MATCHES" 2>/dev/null || true
 
+              # Remove issue lines that belong only to leagues that are
+              # operationally offseason.
               if [ -s "$TMP_MATCHES" ]; then
+                while IFS=: read -r RELATIVE_LINE MESSAGE; do
+                  [ -n "$RELATIVE_LINE" ] || continue
+
+                  ISSUE_CONTEXT="$file $MESSAGE"
+
+                  if should_suppress_offseason_issue "$ISSUE_CONTEXT"; then
+                    TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON=$(
+                      (TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON + 1)
+                    )
+                    continue
+                  fi
+
+                  printf '%s:%s\n' \
+                    "$RELATIVE_LINE" \
+                    "$MESSAGE" \
+                    >> "$TMP_FILTERED_MATCHES"
+                done < "$TMP_MATCHES"
+              fi
+
+              if [ -s "$TMP_FILTERED_MATCHES" ]; then
                 TXT_FILES_WITH_ISSUES=$((TXT_FILES_WITH_ISSUES + 1))
 
                 MATCH_COUNT="$(
-                  wc -l < "$TMP_MATCHES" \
+                  wc -l < "$TMP_FILTERED_MATCHES" \
                     | tr -d ' '
                 )"
 
@@ -425,7 +564,7 @@ jobs:
                     printf '%s:%s\n' \
                       "$ORIGINAL_LINE" \
                       "$MESSAGE"
-                  done < "$TMP_MATCHES"
+                  done < "$TMP_FILTERED_MATCHES"
 
                   echo ""
                 } >> "$TMP_TXT_ISSUES"
@@ -442,8 +581,9 @@ jobs:
 
           # Check current unresolved no-map teams.
           #
-          # Unlike historical TXT logs, this CSV represents the current
-          # unresolved mapping state, so its current rows are checked every run.
+          # This CSV represents the current unresolved mapping state.
+          # Rows belonging to operationally offseason leagues are suppressed
+          # until those leagues return to season.
           if [ ! -f "$NO_MAP_FILE" ]; then
             SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
 
@@ -467,21 +607,37 @@ jobs:
               } >> "$TMP_SYSTEM_ISSUES"
             fi
 
-            awk -F',' '
-              NR > 1 {
-                gsub(/\r/, "", $0)
+            while IFS=',' read -r league team remainder; do
+              league="$(
+                printf '%s' "$league" \
+                  | tr -d '\r' \
+                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+              )"
 
-                league = $1
-                team = $2
+              team="$(
+                printf '%s' "$team" \
+                  | tr -d '\r' \
+                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+              )"
 
-                gsub(/^[ \t]+|[ \t]+$/, "", league)
-                gsub(/^[ \t]+|[ \t]+$/, "", team)
+              [ -n "$league" ] || [ -n "$team" ] || continue
 
-                if (league != "" || team != "") {
-                  printf "%s | %s\n", league, team
-                }
-              }
-            ' "$NO_MAP_FILE" > "$TMP_NO_MAP"
+              LEAGUE_LOWER="${league,,}"
+              LEAGUE_STATUS="$(season_status_for_league "$LEAGUE_LOWER")"
+
+              if [ "$LEAGUE_STATUS" = "offseason" ]; then
+                NO_MAP_TEAMS_SUPPRESSED_OFFSEASON=$(
+                  (NO_MAP_TEAMS_SUPPRESSED_OFFSEASON + 1)
+                )
+                continue
+              fi
+
+              printf '%s | %s\n' \
+                "$league" \
+                "$team" \
+                >> "$TMP_NO_MAP"
+
+            done < <(tail -n +2 "$NO_MAP_FILE")
 
             if [ -s "$TMP_NO_MAP" ]; then
               NO_MAP_TEAMS="$(
@@ -520,12 +676,20 @@ jobs:
             echo "github_run_attempt: ${GITHUB_RUN_ATTEMPT:-unknown}"
             echo "workflow_status: $JOB_STATUS"
             echo ""
+            echo "SEASON STATUS"
+            echo "-------------"
+            echo "nba: $NBA_SEASON_STATUS"
+            echo "ncaam: $NCAAM_SEASON_STATUS"
+            echo "wnba: $WNBA_SEASON_STATUS"
+            echo ""
             echo "SUMMARY"
             echo "-------"
             echo "txt_files_checked_this_run: $TXT_FILES_CHECKED_THIS_RUN"
             echo "txt_files_with_issues: $TXT_FILES_WITH_ISSUES"
             echo "txt_issue_lines: $TXT_ISSUE_LINES"
+            echo "txt_issue_lines_suppressed_offseason: $TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON"
             echo "no_map_teams: $NO_MAP_TEAMS"
+            echo "no_map_teams_suppressed_offseason: $NO_MAP_TEAMS_SUPPRESSED_OFFSEASON"
             echo "system_issues: $SYSTEM_ISSUES"
             echo "overall: $OVERALL"
             echo ""
