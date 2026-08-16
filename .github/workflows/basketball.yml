@@ -205,15 +205,10 @@ jobs:
       #
       # Reports only issues generated during THIS workflow run.
       #
-      # Operational season gate:
+      # Operational season dates are loaded from:
+      # docs/win/basketball/config/season_dates.yaml
       #
-      #   NBA / NCAAM
-      #     In season September 1 through July 1.
-      #     Offseason July 2 through August 31.
-      #
-      #   WNBA
-      #     In season May through October.
-      #     Offseason November through April.
+      # Change season start/end dates in that config file only.
       #
       # League-specific issue lines for an offseason league are suppressed.
       # They automatically become reportable again when that league enters
@@ -253,6 +248,7 @@ jobs:
           ERR_DIR="docs/win/basketball/errors"
           STATUS_FILE="$ERR_DIR/daily_status.txt"
           NO_MAP_FILE="docs/win/basketball/maps/no_map/no_map_basketball.csv"
+          SEASON_CONFIG="docs/win/basketball/config/season_dates.yaml"
 
           BASELINE_MANIFEST="/tmp/basketball_error_baseline.tsv"
           RUN_MARKER="/tmp/basketball_run_start"
@@ -291,41 +287,148 @@ jobs:
           # OPERATIONAL SEASON STATUS
           # ------------------------------------------------------------
           #
-          # Keep this aligned with basketball_odds.py.
+          # Season dates come from:
+          # docs/win/basketball/config/season_dates.yaml
           #
-          # NBA / NCAAM:
-          #   Sep 1 through Jul 1 = in season
-          #   Jul 2 through Aug 31 = offseason
+          # The config provides:
+          #   start_month
+          #   start_day
+          #   end_month
+          #   end_day
           #
-          # WNBA:
-          #   May through Oct = in season
-          #   Nov through Apr = offseason
+          # Normal windows such as May 1 through Oct 31 are supported.
+          # Cross-year windows such as Oct 15 through Jul 1 are supported.
           #
-          NY_MONTH="$(
-            TZ='America/New_York' date +%m
-          )"
-
-          NY_DAY="$(
-            TZ='America/New_York' date +%d
-          )"
+          NY_MONTH="$(TZ='America/New_York' date +%m)"
+          NY_DAY="$(TZ='America/New_York' date +%d)"
 
           NY_MONTH_NUM=$((10#$NY_MONTH))
           NY_DAY_NUM=$((10#$NY_DAY))
+          CURRENT_MMDD=$((NY_MONTH_NUM * 100 + NY_DAY_NUM))
 
           NBA_SEASON_STATUS="offseason"
           NCAAM_SEASON_STATUS="offseason"
           WNBA_SEASON_STATUS="offseason"
 
-          if [ "$NY_MONTH_NUM" -ge 9 ] || \
-             [ "$NY_MONTH_NUM" -le 6 ] || \
-             { [ "$NY_MONTH_NUM" -eq 7 ] && [ "$NY_DAY_NUM" -eq 1 ]; }; then
-            NBA_SEASON_STATUS="in_season"
-            NCAAM_SEASON_STATUS="in_season"
+          SEASON_CONFIG_VALID=1
+
+          if [ ! -f "$SEASON_CONFIG" ]; then
+            SEASON_CONFIG_VALID=0
+            SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+
+            {
+              echo "[$SEASON_CONFIG]"
+              echo "ERROR: season date config is missing."
+              echo ""
+            } >> "$TMP_SYSTEM_ISSUES"
+          else
+            SEASON_VALUES="$(
+              python - "$SEASON_CONFIG" <<'PY'
+          import sys
+          import yaml
+
+          path = sys.argv[1]
+
+          try:
+              with open(path, "r", encoding="utf-8") as f:
+                  cfg = yaml.safe_load(f) or {}
+
+              values = []
+
+              for league in ("nba", "ncaam", "wnba"):
+                  row = cfg.get(league)
+
+                  if not isinstance(row, dict):
+                      raise ValueError(f"Missing league config: {league}")
+
+                  start_month = int(row["start_month"])
+                  start_day = int(row["start_day"])
+                  end_month = int(row["end_month"])
+                  end_day = int(row["end_day"])
+
+                  if not 1 <= start_month <= 12:
+                      raise ValueError(f"{league}.start_month must be 1-12")
+                  if not 1 <= end_month <= 12:
+                      raise ValueError(f"{league}.end_month must be 1-12")
+                  if not 1 <= start_day <= 31:
+                      raise ValueError(f"{league}.start_day must be 1-31")
+                  if not 1 <= end_day <= 31:
+                      raise ValueError(f"{league}.end_day must be 1-31")
+
+                  values.extend([
+                      start_month,
+                      start_day,
+                      end_month,
+                      end_day,
+                  ])
+
+              print(*values)
+
+          except Exception as exc:
+              print(f"ERROR:{exc}", file=sys.stderr)
+              sys.exit(1)
+          PY
+            )"
+
+            SEASON_CONFIG_RC=$?
+
+            if [ "$SEASON_CONFIG_RC" -ne 0 ]; then
+              SEASON_CONFIG_VALID=0
+              SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+
+              {
+                echo "[$SEASON_CONFIG]"
+                echo "ERROR: season date config is invalid."
+                echo ""
+              } >> "$TMP_SYSTEM_ISSUES"
+            else
+              read -r \
+                NBA_START_MONTH NBA_START_DAY NBA_END_MONTH NBA_END_DAY \
+                NCAAM_START_MONTH NCAAM_START_DAY NCAAM_END_MONTH NCAAM_END_DAY \
+                WNBA_START_MONTH WNBA_START_DAY WNBA_END_MONTH WNBA_END_DAY \
+                <<< "$SEASON_VALUES"
+            fi
           fi
 
-          if [ "$NY_MONTH_NUM" -ge 5 ] && \
-             [ "$NY_MONTH_NUM" -le 10 ]; then
-            WNBA_SEASON_STATUS="in_season"
+          season_is_active() {
+            local START_MONTH="$1"
+            local START_DAY="$2"
+            local END_MONTH="$3"
+            local END_DAY="$4"
+
+            local START_MMDD=$((START_MONTH * 100 + START_DAY))
+            local END_MMDD=$((END_MONTH * 100 + END_DAY))
+
+            # Season contained within one calendar year.
+            if [ "$START_MMDD" -le "$END_MMDD" ]; then
+              [ "$CURRENT_MMDD" -ge "$START_MMDD" ] && \
+              [ "$CURRENT_MMDD" -le "$END_MMDD" ]
+              return
+            fi
+
+            # Season crosses New Year.
+            [ "$CURRENT_MMDD" -ge "$START_MMDD" ] || \
+            [ "$CURRENT_MMDD" -le "$END_MMDD" ]
+          }
+
+          if [ "$SEASON_CONFIG_VALID" -eq 1 ]; then
+            if season_is_active \
+              "$NBA_START_MONTH" "$NBA_START_DAY" \
+              "$NBA_END_MONTH" "$NBA_END_DAY"; then
+              NBA_SEASON_STATUS="in_season"
+            fi
+
+            if season_is_active \
+              "$NCAAM_START_MONTH" "$NCAAM_START_DAY" \
+              "$NCAAM_END_MONTH" "$NCAAM_END_DAY"; then
+              NCAAM_SEASON_STATUS="in_season"
+            fi
+
+            if season_is_active \
+              "$WNBA_START_MONTH" "$WNBA_START_DAY" \
+              "$WNBA_END_MONTH" "$WNBA_END_DAY"; then
+              WNBA_SEASON_STATUS="in_season"
+            fi
           fi
 
           season_status_for_league() {
@@ -529,9 +632,7 @@ jobs:
                   ISSUE_CONTEXT="$file $MESSAGE"
 
                   if should_suppress_offseason_issue "$ISSUE_CONTEXT"; then
-                    TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON=$(
-                      (TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON + 1)
-                    )
+                    TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON=$((TXT_ISSUE_LINES_SUPPRESSED_OFFSEASON + 1))
                     continue
                   fi
 
@@ -626,9 +727,7 @@ jobs:
               LEAGUE_STATUS="$(season_status_for_league "$LEAGUE_LOWER")"
 
               if [ "$LEAGUE_STATUS" = "offseason" ]; then
-                NO_MAP_TEAMS_SUPPRESSED_OFFSEASON=$(
-                  (NO_MAP_TEAMS_SUPPRESSED_OFFSEASON + 1)
-                )
+                NO_MAP_TEAMS_SUPPRESSED_OFFSEASON=$((NO_MAP_TEAMS_SUPPRESSED_OFFSEASON + 1))
                 continue
               fi
 
