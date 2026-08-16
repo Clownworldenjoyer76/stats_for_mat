@@ -1,73 +1,73 @@
 === 03_basketball_results_reports ===
-START_TIMESTAMP_UTC: 2026-08-16T12:18:22.900071+00:00
-2026-08-16T12:18:22.900266+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_nba.csv | exists=0 | rows=0
-2026-08-16T12:18:22.900292+00:00 | WARNING | [nba] missing work file: docs/win/basketball/05_final_scores/work_nba.csv
-2026-08-16T12:18:22.900318+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_ncaam.csv | exists=0 | rows=0
-2026-08-16T12:18:22.900336+00:00 | WARNING | [ncaam] missing work file: docs/win/basketball/05_final_scores/work_ncaam.csv
-2026-08-16T12:18:22.904174+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv | exists=1 | rows=109
-2026-08-16T12:18:22.911001+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/wnba_summary_overall.csv | rows=3
-2026-08-16T12:18:22.912776+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/wnba_summary_grand_total.csv | rows=1
-2026-08-16T12:18:22.920397+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev.csv | rows=7
-2026-08-16T12:18:22.927418+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev_home_away_summary.csv | rows=10
-2026-08-16T12:18:22.931855+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly.csv | rows=3
-2026-08-16T12:18:22.937330+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly_home_away_summary.csv | rows=4
-2026-08-16T12:18:22.942512+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds.csv | rows=6
-2026-08-16T12:18:22.949115+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds_home_away_summary.csv | rows=9
-2026-08-16T12:18:22.954080+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob.csv | rows=6
-2026-08-16T12:18:22.960580+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob_home_away_summary.csv | rows=9
-2026-08-16T12:18:22.964950+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market.csv | rows=4
-2026-08-16T12:18:22.970749+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market_home_away_summary.csv | rows=7
-2026-08-16T12:18:22.975694+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow.csv | rows=6
-2026-08-16T12:18:22.982407+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow_home_away_summary.csv | rows=10
-2026-08-16T12:18:22.986748+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month.csv | rows=4
-2026-08-16T12:18:22.992639+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month_home_away_summary.csv | rows=6
-2026-08-16T12:18:23.242085+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_crosses.csv | rows=338
-2026-08-16T12:18:23.248882+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev.csv | rows=3
-2026-08-16T12:18:23.253958+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev_home_away_summary.csv | rows=4
-2026-08-16T12:18:23.258086+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly.csv | rows=3
-2026-08-16T12:18:23.262976+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly_home_away_summary.csv | rows=4
-2026-08-16T12:18:23.266736+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds.csv | rows=2
-2026-08-16T12:18:23.271660+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds_home_away_summary.csv | rows=4
-2026-08-16T12:18:23.275702+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob.csv | rows=3
-2026-08-16T12:18:23.280735+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob_home_away_summary.csv | rows=4
-2026-08-16T12:18:23.284826+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market.csv | rows=3
-2026-08-16T12:18:23.290013+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market_home_away_summary.csv | rows=5
-2026-08-16T12:18:23.295266+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow.csv | rows=7
-2026-08-16T12:18:23.303210+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow_home_away_summary.csv | rows=14
-2026-08-16T12:18:23.308074+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month.csv | rows=4
-2026-08-16T12:18:23.314184+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month_home_away_summary.csv | rows=8
-2026-08-16T12:18:23.317972+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side.csv | rows=2
-2026-08-16T12:18:23.318812+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side_home_away_summary.csv | rows=2
-2026-08-16T12:18:23.530871+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_crosses.csv | rows=252
-2026-08-16T12:18:23.537688+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev.csv | rows=5
-2026-08-16T12:18:23.544432+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev_over_under_summary.csv | rows=10
-2026-08-16T12:18:23.548871+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly.csv | rows=4
-2026-08-16T12:18:23.555468+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly_over_under_summary.csv | rows=8
-2026-08-16T12:18:23.559318+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds.csv | rows=2
-2026-08-16T12:18:23.564311+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds_over_under_summary.csv | rows=4
-2026-08-16T12:18:23.568393+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob.csv | rows=3
-2026-08-16T12:18:23.573619+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob_over_under_summary.csv | rows=5
-2026-08-16T12:18:23.577965+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market.csv | rows=4
-2026-08-16T12:18:23.584010+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market_over_under_summary.csv | rows=8
-2026-08-16T12:18:23.589248+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow.csv | rows=7
-2026-08-16T12:18:23.596556+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow_over_under_summary.csv | rows=12
-2026-08-16T12:18:23.600949+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month.csv | rows=4
-2026-08-16T12:18:23.607026+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month_over_under_summary.csv | rows=8
-2026-08-16T12:18:23.611321+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side.csv | rows=2
-2026-08-16T12:18:23.612214+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side_over_under_summary.csv | rows=2
-2026-08-16T12:18:23.617372+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range.csv | rows=6
-2026-08-16T12:18:23.622981+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range_over_under_summary.csv | rows=6
-2026-08-16T12:18:23.840980+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_crosses.csv | rows=287
-2026-08-16T12:18:23.853249+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_market.csv | rows=3
-2026-08-16T12:18:23.858966+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_side_group.csv | rows=4
-2026-08-16T12:18:23.885430+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_date.csv | rows=53
-2026-08-16T12:18:23.887632+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_bet_log.csv | rows=109
-2026-08-16T12:18:23.892474+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_overall.csv | rows=3
-2026-08-16T12:18:23.892688+00:00 | INFO | [wnba] reports written under docs/win/basketball/05_final_scores/reports/wnba
-2026-08-16T12:18:23.892814+00:00 | INFO | Basketball reports complete.
+START_TIMESTAMP_UTC: 2026-08-16T12:42:04.880433+00:00
+2026-08-16T12:42:04.880715+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_nba.csv | exists=0 | rows=0
+2026-08-16T12:42:04.880772+00:00 | WARNING | [nba] missing work file: docs/win/basketball/05_final_scores/work_nba.csv
+2026-08-16T12:42:04.880809+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_ncaam.csv | exists=0 | rows=0
+2026-08-16T12:42:04.880832+00:00 | WARNING | [ncaam] missing work file: docs/win/basketball/05_final_scores/work_ncaam.csv
+2026-08-16T12:42:04.885754+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv | exists=1 | rows=109
+2026-08-16T12:42:04.894485+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/wnba_summary_overall.csv | rows=3
+2026-08-16T12:42:04.896901+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/wnba_summary_grand_total.csv | rows=1
+2026-08-16T12:42:04.906954+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev.csv | rows=7
+2026-08-16T12:42:04.916136+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev_home_away_summary.csv | rows=10
+2026-08-16T12:42:04.921651+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly.csv | rows=3
+2026-08-16T12:42:04.928702+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly_home_away_summary.csv | rows=4
+2026-08-16T12:42:04.935301+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds.csv | rows=6
+2026-08-16T12:42:04.943882+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds_home_away_summary.csv | rows=9
+2026-08-16T12:42:04.951003+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob.csv | rows=6
+2026-08-16T12:42:04.959387+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob_home_away_summary.csv | rows=9
+2026-08-16T12:42:04.965098+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market.csv | rows=4
+2026-08-16T12:42:04.972632+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market_home_away_summary.csv | rows=7
+2026-08-16T12:42:04.979093+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow.csv | rows=6
+2026-08-16T12:42:04.987859+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow_home_away_summary.csv | rows=10
+2026-08-16T12:42:04.993845+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month.csv | rows=4
+2026-08-16T12:42:05.001554+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month_home_away_summary.csv | rows=6
+2026-08-16T12:42:05.329285+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_crosses.csv | rows=338
+2026-08-16T12:42:05.337751+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev.csv | rows=3
+2026-08-16T12:42:05.344460+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev_home_away_summary.csv | rows=4
+2026-08-16T12:42:05.349867+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly.csv | rows=3
+2026-08-16T12:42:05.356416+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly_home_away_summary.csv | rows=4
+2026-08-16T12:42:05.361462+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds.csv | rows=2
+2026-08-16T12:42:05.367987+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds_home_away_summary.csv | rows=4
+2026-08-16T12:42:05.373393+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob.csv | rows=3
+2026-08-16T12:42:05.379942+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob_home_away_summary.csv | rows=4
+2026-08-16T12:42:05.385321+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market.csv | rows=3
+2026-08-16T12:42:05.392186+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market_home_away_summary.csv | rows=5
+2026-08-16T12:42:05.399048+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow.csv | rows=7
+2026-08-16T12:42:05.409391+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow_home_away_summary.csv | rows=14
+2026-08-16T12:42:05.415205+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month.csv | rows=4
+2026-08-16T12:42:05.423204+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month_home_away_summary.csv | rows=8
+2026-08-16T12:42:05.428142+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side.csv | rows=2
+2026-08-16T12:42:05.429282+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side_home_away_summary.csv | rows=2
+2026-08-16T12:42:05.708097+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_crosses.csv | rows=252
+2026-08-16T12:42:05.716825+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev.csv | rows=5
+2026-08-16T12:42:05.725491+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev_over_under_summary.csv | rows=10
+2026-08-16T12:42:05.731180+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly.csv | rows=4
+2026-08-16T12:42:05.739195+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly_over_under_summary.csv | rows=8
+2026-08-16T12:42:05.744180+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds.csv | rows=2
+2026-08-16T12:42:05.750752+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds_over_under_summary.csv | rows=4
+2026-08-16T12:42:05.756032+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob.csv | rows=3
+2026-08-16T12:42:05.762860+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob_over_under_summary.csv | rows=5
+2026-08-16T12:42:05.768500+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market.csv | rows=4
+2026-08-16T12:42:05.776403+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market_over_under_summary.csv | rows=8
+2026-08-16T12:42:05.783369+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow.csv | rows=7
+2026-08-16T12:42:05.793049+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow_over_under_summary.csv | rows=12
+2026-08-16T12:42:05.798891+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month.csv | rows=4
+2026-08-16T12:42:05.806945+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month_over_under_summary.csv | rows=8
+2026-08-16T12:42:05.811928+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side.csv | rows=2
+2026-08-16T12:42:05.813064+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side_over_under_summary.csv | rows=2
+2026-08-16T12:42:05.822530+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range.csv | rows=6
+2026-08-16T12:42:05.830243+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range_over_under_summary.csv | rows=6
+2026-08-16T12:42:06.117409+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_crosses.csv | rows=287
+2026-08-16T12:42:06.134023+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_market.csv | rows=3
+2026-08-16T12:42:06.141678+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_side_group.csv | rows=4
+2026-08-16T12:42:06.176774+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_date.csv | rows=53
+2026-08-16T12:42:06.179649+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_bet_log.csv | rows=109
+2026-08-16T12:42:06.186229+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_overall.csv | rows=3
+2026-08-16T12:42:06.186490+00:00 | INFO | [wnba] reports written under docs/win/basketball/05_final_scores/reports/wnba
+2026-08-16T12:42:06.186647+00:00 | INFO | Basketball reports complete.
 INPUT_SUMMARY | files=3 | rows=109
 OUTPUT_SUMMARY | files=58 | rows=1316
 WARNING_COUNT: 2
 ERROR_COUNT: 0
-END_TIMESTAMP_UTC: 2026-08-16T12:18:23.892825+00:00
+END_TIMESTAMP_UTC: 2026-08-16T12:42:06.186661+00:00
 STATUS: SUCCESS
