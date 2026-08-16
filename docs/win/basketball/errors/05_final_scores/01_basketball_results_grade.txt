@@ -1,43 +1,43 @@
-=== 01_basketball_results_grade RUN 2026-08-16T13:11:24.120795+00:00 ===
-2026-08-16T13:11:24.120919+00:00 | INFO  | SELECT_BASE        : docs/win/basketball/04_select
-2026-08-16T13:11:24.120985+00:00 | INFO  | FINAL_SCORES_DIR   : docs/win/basketball/05_final_scores/results
-2026-08-16T13:11:24.121073+00:00 | INFO  | LOCKED_RESULTS_DIR : docs/win/basketball/05_final_scores/locked_picks
-2026-08-16T13:11:24.121127+00:00 | INFO  | ERROR_DIR          : docs/win/basketball/errors/05_final_scores
-2026-08-16T13:11:24.121191+00:00 | INFO  | LOCK GAME DATE   : 2026_08_16 (America/New_York)
-2026-08-16T13:11:24.121299+00:00 | INFO  | [nba] no current daily pick file to lock: docs/win/basketball/04_select/nba/daily_picks/2026_08_16_nba_selected.csv
-2026-08-16T13:11:24.121398+00:00 | INFO  | [ncaam] no current daily pick file to lock: docs/win/basketball/04_select/ncaam/daily_picks/2026_08_16_ncaam_selected.csv
-2026-08-16T13:11:24.121595+00:00 | WARN  | [wnba] LOCKED PICKS IMMUTABLE: regenerated daily file differs; preserved existing docs/win/basketball/04_select/wnba/locked_picks/2026_08_16_wnba_selected.csv
-2026-08-16T13:11:24.121777+00:00 | WARN  | [nba] no picks files in docs/win/basketball/04_select/nba/daily_picks
-2026-08-16T13:11:24.122083+00:00 | INFO  | [nba replay] no picks; skipping
-2026-08-16T13:11:24.122270+00:00 | WARN  | [nba] no locked picks files in docs/win/basketball/04_select/nba/locked_picks
-2026-08-16T13:11:24.122438+00:00 | INFO  | [nba locked] no picks; skipping
-2026-08-16T13:11:24.122629+00:00 | WARN  | [ncaam] no picks files in docs/win/basketball/04_select/ncaam/daily_picks
-2026-08-16T13:11:24.122795+00:00 | INFO  | [ncaam replay] no picks; skipping
-2026-08-16T13:11:24.123009+00:00 | WARN  | [ncaam] no locked picks files in docs/win/basketball/04_select/ncaam/locked_picks
-2026-08-16T13:11:24.123173+00:00 | INFO  | [ncaam locked] no picks; skipping
-2026-08-16T13:11:24.267194+00:00 | INFO  | [wnba] loaded 111 picks rows from 54 files
-2026-08-16T13:11:24.341956+00:00 | INFO  | [wnba] loaded 256 unique scored games from 100 files
-2026-08-16T13:11:24.350335+00:00 | INFO  | [wnba replay] 2 picks had no matching final score -> docs/win/basketball/errors/05_final_scores/wnba_game_id_no_match.csv
-2026-08-16T13:11:24.365913+00:00 | INFO  | [wnba replay] graded 109 bets -> docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv
-2026-08-16T13:11:24.365973+00:00 | INFO  | [wnba replay] W/L/P/Unk = 78/31/0/0  PnL_unit=+33.66  PnL_kelly=+1.2162
-2026-08-16T13:11:24.367964+00:00 | INFO  | [wnba] loaded 2 locked picks rows from 1 files
-2026-08-16T13:11:24.439044+00:00 | INFO  | [wnba] loaded 256 unique scored games from 100 files
-2026-08-16T13:11:24.444409+00:00 | INFO  | [wnba locked] 2 picks had no matching final score -> docs/win/basketball/errors/05_final_scores/wnba_locked_game_id_no_match.csv
-2026-08-16T13:11:24.444484+00:00 | INFO  | [wnba locked] no picks matched a final score; nothing to grade
-2026-08-16T13:11:24.444635+00:00 | INFO  | --- SUMMARY ---
-2026-08-16T13:11:24.444705+00:00 | INFO  |   errors                   : 0
-2026-08-16T13:11:24.444756+00:00 | INFO  |   locked_wnba_unmatched    : 2
-2026-08-16T13:11:24.444801+00:00 | INFO  |   nba_locked_created       : 0
-2026-08-16T13:11:24.444838+00:00 | INFO  |   ncaam_locked_created     : 0
-2026-08-16T13:11:24.444928+00:00 | INFO  |   wnba_graded              : 109
-2026-08-16T13:11:24.444984+00:00 | INFO  |   wnba_locked_created      : 0
-2026-08-16T13:11:24.445025+00:00 | INFO  |   wnba_locked_differs      : 1
-2026-08-16T13:11:24.445063+00:00 | INFO  |   wnba_locked_preserved    : 1
-2026-08-16T13:11:24.445098+00:00 | INFO  |   wnba_losses              : 31
-2026-08-16T13:11:24.445142+00:00 | INFO  |   wnba_pnl_kelly           : 1.2162
-2026-08-16T13:11:24.445174+00:00 | INFO  |   wnba_pnl_unit            : 33.6595
-2026-08-16T13:11:24.445199+00:00 | INFO  |   wnba_pushes              : 0
-2026-08-16T13:11:24.445223+00:00 | INFO  |   wnba_unknown             : 0
-2026-08-16T13:11:24.445247+00:00 | INFO  |   wnba_unmatched           : 2
-2026-08-16T13:11:24.445271+00:00 | INFO  |   wnba_wins                : 78
-2026-08-16T13:11:24.445302+00:00 | INFO  | STATUS: SUCCESS
+=== 01_basketball_results_grade RUN 2026-08-16T13:20:18.075986+00:00 ===
+2026-08-16T13:20:18.076077+00:00 | INFO  | SELECT_BASE        : docs/win/basketball/04_select
+2026-08-16T13:20:18.076162+00:00 | INFO  | FINAL_SCORES_DIR   : docs/win/basketball/05_final_scores/results
+2026-08-16T13:20:18.076219+00:00 | INFO  | LOCKED_RESULTS_DIR : docs/win/basketball/05_final_scores/locked_picks
+2026-08-16T13:20:18.076275+00:00 | INFO  | ERROR_DIR          : docs/win/basketball/errors/05_final_scores
+2026-08-16T13:20:18.076353+00:00 | INFO  | LOCK GAME DATE   : 2026_08_16 (America/New_York)
+2026-08-16T13:20:18.076453+00:00 | INFO  | [nba] no current daily pick file to lock: docs/win/basketball/04_select/nba/daily_picks/2026_08_16_nba_selected.csv
+2026-08-16T13:20:18.076555+00:00 | INFO  | [ncaam] no current daily pick file to lock: docs/win/basketball/04_select/ncaam/daily_picks/2026_08_16_ncaam_selected.csv
+2026-08-16T13:20:18.076755+00:00 | WARN  | [wnba] LOCKED PICKS IMMUTABLE: regenerated daily file differs; preserved existing docs/win/basketball/04_select/wnba/locked_picks/2026_08_16_wnba_selected.csv
+2026-08-16T13:20:18.076926+00:00 | WARN  | [nba] no picks files in docs/win/basketball/04_select/nba/daily_picks
+2026-08-16T13:20:18.077162+00:00 | INFO  | [nba replay] no picks; skipping
+2026-08-16T13:20:18.077332+00:00 | WARN  | [nba] no locked picks files in docs/win/basketball/04_select/nba/locked_picks
+2026-08-16T13:20:18.077493+00:00 | INFO  | [nba locked] no picks; skipping
+2026-08-16T13:20:18.077696+00:00 | WARN  | [ncaam] no picks files in docs/win/basketball/04_select/ncaam/daily_picks
+2026-08-16T13:20:18.077851+00:00 | INFO  | [ncaam replay] no picks; skipping
+2026-08-16T13:20:18.078013+00:00 | WARN  | [ncaam] no locked picks files in docs/win/basketball/04_select/ncaam/locked_picks
+2026-08-16T13:20:18.078166+00:00 | INFO  | [ncaam locked] no picks; skipping
+2026-08-16T13:20:18.221746+00:00 | INFO  | [wnba] loaded 111 picks rows from 54 files
+2026-08-16T13:20:18.295193+00:00 | INFO  | [wnba] loaded 256 unique scored games from 100 files
+2026-08-16T13:20:18.303350+00:00 | INFO  | [wnba replay] 2 picks had no matching final score -> docs/win/basketball/errors/05_final_scores/wnba_game_id_no_match.csv
+2026-08-16T13:20:18.318646+00:00 | INFO  | [wnba replay] graded 109 bets -> docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv
+2026-08-16T13:20:18.318727+00:00 | INFO  | [wnba replay] W/L/P/Unk = 78/31/0/0  PnL_unit=+33.66  PnL_kelly=+1.2162
+2026-08-16T13:20:18.320644+00:00 | INFO  | [wnba] loaded 2 locked picks rows from 1 files
+2026-08-16T13:20:18.391290+00:00 | INFO  | [wnba] loaded 256 unique scored games from 100 files
+2026-08-16T13:20:18.399180+00:00 | INFO  | [wnba locked] 2 picks had no matching final score -> docs/win/basketball/errors/05_final_scores/wnba_locked_game_id_no_match.csv
+2026-08-16T13:20:18.399261+00:00 | INFO  | [wnba locked] no picks matched a final score; nothing to grade
+2026-08-16T13:20:18.399394+00:00 | INFO  | --- SUMMARY ---
+2026-08-16T13:20:18.399474+00:00 | INFO  |   errors                   : 0
+2026-08-16T13:20:18.399535+00:00 | INFO  |   locked_wnba_unmatched    : 2
+2026-08-16T13:20:18.399621+00:00 | INFO  |   nba_locked_created       : 0
+2026-08-16T13:20:18.399683+00:00 | INFO  |   ncaam_locked_created     : 0
+2026-08-16T13:20:18.399744+00:00 | INFO  |   wnba_graded              : 109
+2026-08-16T13:20:18.399803+00:00 | INFO  |   wnba_locked_created      : 0
+2026-08-16T13:20:18.399860+00:00 | INFO  |   wnba_locked_differs      : 1
+2026-08-16T13:20:18.399918+00:00 | INFO  |   wnba_locked_preserved    : 1
+2026-08-16T13:20:18.399975+00:00 | INFO  |   wnba_losses              : 31
+2026-08-16T13:20:18.400034+00:00 | INFO  |   wnba_pnl_kelly           : 1.2162
+2026-08-16T13:20:18.400093+00:00 | INFO  |   wnba_pnl_unit            : 33.6595
+2026-08-16T13:20:18.400150+00:00 | INFO  |   wnba_pushes              : 0
+2026-08-16T13:20:18.400206+00:00 | INFO  |   wnba_unknown             : 0
+2026-08-16T13:20:18.400262+00:00 | INFO  |   wnba_unmatched           : 2
+2026-08-16T13:20:18.400319+00:00 | INFO  |   wnba_wins                : 78
+2026-08-16T13:20:18.400381+00:00 | INFO  | STATUS: SUCCESS
