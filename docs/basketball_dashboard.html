@@ -58,7 +58,7 @@ footer { color: var(--muted); font-size: 11px; padding: 16px 24px; }
 <body>
 <header>
   <h1>Basketball Dashboard</h1>
-  <span class="ts">Built 2026-08-15T16:43:04+00:00 UTC</span>
+  <span class="ts">Built 2026-08-16T11:53:43+00:00 UTC</span>
 </header>
 <div class="league-bar">
   <span class="lbl">League:</span>
@@ -280,7 +280,6 @@ function buildLeagueSection(lg, data) {
   const section = document.querySelector('.league-section[data-league="' + lg + '"]');
   if (!section) return;
 
-  // KPIs
   const gt = data.grand_total || {};
   const kpiHtml = (label, value, fmt) => {
     let disp = '\u2014', cls = '';
@@ -306,7 +305,6 @@ function buildLeagueSection(lg, data) {
   ].join('');
   section.querySelector('.kpis').innerHTML = kpis;
 
-  // By-market summary table
   const byMarketCols = [
     { key: 'market_type', label: 'Market' },
     { key: 'Win', label: 'W', fmt: 'int' },
@@ -317,7 +315,6 @@ function buildLeagueSection(lg, data) {
   ];
   renderTable(data.by_market_summary, byMarketCols, section.querySelector('.by-market-summary'));
 
-  // Per-market drilldown
   ['moneyline', 'spread', 'total'].forEach(mt => {
     const wrap = section.querySelector('.panel-' + mt);
     const md = (data.markets && data.markets[mt]) || {by:{}, by_side:{}};
@@ -350,13 +347,11 @@ function buildLeagueSection(lg, data) {
     refresh();
   });
 
-  // Market tabs
   const marketArea = section.querySelector('.market-area');
   marketArea.querySelectorAll(':scope > .tabs .tab').forEach(t => {
     t.onclick = () => showTab(marketArea, t.dataset.key);
   });
 
-  // Overview
   renderTable(data.overview.by_market, [
     { key: 'market_type', label: 'Market' },
     ...STD_COLUMNS.filter(c => c.key !== 'bucket'),
