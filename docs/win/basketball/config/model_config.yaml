@@ -82,13 +82,13 @@ leagues:
 
     bias:
       margin:
-        method: fixed
-        window_games: null
-        value: 0.500
+        method: rolling
+        window_games: 100
+        value: null
       total:
-        method: fixed
-        window_games: null
-        value: 0.000
+        method: rolling
+        window_games: 50
+        value: null
 
     calibration:
       moneyline:
