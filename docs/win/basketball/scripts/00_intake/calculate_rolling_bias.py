@@ -25,8 +25,9 @@
 #     1 -> reverse using exact per-game margin_bias + total_bias when available;
 #          otherwise use the known legacy 2025 fallback only.
 #     anything else -> invalid historical row.
-# - NBA/NCAAM seasons run September 1 through July 1; July 2-August 31 is offseason.
-# - WNBA season is the calendar year.
+# - Operational season boundaries are read from:
+#   docs/win/basketball/config/season_dates.yaml
+# - Dates outside a league's configured season window are offseason.
 # - Rolling windows cross season boundaries and require the full configured window.
 # - Projection error sign is projected_minus_actual.
 
@@ -80,6 +81,11 @@ else:
 CONFIG_PATH = (
     REPO_ROOT
     / "docs/win/basketball/config/model_config.yaml"
+)
+
+SEASON_CONFIG_PATH = (
+    REPO_ROOT
+    / "docs/win/basketball/config/season_dates.yaml"
 )
 
 STATE_PATH = (
@@ -1022,6 +1028,134 @@ def final_files_for_league(
 # SEASON RULES
 # ============================================================================
 
+_SEASON_CONFIG_CACHE: dict[str, dict[str, int]] | None = None
+
+
+def load_season_config() -> dict[str, dict[str, int]]:
+    global _SEASON_CONFIG_CACHE
+
+    if _SEASON_CONFIG_CACHE is not None:
+        return _SEASON_CONFIG_CACHE
+
+    if not SEASON_CONFIG_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing season config: "
+            f"{SEASON_CONFIG_PATH}"
+        )
+
+    with open(
+        SEASON_CONFIG_PATH,
+        "r",
+        encoding="utf-8",
+    ) as f:
+        raw = (
+            yaml.safe_load(f)
+            or {}
+        )
+
+    if not isinstance(
+        raw,
+        dict,
+    ):
+        raise ValueError(
+            f"{SEASON_CONFIG_PATH} must "
+            f"contain a top-level mapping"
+        )
+
+    required_fields = (
+        "start_month",
+        "start_day",
+        "end_month",
+        "end_day",
+    )
+
+    config: dict[
+        str,
+        dict[str, int],
+    ] = {}
+
+    for league in SUPPORTED_LEAGUES:
+        row = raw.get(
+            league
+        )
+
+        if not isinstance(
+            row,
+            dict,
+        ):
+            raise ValueError(
+                f"Missing season configuration "
+                f"for league={league}"
+            )
+
+        values: dict[
+            str,
+            int,
+        ] = {}
+
+        for field in required_fields:
+            if field not in row:
+                raise ValueError(
+                    f"Missing {league}.{field} "
+                    f"in {SEASON_CONFIG_PATH}"
+                )
+
+            try:
+                values[
+                    field
+                ] = int(
+                    row[
+                        field
+                    ]
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ) as exc:
+                raise ValueError(
+                    f"Invalid {league}.{field}: "
+                    f"{row[field]!r}"
+                ) from exc
+
+        try:
+            datetime(
+                2000,
+                values[
+                    "start_month"
+                ],
+                values[
+                    "start_day"
+                ],
+            )
+
+            datetime(
+                2000,
+                values[
+                    "end_month"
+                ],
+                values[
+                    "end_day"
+                ],
+            )
+
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid season dates "
+                f"for league={league}"
+            ) from exc
+
+        config[
+            league
+        ] = values
+
+    _SEASON_CONFIG_CACHE = (
+        config
+    )
+
+    return config
+
+
 def season_for_game_date(
     league: str,
     game_date: Any,
@@ -1033,42 +1167,73 @@ def season_for_game_date(
     if d is None:
         return None
 
-    key = league.lower()
+    key = (
+        league
+        .strip()
+        .lower()
+    )
 
-    if key == "wnba":
-        return d.year
-
-    if key in {
-        "nba",
-        "ncaam",
-    }:
-        month_day = (
-            d.month,
-            d.day,
+    if (
+        key
+        not in SUPPORTED_LEAGUES
+    ):
+        raise ValueError(
+            f"Unsupported league "
+            f"for season classification: "
+            f"{league}"
         )
 
-        if month_day >= (
-            9,
-            1,
+    season_config = (
+        load_season_config()
+    )
+
+    cfg = season_config[
+        key
+    ]
+
+    month_day = (
+        d.month,
+        d.day,
+    )
+
+    start = (
+        cfg[
+            "start_month"
+        ],
+        cfg[
+            "start_day"
+        ],
+    )
+
+    end = (
+        cfg[
+            "end_month"
+        ],
+        cfg[
+            "end_day"
+        ],
+    )
+
+    if start <= end:
+        if (
+            start
+            <= month_day
+            <= end
         ):
             return d.year
 
-        if month_day <= (
-            7,
-            1,
-        ):
-            return (
-                d.year
-                - 1
-            )
-
         return None
 
-    raise ValueError(
-        f"Unsupported league "
-        f"for season classification: "
-        f"{league}"
-    )
+    if month_day >= start:
+        return d.year
+
+    if month_day <= end:
+        return (
+            d.year
+            - 1
+        )
+
+    return None
 
 
 def current_season_for_league(
@@ -1090,17 +1255,11 @@ def season_status_for_league(
     league: str,
     current_season: int | None,
 ) -> str:
-    if (
-        league.lower()
-        in {
-            "nba",
-            "ncaam",
-        }
-        and current_season is None
-    ):
-        return "offseason"
-
-    return "in_season"
+    return (
+        "in_season"
+        if current_season is not None
+        else "offseason"
+    )
 
 
 # ============================================================================
@@ -3971,7 +4130,7 @@ def main() -> int:
 
         # --------------------------------------------------------
         # UNKNOWN LEAGUE KEYS
-        # --------------------------------------------------------
+        # --------------------------------------------------------------------------
 
         for raw_key in config_leagues:
             league_key = (
