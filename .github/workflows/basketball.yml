@@ -153,9 +153,190 @@ jobs:
       - name: Build basketball dashboard
         run: python docs/win/basketball/scripts/05_final_scores/04_basketball_results_dashboard.py
 
+      # DAILY STATUS
+      - name: Write daily basketball status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set +e
+
+          ERR_DIR="docs/win/basketball/errors"
+          STATUS_FILE="$ERR_DIR/daily_status.txt"
+          NO_MAP_FILE="docs/win/basketball/maps/no_map/no_map_basketball.csv"
+
+          mkdir -p "$ERR_DIR"
+
+          TMP_TXT_ISSUES="$(mktemp)"
+          TMP_NO_MAP="$(mktemp)"
+          TMP_SYSTEM_ISSUES="$(mktemp)"
+
+          trap 'rm -f "$TMP_TXT_ISSUES" "$TMP_NO_MAP" "$TMP_SYSTEM_ISSUES"' EXIT
+
+          # daily_status.txt is rebuilt from scratch every run.
+          : > "$STATUS_FILE"
+
+          TXT_FILES_SCANNED=0
+          TXT_FILES_WITH_ISSUES=0
+          TXT_ISSUE_LINES=0
+          NO_MAP_TEAMS=0
+          SYSTEM_ISSUES=0
+
+          JOB_STATUS="${JOB_STATUS:-unknown}"
+
+          # Match actual warning/error/failure indicators while avoiding
+          # normal lines such as "Errors: 0" and "STATUS: SUCCESS".
+          ISSUE_RE='(^[[:space:]]*|[|][[:space:]]*)(WARN(ING)?|ERROR|CRITICAL|FATAL|EXCEPTION|TRACEBACK|FAILED|FAILURE)([[:space:]:|]|$)|STATUS[[:space:]]*:[[:space:]]*(WARNING|WARN|ERROR|FAILED|FAILURE|CRITICAL|FATAL|UNHEALTHY)|WARNINGS?[[:space:]]*[:=][[:space:]]*[1-9][0-9]*|ERRORS?[[:space:]]*[:=][[:space:]]*[1-9][0-9]*|(WARNING|ERROR|FAILED)[[:space:]]*=[[:space:]]*TRUE|^[[:space:]]*[A-Za-z_][A-Za-z0-9_.]*(Error|Exception)[[:space:]]*:'
+
+          while IFS= read -r -d '' file; do
+            TXT_FILES_SCANNED=$((TXT_FILES_SCANNED + 1))
+
+            MATCHES="$(grep -Ein "$ISSUE_RE" "$file" 2>/dev/null || true)"
+
+            if [ -n "$MATCHES" ]; then
+              TXT_FILES_WITH_ISSUES=$((TXT_FILES_WITH_ISSUES + 1))
+
+              MATCH_COUNT="$(printf '%s\n' "$MATCHES" | wc -l | tr -d ' ')"
+              TXT_ISSUE_LINES=$((TXT_ISSUE_LINES + MATCH_COUNT))
+
+              {
+                echo "[$file]"
+                printf '%s\n' "$MATCHES"
+                echo ""
+              } >> "$TMP_TXT_ISSUES"
+            fi
+          done < <(
+            find "$ERR_DIR" \
+              -type f \
+              -name '*.txt' \
+              ! -path "$STATUS_FILE" \
+              -print0 2>/dev/null | sort -z
+          )
+
+          # Check no_map_basketball.csv.
+          if [ ! -f "$NO_MAP_FILE" ]; then
+            SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+            {
+              echo "[$NO_MAP_FILE]"
+              echo "ERROR: no-map CSV is missing."
+              echo ""
+            } >> "$TMP_SYSTEM_ISSUES"
+          else
+            HEADER="$(head -n 1 "$NO_MAP_FILE" | tr -d '\r')"
+
+            if [ "$HEADER" != "league,team" ]; then
+              SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+              {
+                echo "[$NO_MAP_FILE]"
+                echo "ERROR: invalid header."
+                echo "Expected: league,team"
+                echo "Found: $HEADER"
+                echo ""
+              } >> "$TMP_SYSTEM_ISSUES"
+            fi
+
+            awk -F',' '
+              NR > 1 {
+                gsub(/\r/, "", $0)
+
+                league = $1
+                team = $2
+
+                gsub(/^[ \t]+|[ \t]+$/, "", league)
+                gsub(/^[ \t]+|[ \t]+$/, "", team)
+
+                if (league != "" || team != "") {
+                  printf "%s | %s\n", league, team
+                }
+              }
+            ' "$NO_MAP_FILE" > "$TMP_NO_MAP"
+
+            if [ -s "$TMP_NO_MAP" ]; then
+              NO_MAP_TEAMS="$(wc -l < "$TMP_NO_MAP" | tr -d ' ')"
+            fi
+          fi
+
+          # If an earlier workflow step failed, include that in daily status.
+          if [ "$JOB_STATUS" != "success" ]; then
+            SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+            {
+              echo "[GITHUB WORKFLOW]"
+              echo "ERROR: workflow status before daily-status generation is $JOB_STATUS."
+              echo ""
+            } >> "$TMP_SYSTEM_ISSUES"
+          fi
+
+          OVERALL="CLEAN"
+
+          if [ "$TXT_FILES_WITH_ISSUES" -gt 0 ] || \
+             [ "$NO_MAP_TEAMS" -gt 0 ] || \
+             [ "$SYSTEM_ISSUES" -gt 0 ]; then
+            OVERALL="ISSUES FOUND"
+          fi
+
+          {
+            echo "BASKETBALL DAILY STATUS"
+            echo "======================="
+            echo "generated_at_utc: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "game_date_new_york: ${DATE:-unknown}"
+            echo "github_run_id: ${GITHUB_RUN_ID:-unknown}"
+            echo "github_run_attempt: ${GITHUB_RUN_ATTEMPT:-unknown}"
+            echo "workflow_status: $JOB_STATUS"
+            echo ""
+            echo "SUMMARY"
+            echo "-------"
+            echo "txt_files_scanned: $TXT_FILES_SCANNED"
+            echo "txt_files_with_issues: $TXT_FILES_WITH_ISSUES"
+            echo "txt_issue_lines: $TXT_ISSUE_LINES"
+            echo "no_map_teams: $NO_MAP_TEAMS"
+            echo "system_issues: $SYSTEM_ISSUES"
+            echo "overall: $OVERALL"
+            echo ""
+            echo "TXT ISSUES"
+            echo "----------"
+
+            if [ -s "$TMP_TXT_ISSUES" ]; then
+              cat "$TMP_TXT_ISSUES"
+            else
+              echo "None"
+              echo ""
+            fi
+
+            echo "NO-MAP TEAMS"
+            echo "------------"
+
+            if [ -s "$TMP_NO_MAP" ]; then
+              cat "$TMP_NO_MAP"
+              echo ""
+            else
+              echo "None"
+              echo ""
+            fi
+
+            echo "SYSTEM ISSUES"
+            echo "-------------"
+
+            if [ -s "$TMP_SYSTEM_ISSUES" ]; then
+              cat "$TMP_SYSTEM_ISSUES"
+            else
+              echo "None"
+              echo ""
+            fi
+          } > "$STATUS_FILE"
+
+          echo "=== Basketball Daily Status ==="
+          cat "$STATUS_FILE"
+
+          # Reporting must not itself fail the workflow.
+          exit 0
+
       - name: Show logs
         if: always()
         run: |
+          echo "=== Daily Status ==="
+          cat docs/win/basketball/errors/daily_status.txt || true
+          echo ""
           echo "=== Pipeline Health ==="
           cat docs/win/basketball/errors/pipeline_health.txt || true
           cat docs/win/basketball/pipeline_health.json || true
@@ -181,6 +362,35 @@ jobs:
         with:
           name: basketball-pipeline-logs
           path: docs/win/basketball/errors/
+
+      # If the pipeline failed, preserve daily_status.txt in the repository
+      # without committing partial pipeline outputs.
+      - name: Commit daily status after failed run
+        if: failure()
+        run: |
+          STATUS_FILE="docs/win/basketball/errors/daily_status.txt"
+
+          if [ ! -f "$STATUS_FILE" ]; then
+            echo "daily_status.txt was not created."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- "$STATUS_FILE"
+
+          echo "--- daily status before failed-run commit ---"
+          git status --short
+
+          if git diff --cached --quiet; then
+            echo "No daily status change to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: basketball daily status failed run $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash origin main
+          git push
 
       - name: Commit outputs
         if: success()
