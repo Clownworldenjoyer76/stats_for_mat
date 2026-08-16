@@ -1,7 +1,7 @@
 {
   "fatal_errors": [],
   "game_date_new_york": "2026_08_16",
-  "generated_at_utc": "2026-08-16T13:29:17.297683+00:00",
+  "generated_at_utc": "2026-08-16T15:07:05.002466+00:00",
   "leagues": {
     "nba": {
       "counts": {
@@ -33,6 +33,12 @@
         "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/nba/2026_08_16_NBA_predictions.csv",
         "selected": "docs/win/basketball/04_select/nba/daily_picks/2026_08_16_nba_selected.csv",
         "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba/2026_08_16_NBA_odds.csv"
+      },
+      "season_config": {
+        "end_day": 1,
+        "end_month": 7,
+        "start_day": 15,
+        "start_month": 10
       }
     },
     "ncaam": {
@@ -65,6 +71,12 @@
         "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_08_16_NCAAM_predictions.csv",
         "selected": "docs/win/basketball/04_select/ncaam/daily_picks/2026_08_16_ncaam_selected.csv",
         "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_08_16_NCAAM_odds.csv"
+      },
+      "season_config": {
+        "end_day": 1,
+        "end_month": 7,
+        "start_day": 31,
+        "start_month": 10
       }
     },
     "wnba": {
@@ -97,60 +109,67 @@
         "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/wnba/2026_08_16_WNBA_predictions.csv",
         "selected": "docs/win/basketball/04_select/wnba/daily_picks/2026_08_16_wnba_selected.csv",
         "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba/2026_08_16_WNBA_odds.csv"
+      },
+      "season_config": {
+        "end_day": 31,
+        "end_month": 10,
+        "start_day": 1,
+        "start_month": 5
       }
     }
   },
   "schema_version": 1,
+  "season_config_path": "docs/win/basketball/config/season_dates.yaml",
   "stage_status": [
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/basketball_odds.txt",
-      "status": "2026-08-16T13:29:01.913117 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:06:52.198105 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/basketball_drat_scraper.txt",
-      "status": "2026-08-16T09:29:08.281140-04:00 | STATUS: SUCCESS"
+      "status": "2026-08-16T11:06:58.019456-04:00 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/transform_basketball_nba.txt",
-      "status": "2026-08-16T13:29:11.446424 | STATUS: SUCCESS (offseason skipped)"
+      "status": "2026-08-16T15:07:00.479142 | STATUS: SUCCESS (offseason skipped)"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/transform_basketball_ncaam.txt",
-      "status": "2026-08-16T13:29:11.446845 | STATUS: SUCCESS (offseason skipped)"
+      "status": "2026-08-16T15:07:00.479457 | STATUS: SUCCESS (offseason skipped)"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/transform_basketball_wnba.txt",
-      "status": "2026-08-16T13:29:11.445358 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:00.478200 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/basketball_daily_games.txt",
-      "status": "2026-08-16T13:29:12.669793 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:01.313454 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/basketball_game_id.txt",
-      "status": "2026-08-16T13:29:12.771453 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:01.375199 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/00_intake/clean_basketball_inputs.txt",
-      "status": "2026-08-16T13:29:14.439355 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:02.609820 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/01_merge/merge_intake.txt",
-      "status": "2026-08-16T13:29:14.490211 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:02.664012 | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/01_merge/build_juice_files.txt",
-      "status": "2026-08-16T13:29:15.706082 | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:03.736955 | STATUS: SUCCESS"
     },
     {
       "exists": true,
@@ -165,12 +184,12 @@
     {
       "exists": true,
       "path": "docs/win/basketball/errors/04_select/daily_slate.txt",
-      "status": "2026-08-16T13:29:16.581683+00:00 | INFO  | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:04.449488+00:00 | INFO  | STATUS: SUCCESS"
     },
     {
       "exists": true,
       "path": "docs/win/basketball/errors/05_final_scores/01_basketball_results_grade.txt",
-      "status": "2026-08-16T13:29:17.203467+00:00 | INFO  | STATUS: SUCCESS"
+      "status": "2026-08-16T15:07:04.909246+00:00 | INFO  | STATUS: SUCCESS"
     }
   ],
   "status": "healthy",
