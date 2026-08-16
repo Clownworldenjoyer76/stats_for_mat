@@ -1001,7 +1001,7 @@ def final_files_for_league(
         rf"^\d{{4}}_"
         rf"\d{{2}}_"
         rf"\d{{2}}_"
-        rf"_final_scores_"
+        rf"final_scores_"
         rf"{re.escape(league_upper(league))}"
         rf"\.csv$",
         re.IGNORECASE,
