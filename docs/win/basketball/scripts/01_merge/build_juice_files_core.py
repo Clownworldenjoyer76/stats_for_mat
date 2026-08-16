@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# docs/win/basketball/scripts/01_merge/build_juice_files.py
+# docs/win/basketball/scripts/01_merge/build_juice_files_core.py
 
 import csv
 import math
@@ -169,6 +169,9 @@ def apply_calibration(p, cfg: dict):
     except (TypeError, ValueError):
         return ""
 
+    if not math.isfinite(p):
+        return ""
+
     method = str((cfg or {}).get("method", "none")).strip().lower()
 
     if method in {"none", "raw", ""}:
@@ -201,7 +204,7 @@ def safe_implied_prob(decimal_value):
         d = float(decimal_value)
     except (ValueError, TypeError):
         return ""
-    if d <= 0:
+    if not math.isfinite(d) or d <= 0:
         return ""
     return 1.0 / d
 
@@ -219,9 +222,14 @@ def devig_pair(p_a, p_b):
         b = float(p_b)
     except (ValueError, TypeError):
         return "", ""
-    s = a + b
-    if s <= 0:
+
+    if not math.isfinite(a) or not math.isfinite(b):
         return "", ""
+
+    s = a + b
+    if not math.isfinite(s) or s <= 0:
+        return ""
+
     return a / s, b / s
 
 
@@ -270,10 +278,18 @@ def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: 
         lambda x: 1 / float(x) if x != "" and pd.notna(x) and float(x) > 0 else ""
     )
 
-    ml_df["away_acceptable_decimal_moneyline"]  = ml_df["away_fair"].apply(lambda x: float(x) * (1 + ML_EDGE) if x != "" else "")
-    ml_df["home_acceptable_decimal_moneyline"]  = ml_df["home_fair"].apply(lambda x: float(x) * (1 + ML_EDGE) if x != "" else "")
-    ml_df["away_acceptable_american_moneyline"] = ml_df["away_acceptable_decimal_moneyline"].apply(to_american)
-    ml_df["home_acceptable_american_moneyline"] = ml_df["home_acceptable_decimal_moneyline"].apply(to_american)
+    ml_df["away_acceptable_decimal_moneyline"] = ml_df["away_fair"].apply(
+        lambda x: float(x) * (1 + ML_EDGE) if x != "" else ""
+    )
+    ml_df["home_acceptable_decimal_moneyline"] = ml_df["home_fair"].apply(
+        lambda x: float(x) * (1 + ML_EDGE) if x != "" else ""
+    )
+    ml_df["away_acceptable_american_moneyline"] = ml_df[
+        "away_acceptable_decimal_moneyline"
+    ].apply(to_american)
+    ml_df["home_acceptable_american_moneyline"] = ml_df[
+        "home_acceptable_decimal_moneyline"
+    ].apply(to_american)
 
     out_path = OUTPUT_DIR / league / "moneyline" / f"{date}_{league_upper}_moneyline.csv"
     ml_df.to_csv(out_path, index=False)
@@ -311,12 +327,71 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_under.append("")
             continue
 
+        if not math.isfinite(T) or not math.isfinite(mean):
+            over_model_prob.append("")
+            under_model_prob.append("")
+            fair_over.append("")
+            fair_under.append("")
+            acc_over.append("")
+            acc_under.append("")
+            continue
+
         z = (T - mean) / TOTAL_STD
+
+        if not math.isfinite(z):
+            over_model_prob.append("")
+            under_model_prob.append("")
+            fair_over.append("")
+            fair_under.append("")
+            acc_over.append("")
+            acc_under.append("")
+            continue
+
         raw_under = clamp_probability(norm.cdf(z))
         raw_over = 1 - raw_under
 
         p_over = apply_calibration(raw_over, cal["over"])
         p_under = apply_calibration(raw_under, cal["under"])
+
+        if (
+            p_over == ""
+            or p_under == ""
+            or pd.isna(p_over)
+            or pd.isna(p_under)
+        ):
+            over_model_prob.append("")
+            under_model_prob.append("")
+            fair_over.append("")
+            fair_under.append("")
+            acc_over.append("")
+            acc_under.append("")
+            continue
+
+        try:
+            p_over = float(p_over)
+            p_under = float(p_under)
+        except (ValueError, TypeError):
+            over_model_prob.append("")
+            under_model_prob.append("")
+            fair_over.append("")
+            fair_under.append("")
+            acc_over.append("")
+            acc_under.append("")
+            continue
+
+        if (
+            not math.isfinite(p_over)
+            or not math.isfinite(p_under)
+            or p_over <= 0
+            or p_under <= 0
+        ):
+            over_model_prob.append("")
+            under_model_prob.append("")
+            fair_over.append("")
+            fair_under.append("")
+            acc_over.append("")
+            acc_under.append("")
+            continue
 
         over_model_prob.append(p_over)
         under_model_prob.append(p_under)
@@ -325,7 +400,7 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
         fair_under_dec = 1 / p_under
         fair_over.append(fair_over_dec)
         fair_under.append(fair_under_dec)
-        acc_over.append(fair_over_dec  * (1 + TOTAL_EDGE))
+        acc_over.append(fair_over_dec * (1 + TOTAL_EDGE))
         acc_under.append(fair_under_dec * (1 + TOTAL_EDGE))
 
     total_df["over_model_prob"]  = over_model_prob
@@ -335,14 +410,18 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
     total_df["acceptable_over"]  = acc_over
     total_df["acceptable_under"] = acc_under
 
-    total_df["over_implied_prob"]  = total_df["dk_total_over_decimal"].apply(safe_implied_prob)
-    total_df["under_implied_prob"] = total_df["dk_total_under_decimal"].apply(safe_implied_prob)
+    total_df["over_implied_prob"] = total_df[
+        "dk_total_over_decimal"
+    ].apply(safe_implied_prob)
+    total_df["under_implied_prob"] = total_df[
+        "dk_total_under_decimal"
+    ].apply(safe_implied_prob)
 
     market_pairs = total_df.apply(
         lambda r: devig_pair(r["over_implied_prob"], r["under_implied_prob"]),
         axis=1,
     )
-    total_df["over_market_prob"]  = market_pairs.apply(lambda t: t[0])
+    total_df["over_market_prob"] = market_pairs.apply(lambda t: t[0])
     total_df["under_market_prob"] = market_pairs.apply(lambda t: t[1])
 
     out_path = OUTPUT_DIR / league / "total" / f"{date}_{league_upper}_total.csv"
@@ -370,8 +449,9 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
 
     for _, row in spread_df.iterrows():
         try:
-            mean_margin = float(row["home_projected_points"]) - float(row["away_projected_points"])
-            home_line   = float(row["home_spread"])
+            home_points = float(row["home_projected_points"])
+            away_points = float(row["away_projected_points"])
+            home_line = float(row["home_spread"])
         except (ValueError, TypeError):
             home_model_prob.append("")
             away_model_prob.append("")
@@ -381,13 +461,82 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_away.append("")
             continue
 
+        if (
+            not math.isfinite(home_points)
+            or not math.isfinite(away_points)
+            or not math.isfinite(home_line)
+        ):
+            home_model_prob.append("")
+            away_model_prob.append("")
+            fair_home.append("")
+            fair_away.append("")
+            acc_home.append("")
+            acc_away.append("")
+            continue
+
+        mean_margin = home_points - away_points
         cover_threshold = -home_line
-        raw_home = 1 - norm.cdf(cover_threshold, loc=mean_margin, scale=SPREAD_STD)
+
+        raw_home = 1 - norm.cdf(
+            cover_threshold,
+            loc=mean_margin,
+            scale=SPREAD_STD,
+        )
+
+        if not math.isfinite(raw_home):
+            home_model_prob.append("")
+            away_model_prob.append("")
+            fair_home.append("")
+            fair_away.append("")
+            acc_home.append("")
+            acc_away.append("")
+            continue
+
         raw_home = clamp_probability(raw_home)
         raw_away = 1 - raw_home
 
         p_home = apply_calibration(raw_home, cal["home"])
         p_away = apply_calibration(raw_away, cal["away"])
+
+        if (
+            p_home == ""
+            or p_away == ""
+            or pd.isna(p_home)
+            or pd.isna(p_away)
+        ):
+            home_model_prob.append("")
+            away_model_prob.append("")
+            fair_home.append("")
+            fair_away.append("")
+            acc_home.append("")
+            acc_away.append("")
+            continue
+
+        try:
+            p_home = float(p_home)
+            p_away = float(p_away)
+        except (ValueError, TypeError):
+            home_model_prob.append("")
+            away_model_prob.append("")
+            fair_home.append("")
+            fair_away.append("")
+            acc_home.append("")
+            acc_away.append("")
+            continue
+
+        if (
+            not math.isfinite(p_home)
+            or not math.isfinite(p_away)
+            or p_home <= 0
+            or p_away <= 0
+        ):
+            home_model_prob.append("")
+            away_model_prob.append("")
+            fair_home.append("")
+            fair_away.append("")
+            acc_home.append("")
+            acc_away.append("")
+            continue
 
         home_model_prob.append(p_home)
         away_model_prob.append(p_away)
@@ -399,20 +548,31 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
         acc_home.append(fair_home_dec * (1 + SPREAD_EDGE))
         acc_away.append(fair_away_dec * (1 + SPREAD_EDGE))
 
-    spread_df["home_spread_model_prob"]          = home_model_prob
-    spread_df["away_spread_model_prob"]          = away_model_prob
-    spread_df["fair_home_spread_decimal"]        = fair_home
-    spread_df["fair_away_spread_decimal"]        = fair_away
-    spread_df["home_acceptable_spread_decimal"]  = acc_home
-    spread_df["away_acceptable_spread_decimal"]  = acc_away
-    spread_df["home_acceptable_spread_american"] = spread_df["home_acceptable_spread_decimal"].apply(to_american)
-    spread_df["away_acceptable_spread_american"] = spread_df["away_acceptable_spread_decimal"].apply(to_american)
+    spread_df["home_spread_model_prob"] = home_model_prob
+    spread_df["away_spread_model_prob"] = away_model_prob
+    spread_df["fair_home_spread_decimal"] = fair_home
+    spread_df["fair_away_spread_decimal"] = fair_away
+    spread_df["home_acceptable_spread_decimal"] = acc_home
+    spread_df["away_acceptable_spread_decimal"] = acc_away
+    spread_df["home_acceptable_spread_american"] = spread_df[
+        "home_acceptable_spread_decimal"
+    ].apply(to_american)
+    spread_df["away_acceptable_spread_american"] = spread_df[
+        "away_acceptable_spread_decimal"
+    ].apply(to_american)
 
-    spread_df["home_spread_implied_prob"] = spread_df["home_dk_spread_decimal"].apply(safe_implied_prob)
-    spread_df["away_spread_implied_prob"] = spread_df["away_dk_spread_decimal"].apply(safe_implied_prob)
+    spread_df["home_spread_implied_prob"] = spread_df[
+        "home_dk_spread_decimal"
+    ].apply(safe_implied_prob)
+    spread_df["away_spread_implied_prob"] = spread_df[
+        "away_dk_spread_decimal"
+    ].apply(safe_implied_prob)
 
     market_pairs = spread_df.apply(
-        lambda r: devig_pair(r["home_spread_implied_prob"], r["away_spread_implied_prob"]),
+        lambda r: devig_pair(
+            r["home_spread_implied_prob"],
+            r["away_spread_implied_prob"],
+        ),
         axis=1,
     )
     spread_df["home_spread_market_prob"] = market_pairs.apply(lambda t: t[0])
@@ -437,7 +597,8 @@ def main():
 
         for league in LEAGUES:
             league_upper = league.upper()
-            settings     = LEAGUE_SETTINGS[league_upper]
+            settings = LEAGUE_SETTINGS[league_upper]
+
             log(
                 f"{league_upper} SETTINGS | ML_EDGE={settings['ML_EDGE']} "
                 f"SPREAD_EDGE={settings['SPREAD_EDGE']} TOTAL_EDGE={settings['TOTAL_EDGE']} "
@@ -446,11 +607,14 @@ def main():
 
             for market_type in ["moneyline", "spread", "total"]:
                 input_folder = INPUT_DIR / league / market_type
+
                 if not input_folder.exists():
                     log(f"INPUT FOLDER NOT FOUND: {input_folder}")
                     continue
 
-                input_files = sorted(input_folder.glob(f"*_{league_upper}_{market_type}.csv"))
+                input_files = sorted(
+                    input_folder.glob(f"*_{league_upper}_{market_type}.csv")
+                )
 
                 if not input_files:
                     log(f"NO INPUT FILES: {input_folder}")
@@ -465,28 +629,61 @@ def main():
                             files_skipped += 1
                             continue
 
-                        date = file_path.stem.replace(f"_{league_upper}_{market_type}", "")
+                        date = file_path.stem.replace(
+                            f"_{league_upper}_{market_type}",
+                            "",
+                        )
 
                         if market_type == "moneyline":
-                            out_path, count = process_moneyline(df, date, league_upper, settings, league)
+                            out_path, count = process_moneyline(
+                                df,
+                                date,
+                                league_upper,
+                                settings,
+                                league,
+                            )
+
                         elif market_type == "total":
-                            out_path, count = process_totals(df, date, league_upper, settings, league)
+                            out_path, count = process_totals(
+                                df,
+                                date,
+                                league_upper,
+                                settings,
+                                league,
+                            )
+
                         elif market_type == "spread":
-                            out_path, count = process_spread(df, date, league_upper, settings, league)
+                            out_path, count = process_spread(
+                                df,
+                                date,
+                                league_upper,
+                                settings,
+                                league,
+                            )
 
                         files_written.append((str(out_path), count))
                         log(f"WROTE {out_path.name} ({count} rows)")
-                        audit(market_type.upper(), "SUCCESS", file_path.name, df)
+                        audit(
+                            market_type.upper(),
+                            "SUCCESS",
+                            file_path.name,
+                            df,
+                        )
 
                     except Exception as e:
-                        log(f"ERROR processing {file_path.name}: {e}\n{traceback.format_exc()}")
+                        log(
+                            f"ERROR processing {file_path.name}: "
+                            f"{e}\n{traceback.format_exc()}"
+                        )
                         files_skipped += 1
 
         log("--- SUMMARY ---")
         log(f"Files written: {len(files_written)}")
         log(f"Files skipped: {files_skipped}")
+
         for path, count in files_written:
             log(f"  FILE: {path} ({count} rows)")
+
         log("STATUS: SUCCESS")
         print("build_juice_files complete.")
 
