@@ -1,271 +1,271 @@
 === 04_basketball_results_dashboard ===
-START_TIMESTAMP_UTC: 2026-08-16T13:20:21.151377+00:00
-2026-08-16T13:20:21.152920+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/nba_summary_grand_total.csv | exists=1 | rows=1
-2026-08-16T13:20:21.153841+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/nba_summary_overall.csv | exists=1 | rows=3
-2026-08-16T13:20:21.155997+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156035+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_market.csv
-2026-08-16T13:20:21.156198+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_side_group.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156232+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_side_group.csv
-2026-08-16T13:20:21.156370+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_date.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156404+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_date.csv
-2026-08-16T13:20:21.156541+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156574+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev.csv
-2026-08-16T13:20:21.156732+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156765+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev_home_away_summary.csv
-2026-08-16T13:20:21.156897+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.156929+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly.csv
-2026-08-16T13:20:21.157054+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157085+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly_home_away_summary.csv
-2026-08-16T13:20:21.157207+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157238+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds.csv
-2026-08-16T13:20:21.157349+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157380+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds_home_away_summary.csv
-2026-08-16T13:20:21.157498+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157529+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob.csv
-2026-08-16T13:20:21.157664+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157696+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob_home_away_summary.csv
-2026-08-16T13:20:21.157815+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157854+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market.csv
-2026-08-16T13:20:21.157965+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.157995+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market_home_away_summary.csv
-2026-08-16T13:20:21.158109+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158139+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow.csv
-2026-08-16T13:20:21.158244+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158274+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow_home_away_summary.csv
-2026-08-16T13:20:21.158391+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158421+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month.csv
-2026-08-16T13:20:21.158528+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158558+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month_home_away_summary.csv
-2026-08-16T13:20:21.158712+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158743+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev.csv
-2026-08-16T13:20:21.158850+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.158879+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev_home_away_summary.csv
-2026-08-16T13:20:21.158994+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159022+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly.csv
-2026-08-16T13:20:21.159127+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159156+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly_home_away_summary.csv
-2026-08-16T13:20:21.159266+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159295+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds.csv
-2026-08-16T13:20:21.159396+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159425+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds_home_away_summary.csv
-2026-08-16T13:20:21.159535+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159570+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob.csv
-2026-08-16T13:20:21.159711+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159742+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob_home_away_summary.csv
-2026-08-16T13:20:21.159862+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.159892+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market.csv
-2026-08-16T13:20:21.159995+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160025+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market_home_away_summary.csv
-2026-08-16T13:20:21.160136+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160165+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow.csv
-2026-08-16T13:20:21.160268+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160297+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow_home_away_summary.csv
-2026-08-16T13:20:21.160408+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160437+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month.csv
-2026-08-16T13:20:21.160539+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160567+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month_home_away_summary.csv
-2026-08-16T13:20:21.160700+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160731+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side.csv
-2026-08-16T13:20:21.160842+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.160870+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side_home_away_summary.csv
-2026-08-16T13:20:21.160989+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161018+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev.csv
-2026-08-16T13:20:21.161122+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161150+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev_over_under_summary.csv
-2026-08-16T13:20:21.161260+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161289+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly.csv
-2026-08-16T13:20:21.161391+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161426+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly_over_under_summary.csv
-2026-08-16T13:20:21.161539+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161568+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds.csv
-2026-08-16T13:20:21.161696+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161726+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds_over_under_summary.csv
-2026-08-16T13:20:21.161836+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.161864+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob.csv
-2026-08-16T13:20:21.161973+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162001+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob_over_under_summary.csv
-2026-08-16T13:20:21.162112+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162140+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market.csv
-2026-08-16T13:20:21.162242+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162270+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market_over_under_summary.csv
-2026-08-16T13:20:21.162379+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162407+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow.csv
-2026-08-16T13:20:21.162520+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162549+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow_over_under_summary.csv
-2026-08-16T13:20:21.162686+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162717+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month.csv
-2026-08-16T13:20:21.162820+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162848+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month_over_under_summary.csv
-2026-08-16T13:20:21.162954+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side.csv | exists=0 | rows=0
-2026-08-16T13:20:21.162983+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side.csv
-2026-08-16T13:20:21.163089+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.163118+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side_over_under_summary.csv
-2026-08-16T13:20:21.163231+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range.csv | exists=0 | rows=0
-2026-08-16T13:20:21.163260+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range.csv
-2026-08-16T13:20:21.163366+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.163394+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range_over_under_summary.csv
-2026-08-16T13:20:21.164237+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/ncaam_summary_grand_total.csv | exists=1 | rows=1
-2026-08-16T13:20:21.165043+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/ncaam_summary_overall.csv | exists=1 | rows=3
-2026-08-16T13:20:21.166584+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.166643+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_market.csv
-2026-08-16T13:20:21.166778+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_side_group.csv | exists=0 | rows=0
-2026-08-16T13:20:21.166809+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_side_group.csv
-2026-08-16T13:20:21.166927+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_date.csv | exists=0 | rows=0
-2026-08-16T13:20:21.166957+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_date.csv
-2026-08-16T13:20:21.167088+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167118+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev.csv
-2026-08-16T13:20:21.167225+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167254+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev_home_away_summary.csv
-2026-08-16T13:20:21.167368+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167397+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly.csv
-2026-08-16T13:20:21.167502+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167531+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly_home_away_summary.csv
-2026-08-16T13:20:21.167678+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167708+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds.csv
-2026-08-16T13:20:21.167815+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167844+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds_home_away_summary.csv
-2026-08-16T13:20:21.167964+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.167993+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob.csv
-2026-08-16T13:20:21.168097+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168126+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob_home_away_summary.csv
-2026-08-16T13:20:21.168237+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168266+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market.csv
-2026-08-16T13:20:21.168368+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168397+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market_home_away_summary.csv
-2026-08-16T13:20:21.168507+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168535+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow.csv
-2026-08-16T13:20:21.168664+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168695+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow_home_away_summary.csv
-2026-08-16T13:20:21.168808+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168837+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month.csv
-2026-08-16T13:20:21.168938+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.168967+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month_home_away_summary.csv
-2026-08-16T13:20:21.169084+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169113+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev.csv
-2026-08-16T13:20:21.169214+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169243+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev_home_away_summary.csv
-2026-08-16T13:20:21.169351+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169379+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly.csv
-2026-08-16T13:20:21.169479+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169508+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly_home_away_summary.csv
-2026-08-16T13:20:21.169650+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169680+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds.csv
-2026-08-16T13:20:21.169793+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169822+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds_home_away_summary.csv
-2026-08-16T13:20:21.169932+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.169961+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob.csv
-2026-08-16T13:20:21.170061+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170089+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob_home_away_summary.csv
-2026-08-16T13:20:21.170197+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170226+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market.csv
-2026-08-16T13:20:21.170326+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170354+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market_home_away_summary.csv
-2026-08-16T13:20:21.170463+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170491+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow.csv
-2026-08-16T13:20:21.170610+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170643+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow_home_away_summary.csv
-2026-08-16T13:20:21.170758+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170787+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month.csv
-2026-08-16T13:20:21.170887+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.170916+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month_home_away_summary.csv
-2026-08-16T13:20:21.171021+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171050+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side.csv
-2026-08-16T13:20:21.171155+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side_home_away_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171184+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side_home_away_summary.csv
-2026-08-16T13:20:21.171305+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171334+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev.csv
-2026-08-16T13:20:21.171434+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171463+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev_over_under_summary.csv
-2026-08-16T13:20:21.171572+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171631+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly.csv
-2026-08-16T13:20:21.171746+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171775+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly_over_under_summary.csv
-2026-08-16T13:20:21.171886+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds.csv | exists=0 | rows=0
-2026-08-16T13:20:21.171914+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds.csv
-2026-08-16T13:20:21.172015+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172043+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds_over_under_summary.csv
-2026-08-16T13:20:21.172152+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172180+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob.csv
-2026-08-16T13:20:21.172280+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172308+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob_over_under_summary.csv
-2026-08-16T13:20:21.172417+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172445+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market.csv
-2026-08-16T13:20:21.172545+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172573+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market_over_under_summary.csv
-2026-08-16T13:20:21.172710+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172740+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow.csv
-2026-08-16T13:20:21.172842+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.172870+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow_over_under_summary.csv
-2026-08-16T13:20:21.172979+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173014+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month.csv
-2026-08-16T13:20:21.173114+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173142+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month_over_under_summary.csv
-2026-08-16T13:20:21.173247+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173275+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side.csv
-2026-08-16T13:20:21.173380+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173409+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side_over_under_summary.csv
-2026-08-16T13:20:21.173513+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173541+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range.csv
-2026-08-16T13:20:21.173672+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range_over_under_summary.csv | exists=0 | rows=0
-2026-08-16T13:20:21.173702+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range_over_under_summary.csv
-2026-08-16T13:20:21.174491+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/wnba_summary_grand_total.csv | exists=1 | rows=1
-2026-08-16T13:20:21.175268+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/wnba_summary_overall.csv | exists=1 | rows=3
-2026-08-16T13:20:21.177443+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_market.csv | exists=1 | rows=3
-2026-08-16T13:20:21.180352+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_side_group.csv | exists=1 | rows=4
-2026-08-16T13:20:21.183283+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_date.csv | exists=1 | rows=53
-2026-08-16T13:20:21.186305+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev.csv | exists=1 | rows=7
-2026-08-16T13:20:21.189087+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev_home_away_summary.csv | exists=1 | rows=10
-2026-08-16T13:20:21.192131+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly.csv | exists=1 | rows=3
-2026-08-16T13:20:21.194882+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly_home_away_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.197991+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds.csv | exists=1 | rows=6
-2026-08-16T13:20:21.200804+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds_home_away_summary.csv | exists=1 | rows=9
-2026-08-16T13:20:21.203743+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob.csv | exists=1 | rows=6
-2026-08-16T13:20:21.206442+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob_home_away_summary.csv | exists=1 | rows=9
-2026-08-16T13:20:21.209308+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market.csv | exists=1 | rows=4
-2026-08-16T13:20:21.212049+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market_home_away_summary.csv | exists=1 | rows=7
-2026-08-16T13:20:21.214901+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow.csv | exists=1 | rows=6
-2026-08-16T13:20:21.217630+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow_home_away_summary.csv | exists=1 | rows=10
-2026-08-16T13:20:21.220972+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month.csv | exists=1 | rows=4
-2026-08-16T13:20:21.223834+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month_home_away_summary.csv | exists=1 | rows=6
-2026-08-16T13:20:21.226731+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev.csv | exists=1 | rows=3
-2026-08-16T13:20:21.229549+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev_home_away_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.232441+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly.csv | exists=1 | rows=3
-2026-08-16T13:20:21.235121+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly_home_away_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.237955+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds.csv | exists=1 | rows=2
-2026-08-16T13:20:21.240690+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds_home_away_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.243490+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob.csv | exists=1 | rows=3
-2026-08-16T13:20:21.246194+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob_home_away_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.249062+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market.csv | exists=1 | rows=3
-2026-08-16T13:20:21.251779+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market_home_away_summary.csv | exists=1 | rows=5
-2026-08-16T13:20:21.254583+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow.csv | exists=1 | rows=7
-2026-08-16T13:20:21.257350+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow_home_away_summary.csv | exists=1 | rows=14
-2026-08-16T13:20:21.260218+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month.csv | exists=1 | rows=4
-2026-08-16T13:20:21.263038+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month_home_away_summary.csv | exists=1 | rows=8
-2026-08-16T13:20:21.265923+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side.csv | exists=1 | rows=2
-2026-08-16T13:20:21.268616+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side_home_away_summary.csv | exists=1 | rows=2
-2026-08-16T13:20:21.271407+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev.csv | exists=1 | rows=5
-2026-08-16T13:20:21.274120+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev_over_under_summary.csv | exists=1 | rows=10
-2026-08-16T13:20:21.276956+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly.csv | exists=1 | rows=4
-2026-08-16T13:20:21.279674+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly_over_under_summary.csv | exists=1 | rows=8
-2026-08-16T13:20:21.282529+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds.csv | exists=1 | rows=2
-2026-08-16T13:20:21.285239+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds_over_under_summary.csv | exists=1 | rows=4
-2026-08-16T13:20:21.288050+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob.csv | exists=1 | rows=3
-2026-08-16T13:20:21.290738+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob_over_under_summary.csv | exists=1 | rows=5
-2026-08-16T13:20:21.293557+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market.csv | exists=1 | rows=4
-2026-08-16T13:20:21.296255+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market_over_under_summary.csv | exists=1 | rows=8
-2026-08-16T13:20:21.299062+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow.csv | exists=1 | rows=7
-2026-08-16T13:20:21.301801+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow_over_under_summary.csv | exists=1 | rows=12
-2026-08-16T13:20:21.304693+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month.csv | exists=1 | rows=4
-2026-08-16T13:20:21.307371+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month_over_under_summary.csv | exists=1 | rows=8
-2026-08-16T13:20:21.310219+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side.csv | exists=1 | rows=2
-2026-08-16T13:20:21.312916+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side_over_under_summary.csv | exists=1 | rows=2
-2026-08-16T13:20:21.315704+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range.csv | exists=1 | rows=6
-2026-08-16T13:20:21.318382+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range_over_under_summary.csv | exists=1 | rows=6
-2026-08-16T13:20:21.323033+00:00 | INFO | OUTPUT | file=docs/basketball_dashboard.html | rows=388 | bytes=153272
-2026-08-16T13:20:21.323066+00:00 | INFO | dashboard -> docs/basketball_dashboard.html
+START_TIMESTAMP_UTC: 2026-08-16T13:29:19.982272+00:00
+2026-08-16T13:29:19.983834+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/nba_summary_grand_total.csv | exists=1 | rows=1
+2026-08-16T13:29:19.984775+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/nba_summary_overall.csv | exists=1 | rows=3
+2026-08-16T13:29:19.987050+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.987088+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_market.csv
+2026-08-16T13:29:19.987259+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_side_group.csv | exists=0 | rows=0
+2026-08-16T13:29:19.987294+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_side_group.csv
+2026-08-16T13:29:19.987436+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_date.csv | exists=0 | rows=0
+2026-08-16T13:29:19.987471+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/overview/nba_summary_by_date.csv
+2026-08-16T13:29:19.987614+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:19.987647+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev.csv
+2026-08-16T13:29:19.987778+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.987810+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_ev_home_away_summary.csv
+2026-08-16T13:29:19.987966+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988000+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly.csv
+2026-08-16T13:29:19.988131+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988163+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_kelly_home_away_summary.csv
+2026-08-16T13:29:19.988292+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988324+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds.csv
+2026-08-16T13:29:19.988439+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988470+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_odds_home_away_summary.csv
+2026-08-16T13:29:19.988590+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988622+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob.csv
+2026-08-16T13:29:19.988734+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988765+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_win_prob_home_away_summary.csv
+2026-08-16T13:29:19.988883+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.988946+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market.csv
+2026-08-16T13:29:19.989067+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989097+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_edge_vs_market_home_away_summary.csv
+2026-08-16T13:29:19.989214+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989243+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow.csv
+2026-08-16T13:29:19.989350+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989380+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_dow_home_away_summary.csv
+2026-08-16T13:29:19.989497+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989526+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month.csv
+2026-08-16T13:29:19.989633+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989663+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/moneyline/nba_moneyline_by_month_home_away_summary.csv
+2026-08-16T13:29:19.989788+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:19.989818+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev.csv
+2026-08-16T13:29:19.989971+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990005+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_ev_home_away_summary.csv
+2026-08-16T13:29:19.990134+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990165+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly.csv
+2026-08-16T13:29:19.990273+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990303+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_kelly_home_away_summary.csv
+2026-08-16T13:29:19.990418+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990446+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds.csv
+2026-08-16T13:29:19.990551+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990579+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_odds_home_away_summary.csv
+2026-08-16T13:29:19.990693+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990728+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob.csv
+2026-08-16T13:29:19.990842+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.990871+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_win_prob_home_away_summary.csv
+2026-08-16T13:29:19.991012+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991043+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market.csv
+2026-08-16T13:29:19.991148+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991177+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_edge_vs_market_home_away_summary.csv
+2026-08-16T13:29:19.991298+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991327+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow.csv
+2026-08-16T13:29:19.991436+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991465+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_dow_home_away_summary.csv
+2026-08-16T13:29:19.991578+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991607+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month.csv
+2026-08-16T13:29:19.991712+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991742+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_month_home_away_summary.csv
+2026-08-16T13:29:19.991851+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side.csv | exists=0 | rows=0
+2026-08-16T13:29:19.991880+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side.csv
+2026-08-16T13:29:19.992024+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992054+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/spread/nba_spread_by_side_home_away_summary.csv
+2026-08-16T13:29:19.992175+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992204+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev.csv
+2026-08-16T13:29:19.992307+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992336+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_ev_over_under_summary.csv
+2026-08-16T13:29:19.992447+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992475+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly.csv
+2026-08-16T13:29:19.992579+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992615+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_kelly_over_under_summary.csv
+2026-08-16T13:29:19.992727+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992756+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds.csv
+2026-08-16T13:29:19.992857+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.992885+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_odds_over_under_summary.csv
+2026-08-16T13:29:19.993022+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993052+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob.csv
+2026-08-16T13:29:19.993157+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993185+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_win_prob_over_under_summary.csv
+2026-08-16T13:29:19.993295+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993324+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market.csv
+2026-08-16T13:29:19.993424+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993453+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_edge_vs_market_over_under_summary.csv
+2026-08-16T13:29:19.993570+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993598+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow.csv
+2026-08-16T13:29:19.993701+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993730+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_dow_over_under_summary.csv
+2026-08-16T13:29:19.993840+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:19.993869+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month.csv
+2026-08-16T13:29:19.994025+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.994056+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_month_over_under_summary.csv
+2026-08-16T13:29:19.994167+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side.csv | exists=0 | rows=0
+2026-08-16T13:29:19.994196+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side.csv
+2026-08-16T13:29:19.994304+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.994333+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_side_over_under_summary.csv
+2026-08-16T13:29:19.994449+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range.csv | exists=0 | rows=0
+2026-08-16T13:29:19.994478+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range.csv
+2026-08-16T13:29:19.994587+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.994616+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/nba/total/nba_total_by_total_range_over_under_summary.csv
+2026-08-16T13:29:19.995470+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/ncaam_summary_grand_total.csv | exists=1 | rows=1
+2026-08-16T13:29:19.996272+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/ncaam_summary_overall.csv | exists=1 | rows=3
+2026-08-16T13:29:19.997746+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.997780+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_market.csv
+2026-08-16T13:29:19.997952+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_side_group.csv | exists=0 | rows=0
+2026-08-16T13:29:19.997993+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_side_group.csv
+2026-08-16T13:29:19.998126+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_date.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998156+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/overview/ncaam_summary_by_date.csv
+2026-08-16T13:29:19.998287+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998317+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev.csv
+2026-08-16T13:29:19.998425+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998454+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_ev_home_away_summary.csv
+2026-08-16T13:29:19.998568+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998597+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly.csv
+2026-08-16T13:29:19.998705+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998733+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_kelly_home_away_summary.csv
+2026-08-16T13:29:19.998845+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:19.998873+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds.csv
+2026-08-16T13:29:19.999004+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999033+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_odds_home_away_summary.csv
+2026-08-16T13:29:19.999158+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999187+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob.csv
+2026-08-16T13:29:19.999290+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999318+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_win_prob_home_away_summary.csv
+2026-08-16T13:29:19.999430+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999458+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market.csv
+2026-08-16T13:29:19.999562+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999590+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_edge_vs_market_home_away_summary.csv
+2026-08-16T13:29:19.999700+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999728+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow.csv
+2026-08-16T13:29:19.999831+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:19.999859+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_dow_home_away_summary.csv
+2026-08-16T13:29:19.999995+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000024+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month.csv
+2026-08-16T13:29:20.000126+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000154+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/moneyline/ncaam_moneyline_by_month_home_away_summary.csv
+2026-08-16T13:29:20.000270+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000298+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev.csv
+2026-08-16T13:29:20.000400+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000428+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_ev_home_away_summary.csv
+2026-08-16T13:29:20.000542+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000570+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly.csv
+2026-08-16T13:29:20.000671+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000699+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_kelly_home_away_summary.csv
+2026-08-16T13:29:20.000818+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:20.000846+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds.csv
+2026-08-16T13:29:20.000973+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001002+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_odds_home_away_summary.csv
+2026-08-16T13:29:20.001115+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001143+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob.csv
+2026-08-16T13:29:20.001249+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001277+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_win_prob_home_away_summary.csv
+2026-08-16T13:29:20.001388+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001415+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market.csv
+2026-08-16T13:29:20.001515+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001542+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_edge_vs_market_home_away_summary.csv
+2026-08-16T13:29:20.001652+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001679+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow.csv
+2026-08-16T13:29:20.001781+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001808+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_dow_home_away_summary.csv
+2026-08-16T13:29:20.001939+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:20.001969+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month.csv
+2026-08-16T13:29:20.002077+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002105+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_month_home_away_summary.csv
+2026-08-16T13:29:20.002212+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002240+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side.csv
+2026-08-16T13:29:20.002347+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side_home_away_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002375+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/spread/ncaam_spread_by_side_home_away_summary.csv
+2026-08-16T13:29:20.002500+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002528+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev.csv
+2026-08-16T13:29:20.002630+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002659+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_ev_over_under_summary.csv
+2026-08-16T13:29:20.002768+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002796+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly.csv
+2026-08-16T13:29:20.002898+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.002950+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_kelly_over_under_summary.csv
+2026-08-16T13:29:20.003064+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003093+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds.csv
+2026-08-16T13:29:20.003193+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003221+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_odds_over_under_summary.csv
+2026-08-16T13:29:20.003329+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003356+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob.csv
+2026-08-16T13:29:20.003459+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003487+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_win_prob_over_under_summary.csv
+2026-08-16T13:29:20.003596+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003624+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market.csv
+2026-08-16T13:29:20.003724+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003752+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_edge_vs_market_over_under_summary.csv
+2026-08-16T13:29:20.003861+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow.csv | exists=0 | rows=0
+2026-08-16T13:29:20.003889+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow.csv
+2026-08-16T13:29:20.004016+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004045+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_dow_over_under_summary.csv
+2026-08-16T13:29:20.004156+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004190+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month.csv
+2026-08-16T13:29:20.004294+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004322+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_month_over_under_summary.csv
+2026-08-16T13:29:20.004427+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004455+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side.csv
+2026-08-16T13:29:20.004561+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004590+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_side_over_under_summary.csv
+2026-08-16T13:29:20.004695+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004723+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range.csv
+2026-08-16T13:29:20.004830+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range_over_under_summary.csv | exists=0 | rows=0
+2026-08-16T13:29:20.004858+00:00 | INFO | Optional dashboard input missing: docs/win/basketball/05_final_scores/reports/ncaam/total/ncaam_total_by_total_range_over_under_summary.csv
+2026-08-16T13:29:20.005680+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/wnba_summary_grand_total.csv | exists=1 | rows=1
+2026-08-16T13:29:20.006451+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/wnba_summary_overall.csv | exists=1 | rows=3
+2026-08-16T13:29:20.008642+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_market.csv | exists=1 | rows=3
+2026-08-16T13:29:20.011569+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_side_group.csv | exists=1 | rows=4
+2026-08-16T13:29:20.014555+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/overview/wnba_summary_by_date.csv | exists=1 | rows=53
+2026-08-16T13:29:20.017589+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev.csv | exists=1 | rows=7
+2026-08-16T13:29:20.020386+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_ev_home_away_summary.csv | exists=1 | rows=10
+2026-08-16T13:29:20.023375+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly.csv | exists=1 | rows=3
+2026-08-16T13:29:20.026212+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_kelly_home_away_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.029114+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds.csv | exists=1 | rows=6
+2026-08-16T13:29:20.031930+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_odds_home_away_summary.csv | exists=1 | rows=9
+2026-08-16T13:29:20.034922+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob.csv | exists=1 | rows=6
+2026-08-16T13:29:20.037669+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_win_prob_home_away_summary.csv | exists=1 | rows=9
+2026-08-16T13:29:20.040583+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market.csv | exists=1 | rows=4
+2026-08-16T13:29:20.043351+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_edge_vs_market_home_away_summary.csv | exists=1 | rows=7
+2026-08-16T13:29:20.046263+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow.csv | exists=1 | rows=6
+2026-08-16T13:29:20.049034+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_dow_home_away_summary.csv | exists=1 | rows=10
+2026-08-16T13:29:20.051922+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month.csv | exists=1 | rows=4
+2026-08-16T13:29:20.054676+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/moneyline/wnba_moneyline_by_month_home_away_summary.csv | exists=1 | rows=6
+2026-08-16T13:29:20.057554+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev.csv | exists=1 | rows=3
+2026-08-16T13:29:20.060427+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_ev_home_away_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.063335+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly.csv | exists=1 | rows=3
+2026-08-16T13:29:20.066176+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_kelly_home_away_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.069095+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds.csv | exists=1 | rows=2
+2026-08-16T13:29:20.071816+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_odds_home_away_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.074709+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob.csv | exists=1 | rows=3
+2026-08-16T13:29:20.077444+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_win_prob_home_away_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.080299+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market.csv | exists=1 | rows=3
+2026-08-16T13:29:20.083047+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_edge_vs_market_home_away_summary.csv | exists=1 | rows=5
+2026-08-16T13:29:20.085873+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow.csv | exists=1 | rows=7
+2026-08-16T13:29:20.088679+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_dow_home_away_summary.csv | exists=1 | rows=14
+2026-08-16T13:29:20.091575+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month.csv | exists=1 | rows=4
+2026-08-16T13:29:20.094351+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_month_home_away_summary.csv | exists=1 | rows=8
+2026-08-16T13:29:20.097265+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side.csv | exists=1 | rows=2
+2026-08-16T13:29:20.099992+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/spread/wnba_spread_by_side_home_away_summary.csv | exists=1 | rows=2
+2026-08-16T13:29:20.102819+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev.csv | exists=1 | rows=5
+2026-08-16T13:29:20.105549+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_ev_over_under_summary.csv | exists=1 | rows=10
+2026-08-16T13:29:20.108426+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly.csv | exists=1 | rows=4
+2026-08-16T13:29:20.111188+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_kelly_over_under_summary.csv | exists=1 | rows=8
+2026-08-16T13:29:20.114104+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds.csv | exists=1 | rows=2
+2026-08-16T13:29:20.116791+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_odds_over_under_summary.csv | exists=1 | rows=4
+2026-08-16T13:29:20.119645+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob.csv | exists=1 | rows=3
+2026-08-16T13:29:20.122386+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_win_prob_over_under_summary.csv | exists=1 | rows=5
+2026-08-16T13:29:20.125258+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market.csv | exists=1 | rows=4
+2026-08-16T13:29:20.128058+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_edge_vs_market_over_under_summary.csv | exists=1 | rows=8
+2026-08-16T13:29:20.130983+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow.csv | exists=1 | rows=7
+2026-08-16T13:29:20.133721+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_dow_over_under_summary.csv | exists=1 | rows=12
+2026-08-16T13:29:20.136715+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month.csv | exists=1 | rows=4
+2026-08-16T13:29:20.139545+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_month_over_under_summary.csv | exists=1 | rows=8
+2026-08-16T13:29:20.142470+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side.csv | exists=1 | rows=2
+2026-08-16T13:29:20.145234+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_side_over_under_summary.csv | exists=1 | rows=2
+2026-08-16T13:29:20.148281+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range.csv | exists=1 | rows=6
+2026-08-16T13:29:20.151039+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/reports/wnba/total/wnba_total_by_total_range_over_under_summary.csv | exists=1 | rows=6
+2026-08-16T13:29:20.155863+00:00 | INFO | OUTPUT | file=docs/basketball_dashboard.html | rows=388 | bytes=153272
+2026-08-16T13:29:20.155896+00:00 | INFO | dashboard -> docs/basketball_dashboard.html
 INPUT_SUMMARY | files=159 | rows=335
 OUTPUT_SUMMARY | files=1 | rows=388
 WARNING_COUNT: 0
 ERROR_COUNT: 0
-END_TIMESTAMP_UTC: 2026-08-16T13:20:21.323079+00:00
+END_TIMESTAMP_UTC: 2026-08-16T13:29:20.155948+00:00
 STATUS: SUCCESS
