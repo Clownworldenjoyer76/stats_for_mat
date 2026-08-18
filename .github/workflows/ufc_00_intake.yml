@@ -1,0 +1,50 @@
+name: UFC Intake Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+
+      - name: Create output directories
+        run: |
+          mkdir -p docs/win/mma/ufc/00_intake/sportsbook
+          mkdir -p docs/win/mma/ufc/00_intake/predictions
+          mkdir -p mappings/mma/ufc
+
+      - name: Run odds scraper
+        run: python docs/win/mma/ufc/scripts/00_intake/00_scrape_odds.py
+
+      - name: Run predictions scraper
+        run: python docs/win/mma/ufc/scripts/00_intake/00_scrape_predictions.py
+
+      - name: Run name normalization
+        run: python docs/win/mma/ufc/scripts/00_intake/00_name_normalization.py
+
+      - name: Commit and push all output files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/win/mma/ufc/00_intake/sportsbook/*_ufc_odds.csv
+          git add docs/win/mma/ufc/00_intake/predictions/*_ufc_predictions.csv
+          git add mappings/mma/ufc/no_map_fighter_name.csv
+          git diff --cached --quiet || git commit -m "chore: ufc intake run $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
