@@ -1,0 +1,19 @@
+# Ignore raw and processed data directories
+data/processed/
+data/raw/
+
+# Ignore all parquet files EXCEPT the 4 model files
+*.parquet
+!data/model/fighter_historical_stats.parquet
+!data/model/ufc_master_clean.parquet
+
+# Ignore all pkl files EXCEPT the model
+*.pkl
+!data/model/ufc_model.pkl
+
+# Ignore all json files EXCEPT fighter attributes and history
+*.json
+!data/model/fighter_attributes.json
+!data/model/fighter_history.json
+
+

@@ -1,0 +1,53 @@
+Daily UFC Pipeline — how it works:
+
+You go to GitHub Actions and run UFC Daily Pipeline manually
+It scrapes current odds from oddstrader
+It scrapes win predictions from dratings
+It normalizes fighter names against your name map
+It builds features for each upcoming fight
+It runs the model and computes edge, EV, and Kelly per fighter
+It filters picks using your markets.yaml settings
+All output CSVs are committed back to the repo
+
+######################################################
+
+On updating data/model files:
+When to update data/model/ files:
+
+After retraining the model (train_model_weighted.py) → upload new ufc_model.pkl
+After scraping new fighter stats (scrape_fighter_stats.py, fix_unmatched_fighters.py) → upload new fighter_attributes.json
+After scraping new fight history (scrape_historical_stats.py) → upload new fighter_history.json and fighter_historical_stats.parquet
+After adding new fights to master dataset → upload new ufc_master_clean.parquet
+
+How to update: Go to bet_tracker/data/model/ on the model-data branch on GitHub → click the file → click the pencil/upload icon → upload the new version → commit to model-data.
+
+########################################
+WHEN to update each file and HOW OFTEN:
+ufc_model.pkl
+
+When: After you retrain the model by running train_model_weighted.py on your local machine
+How often: Only when you have new fight result data to train on — roughly monthly after UFC events are added to your CSV files
+
+ufc_master_clean.parquet
+
+When: After you add new completed UFC event CSVs to your raw data folder and re-run parse_ufc_files.py and apply_corrections.py
+How often: After every UFC event — roughly 2-3 times per month
+
+fighter_attributes.json
+
+When: After running scrape_fighter_stats.py or add_missing_fighters.py to add new fighters
+How often: Only when new fighters appear in no_map_fighter_name.csv after a pipeline run
+
+fighter_history.json and fighter_historical_stats.parquet
+
+When: After running scrape_historical_stats.py on your local machine
+How often: Same as ufc_master_clean.parquet — after every UFC event
+
+HOW to upload each time:
+
+Go to bet_tracker repo on GitHub
+Switch to model-data branch
+Navigate to data/model/
+Click the file you want to replace
+Click the three dots ... → Delete file → commit
+Go back to data/model/ → Add file → Upload files → upload the new version → commit to model-data

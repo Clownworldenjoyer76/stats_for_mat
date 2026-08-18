@@ -1,0 +1,94 @@
+## UFC Prediction Model — Step-by-Step Plan
+
+---
+
+### Phase 1 — Data Pipeline
+
+1. Write a Python script to loop through all 450+ files, parse each one, and append to a single master dataframe
+2. Standardize fighter names across all files (lowercase, strip whitespace, handle known aliases)
+3. Save master dataframe as a SQLite database or Parquet file — this is your source of truth
+4. Validate: check for duplicates, missing results, date gaps
+
+---
+
+### Phase 2 — Fighter Attribute Scraping
+
+5. Identify your scrape source — UFC Stats (ufcstats.com) is the best free option; it has reach, height, stance, age, and full record
+6. Build a scraper (requests + BeautifulSoup) to pull attributes for every unique fighter in your dataset
+7. Store scraped attributes in a separate table/file joined on fighter name
+8. For each fight row, calculate **fighter age at fight date** from DOB (not current age)
+
+---
+
+### Phase 3 — Feature Engineering
+
+*All features must be computed using only data before that fight's date — no leakage.*
+
+9. For each fighter, compute rolling historical stats up to fight date:
+   - Win rate (all-time, last 5 fights)
+   - Win streak / loss streak
+   - Total fights (experience proxy)
+   - Days since last fight
+   - Average opponent win rate (strength of schedule)
+10. Compute **sportsbook implied probability** from moneylines:
+    - Positive line: `100 / (moneyline + 100)`
+    - Negative line: `abs(moneyline) / (abs(moneyline) + 100)`
+    - Then normalize both to remove the vig so they sum to 1
+11. Compute **differential features** (fighter 1 minus fighter 2):
+    - Win rate diff, experience diff, days rest diff, reach diff, age diff
+12. Flag: title fight, weight class (if scrapeable), home country advantage if fight location available
+
+---
+
+### Phase 4 — Dataset Assembly
+
+13. Final row structure: one fight = one row, from fighter 1's perspective
+14. Also add the mirror row (fighter 2's perspective, labels flipped) to double your training data and remove position bias
+15. Drop any rows where result is missing
+16. Save final feature matrix as a Parquet file
+
+---
+
+### Phase 5 — Modeling
+
+17. Time-based train/test split — train on years 1–5, test on year 6. Never random split
+18. Start with **logistic regression on implied probability only** as your baseline — record its Brier score and log loss
+19. Train **XGBoost or LightGBM** on all features — these are the best fit for this type of tabular data in Python
+20. Tune with cross-validation using **TimeSeriesSplit** to respect chronological order
+21. Evaluate on test set using Brier score, log loss, and ROI simulation — not accuracy
+
+---
+
+### Phase 6 — Edge Detection & Backtesting
+
+22. For every fight in your test set, compute: `edge = model_probability - implied_probability`
+23. Simulate flat betting only when edge exceeds a threshold (start with 3%, 5%, 7% — test all three)
+24. Track ROI separately by: edge bucket, favorite vs underdog, weight class
+25. Use **fractional Kelly (25% Kelly)** for stake sizing in the simulation
+26. Report: total bets placed, win rate, ROI — if no consistent positive ROI at any threshold, the model needs more features before going live
+
+---
+
+### Phase 7 — Live Predictions
+
+27. When new fight cards are announced, scrape current sportsbook odds for moneylines
+28. Pull latest fighter stats (update your scraped attributes if needed)
+29. Run the same feature engineering pipeline on the upcoming matchups
+30. Output: model probability, implied probability, edge — only flag fights where edge clears your backtested threshold
+
+---
+
+### Stack Summary
+
+| Task | Tool |
+|---|---|
+| Data parsing | pandas |
+| Storage | SQLite (via sqlite3) or Parquet (via pandas) |
+| Scraping | requests + BeautifulSoup |
+| Modeling | scikit-learn, XGBoost or LightGBM |
+| Validation | scikit-learn TimeSeriesSplit |
+| Environment | Python, PowerShell for file ops, GitHub for version control |
+
+---
+
+Ready to start at Step 1 whenever you are — share one of your data files and I'll write the parser.

@@ -1,0 +1,85 @@
+* **Daily/manual intake**
+
+  * Paste UFC raw predictions/odds into `docs/manual_data.html`.
+  * Frontend triggers `manual_data_input.yml`.
+  * Workflow runs `docs/win/mma/ufc/scripts/00_parsing/ufc_input.py`.
+  * That creates:
+
+    * `docs/win/mma/ufc/00_intake/predictions/YYYY_MM_DD_ufc_predictions.csv`
+    * `docs/win/mma/ufc/00_intake/sportsbook/YYYY_MM_DD_ufc_odds.csv`
+
+* **Before running UFC pipeline**
+
+  * Make sure sportsbook and prediction intake files exist for the UFC event date.
+  * Make sure model files exist on `model-data` branch:
+
+    * `fighter_attributes.json`
+    * `fighter_history.json`
+    * `fighter_historical_stats.parquet`
+    * `ufc_master_clean.parquet`
+    * `ufc_model.pkl`
+
+* **Run UFC pipeline**
+
+  * Pulls model files from `model-data`.
+  * Runs name normalization.
+  * Builds features from sportsbook odds + model data.
+  * Computes edges using features + predictions + model.
+  * Later scripts select/filter bets using `markets.yaml`.
+
+* **Generated pipeline outputs**
+
+  * `01_feature_engineering/YYYY_MM_DD_ufc_features.csv`
+  * `02_edges/YYYY_MM_DD_ufc_edges.csv`
+  * `03_select/YYYY_MM_DD_ufc_select.csv`
+  * `04_final/...` summary/report files
+
+* **When new fighters appear**
+
+  * Download `mappings/mma/ufc/no_map_fighter_name.csv`.
+  * Save it locally to:
+
+    * `C:\Users\ntmal\Downloads\bet_tracker_files\UFC_Master\mappings\mma\ufc\no_map_fighter_name.csv`
+  * Run locally:
+
+    * `scripts\builder_scripts\add_missing_fighters.py`
+  * Upload updated `fighter_attributes.json` to `model-data`.
+  * Any fighters not found on UFCStats get manually added to `mappings/mma/ufc/fighter_name_map.csv` on `main`.
+
+* **After every completed UFC event**
+
+  * Add completed event results locally.
+  * Run local builder scripts to update historical data:
+
+    * `parse_ufc_files.py`
+    * `apply_corrections.py`
+    * `scrape_historical_stats.py`
+    * `build_features.py`
+  * Upload updated files to `model-data`:
+
+    * `ufc_master_clean.parquet`
+    * `fighter_history.json`
+    * `fighter_historical_stats.parquet`
+
+* **Monthly or after enough new data**
+
+  * Retrain model locally:
+
+    * `train_model_weighted.py`
+    * `evaluate_roi.py`
+  * Upload updated `ufc_model.pkl` to `model-data`.
+
+* **Adjusting filters**
+
+  * Edit:
+
+    * `docs/win/mma/ufc/config/markets.yaml`
+  * No script change needed.
+  * Changes apply next pipeline run.
+
+* **Key takeaway**
+
+  * GitHub/main branch should mostly hold intake/output pipeline CSVs and configs.
+  * `model-data` branch holds heavy model/history files.
+  * Local machine handles model building, fighter history updates, and retraining.
+  * GitHub Actions handles lightweight pipeline processing from intake files into edges/select outputs.

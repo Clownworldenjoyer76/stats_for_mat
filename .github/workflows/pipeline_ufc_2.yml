@@ -1,0 +1,81 @@
+name: Pipeline UFC 2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ufc-select-grade-reports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Create output folders
+        run: |
+          mkdir -p docs/win/mma/ufc/03_select
+          mkdir -p docs/win/mma/ufc/03_select/detailed
+          mkdir -p docs/win/mma/ufc/04_final/graded
+          mkdir -p docs/win/mma/ufc/04_final/reports
+
+      - name: UFC Select Bets
+        run: |
+          python docs/win/mma/ufc/scripts/03_select/03_select.py
+
+      - name: UFC Grade Bets
+        run: |
+          python docs/win/mma/ufc/scripts/04_final/ufc_grader.py
+
+      - name: UFC Reports
+        run: |
+          python docs/win/mma/ufc/scripts/04_final/ufc_reports.py
+
+      - name: Show outputs
+        if: always()
+        run: |
+          echo "=== UFC legacy select outputs ==="
+          find docs/win/mma/ufc/03_select -maxdepth 1 -type f -name "*_ufc_select.csv" | sort || true
+
+          echo ""
+          echo "=== UFC detailed select outputs ==="
+          find docs/win/mma/ufc/03_select/detailed -maxdepth 1 -type f -name "*_ufc_select_detailed.csv" | sort || true
+
+          echo ""
+          echo "=== UFC graded outputs ==="
+          find docs/win/mma/ufc/04_final/graded -maxdepth 1 -type f -name "*_ufc_graded.csv" | sort || true
+
+          echo ""
+          echo "=== UFC report outputs ==="
+          find docs/win/mma/ufc/04_final -type f | sort || true
+
+      - name: Commit outputs
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add docs/win/mma/ufc/03_select/
+          git add docs/win/mma/ufc/04_final/
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: run UFC select grade reports $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git pull --rebase origin main
+            git push
+          fi
