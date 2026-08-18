@@ -4,7 +4,7 @@ Update order
 
 #	NFL file/script	Why this order	Expected change
 1	config/mapping/team_map.csv	Team IDs/names are used throughout the pipeline	CFB teams/ESPN IDs/aliases
-->missing team_uid	logos_height	logos_href	logos_rel	logos_width	guid	alternateIds_sdr
+->missing 	team_abbr, alt_color	team_color, guid	alternateIds_sdr	
 2	config/mapping/stadium_map_nfl.csv → CFB copy	Schedule, travel and weather depend on it	Populate from your stadium/coordinate files
 3	data/master/team_master.csv	League/coaches and other joins depend on team IDs	CFB team master using ESPN + mappings
 4	pull_schedule.py	Creates the game backbone everything else can join to	Low: paths, nfl→college-football, season/team universe
