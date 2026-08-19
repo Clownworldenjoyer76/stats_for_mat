@@ -3,9 +3,9 @@
 
 Builds features for upcoming UFC matchups by combining:
 - Odds from docs/win/mma/ufc/00_intake/sportsbook/*_ufc_odds.csv
-- Fighter attributes from data/model/fighter_attributes.json
-- Fighter historical stats from data/model/fighter_historical_stats.parquet
-- Rolling fight history from data/model/ufc_master_clean.parquet
+- Fighter attributes from docs/win/mma/ufc/data/model/fighter_attributes.json
+- Fighter historical stats from docs/win/mma/ufc/data/model/fighter_historical_stats.parquet
+- Rolling fight history from docs/win/mma/ufc/data/model/ufc_master_clean.parquet
 
 Output: docs/win/mma/ufc/01_feature_engineering/{date}_ufc_features.csv
 """
@@ -22,9 +22,9 @@ import pandas as pd
 
 # --- Paths ---
 ODDS_DIR = Path("docs/win/mma/ufc/00_intake/sportsbook")
-ATTRS_PATH = Path("data/model/fighter_attributes.json")
-HISTORY_PATH = Path("data/model/fighter_history.json")
-MASTER_PATH = Path("data/model/ufc_master_clean.parquet")
+ATTRS_PATH = Path("docs/win/mma/ufc/data/model/fighter_attributes.json")
+HISTORY_PATH = Path("docs/win/mma/ufc/data/model/fighter_history.json")
+MASTER_PATH = Path("docs/win/mma/ufc/data/model/ufc_master_clean.parquet")
 OUT_DIR = Path("docs/win/mma/ufc/01_feature_engineering")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
