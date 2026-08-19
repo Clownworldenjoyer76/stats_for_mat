@@ -7,7 +7,7 @@ merges with dratings predictions, computes edge, EV, and Kelly.
 Input:
     docs/win/mma/ufc/01_feature_engineering/{date}_ufc_features.csv
     docs/win/mma/ufc/00_intake/predictions/{date}_ufc_predictions.csv
-    data/model/ufc_model.pkl
+    ddocs/win/mma/ufc/data/model/ufc_model.pkl
 
 Output:
     docs/win/mma/ufc/02_edges/{date}_ufc_edges.csv
@@ -25,7 +25,7 @@ import pandas as pd
 # --- Paths ---
 FEATURES_DIR = Path("docs/win/mma/ufc/01_feature_engineering")
 PREDICTIONS_DIR = Path("docs/win/mma/ufc/00_intake/predictions")
-MODEL_PATH = Path("data/model/ufc_model.pkl")
+MODEL_PATH = Path("docs/win/mma/ufc/data/model/ufc_model.pkl")
 OUT_DIR = Path("docs/win/mma/ufc/02_edges")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 

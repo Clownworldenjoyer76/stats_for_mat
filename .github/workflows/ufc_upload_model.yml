@@ -21,17 +21,17 @@ jobs:
 
       - name: Verify model files exist
         run: |
-          ls -lh data/model/
+          ls -lh docs/win/mma/ufc/data/model/
           echo "If files are missing, push them to the model-data branch first."
 
       - name: Confirm files committed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/model/fighter_attributes.json
-          git add data/model/fighter_history.json
-          git add data/model/fighter_historical_stats.parquet
-          git add data/model/ufc_master_clean.parquet
-          git add data/model/ufc_model.pkl
+          git add docs/win/mma/ufc/data/model/fighter_attributes.json
+          git add docs/win/mma/ufc/data/model/fighter_history.json
+          git add docs/win/mma/ufc/data/model/fighter_historical_stats.parquet
+          git add docs/win/mma/ufc/data/model/ufc_master_clean.parquet
+          git add docs/win/mma/ufc/data/model/ufc_model.pkl
           git diff --cached --quiet || git commit -m "chore: update model files $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push origin model-data
