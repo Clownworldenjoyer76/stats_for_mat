@@ -3,8 +3,16 @@
 # Dynamic rolling bias values should be calculated separately and are not stored here.
 #
 # Bias schema:
-#   method: rolling -> window_games required, value must be null
-#   method: fixed   -> value required, window_games must be null
+#   method: rolling      -> window_games required, value must be null
+#   method: regime_aware -> windows_games + weights + sign_conflict_shrink required,
+#                          value must be null
+#   method: fixed        -> value required, window_games must be null
+#
+# regime_aware:
+#   - calculates projected_minus_actual residual means for every configured window
+#   - combines them with the configured weights
+#   - if both positive and negative window means are present, multiplies the
+#     weighted value by sign_conflict_shrink to avoid chasing an unstable regime
 #
 # Calibration schema:
 #   moneyline may retain side-specific calibration.
@@ -95,8 +103,10 @@ leagues:
         window_games: 100
         value: null
       total:
-        method: rolling
-        window_games: 50
+        method: regime_aware
+        windows_games: [25, 50, 100]
+        weights: [0.50, 0.30, 0.20]
+        sign_conflict_shrink: 0.35
         value: null
 
     calibration:

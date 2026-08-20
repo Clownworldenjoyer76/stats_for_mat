@@ -28,7 +28,7 @@
 # - Operational season boundaries are read from:
 #   docs/win/basketball/config/season_dates.yaml
 # - Dates outside a league's configured season window are offseason.
-# - Rolling windows cross season boundaries and require the full configured window.
+# - Rolling/regime-aware windows cross season boundaries and require the full configured window.
 # - Projection error sign is projected_minus_actual.
 
 from __future__ import annotations
@@ -1315,6 +1315,9 @@ def resolve_bias_rule(
         return {
             "method": None,
             "window_games": None,
+            "windows_games": None,
+            "weights": None,
+            "sign_conflict_shrink": None,
             "value": None,
         }
 
@@ -1356,6 +1359,164 @@ def resolve_bias_rule(
         ),
     )
 
+    windows: list[int] | None = None
+    weights: list[float] | None = None
+    sign_conflict_shrink: float | None = None
+
+    if method == "regime_aware":
+        raw_windows = rule.get(
+            "windows_games"
+        )
+
+        raw_weights = rule.get(
+            "weights"
+        )
+
+        if (
+            not isinstance(
+                raw_windows,
+                list,
+            )
+            or not raw_windows
+        ):
+            raise ValueError(
+                f"bias.{component}.windows_games "
+                f"must be a non-empty list for "
+                f"method='regime_aware'"
+            )
+
+        windows = []
+
+        for index, raw_window in enumerate(
+            raw_windows
+        ):
+            parsed_window = positive_int_or_none(
+                raw_window,
+                (
+                    f"bias.{component}."
+                    f"windows_games[{index}]"
+                ),
+            )
+
+            if (
+                parsed_window is None
+                or parsed_window <= 0
+            ):
+                raise ValueError(
+                    f"bias.{component}."
+                    f"windows_games[{index}] "
+                    f"must be > 0"
+                )
+
+            windows.append(
+                parsed_window
+            )
+
+        if len(
+            set(
+                windows
+            )
+        ) != len(
+            windows
+        ):
+            raise ValueError(
+                f"bias.{component}.windows_games "
+                f"must contain unique windows"
+            )
+
+        if windows != sorted(
+            windows
+        ):
+            raise ValueError(
+                f"bias.{component}.windows_games "
+                f"must be sorted ascending"
+            )
+
+        if (
+            not isinstance(
+                raw_weights,
+                list,
+            )
+            or len(
+                raw_weights
+            ) != len(
+                windows
+            )
+        ):
+            raise ValueError(
+                f"bias.{component}.weights "
+                f"must contain exactly one weight "
+                f"for each configured window"
+            )
+
+        weights = []
+
+        for index, raw_weight in enumerate(
+            raw_weights
+        ):
+            weight = to_float(
+                raw_weight
+            )
+
+            if (
+                weight is None
+                or weight < 0
+            ):
+                raise ValueError(
+                    f"bias.{component}."
+                    f"weights[{index}] "
+                    f"must be a finite number >= 0"
+                )
+
+            weights.append(
+                float(
+                    weight
+                )
+            )
+
+        weight_sum = sum(
+            weights
+        )
+
+        if weight_sum <= 0:
+            raise ValueError(
+                f"bias.{component}.weights "
+                f"must sum to > 0"
+            )
+
+        weights = [
+            weight
+            / weight_sum
+            for weight
+            in weights
+        ]
+
+        shrink_raw = rule.get(
+            "sign_conflict_shrink"
+        )
+
+        sign_conflict_shrink = to_float(
+            shrink_raw
+        )
+
+        if (
+            sign_conflict_shrink is None
+            or sign_conflict_shrink < 0
+            or sign_conflict_shrink > 1
+        ):
+            raise ValueError(
+                f"bias.{component}."
+                f"sign_conflict_shrink "
+                f"must be between 0 and 1"
+            )
+
+        if window is not None:
+            raise ValueError(
+                f"bias.{component}.window_games "
+                f"must be null/omitted for "
+                f"method='regime_aware'"
+            )
+
     value_raw = rule.get(
         "value"
     )
@@ -1377,9 +1538,39 @@ def resolve_bias_rule(
                 f"got {value_raw!r}"
             )
 
+    if (
+        method
+        in {
+            "rolling",
+            "regime_aware",
+            "none",
+        }
+        and value is not None
+    ):
+        raise ValueError(
+            f"bias.{component}.value "
+            f"must be null for "
+            f"method={method!r}"
+        )
+
+    if (
+        method == "fixed"
+        and window is not None
+    ):
+        raise ValueError(
+            f"bias.{component}.window_games "
+            f"must be null/omitted for "
+            f"method='fixed'"
+        )
+
     return {
         "method": method,
         "window_games": window,
+        "windows_games": windows,
+        "weights": weights,
+        "sign_conflict_shrink": (
+            sign_conflict_shrink
+        ),
         "value": value,
     }
 
@@ -3403,6 +3594,249 @@ def calculate_component_bias(
         return result
 
     # ------------------------------------------------------------
+    # REGIME-AWARE MULTI-WINDOW
+    # ------------------------------------------------------------
+
+    if method == "regime_aware":
+        windows = rule.get(
+            "windows_games"
+        )
+
+        weights = rule.get(
+            "weights"
+        )
+
+        shrink = rule.get(
+            "sign_conflict_shrink"
+        )
+
+        if (
+            not isinstance(
+                windows,
+                list,
+            )
+            or not windows
+        ):
+            raise ValueError(
+                f"{league_upper(league)} "
+                f"{component} regime_aware bias "
+                f"requires windows_games"
+            )
+
+        if (
+            not isinstance(
+                weights,
+                list,
+            )
+            or len(
+                weights
+            ) != len(
+                windows
+            )
+        ):
+            raise ValueError(
+                f"{league_upper(league)} "
+                f"{component} regime_aware bias "
+                f"requires one weight per window"
+            )
+
+        if shrink is None:
+            raise ValueError(
+                f"{league_upper(league)} "
+                f"{component} regime_aware bias "
+                f"requires sign_conflict_shrink"
+            )
+
+        largest_window = max(
+            int(window)
+            for window
+            in windows
+        )
+
+        if (
+            len(history)
+            < largest_window
+        ):
+            raise ValueError(
+                f"{league_upper(league)} "
+                f"{component} regime_aware bias "
+                f"requires {largest_window} "
+                f"completed games; only "
+                f"{len(history)} unique "
+                f"completed games are "
+                f"available"
+            )
+
+        window_means: dict[
+            int,
+            float,
+        ] = {}
+
+        for window in windows:
+            window_int = int(
+                window
+            )
+
+            selected = history[
+                -window_int:
+            ]
+
+            if component == "margin":
+                errors = [
+                    game.margin_error
+                    for game in selected
+                ]
+
+            elif component == "total":
+                errors = [
+                    game.total_error
+                    for game in selected
+                ]
+
+            else:
+                raise ValueError(
+                    f"Unsupported bias component: "
+                    f"{component}"
+                )
+
+            window_means[
+                window_int
+            ] = (
+                sum(
+                    errors
+                )
+                / len(
+                    errors
+                )
+            )
+
+        weighted_unshrunk = sum(
+            float(weight)
+            * window_means[
+                int(window)
+            ]
+            for (
+                window,
+                weight,
+            )
+            in zip(
+                windows,
+                weights,
+            )
+        )
+
+        positive_present = any(
+            value > 1e-12
+            for value
+            in window_means.values()
+        )
+
+        negative_present = any(
+            value < -1e-12
+            for value
+            in window_means.values()
+        )
+
+        sign_conflict = (
+            positive_present
+            and negative_present
+        )
+
+        effective_value = (
+            weighted_unshrunk
+            * float(
+                shrink
+            )
+            if sign_conflict
+            else weighted_unshrunk
+        )
+
+        largest_selected = history[
+            -largest_window:
+        ]
+
+        return {
+            "status": "ready",
+            "method": (
+                "regime_aware"
+            ),
+            "value": round(
+                effective_value,
+                3,
+            ),
+            # window_games remains populated with the largest lookback for
+            # compatibility with consumers that expect a scalar window field.
+            "window_games": (
+                largest_window
+            ),
+            "windows_games": [
+                int(
+                    window
+                )
+                for window
+                in windows
+            ],
+            "weights": [
+                round(
+                    float(
+                        weight
+                    ),
+                    6,
+                )
+                for weight
+                in weights
+            ],
+            "window_mean_residuals": {
+                str(
+                    int(
+                        window
+                    )
+                ): round(
+                    window_means[
+                        int(
+                            window
+                        )
+                    ],
+                    4,
+                )
+                for window
+                in windows
+            },
+            "unshrunk_weighted_value": round(
+                weighted_unshrunk,
+                4,
+            ),
+            "sign_conflict": (
+                sign_conflict
+            ),
+            "sign_conflict_shrink": round(
+                float(
+                    shrink
+                ),
+                6,
+            ),
+            "regime_status": (
+                "sign_conflict_shrunk"
+                if sign_conflict
+                else "aligned"
+            ),
+            "games_used": (
+                largest_window
+            ),
+            "first_game_date": (
+                largest_selected[0]
+                .game_date
+            ),
+            "last_game_date": (
+                largest_selected[-1]
+                .game_date
+            ),
+            "mean_error_definition": (
+                "projected_minus_actual"
+            ),
+        }
+
+    # ------------------------------------------------------------
     # ROLLING
     # ------------------------------------------------------------
 
@@ -3413,8 +3847,8 @@ def calculate_component_bias(
             f"{component} bias method "
             f"{method!r}; supported "
             f"methods are rolling, "
-            f"fixed, none, or "
-            f"null/missing"
+            f"regime_aware, fixed, "
+            f"none, or null/missing"
         )
 
     window = rule.get(
@@ -3524,14 +3958,42 @@ def calculate_component_safely(
         )
 
     except Exception as exc:
+        error_window = rule.get(
+            "window_games"
+        )
+
+        if (
+            error_window is None
+            and rule.get(
+                "method"
+            )
+            == "regime_aware"
+            and isinstance(
+                rule.get(
+                    "windows_games"
+                ),
+                list,
+            )
+            and rule.get(
+                "windows_games"
+            )
+        ):
+            error_window = max(
+                int(
+                    window
+                )
+                for window
+                in rule[
+                    "windows_games"
+                ]
+            )
+
         result = component_stub(
             "error",
             rule.get(
                 "method"
             ),
-            rule.get(
-                "window_games"
-            ),
+            error_window,
         )
 
         result[
@@ -3736,10 +4198,14 @@ def process_league(
     # UNSAFE HISTORICAL ROWS
     # ------------------------------------------------------------
 
-    rolling_required = any(
+    history_required = any(
         rule.get(
             "method"
-        ) == "rolling"
+        )
+        in {
+            "rolling",
+            "regime_aware",
+        }
         for rule in (
             margin_rule,
             total_rule,
@@ -3747,7 +4213,7 @@ def process_league(
     )
 
     if (
-        rolling_required
+        history_required
         and fatal_history_errors
     ):
         error_text = "; ".join(
@@ -3772,15 +4238,44 @@ def process_league(
             margin_rule.get(
                 "method"
             )
-            == "rolling"
+            in {
+                "rolling",
+                "regime_aware",
+            }
         ):
+            margin_method = margin_rule.get(
+                "method"
+            )
+
+            margin_window = margin_rule.get(
+                "window_games"
+            )
+
+            if (
+                margin_window is None
+                and margin_method
+                == "regime_aware"
+            ):
+                margin_windows = (
+                    margin_rule.get(
+                        "windows_games"
+                    )
+                    or []
+                )
+
+                margin_window = (
+                    max(
+                        margin_windows
+                    )
+                    if margin_windows
+                    else None
+                )
+
             margin = {
                 **component_stub(
                     "error",
-                    "rolling",
-                    margin_rule.get(
-                        "window_games"
-                    ),
+                    margin_method,
+                    margin_window,
                 ),
                 "error": (
                     "Unsafe historical "
@@ -3804,15 +4299,44 @@ def process_league(
             total_rule.get(
                 "method"
             )
-            == "rolling"
+            in {
+                "rolling",
+                "regime_aware",
+            }
         ):
+            total_method = total_rule.get(
+                "method"
+            )
+
+            total_window = total_rule.get(
+                "window_games"
+            )
+
+            if (
+                total_window is None
+                and total_method
+                == "regime_aware"
+            ):
+                total_windows = (
+                    total_rule.get(
+                        "windows_games"
+                    )
+                    or []
+                )
+
+                total_window = (
+                    max(
+                        total_windows
+                    )
+                    if total_windows
+                    else None
+                )
+
             total = {
                 **component_stub(
                     "error",
-                    "rolling",
-                    total_rule.get(
-                        "window_games"
-                    ),
+                    total_method,
+                    total_window,
                 ),
                 "error": (
                     "Unsafe historical "
