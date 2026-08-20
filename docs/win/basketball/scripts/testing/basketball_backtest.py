@@ -161,6 +161,50 @@ def calibration_cfg(league_cfg: dict, market: str, side: str) -> dict:
     return cfg
 
 
+def complementary_calibration_cfg(
+    league_cfg: dict,
+    market: str,
+    first_side: str,
+    second_side: str,
+) -> dict:
+    market_cfg = ((league_cfg.get("calibration") or {}).get(market) or {})
+    if not isinstance(market_cfg, dict):
+        raise ValueError(f"calibration.{market} must be a mapping")
+
+    canonical_side = str(
+        market_cfg.get("canonical_side", first_side)
+    ).strip().lower()
+
+    if canonical_side not in {first_side, second_side}:
+        raise ValueError(
+            f"calibration.{market}.canonical_side must be "
+            f"{first_side!r} or {second_side!r}"
+        )
+
+    cfg = market_cfg.get(canonical_side) or {"method": "none"}
+    if isinstance(cfg, str):
+        cfg = {"method": cfg}
+    if not isinstance(cfg, dict):
+        raise ValueError(
+            f"calibration.{market}.{canonical_side} must be a mapping"
+        )
+
+    opposite_side = second_side if canonical_side == first_side else first_side
+    opposite_cfg = market_cfg.get(opposite_side)
+    if opposite_cfg not in (None, {}, "none", "raw"):
+        if isinstance(opposite_cfg, dict):
+            opposite_method = str(opposite_cfg.get("method", "none")).strip().lower()
+            if opposite_method not in {"none", "raw", ""}:
+                raise ValueError(
+                    f"calibration.{market}.{opposite_side} must not define an "
+                    "independent calibration when complementary calibration is enabled"
+                )
+
+    return {
+        "canonical_side": canonical_side,
+        "config": cfg,
+    }
+
 def build_league_settings(model_cfg: dict) -> dict:
     leagues_cfg = ensure_mapping(model_cfg.get("leagues"), "model_config.leagues")
     settings = {}
@@ -183,13 +227,25 @@ def build_league_settings(model_cfg: dict) -> dict:
             "SPREAD_STD": require_number(spread_std_cfg.get("value"), f"{league}.std.spread.value"),
             "TOTAL_STD": require_number(total_std_cfg.get("value"), f"{league}.std.total.value"),
             "CALIBRATION": {
-                "moneyline": {"home": calibration_cfg(league_cfg, "moneyline", "home"), "away": calibration_cfg(league_cfg, "moneyline", "away")},
-                "spread": {"home": calibration_cfg(league_cfg, "spread", "home"), "away": calibration_cfg(league_cfg, "spread", "away")},
-                "total": {"over": calibration_cfg(league_cfg, "total", "over"), "under": calibration_cfg(league_cfg, "total", "under")},
+                "moneyline": {
+                    "home": calibration_cfg(league_cfg, "moneyline", "home"),
+                    "away": calibration_cfg(league_cfg, "moneyline", "away"),
+                },
+                "spread": complementary_calibration_cfg(
+                    league_cfg,
+                    "spread",
+                    "home",
+                    "away",
+                ),
+                "total": complementary_calibration_cfg(
+                    league_cfg,
+                    "total",
+                    "over",
+                    "under",
+                ),
             },
         }
     return settings
-
 
 def apply_calibration(p: Any, cfg: dict) -> float | str:
     if p is None or pd.isna(p):
@@ -216,7 +272,32 @@ def apply_calibration(p: Any, cfg: dict) -> float | str:
     raise ValueError(f"Unsupported calibration method: {method!r}")
 
 
-# ---------------- ODDS / PROBABILITY ----------------
+def apply_complementary_calibration(
+    raw_first: Any,
+    raw_second: Any,
+    calibration: dict,
+    first_side: str,
+    second_side: str,
+) -> tuple[float | str, float | str]:
+    canonical_side = str(calibration["canonical_side"]).strip().lower()
+    raw_canonical = raw_first if canonical_side == first_side else raw_second
+    calibrated = apply_calibration(raw_canonical, calibration["config"])
+
+    if calibrated == "" or pd.isna(calibrated):
+        return "", ""
+
+    p_canonical = clamp_probability(float(calibrated))
+    p_opposite = 1.0 - p_canonical
+
+    if canonical_side == first_side:
+        return p_canonical, p_opposite
+    if canonical_side == second_side:
+        return p_opposite, p_canonical
+
+    raise ValueError(
+        f"Unsupported canonical side {canonical_side!r}; "
+        f"expected {first_side!r} or {second_side!r}"
+    )
 
 def american_to_decimal(odds: Any) -> float | str:
     if odds is None or pd.isna(odds) or str(odds).strip() == "":
@@ -325,16 +406,39 @@ def process_total_juice(df: pd.DataFrame, settings: dict) -> pd.DataFrame:
     edge, std = settings["TOTAL_EDGE"], settings["TOTAL_STD"]
     cal = settings["CALIBRATION"]["total"]
     vals = {k: [] for k in ["over_model_prob", "under_model_prob", "fair_over", "fair_under", "acceptable_over", "acceptable_under"]}
+
     for _, row in out.iterrows():
         line, mean = fv(row.get("total")), fv(row.get("total_projected_points"))
         if line is None or mean is None:
             for k in vals:
                 vals[k].append("")
             continue
+
         raw_under = clamp_probability(norm.cdf((line - mean) / std))
         raw_over = 1.0 - raw_under
-        p_over = float(apply_calibration(raw_over, cal["over"]))
-        p_under = float(apply_calibration(raw_under, cal["under"]))
+
+        p_over, p_under = apply_complementary_calibration(
+            raw_over,
+            raw_under,
+            cal,
+            "over",
+            "under",
+        )
+
+        if p_over == "" or p_under == "":
+            for k in vals:
+                vals[k].append("")
+            continue
+
+        p_over = float(p_over)
+        p_under = float(p_under)
+
+        if not math.isclose(p_over + p_under, 1.0, abs_tol=1e-12):
+            raise ValueError(
+                f"Total probabilities are not complementary: "
+                f"over={p_over}, under={p_under}"
+            )
+
         fo, fu = 1.0 / p_over, 1.0 / p_under
         vals["over_model_prob"].append(p_over)
         vals["under_model_prob"].append(p_under)
@@ -342,31 +446,64 @@ def process_total_juice(df: pd.DataFrame, settings: dict) -> pd.DataFrame:
         vals["fair_under"].append(fu)
         vals["acceptable_over"].append(fo * (1.0 + edge))
         vals["acceptable_under"].append(fu * (1.0 + edge))
+
     for k, v in vals.items():
         out[k] = v
+
     out["over_implied_prob"] = out["dk_total_over_decimal"].apply(safe_implied_prob)
     out["under_implied_prob"] = out["dk_total_under_decimal"].apply(safe_implied_prob)
-    pairs = out.apply(lambda r: devig_pair(r["over_implied_prob"], r["under_implied_prob"]), axis=1)
+    pairs = out.apply(
+        lambda r: devig_pair(r["over_implied_prob"], r["under_implied_prob"]),
+        axis=1,
+    )
     out["over_market_prob"] = pairs.apply(lambda x: x[0])
     out["under_market_prob"] = pairs.apply(lambda x: x[1])
     return out
-
 
 def process_spread_juice(df: pd.DataFrame, settings: dict) -> pd.DataFrame:
     out = df.copy()
     edge, std = settings["SPREAD_EDGE"], settings["SPREAD_STD"]
     cal = settings["CALIBRATION"]["spread"]
     vals = {k: [] for k in ["home_spread_model_prob", "away_spread_model_prob", "fair_home_spread_decimal", "fair_away_spread_decimal", "home_acceptable_spread_decimal", "away_acceptable_spread_decimal"]}
+
     for _, row in out.iterrows():
-        hp, ap, line = fv(row.get("home_projected_points")), fv(row.get("away_projected_points")), fv(row.get("home_spread"))
+        hp, ap, line = (
+            fv(row.get("home_projected_points")),
+            fv(row.get("away_projected_points")),
+            fv(row.get("home_spread")),
+        )
         if hp is None or ap is None or line is None:
             for k in vals:
                 vals[k].append("")
             continue
-        raw_home = clamp_probability(1.0 - norm.cdf(-line, loc=hp - ap, scale=std))
+
+        raw_home = clamp_probability(
+            1.0 - norm.cdf(-line, loc=hp - ap, scale=std)
+        )
         raw_away = 1.0 - raw_home
-        p_home = float(apply_calibration(raw_home, cal["home"]))
-        p_away = float(apply_calibration(raw_away, cal["away"]))
+
+        p_home, p_away = apply_complementary_calibration(
+            raw_home,
+            raw_away,
+            cal,
+            "home",
+            "away",
+        )
+
+        if p_home == "" or p_away == "":
+            for k in vals:
+                vals[k].append("")
+            continue
+
+        p_home = float(p_home)
+        p_away = float(p_away)
+
+        if not math.isclose(p_home + p_away, 1.0, abs_tol=1e-12):
+            raise ValueError(
+                f"Spread probabilities are not complementary: "
+                f"home={p_home}, away={p_away}"
+            )
+
         fh, fa = 1.0 / p_home, 1.0 / p_away
         vals["home_spread_model_prob"].append(p_home)
         vals["away_spread_model_prob"].append(p_away)
@@ -374,19 +511,21 @@ def process_spread_juice(df: pd.DataFrame, settings: dict) -> pd.DataFrame:
         vals["fair_away_spread_decimal"].append(fa)
         vals["home_acceptable_spread_decimal"].append(fh * (1.0 + edge))
         vals["away_acceptable_spread_decimal"].append(fa * (1.0 + edge))
+
     for k, v in vals.items():
         out[k] = v
+
     out["home_acceptable_spread_american"] = out["home_acceptable_spread_decimal"].apply(to_american)
     out["away_acceptable_spread_american"] = out["away_acceptable_spread_decimal"].apply(to_american)
     out["home_spread_implied_prob"] = out["home_dk_spread_decimal"].apply(safe_implied_prob)
     out["away_spread_implied_prob"] = out["away_dk_spread_decimal"].apply(safe_implied_prob)
-    pairs = out.apply(lambda r: devig_pair(r["home_spread_implied_prob"], r["away_spread_implied_prob"]), axis=1)
+    pairs = out.apply(
+        lambda r: devig_pair(r["home_spread_implied_prob"], r["away_spread_implied_prob"]),
+        axis=1,
+    )
     out["home_spread_market_prob"] = pairs.apply(lambda x: x[0])
     out["away_spread_market_prob"] = pairs.apply(lambda x: x[1])
     return out
-
-
-# ---------------- EV / KELLY ----------------
 
 def compute_ev(model_prob: Any, book_decimal: Any) -> float | None:
     p, d = fv(model_prob), fv(book_decimal)
