@@ -81,6 +81,54 @@ def _calibration_cfg(league_cfg: dict, market: str, side: str) -> dict:
     return cfg
 
 
+def _complementary_calibration_cfg(
+    league_cfg: dict,
+    market: str,
+    first_side: str,
+    second_side: str,
+) -> dict:
+    """
+    Load a binary-market calibration where exactly one side is calibrated and
+    the opposite side is derived as 1 - calibrated_probability.
+    """
+    market_cfg = ((league_cfg.get("calibration") or {}).get(market) or {})
+    if not isinstance(market_cfg, dict):
+        raise ValueError(f"calibration.{market} must be a mapping")
+
+    canonical_side = str(
+        market_cfg.get("canonical_side", first_side)
+    ).strip().lower()
+
+    if canonical_side not in {first_side, second_side}:
+        raise ValueError(
+            f"calibration.{market}.canonical_side must be "
+            f"{first_side!r} or {second_side!r}"
+        )
+
+    cfg = market_cfg.get(canonical_side) or {"method": "none"}
+    if isinstance(cfg, str):
+        cfg = {"method": cfg}
+    if not isinstance(cfg, dict):
+        raise ValueError(
+            f"calibration.{market}.{canonical_side} must be a mapping"
+        )
+
+    opposite_side = second_side if canonical_side == first_side else first_side
+    opposite_cfg = market_cfg.get(opposite_side)
+    if opposite_cfg not in (None, {}, "none", "raw"):
+        if isinstance(opposite_cfg, dict):
+            opposite_method = str(opposite_cfg.get("method", "none")).strip().lower()
+            if opposite_method not in {"none", "raw", ""}:
+                raise ValueError(
+                    f"calibration.{market}.{opposite_side} must not define an "
+                    "independent calibration when complementary calibration is enabled"
+                )
+
+    return {
+        "canonical_side": canonical_side,
+        "config": cfg,
+    }
+
 def build_league_settings(model_cfg: dict) -> dict:
     settings = {}
     for league in LEAGUES:
@@ -114,14 +162,18 @@ def build_league_settings(model_cfg: dict) -> dict:
                     "home": _calibration_cfg(league_cfg, "moneyline", "home"),
                     "away": _calibration_cfg(league_cfg, "moneyline", "away"),
                 },
-                "spread": {
-                    "home": _calibration_cfg(league_cfg, "spread", "home"),
-                    "away": _calibration_cfg(league_cfg, "spread", "away"),
-                },
-                "total": {
-                    "over": _calibration_cfg(league_cfg, "total", "over"),
-                    "under": _calibration_cfg(league_cfg, "total", "under"),
-                },
+                "spread": _complementary_calibration_cfg(
+                    league_cfg,
+                    "spread",
+                    "home",
+                    "away",
+                ),
+                "total": _complementary_calibration_cfg(
+                    league_cfg,
+                    "total",
+                    "over",
+                    "under",
+                ),
             },
         }
     return settings
@@ -195,6 +247,44 @@ def apply_calibration(p, cfg: dict):
 
     raise ValueError(f"Unsupported calibration method: {method!r}")
 
+
+def apply_complementary_calibration(
+    raw_first,
+    raw_second,
+    calibration: dict,
+    first_side: str,
+    second_side: str,
+) -> tuple[float | str, float | str]:
+    """
+    Calibrate exactly one side of a binary market and derive the other side
+    as its mathematical complement.
+    """
+    canonical_side = str(calibration["canonical_side"]).strip().lower()
+    cfg = calibration["config"]
+
+    raw_canonical = raw_first if canonical_side == first_side else raw_second
+    calibrated = apply_calibration(raw_canonical, cfg)
+
+    if calibrated == "" or pd.isna(calibrated):
+        return "", ""
+
+    try:
+        p_canonical = clamp_probability(float(calibrated))
+    except (TypeError, ValueError):
+        return "", ""
+
+    p_opposite = 1.0 - p_canonical
+
+    if canonical_side == first_side:
+        return p_canonical, p_opposite
+
+    if canonical_side == second_side:
+        return p_opposite, p_canonical
+
+    raise ValueError(
+        f"Unsupported canonical side {canonical_side!r}; "
+        f"expected {first_side!r} or {second_side!r}"
+    )
 
 def safe_implied_prob(decimal_value):
     """Convert a decimal odds value to implied probability. Returns '' if invalid."""
@@ -310,21 +400,21 @@ def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: 
 
 def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
     TOTAL_EDGE = settings["TOTAL_EDGE"]
-    TOTAL_STD  = settings["TOTAL_STD"]
+    TOTAL_STD = settings["TOTAL_STD"]
     cal = settings["CALIBRATION"]["total"]
 
     total_df = df.copy()
 
-    over_model_prob  = []
+    over_model_prob = []
     under_model_prob = []
-    fair_over        = []
-    fair_under       = []
-    acc_over         = []
-    acc_under        = []
+    fair_over = []
+    fair_under = []
+    acc_over = []
+    acc_under = []
 
     for _, row in total_df.iterrows():
         try:
-            T    = float(row["total"])
+            T = float(row["total"])
             mean = float(row["total_projected_points"])
         except (ValueError, TypeError):
             over_model_prob.append("")
@@ -356,17 +446,17 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             continue
 
         raw_under = clamp_probability(norm.cdf(z))
-        raw_over = 1 - raw_under
+        raw_over = 1.0 - raw_under
 
-        p_over = apply_calibration(raw_over, cal["over"])
-        p_under = apply_calibration(raw_under, cal["under"])
+        p_over, p_under = apply_complementary_calibration(
+            raw_over,
+            raw_under,
+            cal,
+            "over",
+            "under",
+        )
 
-        if (
-            p_over == ""
-            or p_under == ""
-            or pd.isna(p_over)
-            or pd.isna(p_under)
-        ):
+        if p_over == "" or p_under == "":
             over_model_prob.append("")
             under_model_prob.append("")
             fair_over.append("")
@@ -375,47 +465,36 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_under.append("")
             continue
 
-        try:
-            p_over = float(p_over)
-            p_under = float(p_under)
-        except (ValueError, TypeError):
-            over_model_prob.append("")
-            under_model_prob.append("")
-            fair_over.append("")
-            fair_under.append("")
-            acc_over.append("")
-            acc_under.append("")
-            continue
+        p_over = float(p_over)
+        p_under = float(p_under)
 
         if (
             not math.isfinite(p_over)
             or not math.isfinite(p_under)
             or p_over <= 0
             or p_under <= 0
+            or not math.isclose(p_over + p_under, 1.0, abs_tol=1e-12)
         ):
-            over_model_prob.append("")
-            under_model_prob.append("")
-            fair_over.append("")
-            fair_under.append("")
-            acc_over.append("")
-            acc_under.append("")
-            continue
+            raise ValueError(
+                f"{league_upper} total probabilities are not complementary: "
+                f"over={p_over}, under={p_under}"
+            )
 
         over_model_prob.append(p_over)
         under_model_prob.append(p_under)
 
-        fair_over_dec  = 1 / p_over
+        fair_over_dec = 1 / p_over
         fair_under_dec = 1 / p_under
         fair_over.append(fair_over_dec)
         fair_under.append(fair_under_dec)
         acc_over.append(fair_over_dec * (1 + TOTAL_EDGE))
         acc_under.append(fair_under_dec * (1 + TOTAL_EDGE))
 
-    total_df["over_model_prob"]  = over_model_prob
+    total_df["over_model_prob"] = over_model_prob
     total_df["under_model_prob"] = under_model_prob
-    total_df["fair_over"]        = fair_over
-    total_df["fair_under"]       = fair_under
-    total_df["acceptable_over"]  = acc_over
+    total_df["fair_over"] = fair_over
+    total_df["fair_under"] = fair_under
+    total_df["acceptable_over"] = acc_over
     total_df["acceptable_under"] = acc_under
 
     total_df["over_implied_prob"] = total_df[
@@ -436,24 +515,23 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
     total_df.to_csv(out_path, index=False)
     return out_path, len(total_df)
 
-
 # ============================================================
 # PROCESS SPREAD
 # ============================================================
 
 def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
     SPREAD_EDGE = settings["SPREAD_EDGE"]
-    SPREAD_STD  = settings["SPREAD_STD"]
+    SPREAD_STD = settings["SPREAD_STD"]
     cal = settings["CALIBRATION"]["spread"]
 
     spread_df = df.copy()
 
     home_model_prob = []
     away_model_prob = []
-    fair_home       = []
-    fair_away       = []
-    acc_home        = []
-    acc_away        = []
+    fair_home = []
+    fair_away = []
+    acc_home = []
+    acc_away = []
 
     for _, row in spread_df.iterrows():
         try:
@@ -501,17 +579,17 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             continue
 
         raw_home = clamp_probability(raw_home)
-        raw_away = 1 - raw_home
+        raw_away = 1.0 - raw_home
 
-        p_home = apply_calibration(raw_home, cal["home"])
-        p_away = apply_calibration(raw_away, cal["away"])
+        p_home, p_away = apply_complementary_calibration(
+            raw_home,
+            raw_away,
+            cal,
+            "home",
+            "away",
+        )
 
-        if (
-            p_home == ""
-            or p_away == ""
-            or pd.isna(p_home)
-            or pd.isna(p_away)
-        ):
+        if p_home == "" or p_away == "":
             home_model_prob.append("")
             away_model_prob.append("")
             fair_home.append("")
@@ -520,31 +598,20 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_away.append("")
             continue
 
-        try:
-            p_home = float(p_home)
-            p_away = float(p_away)
-        except (ValueError, TypeError):
-            home_model_prob.append("")
-            away_model_prob.append("")
-            fair_home.append("")
-            fair_away.append("")
-            acc_home.append("")
-            acc_away.append("")
-            continue
+        p_home = float(p_home)
+        p_away = float(p_away)
 
         if (
             not math.isfinite(p_home)
             or not math.isfinite(p_away)
             or p_home <= 0
             or p_away <= 0
+            or not math.isclose(p_home + p_away, 1.0, abs_tol=1e-12)
         ):
-            home_model_prob.append("")
-            away_model_prob.append("")
-            fair_home.append("")
-            fair_away.append("")
-            acc_home.append("")
-            acc_away.append("")
-            continue
+            raise ValueError(
+                f"{league_upper} spread probabilities are not complementary: "
+                f"home={p_home}, away={p_away}"
+            )
 
         home_model_prob.append(p_home)
         away_model_prob.append(p_away)
@@ -589,7 +656,6 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
     out_path = OUTPUT_DIR / league / "spread" / f"{date}_{league_upper}_spread.csv"
     spread_df.to_csv(out_path, index=False)
     return out_path, len(spread_df)
-
 
 # ============================================================
 # MAIN

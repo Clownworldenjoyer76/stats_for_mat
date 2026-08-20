@@ -34,7 +34,9 @@ One self-contained historical test for NBA / WNBA / NCAAM that evaluates:
    - Platt scaling (intercept + slope)
    - beta calibration
    - isotonic regression
-   - tested separately for HOME/AWAY ML, HOME/AWAY spread, OVER/UNDER
+   - moneyline HOME/AWAY may be evaluated separately
+   - spread calibrates HOME and derives AWAY = 1 - HOME
+   - total calibrates OVER and derives UNDER = 1 - OVER
 
 5) SPREAD
    - HOME vs AWAY separately
@@ -71,6 +73,7 @@ Important pipeline behavior mirrored here
 -----------------------------------------
 - Existing bias is reversed first when bias_applied == 1, using the exact cleaner equations.
 - Spread/total probability uses a normal distribution.
+- Spread/total calibration is complementary: calibrate HOME/OVER only and derive the opposite side as 1 - p.
 - EDGE is expected return, not model-vs-market probability difference.
 - Side-selection behavior is read from docs/win/basketball/config/markets.yaml.
 - all_qualifying keeps every qualifying side.
@@ -1131,6 +1134,8 @@ def calibrator_formula(model: dict[str, Any]) -> str:
     method = model.get("method", "raw")
     if method == "raw":
         return "NO ADJUSTMENT"
+    if method == "complement":
+        return "p_derived = 1 - p_canonical"
     if method in {"intercept_only", "temperature", "platt"}:
         return (
             f"p_adj = logistic({model.get('intercept', 0):.8f} + "
@@ -1156,6 +1161,9 @@ def market_sides(market: str) -> tuple[str, str]:
         return "HOME", "AWAY"
     return "OVER", "UNDER"
 
+
+def uses_complementary_calibration(market: str) -> bool:
+    return market in {"spread", "total"}
 
 def side_outcome_columns(market: str) -> tuple[str, str]:
     if market == "moneyline":
@@ -1225,7 +1233,6 @@ def build_oos_prediction_cache(
     biases = np.full(n, np.nan)
     fold_params = []
 
-    # Map original dev index -> OOS position.
     oos_idx = all_oos_indices(folds)
     pos_map = {int(idx): pos for pos, idx in enumerate(oos_idx)}
 
@@ -1244,14 +1251,33 @@ def build_oos_prediction_cache(
         means[positions] = test_base["mean"]
         sigmas[positions] = test_base["sigma"]
         bins[positions] = test_base["range_bin"]
+
         if market != "moneyline":
             biases[positions] = float(model["bias"])
 
         for method in CALIBRATION_METHODS:
-            cal1 = fit_calibrator(train_base["side1_prob"], train[y1_col].to_numpy(float), method)
-            cal2 = fit_calibrator(train_base["side2_prob"], train[y2_col].to_numpy(float), method)
-            side1_methods[method][positions] = apply_calibrator(cal1, test_base["side1_prob"])
-            side2_methods[method][positions] = apply_calibrator(cal2, test_base["side2_prob"])
+            cal1 = fit_calibrator(
+                train_base["side1_prob"],
+                train[y1_col].to_numpy(float),
+                method,
+            )
+            p1 = apply_calibrator(cal1, test_base["side1_prob"])
+            side1_methods[method][positions] = p1
+
+            if uses_complementary_calibration(market):
+                # HOME is canonical for spread; OVER is canonical for total.
+                # The opposite side is never independently calibrated.
+                side2_methods[method][positions] = 1.0 - p1
+            else:
+                cal2 = fit_calibrator(
+                    train_base["side2_prob"],
+                    train[y2_col].to_numpy(float),
+                    method,
+                )
+                side2_methods[method][positions] = apply_calibrator(
+                    cal2,
+                    test_base["side2_prob"],
+                )
 
         if market == "moneyline":
             fold_params.append({
@@ -1265,6 +1291,7 @@ def build_oos_prediction_cache(
                 "global_sigma": np.nan,
                 "std_edges": "",
                 "std_sigmas": "",
+                "calibration_architecture": "independent_sides",
             })
         else:
             sm: StdModel = model["std_model"]
@@ -1279,6 +1306,7 @@ def build_oos_prediction_cache(
                 "global_sigma": sm.global_sigma,
                 "std_edges": json_compact(sm.edges),
                 "std_sigmas": json_compact(sm.sigmas),
+                "calibration_architecture": "canonical_side_plus_complement",
             })
 
     return {
@@ -1601,58 +1629,86 @@ def calibration_acceptance_for_cache(
     cache: dict[str, Any],
 ) -> pd.DataFrame:
     """
-    A non-raw calibration method is allowed into JOINT optimization only if it:
-      1) improves pooled OOS log loss vs raw,
-      2) improves pooled OOS Brier vs raw, and
-      3) beats raw in at least MIN_CALIBRATION_FOLD_WIN_RATE of chronological folds
-         on BOTH scores.
+    Admit calibration into joint optimization only when it repeatedly improves
+    future-game probability accuracy.
 
-    This implements the user's explicit requirement that calibration must show
-    repeated future-game improvement, not merely produce profitable historical bets.
+    Spread and total use one canonical calibrated side:
+      spread HOME -> AWAY = 1 - HOME
+      total OVER  -> UNDER = 1 - OVER
     """
     s1, s2 = market_sides(market)
     y1_col, y2_col = side_outcome_columns(market)
-    rows = []
-    for side, ycol, pmap in [
-        (s1, y1_col, cache["side1"]),
-        (s2, y2_col, cache["side2"]),
-    ]:
-        y = meta[ycol].to_numpy(float)
-        raw_p = pmap["raw"]
-        raw_ll = binary_log_loss(raw_p, y)
-        raw_br = brier_score(raw_p, y)
+
+    if uses_complementary_calibration(market):
+        y1 = meta[y1_col].to_numpy(float)
+        y2 = meta[y2_col].to_numpy(float)
+        raw_p1 = cache["side1"]["raw"]
+        raw_p2 = cache["side2"]["raw"]
+        raw_ll, raw_br = probability_pair_score(
+            meta,
+            market,
+            raw_p1,
+            raw_p2,
+        )
+
+        rows = []
         for method in CALIBRATION_METHODS:
-            p = pmap[method]
-            ll = binary_log_loss(p, y)
-            br = brier_score(p, y)
+            p1 = cache["side1"][method]
+            p2 = cache["side2"][method]
+            ll, br = probability_pair_score(meta, market, p1, p2)
+
             folds = 0
             wins_ll = 0
             wins_br = 0
-            for fold_id, idxs in meta.groupby("fold_id").groups.items():
+
+            for _, idxs in meta.groupby("fold_id").groups.items():
                 idx = np.asarray(list(idxs), dtype=int)
-                mll = binary_log_loss(p[idx], y[idx])
-                rll = binary_log_loss(raw_p[idx], y[idx])
-                mbr = brier_score(p[idx], y[idx])
-                rbr = brier_score(raw_p[idx], y[idx])
-                if np.isfinite(mll) and np.isfinite(rll) and np.isfinite(mbr) and np.isfinite(rbr):
+
+                mll = float(np.nanmean([
+                    binary_log_loss(p1[idx], y1[idx]),
+                    binary_log_loss(p2[idx], y2[idx]),
+                ]))
+                rll = float(np.nanmean([
+                    binary_log_loss(raw_p1[idx], y1[idx]),
+                    binary_log_loss(raw_p2[idx], y2[idx]),
+                ]))
+                mbr = float(np.nanmean([
+                    brier_score(p1[idx], y1[idx]),
+                    brier_score(p2[idx], y2[idx]),
+                ]))
+                rbr = float(np.nanmean([
+                    brier_score(raw_p1[idx], y1[idx]),
+                    brier_score(raw_p2[idx], y2[idx]),
+                ]))
+
+                if (
+                    np.isfinite(mll)
+                    and np.isfinite(rll)
+                    and np.isfinite(mbr)
+                    and np.isfinite(rbr)
+                ):
                     folds += 1
                     wins_ll += int(mll < rll)
                     wins_br += int(mbr < rbr)
+
             win_ll_rate = wins_ll / folds if folds else np.nan
             win_br_rate = wins_br / folds if folds else np.nan
             allowed = (
                 method == "raw"
                 or (
-                    np.isfinite(ll) and np.isfinite(br)
+                    np.isfinite(ll)
+                    and np.isfinite(br)
                     and ll < raw_ll
                     and br < raw_br
                     and win_ll_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
                     and win_br_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
                 )
             )
+
             rows.append({
                 "market": market,
-                "side": side,
+                "side": s1,
+                "calibration_role": "canonical",
                 "method": method,
                 "oos_log_loss": ll,
                 "raw_oos_log_loss": raw_ll,
@@ -1662,8 +1718,81 @@ def calibration_acceptance_for_cache(
                 "fold_win_rate_brier": win_br_rate,
                 "allowed_in_joint_optimization": bool(allowed),
             })
-    return pd.DataFrame(rows)
+            rows.append({
+                "market": market,
+                "side": s2,
+                "calibration_role": "derived_complement",
+                "method": "complement",
+                "canonical_method": method,
+                "oos_log_loss": ll,
+                "raw_oos_log_loss": raw_ll,
+                "oos_brier": br,
+                "raw_oos_brier": raw_br,
+                "fold_win_rate_log_loss": win_ll_rate,
+                "fold_win_rate_brier": win_br_rate,
+                "allowed_in_joint_optimization": bool(allowed),
+            })
 
+        return pd.DataFrame(rows)
+
+    rows = []
+    for side, ycol, pmap in [
+        (s1, y1_col, cache["side1"]),
+        (s2, y2_col, cache["side2"]),
+    ]:
+        y = meta[ycol].to_numpy(float)
+        raw_p = pmap["raw"]
+        raw_ll = binary_log_loss(raw_p, y)
+        raw_br = brier_score(raw_p, y)
+
+        for method in CALIBRATION_METHODS:
+            p = pmap[method]
+            ll = binary_log_loss(p, y)
+            br = brier_score(p, y)
+            folds = 0
+            wins_ll = 0
+            wins_br = 0
+
+            for _, idxs in meta.groupby("fold_id").groups.items():
+                idx = np.asarray(list(idxs), dtype=int)
+                mll = binary_log_loss(p[idx], y[idx])
+                rll = binary_log_loss(raw_p[idx], y[idx])
+                mbr = brier_score(p[idx], y[idx])
+                rbr = brier_score(raw_p[idx], y[idx])
+                if np.isfinite(mll) and np.isfinite(rll) and np.isfinite(mbr) and np.isfinite(rbr):
+                    folds += 1
+                    wins_ll += int(mll < rll)
+                    wins_br += int(mbr < rbr)
+
+            win_ll_rate = wins_ll / folds if folds else np.nan
+            win_br_rate = wins_br / folds if folds else np.nan
+            allowed = (
+                method == "raw"
+                or (
+                    np.isfinite(ll)
+                    and np.isfinite(br)
+                    and ll < raw_ll
+                    and br < raw_br
+                    and win_ll_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
+                    and win_br_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
+                )
+            )
+
+            rows.append({
+                "market": market,
+                "side": side,
+                "calibration_role": "independent",
+                "method": method,
+                "oos_log_loss": ll,
+                "raw_oos_log_loss": raw_ll,
+                "oos_brier": br,
+                "raw_oos_brier": raw_br,
+                "fold_win_rate_log_loss": win_ll_rate,
+                "fold_win_rate_brier": win_br_rate,
+                "allowed_in_joint_optimization": bool(allowed),
+            })
+
+    return pd.DataFrame(rows)
 
 def oos_std_acceptance_for_caches(
     meta: pd.DataFrame,
@@ -1733,18 +1862,24 @@ def evaluate_joint_configs_for_market(
     files: list[Path] = []
     caches: dict[str, dict[str, Any]] = {}
 
-    base_configs: list[tuple[str, str]]
     if market == "moneyline":
         base_configs = [("NA", "NA")]
     else:
         base_configs = [(b, s) for b in bias_strategies for s in std_modes]
 
-    progress(f"  {market}: building OOS probability cache for {len(base_configs)} base configurations...")
+    progress(
+        f"  {market}: building OOS probability cache "
+        f"for {len(base_configs)} base configurations..."
+    )
+
     fold_param_frames = []
     for bias_strategy, std_mode in base_configs:
         key = f"{bias_strategy}|{std_mode}"
         cache = build_oos_prediction_cache(
-            dev, folds, meta, market,
+            dev,
+            folds,
+            meta,
+            market,
             bias_strategy="none" if market == "moneyline" else bias_strategy,
             std_mode="fixed" if market == "moneyline" else std_mode,
         )
@@ -1752,22 +1887,30 @@ def evaluate_joint_configs_for_market(
         fold_param_frames.append(cache["fold_params"])
 
     fold_params_all = pd.concat(fold_param_frames, ignore_index=True).drop_duplicates()
-    files.append(save_csv(fold_params_all, output_dir / f"{prefix}_04_{market}_base_fold_parameters.csv"))
+    files.append(
+        save_csv(
+            fold_params_all,
+            output_dir / f"{prefix}_04_{market}_base_fold_parameters.csv",
+        )
+    )
 
-    # Strict OOS eligibility gates before joint betting optimization.
-    # Calibration must repeatedly improve probability accuracy. Adaptive STD
-    # must materially improve future residual fit versus fixed STD for the same
-    # bias strategy. This prevents profit-only overfitting from smuggling a bad
-    # probability correction into the final configuration.
     std_accept = oos_std_acceptance_for_caches(meta, market, caches)
-    files.append(save_csv(std_accept, output_dir / f"{prefix}_04_{market}_std_joint_acceptance.csv"))
+    files.append(
+        save_csv(
+            std_accept,
+            output_dir / f"{prefix}_04_{market}_std_joint_acceptance.csv",
+        )
+    )
     std_allowed = {
-        (str(r["bias_strategy"]), str(r["std_mode"])): bool(r["allowed_in_joint_optimization"])
+        (str(r["bias_strategy"]), str(r["std_mode"])): bool(
+            r["allowed_in_joint_optimization"]
+        )
         for _, r in std_accept.iterrows()
     }
 
     cal_accept_frames = []
     allowed_cal: dict[tuple[str, str], dict[str, list[str]]] = {}
+
     for bias_strategy, std_mode in base_configs:
         key = f"{bias_strategy}|{std_mode}"
         cache = caches[key]
@@ -1776,82 +1919,168 @@ def evaluate_joint_configs_for_market(
         ca["std_mode"] = std_mode
         ca["cache_key"] = key
         cal_accept_frames.append(ca)
-        side_map = {}
-        for side in market_sides(market):
-            methods = ca[(ca["side"] == side) & (ca["allowed_in_joint_optimization"])]["method"].tolist()
+
+        if uses_complementary_calibration(market):
+            canonical_side = market_sides(market)[0]
+            methods = ca[
+                (ca["side"] == canonical_side)
+                & (ca["calibration_role"] == "canonical")
+                & (ca["allowed_in_joint_optimization"])
+            ]["method"].tolist()
             if "raw" not in methods:
                 methods = ["raw"] + methods
-            side_map[side] = methods
-        allowed_cal[(bias_strategy, std_mode)] = side_map
+            allowed_cal[(bias_strategy, std_mode)] = {
+                canonical_side: methods,
+            }
+        else:
+            side_map = {}
+            for side in market_sides(market):
+                methods = ca[
+                    (ca["side"] == side)
+                    & (ca["allowed_in_joint_optimization"])
+                ]["method"].tolist()
+                if "raw" not in methods:
+                    methods = ["raw"] + methods
+                side_map[side] = methods
+            allowed_cal[(bias_strategy, std_mode)] = side_map
 
     cal_accept_all = pd.concat(cal_accept_frames, ignore_index=True)
-    files.append(save_csv(cal_accept_all, output_dir / f"{prefix}_04_{market}_calibration_joint_acceptance.csv"))
+    files.append(
+        save_csv(
+            cal_accept_all,
+            output_dir / f"{prefix}_04_{market}_calibration_joint_acceptance.csv",
+        )
+    )
 
-    n_oos = len(meta)
-    minimum_bets = min_oos_bets(n_oos)
+    minimum_bets = min_oos_bets(len(meta))
     rows = []
     side1_name, side2_name = market_sides(market)
 
-    progress(f"  {market}: evaluating OOS-approved calibration pairs + EDGE...")
+    progress(f"  {market}: evaluating OOS-approved calibration configurations + EDGE...")
+
     for bias_strategy, std_mode in base_configs:
         if not std_allowed.get((bias_strategy, std_mode), True):
             continue
+
         key = f"{bias_strategy}|{std_mode}"
         cache = caches[key]
         side_map = allowed_cal[(bias_strategy, std_mode)]
-        for cal1 in side_map[side1_name]:
-            p1 = cache["side1"][cal1]
-            for cal2 in side_map[side2_name]:
-                p2 = cache["side2"][cal2]
+
+        if uses_complementary_calibration(market):
+            for cal1 in side_map[side1_name]:
+                p1 = cache["side1"][cal1]
+                p2 = cache["side2"][cal1]
                 ll, br = probability_pair_score(meta, market, p1, p2)
                 opps = market_opportunities(meta, market, p1, p2)
                 scan = edge_scan(opps, EDGE_GRID, minimum_bets, selection_policy)
                 best = choose_edge(scan, minimum_bets)
                 rows.append({
                     "market": market,
+                    "calibration_architecture": "canonical_side_plus_complement",
                     "selection_mode": selection_policy.selection_mode,
                     "pick_preference_metric": selection_policy.preference_metric,
                     "pick_preference_direction": selection_policy.preference_direction,
                     "bias_strategy": bias_strategy,
                     "std_mode": std_mode,
                     f"calibration_{side1_name.lower()}": cal1,
-                    f"calibration_{side2_name.lower()}": cal2,
+                    f"calibration_{side2_name.lower()}": "complement",
                     "oos_probability_log_loss": ll,
                     "oos_probability_brier": br,
                     "selected_edge": float(best["edge"]),
                     "oos_bets": int(best["bets"]),
                     "oos_profit_units": float(best["profit_units"]),
                     "oos_roi": float(best["roi"]) if np.isfinite(best["roi"]) else np.nan,
-                    "positive_fold_rate": float(best["positive_fold_rate"]) if np.isfinite(best["positive_fold_rate"]) else np.nan,
+                    "positive_fold_rate": (
+                        float(best["positive_fold_rate"])
+                        if np.isfinite(best["positive_fold_rate"])
+                        else np.nan
+                    ),
                     "minimum_bets_required": minimum_bets,
                     "cache_key": key,
                 })
+        else:
+            for cal1 in side_map[side1_name]:
+                p1 = cache["side1"][cal1]
+                for cal2 in side_map[side2_name]:
+                    p2 = cache["side2"][cal2]
+                    ll, br = probability_pair_score(meta, market, p1, p2)
+                    opps = market_opportunities(meta, market, p1, p2)
+                    scan = edge_scan(opps, EDGE_GRID, minimum_bets, selection_policy)
+                    best = choose_edge(scan, minimum_bets)
+                    rows.append({
+                        "market": market,
+                        "calibration_architecture": "independent_sides",
+                        "selection_mode": selection_policy.selection_mode,
+                        "pick_preference_metric": selection_policy.preference_metric,
+                        "pick_preference_direction": selection_policy.preference_direction,
+                        "bias_strategy": bias_strategy,
+                        "std_mode": std_mode,
+                        f"calibration_{side1_name.lower()}": cal1,
+                        f"calibration_{side2_name.lower()}": cal2,
+                        "oos_probability_log_loss": ll,
+                        "oos_probability_brier": br,
+                        "selected_edge": float(best["edge"]),
+                        "oos_bets": int(best["bets"]),
+                        "oos_profit_units": float(best["profit_units"]),
+                        "oos_roi": float(best["roi"]) if np.isfinite(best["roi"]) else np.nan,
+                        "positive_fold_rate": (
+                            float(best["positive_fold_rate"])
+                            if np.isfinite(best["positive_fold_rate"])
+                            else np.nan
+                        ),
+                        "minimum_bets_required": minimum_bets,
+                        "cache_key": key,
+                    })
 
     ranking = pd.DataFrame(rows)
     if ranking.empty:
         raise RuntimeError(f"No joint configurations survived OOS gates for market={market}")
 
-    # Raw probability log-loss benchmark for sanity constraint.
-    raw_rows = ranking.copy()
-    raw_mask = (
-        raw_rows[f"calibration_{side1_name.lower()}"] == "raw"
-    ) & (
-        raw_rows[f"calibration_{side2_name.lower()}"] == "raw"
+    if uses_complementary_calibration(market):
+        raw_mask = ranking[f"calibration_{side1_name.lower()}"] == "raw"
+    else:
+        raw_mask = (
+            (ranking[f"calibration_{side1_name.lower()}"] == "raw")
+            & (ranking[f"calibration_{side2_name.lower()}"] == "raw")
+        )
+
+    raw_best_ll = (
+        float(ranking.loc[raw_mask, "oos_probability_log_loss"].min())
+        if raw_mask.any()
+        else np.nan
     )
-    raw_best_ll = float(raw_rows.loc[raw_mask, "oos_probability_log_loss"].min()) if raw_mask.any() else np.nan
+
     ranking["probability_sanity_pass"] = (
         ranking["oos_probability_log_loss"] <= raw_best_ll + 0.01
-    ) if np.isfinite(raw_best_ll) else True
+        if np.isfinite(raw_best_ll)
+        else True
+    )
     ranking["stability_pass"] = ranking["positive_fold_rate"].fillna(0) >= 0.50
     ranking["bets_pass"] = ranking["oos_bets"] >= minimum_bets
-    ranking["joint_candidate_pass"] = ranking["probability_sanity_pass"] & ranking["bets_pass"] & ranking["stability_pass"]
+    ranking["joint_candidate_pass"] = (
+        ranking["probability_sanity_pass"]
+        & ranking["bets_pass"]
+        & ranking["stability_pass"]
+    )
 
     ranking = ranking.sort_values(
-        ["joint_candidate_pass", "oos_profit_units", "positive_fold_rate", "oos_probability_log_loss"],
+        [
+            "joint_candidate_pass",
+            "oos_profit_units",
+            "positive_fold_rate",
+            "oos_probability_log_loss",
+        ],
         ascending=[False, False, False, True],
     ).reset_index(drop=True)
     ranking["rank"] = np.arange(1, len(ranking) + 1)
-    files.append(save_csv(ranking, output_dir / f"{prefix}_04_joint_rankings_{market}.csv"))
+
+    files.append(
+        save_csv(
+            ranking,
+            output_dir / f"{prefix}_04_joint_rankings_{market}.csv",
+        )
+    )
+
     return ranking, caches, files
 
 # =============================================================================
@@ -1872,9 +2101,16 @@ def config_opportunities(
     cache = caches[str(config_row["cache_key"])]
     s1, s2 = market_sides(market)
     cal1 = str(config_row[f"calibration_{s1.lower()}"])
-    cal2 = str(config_row[f"calibration_{s2.lower()}"])
-    return market_opportunities(meta, market, cache["side1"][cal1], cache["side2"][cal2])
 
+    if uses_complementary_calibration(market):
+        p1 = cache["side1"][cal1]
+        p2 = cache["side2"][cal1]
+    else:
+        cal2 = str(config_row[f"calibration_{s2.lower()}"])
+        p1 = cache["side1"][cal1]
+        p2 = cache["side2"][cal2]
+
+    return market_opportunities(meta, market, p1, p2)
 
 def stress_top_joint_configs(
     meta: pd.DataFrame,
@@ -1973,6 +2209,68 @@ def calibration_method_summary(
     s1, s2 = market_sides(market)
     y1_col, y2_col = side_outcome_columns(market)
     rows = []
+
+    if uses_complementary_calibration(market):
+        y1 = meta[y1_col].to_numpy(float)
+        y2 = meta[y2_col].to_numpy(float)
+        raw_p1 = cache["side1"]["raw"]
+        raw_p2 = cache["side2"]["raw"]
+        raw_ll, raw_br = probability_pair_score(
+            meta,
+            market,
+            raw_p1,
+            raw_p2,
+        )
+
+        for method in CALIBRATION_METHODS:
+            p1 = cache["side1"][method]
+            p2 = cache["side2"][method]
+            ll, br = probability_pair_score(meta, market, p1, p2)
+
+            fold_wins_ll = 0
+            fold_wins_br = 0
+            folds = 0
+
+            for _, gidx in meta.groupby("fold_id").groups.items():
+                idx = np.asarray(list(gidx), dtype=int)
+                mll = float(np.nanmean([
+                    binary_log_loss(p1[idx], y1[idx]),
+                    binary_log_loss(p2[idx], y2[idx]),
+                ]))
+                rll = float(np.nanmean([
+                    binary_log_loss(raw_p1[idx], y1[idx]),
+                    binary_log_loss(raw_p2[idx], y2[idx]),
+                ]))
+                mbr = float(np.nanmean([
+                    brier_score(p1[idx], y1[idx]),
+                    brier_score(p2[idx], y2[idx]),
+                ]))
+                rbr = float(np.nanmean([
+                    brier_score(raw_p1[idx], y1[idx]),
+                    brier_score(raw_p2[idx], y2[idx]),
+                ]))
+                if np.isfinite(mll) and np.isfinite(rll):
+                    folds += 1
+                    fold_wins_ll += int(mll < rll)
+                    fold_wins_br += int(mbr < rbr)
+
+            rows.append({
+                "market": market,
+                "side": s1,
+                "calibration_role": "canonical",
+                "derived_side": s2,
+                "method": method,
+                "oos_games": int(np.isfinite(y1).sum()),
+                "oos_log_loss": ll,
+                "oos_brier": br,
+                "log_loss_change_vs_raw": ll - raw_ll,
+                "brier_change_vs_raw": br - raw_br,
+                "fold_win_rate_log_loss": fold_wins_ll / folds if folds else np.nan,
+                "fold_win_rate_brier": fold_wins_br / folds if folds else np.nan,
+            })
+
+        return pd.DataFrame(rows)
+
     for side, ycol, pmap in [
         (s1, y1_col, cache["side1"]),
         (s2, y2_col, cache["side2"]),
@@ -1980,12 +2278,14 @@ def calibration_method_summary(
         y = meta[ycol].to_numpy(float)
         raw_ll = binary_log_loss(pmap["raw"], y)
         raw_br = brier_score(pmap["raw"], y)
+
         for method in CALIBRATION_METHODS:
             p = pmap[method]
             fold_wins_ll = 0
             fold_wins_br = 0
             folds = 0
-            for fold_id, gidx in meta.groupby("fold_id").groups.items():
+
+            for _, gidx in meta.groupby("fold_id").groups.items():
                 idx = np.asarray(list(gidx), dtype=int)
                 ll = binary_log_loss(p[idx], y[idx])
                 ll_raw = binary_log_loss(pmap["raw"][idx], y[idx])
@@ -1995,9 +2295,12 @@ def calibration_method_summary(
                     folds += 1
                     fold_wins_ll += int(ll < ll_raw)
                     fold_wins_br += int(br < br_raw)
+
             rows.append({
                 "market": market,
                 "side": side,
+                "calibration_role": "independent",
+                "derived_side": "",
                 "method": method,
                 "oos_games": int(np.isfinite(y).sum()),
                 "oos_log_loss": binary_log_loss(p, y),
@@ -2007,6 +2310,7 @@ def calibration_method_summary(
                 "fold_win_rate_log_loss": fold_wins_ll / folds if folds else np.nan,
                 "fold_win_rate_brier": fold_wins_br / folds if folds else np.nan,
             })
+
     return pd.DataFrame(rows)
 
 # =============================================================================
@@ -2036,23 +2340,37 @@ def current_edge_for_market(market: str, settings: dict[str, float]) -> float:
 # =============================================================================
 # FIT SELECTED CONFIG ON DEVELOPMENT / APPLY TO LOCKBOX
 # =============================================================================
-def selected_config_components(row: pd.Series, market: str) -> tuple[str, str, str, str, float]:
+def selected_config_components(
+    row: pd.Series,
+    market: str,
+) -> tuple[str, str, str, str, float]:
     s1, s2 = market_sides(market)
+    cal1 = str(row[f"calibration_{s1.lower()}"])
+    cal2 = str(row[f"calibration_{s2.lower()}"])
+
+    if uses_complementary_calibration(market) and cal2 != "complement":
+        raise ValueError(
+            f"{market} must use complementary calibration; "
+            f"found {s2} calibration={cal2!r}"
+        )
+
     return (
         str(row["bias_strategy"]),
         str(row["std_mode"]),
-        str(row[f"calibration_{s1.lower()}"]),
-        str(row[f"calibration_{s2.lower()}"]),
+        cal1,
+        cal2,
         float(row["selected_edge"]),
     )
-
 
 def fit_selected_config(
     train: pd.DataFrame,
     market: str,
     chosen: pd.Series,
 ) -> dict[str, Any]:
-    bias_strategy, std_mode, cal1_method, cal2_method, edge = selected_config_components(chosen, market)
+    bias_strategy, std_mode, cal1_method, cal2_method, edge = selected_config_components(
+        chosen,
+        market,
+    )
     model = fit_base_model(
         train,
         market,
@@ -2061,8 +2379,25 @@ def fit_selected_config(
     )
     base_train = apply_base_model(model, train)
     y1_col, y2_col = side_outcome_columns(market)
-    cal1 = fit_calibrator(base_train["side1_prob"], train[y1_col].to_numpy(float), cal1_method)
-    cal2 = fit_calibrator(base_train["side2_prob"], train[y2_col].to_numpy(float), cal2_method)
+
+    cal1 = fit_calibrator(
+        base_train["side1_prob"],
+        train[y1_col].to_numpy(float),
+        cal1_method,
+    )
+
+    if uses_complementary_calibration(market):
+        cal2 = {
+            "method": "complement",
+            "source_side": market_sides(market)[0],
+        }
+    else:
+        cal2 = fit_calibrator(
+            base_train["side2_prob"],
+            train[y2_col].to_numpy(float),
+            cal2_method,
+        )
+
     return {
         "market": market,
         "base_model": model,
@@ -2071,13 +2406,27 @@ def fit_selected_config(
         "cal1_method": cal1_method,
         "cal2_method": cal2_method,
         "edge": edge,
+        "complementary_calibration": uses_complementary_calibration(market),
     }
 
-
-def apply_selected_config(fitted: dict[str, Any], df: pd.DataFrame) -> dict[str, Any]:
+def apply_selected_config(
+    fitted: dict[str, Any],
+    df: pd.DataFrame,
+) -> dict[str, Any]:
     base = apply_base_model(fitted["base_model"], df)
     p1 = apply_calibrator(fitted["cal1"], base["side1_prob"])
-    p2 = apply_calibrator(fitted["cal2"], base["side2_prob"])
+
+    if fitted.get("complementary_calibration", False):
+        p2 = 1.0 - p1
+    else:
+        p2 = apply_calibrator(fitted["cal2"], base["side2_prob"])
+
+    if fitted.get("complementary_calibration", False):
+        if not np.allclose(p1 + p2, 1.0, atol=1e-12, equal_nan=True):
+            raise ValueError(
+                f"{fitted['market']} calibrated probabilities are not complementary"
+            )
+
     return {
         **base,
         "p1_raw": base["side1_prob"],
@@ -2448,15 +2797,14 @@ def build_frozen_candidates(
     """
     Freeze the COMPLETE candidate for each market using DEVELOPMENT OOS data only.
 
-    Shared-vs-split EDGE is decided here, before the lockbox is touched.
-    The lockbox may later accept or reject the entire frozen market candidate,
-    but it cannot change any component inside it.
+    Spread and total preserve complementary calibration throughout this stage:
+      spread AWAY = 1 - calibrated HOME
+      total UNDER = 1 - calibrated OVER
     """
     frozen: dict[str, dict[str, Any]] = {}
     split_rows = []
     files: list[Path] = []
 
-    # Moneyline has one shared EDGE.
     ml = chosen_by_market["moneyline"]
     frozen["moneyline"] = {
         "market": "moneyline",
@@ -2471,12 +2819,25 @@ def build_frozen_candidates(
         chosen = chosen_by_market[market]
         cache = caches_by_market[market][str(chosen["cache_key"])]
         s1, s2 = market_sides(market)
-        p1 = cache["side1"][str(chosen[f"calibration_{s1.lower()}"])]
-        p2 = cache["side2"][str(chosen[f"calibration_{s2.lower()}"])]
-        minbets = min_oos_bets(len(meta))
 
+        cal1 = str(chosen[f"calibration_{s1.lower()}"])
+        p1 = cache["side1"][cal1]
+
+        if uses_complementary_calibration(market):
+            p2 = cache["side2"][cal1]
+        else:
+            cal2 = str(chosen[f"calibration_{s2.lower()}"])
+            p2 = cache["side2"][cal2]
+
+        if not np.allclose(p1 + p2, 1.0, atol=1e-12, equal_nan=True):
+            raise ValueError(
+                f"{market} frozen candidate probabilities are not complementary"
+            )
+
+        minbets = min_oos_bets(len(meta))
         selection_policy = selection_policies[market]
 
+        shared_edge = float(chosen["selected_edge"])
         shared_opps = edge_mode_opportunities(
             meta,
             market,
@@ -2484,10 +2845,11 @@ def build_frozen_candidates(
             p2,
             policy=selection_policy,
             edge_mode="shared",
-            shared_edge=float(chosen["selected_edge"]),
+            shared_edge=shared_edge,
         )
-        shared_bets, shared_profit, shared_roi = betting_summary_from_opportunities(shared_opps)
-        shared_edge = float(chosen["selected_edge"])
+        shared_bets, shared_profit, shared_roi = betting_summary_from_opportunities(
+            shared_opps
+        )
 
         split_scan_df = split_edge_scan(
             meta,
@@ -2501,17 +2863,21 @@ def build_frozen_candidates(
         split_best = choose_split_edge(split_scan_df, minbets)
         split_profit = float(split_best["profit_units"])
         split_bets = int(split_best["bets"])
-        split_roi = float(split_best["roi"]) if np.isfinite(split_best["roi"]) else np.nan
+        split_roi = (
+            float(split_best["roi"])
+            if np.isfinite(split_best["roi"])
+            else np.nan
+        )
         split_pfr = (
             float(split_best["positive_fold_rate"])
             if np.isfinite(split_best["positive_fold_rate"])
             else np.nan
         )
         improvement = (
-            (split_profit - shared_profit) / max(abs(shared_profit), 1.0)
+            (split_profit - shared_profit)
+            / max(abs(shared_profit), 1.0)
         )
 
-        # All of these are DEVELOPMENT rules. No lockbox information is used.
         dev_supports_split = bool(
             improvement >= MIN_SPLIT_EDGE_DEV_PROFIT_IMPROVEMENT
             and split_bets >= minbets
@@ -2520,13 +2886,22 @@ def build_frozen_candidates(
         )
 
         edge_mode = "split" if dev_supports_split else "shared"
+
         frozen[market] = {
             "market": market,
             "chosen": chosen,
             "edge_mode": edge_mode,
             "shared_edge": shared_edge if edge_mode == "shared" else None,
-            "edge_side1": float(split_best["edge_side1"]) if edge_mode == "split" else None,
-            "edge_side2": float(split_best["edge_side2"]) if edge_mode == "split" else None,
+            "edge_side1": (
+                float(split_best["edge_side1"])
+                if edge_mode == "split"
+                else None
+            ),
+            "edge_side2": (
+                float(split_best["edge_side2"])
+                if edge_mode == "split"
+                else None
+            ),
         }
 
         split_rows.append({
@@ -2534,6 +2909,7 @@ def build_frozen_candidates(
             "selection_mode": selection_policy.selection_mode,
             "pick_preference_metric": selection_policy.preference_metric,
             "pick_preference_direction": selection_policy.preference_direction,
+            "calibration_architecture": "canonical_side_plus_complement",
             "side1": s1,
             "side2": s2,
             "shared_edge": shared_edge,
@@ -2551,22 +2927,33 @@ def build_frozen_candidates(
             "dev_supports_split": dev_supports_split,
             "frozen_edge_mode": edge_mode,
             "frozen_shared_edge": shared_edge if edge_mode == "shared" else np.nan,
-            "frozen_edge_side1": float(split_best["edge_side1"]) if edge_mode == "split" else np.nan,
-            "frozen_edge_side2": float(split_best["edge_side2"]) if edge_mode == "split" else np.nan,
+            "frozen_edge_side1": (
+                float(split_best["edge_side1"])
+                if edge_mode == "split"
+                else np.nan
+            ),
+            "frozen_edge_side2": (
+                float(split_best["edge_side2"])
+                if edge_mode == "split"
+                else np.nan
+            ),
         })
 
-        files.append(save_csv(
-            split_scan_df,
-            output_dir / f"{prefix}_06_{market}_split_edge_scan.csv",
-        ))
+        files.append(
+            save_csv(
+                split_scan_df,
+                output_dir / f"{prefix}_06_{market}_split_edge_scan.csv",
+            )
+        )
 
     split_summary = pd.DataFrame(split_rows)
-    files.append(save_csv(
-        split_summary,
-        output_dir / f"{prefix}_06_shared_vs_split_edges.csv",
-    ))
+    files.append(
+        save_csv(
+            split_summary,
+            output_dir / f"{prefix}_06_shared_vs_split_edges.csv",
+        )
+    )
     return frozen, split_summary, files
-
 
 # =============================================================================
 # SEGMENT ANALYSIS
@@ -2713,8 +3100,8 @@ def production_parameter_tables(
     """
     Refit the DEVELOPMENT-SELECTED method on full history.
 
-    These tables are parameter refit candidates. Whether they are actually
-    recommended is determined only by the whole-market lockbox decision.
+    Spread/total calibration tables explicitly show the canonical calibrated
+    side and the derived complementary side.
     """
     action_rows = []
     std_rows = []
@@ -2728,6 +3115,7 @@ def production_parameter_tables(
         if market != "moneyline":
             base = fitted["base_model"]
             sm: StdModel = base["std_model"]
+
             action_rows.append({
                 "market": market,
                 "component": "BIAS",
@@ -2810,21 +3198,52 @@ def production_parameter_tables(
                 "notes": "Frozen on development OOS data; never retuned on lockbox.",
             })
 
-        for side, cal in [(s1, fitted["cal1"]), (s2, fitted["cal2"])]:
+        if uses_complementary_calibration(market):
+            canonical = fitted["cal1"]
             cal_rows.append({
                 "market": market,
-                "side": side,
-                "method": cal.get("method", "raw"),
-                "formula": calibrator_formula(cal),
-                "intercept": cal.get("intercept", np.nan),
-                "slope": cal.get("slope", np.nan),
-                "coef_log_p": cal.get("coef_log_p", np.nan),
-                "coef_log_1mp": cal.get("coef_log_1mp", np.nan),
-                "isotonic_points": len(cal.get("x_thresholds", [])),
+                "side": s1,
+                "calibration_role": "canonical",
+                "method": canonical.get("method", "raw"),
+                "formula": calibrator_formula(canonical),
+                "intercept": canonical.get("intercept", np.nan),
+                "slope": canonical.get("slope", np.nan),
+                "coef_log_p": canonical.get("coef_log_p", np.nan),
+                "coef_log_1mp": canonical.get("coef_log_1mp", np.nan),
+                "isotonic_points": len(canonical.get("x_thresholds", [])),
             })
+            cal_rows.append({
+                "market": market,
+                "side": s2,
+                "calibration_role": "derived_complement",
+                "method": "complement",
+                "formula": "p_derived = 1 - p_canonical",
+                "intercept": np.nan,
+                "slope": np.nan,
+                "coef_log_p": np.nan,
+                "coef_log_1mp": np.nan,
+                "isotonic_points": 0,
+            })
+        else:
+            for side, cal in [(s1, fitted["cal1"]), (s2, fitted["cal2"])]:
+                cal_rows.append({
+                    "market": market,
+                    "side": side,
+                    "calibration_role": "independent",
+                    "method": cal.get("method", "raw"),
+                    "formula": calibrator_formula(cal),
+                    "intercept": cal.get("intercept", np.nan),
+                    "slope": cal.get("slope", np.nan),
+                    "coef_log_p": cal.get("coef_log_p", np.nan),
+                    "coef_log_1mp": cal.get("coef_log_1mp", np.nan),
+                    "isotonic_points": len(cal.get("x_thresholds", [])),
+                })
 
-    return pd.DataFrame(action_rows), pd.DataFrame(std_rows), pd.DataFrame(cal_rows)
-
+    return (
+        pd.DataFrame(action_rows),
+        pd.DataFrame(std_rows),
+        pd.DataFrame(cal_rows),
+    )
 
 def build_final_recommendations(
     settings: dict[str, float],
@@ -2839,8 +3258,8 @@ def build_final_recommendations(
       - accepts the entire candidate, or
       - rejects it and keeps the entire current market pipeline.
 
-    No individual bias, STD, calibration, or EDGE component is swapped after
-    seeing lockbox results.
+    Spread/total calibration recommendations preserve the complementary
+    architecture: HOME/OVER is calibrated and AWAY/UNDER is derived as 1 - p.
     """
     rows = []
     decisions = lockbox_decisions.set_index("market")
@@ -2859,15 +3278,20 @@ def build_final_recommendations(
     def market_pass(market: str) -> bool:
         return bool(decisions.loc[market, "market_validated"])
 
-    # -------------------------
-    # MONEYLINE
-    # -------------------------
     market = "moneyline"
     frozen = frozen_candidates[market]
     chosen: pd.Series = frozen["chosen"]
     passed = market_pass(market)
-    status_change = "FROZEN_MARKET_CHANGE_VALIDATED" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
-    status_same = "NO_CHANGE_WITHIN_VALIDATED_MARKET" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+    status_change = (
+        "FROZEN_MARKET_CHANGE_VALIDATED"
+        if passed
+        else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+    )
+    status_same = (
+        "NO_CHANGE_WITHIN_VALIDATED_MARKET"
+        if passed
+        else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+    )
 
     rows.append({
         "market": market,
@@ -2875,8 +3299,16 @@ def build_final_recommendations(
         "current_value": settings["ML_EDGE"],
         "development_selected": float(frozen["shared_edge"]),
         "production_refit": float(frozen["shared_edge"]),
-        "final_recommendation": float(frozen["shared_edge"]) if passed else settings["ML_EDGE"],
-        "status": status_change if float(frozen["shared_edge"]) != settings["ML_EDGE"] else status_same,
+        "final_recommendation": (
+            float(frozen["shared_edge"])
+            if passed
+            else settings["ML_EDGE"]
+        ),
+        "status": (
+            status_change
+            if float(frozen["shared_edge"]) != settings["ML_EDGE"]
+            else status_same
+        ),
         "requires_pipeline_code_change": False,
         "evidence": evidence_for(market),
     })
@@ -2892,17 +3324,16 @@ def build_final_recommendations(
             "production_refit": method,
             "final_recommendation": method if passed else "raw",
             "status": (
-                status_change if changed and passed
-                else status_same if not changed and passed
+                status_change
+                if changed and passed
+                else status_same
+                if not changed and passed
                 else "KEEP_RAW_MARKET_LOCKBOX_FAILED"
             ),
             "requires_pipeline_code_change": bool(changed and passed),
             "evidence": evidence_for(market),
         })
 
-    # -------------------------
-    # SPREAD / TOTAL
-    # -------------------------
     for market, bias_setting, std_setting, shared_edge_setting in [
         ("spread", "MARGIN_BIAS", "SPREAD_STD", "SPREAD_EDGE"),
         ("total", "TOTAL_BIAS", "TOTAL_STD", "TOTAL_EDGE"),
@@ -2910,8 +3341,16 @@ def build_final_recommendations(
         frozen = frozen_candidates[market]
         chosen = frozen["chosen"]
         passed = market_pass(market)
-        status_change = "FROZEN_MARKET_CHANGE_VALIDATED" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
-        status_same = "NO_CHANGE_WITHIN_VALIDATED_MARKET" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+        status_change = (
+            "FROZEN_MARKET_CHANGE_VALIDATED"
+            if passed
+            else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+        )
+        status_same = (
+            "NO_CHANGE_WITHIN_VALIDATED_MARKET"
+            if passed
+            else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+        )
 
         pa = production_actions[production_actions["market"] == market]
         bias_row = pa[pa["component"] == "BIAS"].iloc[0]
@@ -2919,15 +3358,22 @@ def build_final_recommendations(
 
         bias_mode = str(chosen["bias_strategy"])
         prod_bias = float(bias_row["production_value"])
+
         rows.append({
             "market": market,
             "setting": bias_setting,
             "current_value": settings[bias_setting],
             "development_selected": bias_mode,
             "production_refit": prod_bias,
-            "final_recommendation": prod_bias if passed else settings[bias_setting],
+            "final_recommendation": (
+                prod_bias
+                if passed
+                else settings[bias_setting]
+            ),
             "status": status_change,
-            "requires_pipeline_code_change": bool(passed and bias_mode.startswith("rolling_")),
+            "requires_pipeline_code_change": bool(
+                passed and bias_mode.startswith("rolling_")
+            ),
             "evidence": evidence_for(market),
         })
 
@@ -2937,12 +3383,21 @@ def build_final_recommendations(
             errors="coerce",
         ).iloc[0]
         prod_std = float(prod_std_raw) if np.isfinite(prod_std_raw) else np.nan
+
         if std_mode == "fixed":
             production_refit_std: Any = prod_std
-            final_std: Any = prod_std if passed else settings[std_setting]
+            final_std: Any = (
+                prod_std
+                if passed
+                else settings[std_setting]
+            )
         else:
             production_refit_std = f"{std_mode}: see FINAL_STD_RANGES.csv"
-            final_std = production_refit_std if passed else settings[std_setting]
+            final_std = (
+                production_refit_std
+                if passed
+                else settings[std_setting]
+            )
 
         rows.append({
             "market": market,
@@ -2952,28 +3407,59 @@ def build_final_recommendations(
             "production_refit": production_refit_std,
             "final_recommendation": final_std,
             "status": status_change,
-            "requires_pipeline_code_change": bool(passed and std_mode != "fixed"),
+            "requires_pipeline_code_change": bool(
+                passed and std_mode != "fixed"
+            ),
             "evidence": evidence_for(market),
         })
 
-        for side in market_sides(market):
-            method = str(chosen[f"calibration_{side.lower()}"])
-            changed = method != "raw"
-            rows.append({
-                "market": market,
-                "setting": f"{side}_CALIBRATION",
-                "current_value": "raw",
-                "development_selected": method,
-                "production_refit": method,
-                "final_recommendation": method if passed else "raw",
-                "status": (
-                    status_change if changed and passed
-                    else status_same if not changed and passed
-                    else "KEEP_RAW_MARKET_LOCKBOX_FAILED"
-                ),
-                "requires_pipeline_code_change": bool(changed and passed),
-                "evidence": evidence_for(market),
-            })
+        s1, s2 = market_sides(market)
+        canonical_method = str(chosen[f"calibration_{s1.lower()}"])
+        canonical_changed = canonical_method != "raw"
+
+        rows.append({
+            "market": market,
+            "setting": f"{s1}_CALIBRATION",
+            "current_value": "raw",
+            "development_selected": canonical_method,
+            "production_refit": canonical_method,
+            "final_recommendation": (
+                canonical_method
+                if passed
+                else "raw"
+            ),
+            "status": (
+                status_change
+                if canonical_changed and passed
+                else status_same
+                if not canonical_changed and passed
+                else "KEEP_RAW_MARKET_LOCKBOX_FAILED"
+            ),
+            "requires_pipeline_code_change": bool(
+                canonical_changed and passed
+            ),
+            "evidence": evidence_for(market),
+        })
+
+        rows.append({
+            "market": market,
+            "setting": f"{s2}_CALIBRATION",
+            "current_value": "derived_complement",
+            "development_selected": "complement",
+            "production_refit": "p_derived = 1 - p_canonical",
+            "final_recommendation": (
+                "p_derived = 1 - p_canonical"
+                if passed
+                else "derived_complement"
+            ),
+            "status": (
+                status_same
+                if passed
+                else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+            ),
+            "requires_pipeline_code_change": False,
+            "evidence": evidence_for(market),
+        })
 
         if frozen["edge_mode"] == "shared":
             dev_edge = float(frozen["shared_edge"])
@@ -2983,26 +3469,39 @@ def build_final_recommendations(
                 "current_value": settings[shared_edge_setting],
                 "development_selected": dev_edge,
                 "production_refit": dev_edge,
-                "final_recommendation": dev_edge if passed else settings[shared_edge_setting],
-                "status": status_change if dev_edge != settings[shared_edge_setting] else status_same,
+                "final_recommendation": (
+                    dev_edge
+                    if passed
+                    else settings[shared_edge_setting]
+                ),
+                "status": (
+                    status_change
+                    if dev_edge != settings[shared_edge_setting]
+                    else status_same
+                ),
                 "requires_pipeline_code_change": False,
                 "evidence": evidence_for(market),
             })
         else:
-            s1, s2 = market_sides(market)
             e1 = float(frozen["edge_side1"])
             e2 = float(frozen["edge_side2"])
+
             rows.append({
                 "market": market,
                 "setting": f"{market.upper()}_EDGE_MODE",
                 "current_value": "shared",
                 "development_selected": "separate_by_side",
                 "production_refit": "separate_by_side",
-                "final_recommendation": "separate_by_side" if passed else "shared",
+                "final_recommendation": (
+                    "separate_by_side"
+                    if passed
+                    else "shared"
+                ),
                 "status": status_change,
                 "requires_pipeline_code_change": bool(passed),
                 "evidence": evidence_for(market),
             })
+
             for side, edge_value in [(s1, e1), (s2, e2)]:
                 rows.append({
                     "market": market,
@@ -3010,7 +3509,11 @@ def build_final_recommendations(
                     "current_value": settings[shared_edge_setting],
                     "development_selected": edge_value,
                     "production_refit": edge_value,
-                    "final_recommendation": edge_value if passed else settings[shared_edge_setting],
+                    "final_recommendation": (
+                        edge_value
+                        if passed
+                        else settings[shared_edge_setting]
+                    ),
                     "status": status_change,
                     "requires_pipeline_code_change": bool(passed),
                     "evidence": evidence_for(market),
@@ -3018,19 +3521,30 @@ def build_final_recommendations(
 
     return pd.DataFrame(rows)
 
-
 # =============================================================================
 # ISOTONIC KNOT TABLE
 # =============================================================================
-def isotonic_knots_table(full_df: pd.DataFrame, chosen_by_market: dict[str, pd.Series]) -> pd.DataFrame:
+def isotonic_knots_table(
+    full_df: pd.DataFrame,
+    chosen_by_market: dict[str, pd.Series],
+) -> pd.DataFrame:
     rows = []
+
     for market, chosen in chosen_by_market.items():
         fitted = fit_selected_config(full_df, market, chosen)
-        for side, cal in [(market_sides(market)[0], fitted["cal1"]), (market_sides(market)[1], fitted["cal2"])]:
+        s1, s2 = market_sides(market)
+
+        calibrators = [(s1, fitted["cal1"])]
+        if not uses_complementary_calibration(market):
+            calibrators.append((s2, fitted["cal2"]))
+
+        for side, cal in calibrators:
             if cal.get("method") != "isotonic":
                 continue
+
             xs = cal.get("x_thresholds", [])
             ys = cal.get("y_thresholds", [])
+
             for i, (x, y) in enumerate(zip(xs, ys)):
                 rows.append({
                     "market": market,
@@ -3039,6 +3553,7 @@ def isotonic_knots_table(full_df: pd.DataFrame, chosen_by_market: dict[str, pd.S
                     "raw_probability": x,
                     "adjusted_probability": y,
                 })
+
     return pd.DataFrame(rows)
 
 # =============================================================================
@@ -3428,8 +3943,13 @@ def main() -> None:
         chosen = frozen["chosen"]
         cache = caches_by_market[market][str(chosen["cache_key"])]
         s1, s2 = market_sides(market)
-        p1 = cache["side1"][str(chosen[f"calibration_{s1.lower()}"])]
-        p2 = cache["side2"][str(chosen[f"calibration_{s2.lower()}"])]
+        cal1 = str(chosen[f"calibration_{s1.lower()}"])
+        p1 = cache["side1"][cal1]
+        if uses_complementary_calibration(market):
+            p2 = cache["side2"][cal1]
+        else:
+            cal2 = str(chosen[f"calibration_{s2.lower()}"])
+            p2 = cache["side2"][cal2]
 
         seg = segment_betting_summary(
             meta,

@@ -7,6 +7,17 @@
 #   method: fixed   -> value required, window_games must be null
 #
 # Calibration schema:
+#   moneyline may retain side-specific calibration.
+#
+#   spread / total use complementary binary calibration:
+#     canonical_side: <side to calibrate>
+#     <canonical_side>:
+#       method: none | beta
+#
+#   The opposite spread/total side is NOT calibrated independently.
+#   It is always derived as:
+#       p_opposite = 1 - p_canonical
+#
 #   method: none -> no probability adjustment
 #   method: beta -> p_adj = logistic(
 #                       intercept
@@ -52,15 +63,13 @@ leagues:
           method: none
 
       spread:
+        canonical_side: home
         home:
-          method: none
-        away:
           method: none
 
       total:
+        canonical_side: over
         over:
-          method: none
-        under:
           method: none
 
 
@@ -98,15 +107,13 @@ leagues:
           method: none
 
       spread:
+        canonical_side: home
         home:
-          method: none
-        away:
           method: none
 
       total:
+        canonical_side: over
         over:
-          method: none
-        under:
           method: none
 
 
@@ -144,16 +151,14 @@ leagues:
           method: none
 
       spread:
+        canonical_side: home
         home:
           method: beta
           intercept: 0.59787618
           coef_log_p: 0.59540409
           coef_log_1mp: 0.36284251
-        away:
-          method: none
 
       total:
+        canonical_side: over
         over:
-          method: none
-        under:
           method: none
