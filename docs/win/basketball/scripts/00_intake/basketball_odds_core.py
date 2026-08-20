@@ -14,6 +14,10 @@ from zoneinfo import ZoneInfo
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 
+SNAPSHOT_ROOT = Path(
+    "docs/win/basketball/00_intake/sportsbook_snapshots"
+)
+
 LEAGUES = {
     "nba": {
         "label": "NBA",
@@ -92,8 +96,10 @@ ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = ERROR_DIR / "basketball_odds.txt"
 
-for cfg in LEAGUES.values():
+for league, cfg in LEAGUES.items():
     cfg["output_dir"].mkdir(parents=True, exist_ok=True)
+    cfg["snapshot_dir"] = SNAPSHOT_ROOT / league
+    cfg["snapshot_dir"].mkdir(parents=True, exist_ok=True)
 
 with open(LOG_FILE, "w", encoding="utf-8") as f:
     f.write(f"=== basketball_odds RUN {datetime.now().isoformat()} ===\n")
@@ -192,12 +198,6 @@ def normalize_row(row: dict) -> dict:
 def parse_espn_datetime(value: str) -> datetime:
     return datetime.fromisoformat(
         value.replace("Z", "+00:00")
-    )
-
-
-def current_run_timestamp() -> str:
-    return datetime.now(UTC_TZ).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
     )
 
 
@@ -1094,6 +1094,54 @@ def write_file(
     return len(rows)
 
 
+def write_snapshot_file(
+    snapshot_dir: Path,
+    league_label: str,
+    snapshot_id: str,
+    rows: list[dict],
+) -> tuple[Path | None, int]:
+    """
+    Write one immutable odds snapshot for this league/run.
+
+    Existing snapshot files are never opened for update, merge, consolidation,
+    deletion, or overwrite. Exclusive-create mode makes a filename collision
+    fatal instead of silently replacing historical observations.
+    """
+    if not rows:
+        return None, 0
+
+    snapshot_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    path = (
+        snapshot_dir
+        / f"{snapshot_id}_{league_label}_odds_snapshot.csv"
+    )
+
+    with open(
+        path,
+        "x",
+        newline="",
+        encoding="utf-8",
+    ) as csvfile:
+        writer = csv.DictWriter(
+            csvfile,
+            fieldnames=FIELDNAMES,
+            extrasaction="ignore",
+        )
+
+        writer.writeheader()
+
+        writer.writerows(
+            normalize_row(row)
+            for row in rows
+        )
+
+    return path, len(rows)
+
+
 def scoreboard_dates(
     start_dt: datetime,
     end_dt: datetime,
@@ -1123,11 +1171,21 @@ def main():
         days=7
     )
 
-    run_timestamp = (
-        current_run_timestamp()
+    run_utc_dt = datetime.now(
+        UTC_TZ
+    )
+
+    run_timestamp = run_utc_dt.strftime(
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    )
+
+    snapshot_id = run_utc_dt.strftime(
+        "%Y%m%dT%H%M%S%fZ"
     )
 
     files_written = []
+    snapshots_written = []
+    total_snapshot_rows = 0
     total_events_found = 0
     total_new_games = 0
     total_updated_games = 0
@@ -1149,6 +1207,12 @@ def main():
             output_dir = (
                 cfg["output_dir"]
             )
+
+            snapshot_dir = (
+                cfg["snapshot_dir"]
+            )
+
+            snapshot_rows = []
 
             (
                 file_rows,
@@ -1350,6 +1414,15 @@ def main():
                         total_errors += 1
                         continue
 
+                    if has_odds_values(
+                        new_row
+                    ):
+                        snapshot_rows.append(
+                            normalize_row(
+                                new_row
+                            )
+                        )
+
                     existing = (
                         existing_index.get(
                             event_id
@@ -1419,6 +1492,33 @@ def main():
 
                     total_new_games += 1
 
+            snapshot_path, snapshot_count = (
+                write_snapshot_file(
+                    snapshot_dir,
+                    league_label,
+                    snapshot_id,
+                    snapshot_rows,
+                )
+            )
+
+            if snapshot_path is not None:
+                snapshots_written.append(
+                    (
+                        str(snapshot_path),
+                        snapshot_count,
+                    )
+                )
+
+                total_snapshot_rows += (
+                    snapshot_count
+                )
+
+                log(
+                    f"WROTE IMMUTABLE SNAPSHOT "
+                    f"{snapshot_path} "
+                    f"({snapshot_count} observations)"
+                )
+
             for path in sorted(
                 changed_paths
             ):
@@ -1478,8 +1578,16 @@ def main():
             f"{total_no_dk_odds}"
         )
         log(
-            f"Files written: "
+            f"Latest-state files written: "
             f"{len(files_written)}"
+        )
+        log(
+            f"Immutable snapshot files written: "
+            f"{len(snapshots_written)}"
+        )
+        log(
+            f"Immutable snapshot observations: "
+            f"{total_snapshot_rows}"
         )
         log(
             f"Errors: "
@@ -1488,8 +1596,14 @@ def main():
 
         for path, count in files_written:
             log(
-                f"FILE: {path} "
+                f"LATEST FILE: {path} "
                 f"({count} games)"
+            )
+
+        for path, count in snapshots_written:
+            log(
+                f"SNAPSHOT FILE: {path} "
+                f"({count} observations)"
             )
 
         log("STATUS: SUCCESS")
@@ -1516,8 +1630,18 @@ def main():
         )
 
         print(
-            f"Files written: "
+            f"Latest-state files written: "
             f"{len(files_written)}"
+        )
+
+        print(
+            f"Immutable snapshot files written: "
+            f"{len(snapshots_written)}"
+        )
+
+        print(
+            f"Immutable snapshot observations: "
+            f"{total_snapshot_rows}"
         )
 
         if total_errors:
