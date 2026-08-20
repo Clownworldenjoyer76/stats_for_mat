@@ -46,6 +46,12 @@ PROVENANCE_FIELDS = [
     "total_bias",
 ]
 
+SPORTSBOOK_PROVENANCE_FIELDS = [
+    "sportsbook_provider",
+    "scraped_at_utc",
+    "provider_updated_at_utc",
+]
+
 MONEYLINE_FIELDS = [
     "sport",
     "league",
@@ -60,6 +66,7 @@ MONEYLINE_FIELDS = [
     "home_projected_points",
     "total_projected_points",
     *PROVENANCE_FIELDS,
+    *SPORTSBOOK_PROVENANCE_FIELDS,
     "total",
     "home_dk_moneyline_american",
     "away_dk_moneyline_american",
@@ -81,6 +88,7 @@ SPREAD_FIELDS = [
     "home_projected_points",
     "total_projected_points",
     *PROVENANCE_FIELDS,
+    *SPORTSBOOK_PROVENANCE_FIELDS,
     "total",
     "home_spread",
     "away_spread",
@@ -104,6 +112,7 @@ TOTAL_FIELDS = [
     "home_projected_points",
     "total_projected_points",
     *PROVENANCE_FIELDS,
+    *SPORTSBOOK_PROVENANCE_FIELDS,
     "total",
     "dk_total_over_american",
     "dk_total_under_american",
@@ -273,13 +282,9 @@ def in_season(
         cfg["end_day"],
     )
 
-    # Normal season contained within one calendar year.
-    # Example: May 1 through October 31.
     if start_mmdd <= end_mmdd:
         return start_mmdd <= current_mmdd <= end_mmdd
 
-    # Season crosses New Year.
-    # Example: October 15 through July 1.
     return (
         current_mmdd >= start_mmdd
         or current_mmdd <= end_mmdd
@@ -489,6 +494,18 @@ def build_base(
         ),
         "total_bias": p.get(
             "total_bias",
+            "",
+        ),
+        "sportsbook_provider": b.get(
+            "sportsbook_provider",
+            "",
+        ),
+        "scraped_at_utc": b.get(
+            "scraped_at_utc",
+            "",
+        ),
+        "provider_updated_at_utc": b.get(
+            "provider_updated_at_utc",
             "",
         ),
         "total": b.get(
