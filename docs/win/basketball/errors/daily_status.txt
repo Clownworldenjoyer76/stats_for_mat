@@ -1,10 +1,10 @@
 BASKETBALL DAILY STATUS
 =======================
-generated_at_utc: 2026-08-20T18:37:16Z
+generated_at_utc: 2026-08-20T18:56:22Z
 game_date_new_york: 2026_08_20
-github_run_id: 32404133277
+github_run_id: 32405776373
 github_run_attempt: 1
-workflow_status: failure
+workflow_status: success
 
 SEASON STATUS
 -------------
@@ -14,17 +14,29 @@ wnba: in_season
 
 SUMMARY
 -------
-txt_files_checked_this_run: 2
-txt_files_with_issues: 2
-txt_issue_lines: 9
-txt_issue_lines_suppressed_offseason: 0
+txt_files_checked_this_run: 26
+txt_files_with_issues: 5
+txt_issue_lines: 12
+txt_issue_lines_suppressed_offseason: 24
 no_map_teams: 0
 no_map_teams_suppressed_offseason: 0
-system_issues: 1
+system_issues: 0
 overall: ISSUES FOUND
 
 CURRENT-RUN TXT ISSUES
 ----------------------
+[docs/win/basketball/errors/00_intake/calculate_rolling_bias.txt]
+run_change: REWRITTEN
+14:2026-08-20T18:56:16+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=0.19 total=1.144 warnings=2
+
+[docs/win/basketball/errors/04_select/daily_slate.txt]
+run_change: REWRITTEN
+5:2026-08-20T18:56:18.698361+00:00 | WARN  | [wnba] extra input headers ignored: provider_updated_at_utc, scraped_at_utc, sportsbook_provider
+
+[docs/win/basketball/errors/05_final_scores/01_basketball_results_grade.txt]
+run_change: REWRITTEN
+9:2026-08-20T18:56:18.981625+00:00 | WARN  | [wnba] LOCKED PICKS IMMUTABLE: regenerated daily file differs; preserved existing docs/win/basketball/04_select/wnba/locked_picks/2026_08_20_wnba_selected.csv
+
 [docs/win/basketball/errors/pipeline_health.txt]
 run_change: REWRITTEN
 9:WNBA drift 25: games=25 margin=0.1812 total=5.8356 warning=True
@@ -46,6 +58,5 @@ None
 
 SYSTEM ISSUES
 -------------
-[GITHUB WORKFLOW]
-ERROR: workflow status before daily-status generation is failure.
+None
 
