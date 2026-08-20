@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/00_intake/basketball_daily_games.py
-"""Build canonical per-date game identity files from sportsbook history.
+"""
+Build canonical per-date basketball game identity files.
 
-Identity is date + normalized home + normalized away. When multiple source IDs exist
-for the same identity, a numeric ESPN event ID is preferred over a legacy/custom ID.
-Conflicting numeric IDs for the same identity are fatal instead of being silently
-carried forward as duplicate games.
+Primary identity source:
+  docs/win/basketball/00_intake/sdv/canonical_games/{league}/*_games.csv
+
+Those files are refreshed from SportsDataVerse/ESPN by sdv_canonical_games.py,
+which uses explicit season translation from sdv_season_mapping.py.
+
+Compatibility/fallback source:
+  docs/win/basketball/00_intake/sportsbook/{league}/*.csv
+
+Identity is league + game_date + normalized home + normalized away.
+SDV/ESPN numeric game IDs are loaded first and remain canonical. Sportsbook
+history may fill missing games/times and may contribute legacy/custom aliases.
+Conflicting numeric IDs for one identity are fatal.
 """
 from __future__ import annotations
 
@@ -15,25 +25,63 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+from sdv_canonical_games import build_current_canonical_games
+
+
+BASE = Path("docs/win/basketball")
+
 LEAGUES = {
-    "nba": {"league_label": "NBA", "input_dir": Path("docs/win/basketball/00_intake/sportsbook/nba"), "output_dir": Path("docs/win/basketball/daily_games/nba")},
-    "ncaam": {"league_label": "NCAAM", "input_dir": Path("docs/win/basketball/00_intake/sportsbook/ncaam"), "output_dir": Path("docs/win/basketball/daily_games/ncaam")},
-    "wnba": {"league_label": "WNBA", "input_dir": Path("docs/win/basketball/00_intake/sportsbook/wnba"), "output_dir": Path("docs/win/basketball/daily_games/wnba")},
+    "nba": {
+        "league_label": "NBA",
+        "sdv_input_dir": BASE / "00_intake/sdv/canonical_games/nba",
+        "sportsbook_input_dir": BASE / "00_intake/sportsbook/nba",
+        "output_dir": BASE / "daily_games/nba",
+    },
+    "ncaam": {
+        "league_label": "NCAAM",
+        "sdv_input_dir": BASE / "00_intake/sdv/canonical_games/ncaam",
+        "sportsbook_input_dir": BASE / "00_intake/sportsbook/ncaam",
+        "output_dir": BASE / "daily_games/ncaam",
+    },
+    "wnba": {
+        "league_label": "WNBA",
+        "sdv_input_dir": BASE / "00_intake/sdv/canonical_games/wnba",
+        "sportsbook_input_dir": BASE / "00_intake/sportsbook/wnba",
+        "output_dir": BASE / "daily_games/wnba",
+    },
 }
+
 for cfg in LEAGUES.values():
     cfg["output_dir"].mkdir(parents=True, exist_ok=True)
 
-ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
+ERROR_DIR = BASE / "errors/00_intake"
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = ERROR_DIR / "basketball_daily_games.txt"
 ALIAS_FILE = ERROR_DIR / "basketball_game_id_aliases.csv"
 
-FIELDNAMES = ["sport", "league", "game_date", "game_time", "home_team", "away_team", "game_id"]
-ALIAS_FIELDS = ["league", "game_date", "home_team", "away_team", "alias_game_id", "canonical_game_id", "source_file"]
+FIELDNAMES = [
+    "sport",
+    "league",
+    "game_date",
+    "game_time",
+    "home_team",
+    "away_team",
+    "game_id",
+]
+
+ALIAS_FIELDS = [
+    "league",
+    "game_date",
+    "home_team",
+    "away_team",
+    "alias_game_id",
+    "canonical_game_id",
+    "source_file",
+]
 
 
 def log(msg: str) -> None:
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
+    with LOG_FILE.open("a", encoding="utf-8") as f:
         f.write(f"{datetime.now().isoformat()} | {msg}\n")
 
 
@@ -62,12 +110,24 @@ def id_rank(game_id: str) -> int:
 
 
 def sort_key(row: dict):
-    return (clean(row.get("game_date")), clean(row.get("game_time")), clean(row.get("home_team")), clean(row.get("away_team")), clean(row.get("game_id")))
+    return (
+        clean(row.get("game_date")),
+        clean(row.get("game_time")),
+        clean(row.get("home_team")),
+        clean(row.get("away_team")),
+        clean(row.get("game_id")),
+    )
 
 
-def choose(existing: dict, candidate: dict, source_file: str, aliases: list[dict]) -> dict:
+def choose(
+    existing: dict,
+    candidate: dict,
+    source_file: str,
+    aliases: list[dict],
+) -> dict:
     old_id = clean(existing.get("game_id"))
     new_id = clean(candidate.get("game_id"))
+
     if old_id.isdigit() and new_id.isdigit() and old_id != new_id:
         raise ValueError(
             "Conflicting numeric game_ids for the same game identity: "
@@ -77,7 +137,6 @@ def choose(existing: dict, candidate: dict, source_file: str, aliases: list[dict
     if id_rank(new_id) > id_rank(old_id):
         canonical, alias = new_id, old_id
         chosen = candidate.copy()
-        # Preserve a useful time if the preferred candidate is blank there.
         if not clean(chosen.get("game_time")):
             chosen["game_time"] = existing.get("game_time", "")
     else:
@@ -88,90 +147,190 @@ def choose(existing: dict, candidate: dict, source_file: str, aliases: list[dict
             chosen["game_time"] = candidate.get("game_time", "")
 
     if alias and alias != canonical:
-        aliases.append({
-            "league": clean(chosen.get("league")),
-            "game_date": clean(chosen.get("game_date")),
-            "home_team": clean(chosen.get("home_team")),
-            "away_team": clean(chosen.get("away_team")),
-            "alias_game_id": alias,
-            "canonical_game_id": canonical,
-            "source_file": source_file,
-        })
+        aliases.append(
+            {
+                "league": clean(chosen.get("league")),
+                "game_date": clean(chosen.get("game_date")),
+                "home_team": clean(chosen.get("home_team")),
+                "away_team": clean(chosen.get("away_team")),
+                "alias_game_id": alias,
+                "canonical_game_id": canonical,
+                "source_file": source_file,
+            }
+        )
+
     return chosen
 
 
 def write_aliases(rows: list[dict]) -> None:
-    # Always rewrite the diagnostic so stale aliases cannot persist.
     unique = {}
     for row in rows:
         key = tuple(row.get(c, "") for c in ALIAS_FIELDS[:-1])
         unique[key] = row
-    with open(ALIAS_FILE, "w", newline="", encoding="utf-8") as f:
+
+    with ALIAS_FILE.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=ALIAS_FIELDS)
         writer.writeheader()
         writer.writerows(unique.values())
 
 
+def load_source_files(
+    *,
+    league_label: str,
+    source_kind: str,
+    folder: Path,
+    pattern: str,
+    canonical: dict[tuple[str, str, str, str], dict],
+    aliases: list[dict],
+) -> tuple[int, int, int]:
+    files = 0
+    rows_read = 0
+    duplicates = 0
+
+    if not folder.exists():
+        log(f"{source_kind.upper()} INPUT DIR NOT FOUND: {folder}")
+        return files, rows_read, duplicates
+
+    for csv_path in sorted(folder.glob(pattern)):
+        files += 1
+        log(f"PROCESSING {source_kind.upper()} {csv_path}")
+
+        with csv_path.open(newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+
+            for source in reader:
+                rows_read += 1
+                row = build_row(source)
+
+                if not row["league"]:
+                    row["league"] = league_label
+                if not row["sport"]:
+                    row["sport"] = "basketball"
+
+                if (
+                    not row["game_date"]
+                    or not row["home_team"]
+                    or not row["away_team"]
+                ):
+                    log(
+                        f"SKIPPED malformed {source_kind} identity row "
+                        f"in {csv_path.name}"
+                    )
+                    continue
+
+                key = identity_key(row)
+
+                if key in canonical:
+                    duplicates += 1
+                    canonical[key] = choose(
+                        canonical[key],
+                        row,
+                        str(csv_path),
+                        aliases,
+                    )
+                else:
+                    canonical[key] = row
+
+    return files, rows_read, duplicates
+
+
 def main() -> None:
-    with open(LOG_FILE, "w", encoding="utf-8") as f:
-        f.write(f"=== basketball_daily_games RUN {datetime.now().isoformat()} ===\n")
+    LOG_FILE.write_text(
+        f"=== basketball_daily_games RUN {datetime.now().isoformat()} ===\n",
+        encoding="utf-8",
+    )
 
     files_written = []
     aliases: list[dict] = []
-    total_input_files = total_rows_read = total_identity_duplicates = total_rows_written = 0
     errors = 0
 
-    for league_key, cfg in LEAGUES.items():
-        league_label = cfg["league_label"]
-        input_dir = cfg["input_dir"]
-        output_dir = cfg["output_dir"]
-        if not input_dir.exists():
-            log(f"INPUT DIR NOT FOUND: {input_dir}")
-            continue
+    total_sdv_files = 0
+    total_sdv_rows = 0
+    total_sportsbook_files = 0
+    total_sportsbook_rows = 0
+    total_identity_duplicates = 0
+    total_rows_written = 0
 
-        csv_files = sorted(input_dir.glob("*.csv"))
-        total_input_files += len(csv_files)
-        canonical: dict[tuple[str, str, str, str], dict] = {}
+    try:
+        refreshed = build_current_canonical_games()
+        log(f"SDV CANONICAL REFRESHED: {len(refreshed)} season files")
 
-        for csv_path in csv_files:
-            log(f"PROCESSING {csv_path}")
-            try:
-                with open(csv_path, newline="", encoding="utf-8") as f:
-                    reader = csv.DictReader(f)
-                    for source in reader:
-                        total_rows_read += 1
-                        row = build_row(source)
-                        if not row["game_date"] or not row["home_team"] or not row["away_team"]:
-                            log(f"SKIPPED malformed identity row in {csv_path.name}")
-                            continue
-                        key = identity_key(row)
-                        if key in canonical:
-                            total_identity_duplicates += 1
-                            canonical[key] = choose(canonical[key], row, str(csv_path), aliases)
-                        else:
-                            canonical[key] = row
-            except Exception as exc:
-                errors += 1
-                log(f"ERROR processing {csv_path}: {exc}\n{traceback.format_exc()}")
+        for league_key, cfg in LEAGUES.items():
+            league_label = cfg["league_label"]
+            canonical: dict[tuple[str, str, str, str], dict] = {}
 
-        by_date: dict[str, list[dict]] = {}
-        for row in canonical.values():
-            by_date.setdefault(row["game_date"], []).append(row)
-        for game_date, rows in sorted(by_date.items()):
-            rows = sorted(rows, key=sort_key)
-            out_path = output_dir / f"{game_date}_{league_label}.csv"
-            with open(out_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
-                writer.writeheader()
-                writer.writerows(rows)
-            files_written.append((str(out_path), len(rows)))
-            total_rows_written += len(rows)
-            log(f"WROTE {out_path} ({len(rows)} rows)")
+            (
+                sdv_files,
+                sdv_rows,
+                sdv_duplicates,
+            ) = load_source_files(
+                league_label=league_label,
+                source_kind="sdv",
+                folder=cfg["sdv_input_dir"],
+                pattern="*_games.csv",
+                canonical=canonical,
+                aliases=aliases,
+            )
+
+            (
+                sportsbook_files,
+                sportsbook_rows,
+                sportsbook_duplicates,
+            ) = load_source_files(
+                league_label=league_label,
+                source_kind="sportsbook",
+                folder=cfg["sportsbook_input_dir"],
+                pattern="*.csv",
+                canonical=canonical,
+                aliases=aliases,
+            )
+
+            total_sdv_files += sdv_files
+            total_sdv_rows += sdv_rows
+            total_sportsbook_files += sportsbook_files
+            total_sportsbook_rows += sportsbook_rows
+            total_identity_duplicates += (
+                sdv_duplicates + sportsbook_duplicates
+            )
+
+            by_date: dict[str, list[dict]] = {}
+            for row in canonical.values():
+                by_date.setdefault(row["game_date"], []).append(row)
+
+            for game_date, rows in sorted(by_date.items()):
+                rows = sorted(rows, key=sort_key)
+                out_path = (
+                    cfg["output_dir"]
+                    / f"{game_date}_{league_label}.csv"
+                )
+
+                with out_path.open(
+                    "w",
+                    newline="",
+                    encoding="utf-8",
+                ) as f:
+                    writer = csv.DictWriter(
+                        f,
+                        fieldnames=FIELDNAMES,
+                    )
+                    writer.writeheader()
+                    writer.writerows(rows)
+
+                files_written.append((str(out_path), len(rows)))
+                total_rows_written += len(rows)
+                log(f"WROTE {out_path} ({len(rows)} rows)")
+
+    except Exception as exc:
+        errors += 1
+        log(f"FATAL: {exc}\n{traceback.format_exc()}")
 
     write_aliases(aliases)
+
     log("--- SUMMARY ---")
-    log(f"Input files found: {total_input_files}")
-    log(f"Rows read: {total_rows_read}")
+    log(f"SDV season files read: {total_sdv_files}")
+    log(f"SDV rows read: {total_sdv_rows}")
+    log(f"Sportsbook files read: {total_sportsbook_files}")
+    log(f"Sportsbook rows read: {total_sportsbook_rows}")
     log(f"Duplicate identities resolved: {total_identity_duplicates}")
     log(f"ID aliases recorded: {len(aliases)}")
     log(f"Rows written: {total_rows_written}")
@@ -181,6 +340,7 @@ def main() -> None:
 
     if errors:
         sys.exit(1)
+
     print("Basketball daily games complete.")
 
 
