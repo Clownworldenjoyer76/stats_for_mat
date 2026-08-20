@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# docs/win/basketball/scripts/00_intake/basketball_odds.py
+# docs/win/basketball/scripts/00_intake/basketball_odds_core.py
 
 import csv
 import json
@@ -44,6 +44,9 @@ FIELDNAMES = [
     "game_date",
     "game_id",
     "odds_last_update",
+    "sportsbook_provider",
+    "scraped_at_utc",
+    "provider_updated_at_utc",
     "game_time",
     "home_team",
     "away_team",
@@ -64,7 +67,26 @@ FIELDNAMES = [
     "dk_total_under_decimal",
 ]
 
-ODDS_FIELDS = FIELDNAMES[8:]
+ODDS_FIELDS = [
+    "home_spread",
+    "away_spread",
+    "total",
+    "home_dk_moneyline_american",
+    "away_dk_moneyline_american",
+    "home_dk_spread_american",
+    "away_dk_spread_american",
+    "dk_total_over_american",
+    "dk_total_under_american",
+    "home_dk_moneyline_decimal",
+    "away_dk_moneyline_decimal",
+    "home_dk_spread_decimal",
+    "away_dk_spread_decimal",
+    "dk_total_over_decimal",
+    "dk_total_under_decimal",
+]
+
+DRAFTKINGS_PROVIDER_NAME = "DraftKings"
+DRAFTKINGS_PROVIDER_IDS = {"41"}
 
 ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
@@ -197,6 +219,103 @@ def parse_update_timestamp(value) -> datetime:
         return datetime.min.replace(tzinfo=UTC_TZ)
 
 
+def normalize_utc_timestamp(value) -> str:
+    if is_blank(value):
+        return ""
+
+    try:
+        parsed = datetime.fromisoformat(
+            str(value).replace("Z", "+00:00")
+        )
+    except (TypeError, ValueError):
+        return ""
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC_TZ)
+
+    return parsed.astimezone(UTC_TZ).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+
+def provider_name_from_odds(
+    odds: dict | None,
+) -> str:
+    if not isinstance(odds, dict):
+        return ""
+
+    provider = odds.get("provider") or {}
+
+    if not isinstance(provider, dict):
+        return ""
+
+    return clean_text(
+        provider.get("name")
+    )
+
+
+def is_draftkings_odds(
+    odds: dict | None,
+) -> bool:
+    if not isinstance(odds, dict):
+        return False
+
+    provider = odds.get("provider") or {}
+
+    if not isinstance(provider, dict):
+        return False
+
+    provider_name = clean_text(
+        provider.get("name")
+    ).casefold()
+
+    provider_id = clean_text(
+        provider.get("id")
+    )
+
+    return (
+        provider_name == "draftkings"
+        or provider_id in DRAFTKINGS_PROVIDER_IDS
+    )
+
+
+def provider_updated_at_utc(
+    odds: dict | None,
+) -> str:
+    """
+    Return an ESPN-supplied odds update timestamp when one is present.
+
+    ESPN payloads are not guaranteed to expose a provider update time, so
+    only explicit update/modified timestamp fields are considered. The field
+    remains blank when ESPN does not provide one.
+    """
+    if not isinstance(odds, dict):
+        return ""
+
+    candidates = [
+        odds.get("lastUpdated"),
+        odds.get("lastUpdatedDate"),
+        odds.get("updatedAt"),
+        odds.get("updateDate"),
+        odds.get("lastModified"),
+        nested_get(odds, "current", "lastUpdated"),
+        nested_get(odds, "current", "lastUpdatedDate"),
+        nested_get(odds, "current", "updatedAt"),
+        nested_get(odds, "current", "updateDate"),
+        nested_get(odds, "current", "lastModified"),
+    ]
+
+    for value in candidates:
+        normalized = normalize_utc_timestamp(
+            value
+        )
+
+        if normalized:
+            return normalized
+
+    return ""
+
+
 def scoreboard_url(
     espn_slug: str,
     date_yyyymmdd: str,
@@ -253,6 +372,12 @@ def fetch_current_odds(
     event_id: str,
     competition_id: str,
 ) -> dict | None:
+    """
+    Return DraftKings odds only.
+
+    A non-DraftKings provider must never be written into *_dk_* columns.
+    If DraftKings is not present in ESPN's provider list, return None.
+    """
     payload = get_json(
         core_odds_url(
             espn_slug,
@@ -266,18 +391,32 @@ def fetch_current_odds(
     if not isinstance(items, list) or not items:
         return None
 
-    for item in items:
-        provider = item.get("provider") or {}
+    available_providers = []
 
-        if (
-            clean_text(
-                provider.get("name")
-            ).lower()
-            == "draftkings"
-        ):
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+
+        provider_name = provider_name_from_odds(
+            item
+        )
+
+        if provider_name:
+            available_providers.append(
+                provider_name
+            )
+
+        if is_draftkings_odds(item):
             return item
 
-    return items[0]
+    log(
+        f"NO DRAFTKINGS PROVIDER: "
+        f"event_id={event_id} "
+        f"available_providers="
+        f"{available_providers or ['unknown']}"
+    )
+
+    return None
 
 
 def get_competition(
@@ -441,6 +580,30 @@ def build_row(
             odds,
             "away",
         )
+    )
+
+    if odds is not None and not is_draftkings_odds(
+        odds
+    ):
+        raise ValueError(
+            "Non-DraftKings odds reached build_row; "
+            "refusing to write them into *_dk_* columns"
+        )
+
+    sportsbook_provider = (
+        provider_name_from_odds(
+            odds
+        )
+        if odds is not None
+        else ""
+    )
+
+    provider_update = (
+        provider_updated_at_utc(
+            odds
+        )
+        if odds is not None
+        else ""
     )
 
     odds = odds or {}
@@ -623,6 +786,9 @@ def build_row(
         "game_date": game_date,
         "game_id": event_id,
         "odds_last_update": "",
+        "sportsbook_provider": "",
+        "scraped_at_utc": "",
+        "provider_updated_at_utc": "",
         "game_time": game_time,
         "home_team": home_team,
         "away_team": away_team,
@@ -686,8 +852,25 @@ def build_row(
     }
 
     if has_odds_values(row):
-        row["odds_last_update"] = (
+        row["sportsbook_provider"] = (
+            sportsbook_provider
+            or DRAFTKINGS_PROVIDER_NAME
+        )
+
+        row["scraped_at_utc"] = (
             run_timestamp
+        )
+
+        row["provider_updated_at_utc"] = (
+            provider_update
+        )
+
+        # Legacy compatibility: downstream code already uses odds_last_update
+        # to choose the newest row. Prefer ESPN's provider timestamp when
+        # available; otherwise use the actual scrape time.
+        row["odds_last_update"] = (
+            provider_update
+            or run_timestamp
         )
 
     return row
@@ -950,7 +1133,7 @@ def main():
     total_updated_games = 0
     total_completed_skipped = 0
     total_outside_window_skipped = 0
-    total_no_odds = 0
+    total_no_dk_odds = 0
     total_errors = 0
 
     try:
@@ -1131,10 +1314,10 @@ def main():
                         )
 
                     if odds is None:
-                        total_no_odds += 1
+                        total_no_dk_odds += 1
 
                         log(
-                            f"NO ODDS: "
+                            f"NO DRAFTKINGS ODDS: "
                             f"{league_label} "
                             f"{event_id} "
                             f"{event_name}"
@@ -1291,8 +1474,8 @@ def main():
             f"{total_outside_window_skipped}"
         )
         log(
-            f"Games without odds: "
-            f"{total_no_odds}"
+            f"Games without DraftKings odds: "
+            f"{total_no_dk_odds}"
         )
         log(
             f"Files written: "
