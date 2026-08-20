@@ -10,8 +10,8 @@
 #   docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/{league}/
 #
 # Originals are never mutated. Filenames are preserved.
-# Permanent bias rules come from model_config.yaml. Rolling bias values come
-# from rolling_bias_state.yaml. Past cleaned prediction files are preserved so
+# Permanent bias rules come from model_config.yaml. Dynamic rolling/regime-aware
+# bias values come from rolling_bias_state.yaml. Past cleaned prediction files are preserved so
 # today's rolling bias is never retroactively applied to historical predictions.
 
 import csv
@@ -288,31 +288,175 @@ def resolve_bias_values() -> dict:
                 if value is None:
                     raise ValueError(f"{league} fixed {component} bias requires numeric value")
 
-            elif method == "rolling":
+                window_games = None
+                windows_games = None
+
+            elif method in {"rolling", "regime_aware"}:
                 state_name = f"{component}_bias"
                 state_component = state_league.get(state_name)
-                if not isinstance(state_component, dict):
-                    raise ValueError(f"{league} missing {state_name} in rolling_bias_state.yaml")
-                if str(state_component.get("status", "")).strip().lower() != "ready":
-                    raise ValueError(f"{league} {state_name} is not ready in rolling_bias_state.yaml")
-                if str(state_component.get("method", "")).strip().lower() != "rolling":
-                    raise ValueError(f"{league} {state_name} state method is not rolling")
 
-                configured_window = rule.get("window_games")
-                state_window = state_component.get("window_games")
-                if configured_window is not None and state_window is not None:
-                    if int(configured_window) != int(state_window):
+                if not isinstance(state_component, dict):
+                    raise ValueError(
+                        f"{league} missing {state_name} in rolling_bias_state.yaml"
+                    )
+
+                if str(state_component.get("status", "")).strip().lower() != "ready":
+                    raise ValueError(
+                        f"{league} {state_name} is not ready in rolling_bias_state.yaml"
+                    )
+
+                state_method = str(
+                    state_component.get("method", "")
+                ).strip().lower()
+
+                if state_method != method:
+                    raise ValueError(
+                        f"{league} {state_name} state method mismatch: "
+                        f"config={method} state={state_method}"
+                    )
+
+                if method == "rolling":
+                    configured_window = rule.get("window_games")
+                    state_window = state_component.get("window_games")
+
+                    if configured_window is not None and state_window is not None:
+                        if int(configured_window) != int(state_window):
+                            raise ValueError(
+                                f"{league} {component} rolling window mismatch: "
+                                f"config={configured_window} state={state_window}"
+                            )
+
+                    window_games = (
+                        int(configured_window)
+                        if configured_window is not None
+                        else None
+                    )
+                    windows_games = None
+
+                else:
+                    configured_windows = rule.get("windows_games")
+                    state_windows = state_component.get("windows_games")
+
+                    if not isinstance(configured_windows, list) or not configured_windows:
                         raise ValueError(
-                            f"{league} {component} rolling window mismatch: "
-                            f"config={configured_window} state={state_window}"
+                            f"{league} regime_aware {component} bias requires "
+                            f"windows_games in model_config.yaml"
                         )
+
+                    if not isinstance(state_windows, list) or not state_windows:
+                        raise ValueError(
+                            f"{league} {state_name} missing windows_games "
+                            f"in rolling_bias_state.yaml"
+                        )
+
+                    configured_windows_int = [
+                        int(window)
+                        for window in configured_windows
+                    ]
+                    state_windows_int = [
+                        int(window)
+                        for window in state_windows
+                    ]
+
+                    if configured_windows_int != state_windows_int:
+                        raise ValueError(
+                            f"{league} {component} regime-aware windows mismatch: "
+                            f"config={configured_windows_int} "
+                            f"state={state_windows_int}"
+                        )
+
+                    configured_weights = rule.get("weights")
+                    state_weights = state_component.get("weights")
+
+                    if (
+                        not isinstance(configured_weights, list)
+                        or len(configured_weights) != len(configured_windows_int)
+                    ):
+                        raise ValueError(
+                            f"{league} regime_aware {component} bias requires "
+                            f"one configured weight per window"
+                        )
+
+                    if (
+                        not isinstance(state_weights, list)
+                        or len(state_weights) != len(configured_windows_int)
+                    ):
+                        raise ValueError(
+                            f"{league} {state_name} missing valid weights "
+                            f"in rolling_bias_state.yaml"
+                        )
+
+                    config_weight_values = [
+                        float(weight)
+                        for weight in configured_weights
+                    ]
+                    weight_sum = sum(config_weight_values)
+
+                    if weight_sum <= 0:
+                        raise ValueError(
+                            f"{league} regime_aware {component} weights "
+                            f"must sum to > 0"
+                        )
+
+                    normalized_config_weights = [
+                        weight / weight_sum
+                        for weight in config_weight_values
+                    ]
+                    state_weight_values = [
+                        float(weight)
+                        for weight in state_weights
+                    ]
+
+                    if any(
+                        abs(configured - state) > 1e-6
+                        for configured, state
+                        in zip(
+                            normalized_config_weights,
+                            state_weight_values,
+                        )
+                    ):
+                        raise ValueError(
+                            f"{league} {component} regime-aware weight mismatch: "
+                            f"config={normalized_config_weights} "
+                            f"state={state_weight_values}"
+                        )
+
+                    configured_shrink = to_float(
+                        rule.get("sign_conflict_shrink")
+                    )
+                    state_shrink = to_float(
+                        state_component.get("sign_conflict_shrink")
+                    )
+
+                    if configured_shrink is None or state_shrink is None:
+                        raise ValueError(
+                            f"{league} regime_aware {component} bias requires "
+                            f"sign_conflict_shrink in config and state"
+                        )
+
+                    if abs(configured_shrink - state_shrink) > 1e-6:
+                        raise ValueError(
+                            f"{league} {component} regime-aware shrink mismatch: "
+                            f"config={configured_shrink} state={state_shrink}"
+                        )
+
+                    window_games = max(
+                        configured_windows_int
+                    )
+                    windows_games = (
+                        configured_windows_int
+                    )
 
                 value = to_float(state_component.get("value"))
                 if value is None:
-                    raise ValueError(f"{league} {state_name} has no numeric value")
+                    raise ValueError(
+                        f"{league} {state_name} has no numeric value"
+                    )
 
             elif method == "none":
                 value = 0.0
+                window_games = None
+                windows_games = None
 
             else:
                 raise ValueError(
@@ -322,7 +466,8 @@ def resolve_bias_values() -> dict:
             league_values[component] = {
                 "method": method,
                 "value": float(value),
-                "window_games": rule.get("window_games"),
+                "window_games": window_games,
+                "windows_games": windows_games,
             }
 
         resolved[league] = league_values
@@ -953,13 +1098,13 @@ def main():
 
     log_master("INFO | Starting basketball input cleanup")
     log_master(f"INFO | Model config: {CONFIG_PATH}")
-    log_master(f"INFO | Rolling bias state: {BIAS_STATE_PATH}")
+    log_master(f"INFO | Dynamic bias state: {BIAS_STATE_PATH}")
     log_master("INFO | Odds cleanup active: blanks only the affected market; does not drop entire games")
     log_master("INFO | Missing market odds are treated as unavailable market, not bad game")
     log_master("INFO | Hold-based odds filtering removed")
     log_master("INFO | Spread outlier fix active: sportsbook home_spread is converted to model-margin convention using -home_spread")
     log_master("INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained")
-    log_master("INFO | Historical cleaned predictions are preserved; current rolling bias is only applied to current/future raw predictions")
+    log_master("INFO | Historical cleaned predictions are preserved; current dynamic bias is only applied to current/future raw predictions")
     log_master(f"INFO | League logs: {LEAGUE_LOG_FILES}")
 
     for league in ("NBA", "NCAAM", "WNBA"):
