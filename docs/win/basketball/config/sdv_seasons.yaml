@@ -1,10 +1,11 @@
 # SportsDataVerse season-ID translation.
 #
-# Internal basketball season files use the season START year in filenames:
-#   2025_NBA.csv -> October 2025 through June 2026
+# Internal NBA/NCAAM season files use the season START year:
+#   2025_NBA.csv   -> 2025-26 season -> SDV 2026
+#   2025_NCAAM.csv -> 2025-26 season -> SDV 2026
 #
-# SportsDataVerse NBA integer seasons use the season END year:
-#   internal NBA 2025 -> SDV NBA 2026
+# Internal WNBA season files use the calendar year:
+#   2026_WNBA.csv -> 2026 season -> SDV 2026
 #
 # Mapping policy is explicit_only:
 # - Never pass an internal season directly to SportsDataVerse.
@@ -21,15 +22,20 @@ leagues:
     sdv_season_definition: end_year
     mappings:
       2025: 2026
+      2026: 2027
 
   ncaam:
-    status: not_configured
+    status: active
     internal_season_definition: start_year
-    sdv_season_definition: null
-    mappings: {}
+    sdv_season_definition: end_year
+    mappings:
+      2025: 2026
+      2026: 2027
 
   wnba:
-    status: not_configured
+    status: active
     internal_season_definition: calendar_year
-    sdv_season_definition: null
-    mappings: {}
+    sdv_season_definition: calendar_year
+    mappings:
+      2025: 2025
+      2026: 2026
