@@ -1,0 +1,11 @@
+=== WNBA bias drift 2026-08-20T14:12:29.578595+00:00 ===
+pipeline_health_generated_at_utc: 2026-08-20T14:12:29.535671+00:00
+definition: adjusted_projected_minus_actual
+warning_threshold_abs_points: 2.0
+matched_games: 267
+window_25: games=25 margin_mean_residual=0.1812 total_mean_residual=5.8356 warning=True
+window_50: games=50 margin_mean_residual=-1.6674 total_mean_residual=1.2938 warning=False
+window_100: games=100 margin_mean_residual=-0.4907 total_mean_residual=-3.3941 warning=True
+WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
+WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
+STATUS: WARNING

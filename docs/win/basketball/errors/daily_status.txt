@@ -1,0 +1,54 @@
+BASKETBALL DAILY STATUS
+=======================
+generated_at_utc: 2026-08-20T14:12:33Z
+game_date_new_york: 2026_08_20
+github_run_id: 32378511362
+github_run_attempt: 1
+workflow_status: success
+
+SEASON STATUS
+-------------
+nba: offseason
+ncaam: offseason
+wnba: in_season
+
+SUMMARY
+-------
+txt_files_checked_this_run: 26
+txt_files_with_issues: 3
+txt_issue_lines: 10
+txt_issue_lines_suppressed_offseason: 24
+no_map_teams: 0
+no_map_teams_suppressed_offseason: 0
+system_issues: 0
+overall: ISSUES FOUND
+
+CURRENT-RUN TXT ISSUES
+----------------------
+[docs/win/basketball/errors/00_intake/calculate_rolling_bias.txt]
+run_change: REWRITTEN
+14:2026-08-20T14:12:25+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=0.19 total=2.318 warnings=2
+
+[docs/win/basketball/errors/pipeline_health.txt]
+run_change: REWRITTEN
+9:WNBA drift 25: games=25 margin=0.1812 total=5.8356 warning=True
+11:WNBA drift 100: games=100 margin=-0.4907 total=-3.3941 warning=True
+12:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
+13:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
+
+[docs/win/basketball/errors/wnba_bias_drift.txt]
+run_change: REWRITTEN
+6:window_25: games=25 margin_mean_residual=0.1812 total_mean_residual=5.8356 warning=True
+8:window_100: games=100 margin_mean_residual=-0.4907 total_mean_residual=-3.3941 warning=True
+9:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
+10:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
+11:STATUS: WARNING
+
+NO-MAP TEAMS
+------------
+None
+
+SYSTEM ISSUES
+-------------
+None
+

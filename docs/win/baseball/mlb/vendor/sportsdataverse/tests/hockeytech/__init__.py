@@ -1,1 +1,0 @@
-# HockeyTech test package

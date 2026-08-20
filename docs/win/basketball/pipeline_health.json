@@ -1,0 +1,226 @@
+{
+  "fatal_errors": [],
+  "game_date_new_york": "2026_08_20",
+  "generated_at_utc": "2026-08-20T14:12:29.535671+00:00",
+  "leagues": {
+    "nba": {
+      "counts": {
+        "locked_bets": 0,
+        "merged_games": 0,
+        "prediction_games": 0,
+        "scheduled_games": 0,
+        "selected_bets": 0,
+        "sportsbook_games": 0
+      },
+      "coverage": {
+        "predictions_not_merged": [],
+        "scheduled_missing_predictions": [],
+        "scheduled_missing_sportsbook": []
+      },
+      "identity": {
+        "blank_daily_game_ids": 0,
+        "blank_prediction_game_ids": 0,
+        "daily_conflicting_game_ids": [],
+        "daily_duplicate_composites": [],
+        "prediction_conflicting_game_ids": [],
+        "prediction_duplicate_composites": []
+      },
+      "in_season": false,
+      "paths": {
+        "daily_games": "docs/win/basketball/daily_games/nba/2026_08_20_NBA.csv",
+        "locked": "docs/win/basketball/04_select/nba/locked_picks/2026_08_20_nba_selected.csv",
+        "merged": "docs/win/basketball/01_merge/nba/moneyline/2026_08_20_NBA_moneyline.csv",
+        "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/nba/2026_08_20_NBA_predictions.csv",
+        "selected": "docs/win/basketball/04_select/nba/daily_picks/2026_08_20_nba_selected.csv",
+        "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/nba/2026_08_20_NBA_odds.csv"
+      },
+      "season_config": {
+        "end_day": 1,
+        "end_month": 7,
+        "start_day": 15,
+        "start_month": 10
+      }
+    },
+    "ncaam": {
+      "counts": {
+        "locked_bets": 0,
+        "merged_games": 0,
+        "prediction_games": 0,
+        "scheduled_games": 0,
+        "selected_bets": 0,
+        "sportsbook_games": 0
+      },
+      "coverage": {
+        "predictions_not_merged": [],
+        "scheduled_missing_predictions": [],
+        "scheduled_missing_sportsbook": []
+      },
+      "identity": {
+        "blank_daily_game_ids": 0,
+        "blank_prediction_game_ids": 0,
+        "daily_conflicting_game_ids": [],
+        "daily_duplicate_composites": [],
+        "prediction_conflicting_game_ids": [],
+        "prediction_duplicate_composites": []
+      },
+      "in_season": false,
+      "paths": {
+        "daily_games": "docs/win/basketball/daily_games/ncaam/2026_08_20_NCAAM.csv",
+        "locked": "docs/win/basketball/04_select/ncaam/locked_picks/2026_08_20_ncaam_selected.csv",
+        "merged": "docs/win/basketball/01_merge/ncaam/moneyline/2026_08_20_NCAAM_moneyline.csv",
+        "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/ncaam/2026_08_20_NCAAM_predictions.csv",
+        "selected": "docs/win/basketball/04_select/ncaam/daily_picks/2026_08_20_ncaam_selected.csv",
+        "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/ncaam/2026_08_20_NCAAM_odds.csv"
+      },
+      "season_config": {
+        "end_day": 1,
+        "end_month": 7,
+        "start_day": 31,
+        "start_month": 10
+      }
+    },
+    "wnba": {
+      "counts": {
+        "locked_bets": 1,
+        "merged_games": 3,
+        "prediction_games": 3,
+        "scheduled_games": 3,
+        "selected_bets": 1,
+        "sportsbook_games": 3
+      },
+      "coverage": {
+        "predictions_not_merged": [],
+        "scheduled_missing_predictions": [],
+        "scheduled_missing_sportsbook": []
+      },
+      "identity": {
+        "blank_daily_game_ids": 0,
+        "blank_prediction_game_ids": 0,
+        "daily_conflicting_game_ids": [],
+        "daily_duplicate_composites": [],
+        "prediction_conflicting_game_ids": [],
+        "prediction_duplicate_composites": []
+      },
+      "in_season": true,
+      "paths": {
+        "daily_games": "docs/win/basketball/daily_games/wnba/2026_08_20_WNBA.csv",
+        "locked": "docs/win/basketball/04_select/wnba/locked_picks/2026_08_20_wnba_selected.csv",
+        "merged": "docs/win/basketball/01_merge/wnba/moneyline/2026_08_20_WNBA_moneyline.csv",
+        "predictions": "docs/win/basketball/00_intake/predictions/predictions_cleaned/wnba/2026_08_20_WNBA_predictions.csv",
+        "selected": "docs/win/basketball/04_select/wnba/daily_picks/2026_08_20_wnba_selected.csv",
+        "sportsbook": "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/wnba/2026_08_20_WNBA_odds.csv"
+      },
+      "season_config": {
+        "end_day": 31,
+        "end_month": 10,
+        "start_day": 1,
+        "start_month": 5
+      }
+    }
+  },
+  "schema_version": 1,
+  "season_config_path": "docs/win/basketball/config/season_dates.yaml",
+  "stage_status": [
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/basketball_odds.txt",
+      "status": "2026-08-20T14:12:11.874787 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/basketball_drat_scraper.txt",
+      "status": "2026-08-20T10:12:18.816858-04:00 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/transform_basketball_nba.txt",
+      "status": "2026-08-20T14:12:22.917306 | STATUS: SUCCESS (offseason skipped)"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/transform_basketball_ncaam.txt",
+      "status": "2026-08-20T14:12:22.917729 | STATUS: SUCCESS (offseason skipped)"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/transform_basketball_wnba.txt",
+      "status": "2026-08-20T14:12:22.915853 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/basketball_daily_games.txt",
+      "status": "2026-08-20T14:12:24.294350 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/basketball_game_id.txt",
+      "status": "2026-08-20T14:12:24.378652 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/00_intake/clean_basketball_inputs.txt",
+      "status": "2026-08-20T14:12:25.947252 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/01_merge/merge_intake.txt",
+      "status": "2026-08-20T14:12:26.018350 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/01_merge/build_juice_files.txt",
+      "status": "2026-08-20T14:12:27.392956 | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/03_edges/compute_ev_kelly.txt",
+      "status": "STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/04_select/select_bets.txt",
+      "status": "STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/04_select/daily_slate.txt",
+      "status": "2026-08-20T14:12:28.585889+00:00 | INFO  | STATUS: SUCCESS"
+    },
+    {
+      "exists": true,
+      "path": "docs/win/basketball/errors/05_final_scores/01_basketball_results_grade.txt",
+      "status": "2026-08-20T14:12:29.388164+00:00 | INFO  | STATUS: SUCCESS"
+    }
+  ],
+  "status": "healthy",
+  "wnba_bias_drift": {
+    "definition": "adjusted_projected_minus_actual",
+    "matched_games": 267,
+    "report_path": "docs/win/basketball/errors/99_validation/wnba_bias_drift.csv",
+    "warning_threshold_abs_points": 2.0,
+    "warnings": [
+      "WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836",
+      "WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394"
+    ],
+    "windows": {
+      "100": {
+        "games": 100,
+        "margin_mean_residual": -0.4907,
+        "total_mean_residual": -3.3941,
+        "warning": true
+      },
+      "25": {
+        "games": 25,
+        "margin_mean_residual": 0.1812,
+        "total_mean_residual": 5.8356,
+        "warning": true
+      },
+      "50": {
+        "games": 50,
+        "margin_mean_residual": -1.6674,
+        "total_mean_residual": 1.2938,
+        "warning": false
+      }
+    }
+  }
+}
