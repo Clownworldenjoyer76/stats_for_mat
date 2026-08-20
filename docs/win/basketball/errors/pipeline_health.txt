@@ -1,0 +1,13 @@
+=== basketball pipeline health 2026-08-20T14:12:29.535671+00:00 ===
+game_date_new_york: 2026_08_20
+season_config: docs/win/basketball/config/season_dates.yaml
+status: healthy
+NBA: in_season=False season=10/15-07/01 scheduled=0 predictions=0 sportsbook=0 merged=0 selected=0 locked=0
+NCAAM: in_season=False season=10/31-07/01 scheduled=0 predictions=0 sportsbook=0 merged=0 selected=0 locked=0
+WNBA: in_season=True season=05/01-10/31 scheduled=3 predictions=3 sportsbook=3 merged=3 selected=1 locked=1
+WNBA drift report: docs/win/basketball/errors/99_validation/wnba_bias_drift.csv
+WNBA drift 25: games=25 margin=0.1812 total=5.8356 warning=True
+WNBA drift 50: games=50 margin=-1.6674 total=1.2938 warning=False
+WNBA drift 100: games=100 margin=-0.4907 total=-3.3941 warning=True
+WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
+WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394

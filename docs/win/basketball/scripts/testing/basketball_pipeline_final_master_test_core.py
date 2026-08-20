@@ -1,0 +1,3204 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+"""
+FINAL BASKETBALL PIPELINE VALIDATION / OPTIMIZATION TEST
+========================================================
+
+Purpose
+-------
+One self-contained historical test for NBA / WNBA / NCAAM that evaluates:
+
+1) BIAS
+   - no bias
+   - one fixed bias estimated from prior games
+   - rolling bias windows estimated from prior games
+
+2) STD
+   - one fixed residual STD
+   - range-specific residual STDs using 2 / 3 / 4 sportsbook-line quantile bands
+   - shrinkage toward the global STD so small bands do not become absurdly noisy
+
+3) EDGE
+   - exact pipeline definition: model_probability * decimal_odds - 1 >= EDGE
+   - repeated chronological future-game folds
+   - one pick per game per market, choosing the higher-EV qualifying side
+   - block-bootstrap stress tests
+
+4) CALIBRATION
+   - raw
+   - intercept-only logistic correction
+   - temperature scaling
+   - Platt scaling (intercept + slope)
+   - beta calibration
+   - isotonic regression
+   - tested separately for HOME/AWAY ML, HOME/AWAY spread, OVER/UNDER
+
+5) SPREAD
+   - HOME vs AWAY separately
+   - spread-size bands
+   - shared EDGE vs separate HOME/AWAY EDGE
+
+6) TOTAL
+   - OVER vs UNDER separately
+   - sportsbook-total ranges
+   - model-vs-book disagreement ranges
+   - shared EDGE vs separate OVER/UNDER EDGE
+
+7) JOINT OPTIMIZATION
+   - BIAS strategy + STD mode + calibration methods + EDGE are evaluated together
+   - all candidate settings are built from prior games only and scored on later games
+
+8) LOCKBOX VALIDATION
+   - the last portion of the season is held out from ALL development/tuning
+   - one COMPLETE candidate per market is frozen before the lockbox is touched
+   - the frozen candidate is tested once against the complete current pipeline
+   - the lockbox never swaps individual bias / STD / calibration / EDGE components
+   - a change passes only if log loss, Brier, total profit and ROI are all no worse
+
+9) STRESS TESTING
+   - thousands of contiguous season-block bootstrap scenarios
+   - reports which configurations and EDGE thresholds survive different samples
+
+Transfer between leagues
+------------------------
+Change only LEAGUE and INPUT_FILE below, or pass --league / --input on the command line.
+The CURRENT_SETTINGS dictionary already contains NBA, NCAAM and WNBA pipeline values.
+
+Important pipeline behavior mirrored here
+-----------------------------------------
+- Existing bias is reversed first when bias_applied == 1, using the exact cleaner equations.
+- Spread/total probability uses a normal distribution.
+- EDGE is expected return, not model-vs-market probability difference.
+- One side per game per market is selected using maximum EV, matching current pick_one behavior.
+
+This script DOES NOT edit the repository or source CSV.
+It writes reports/CSVs beside the input file.
+"""
+
+import argparse
+import json
+import math
+import sys
+import time
+import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+
+try:
+    from scipy.optimize import minimize
+    from scipy.stats import norm
+except Exception as exc:
+    raise SystemExit("This script requires scipy. Install with: pip install scipy") from exc
+
+try:
+    from sklearn.isotonic import IsotonicRegression
+except Exception as exc:
+    raise SystemExit("This script requires scikit-learn. Install with: pip install scikit-learn") from exc
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+# =============================================================================
+# USER CONFIGURATION - CHANGE THESE TWO LINES FOR ANOTHER LEAGUE / FILE
+# =============================================================================
+LEAGUE = "NBA"
+INPUT_FILE = Path(r"C:\basketball\nba\2025\_NBA.csv")
+SEASON_LABEL = "2025"
+
+# Current values from the basketball pipeline.
+CURRENT_SETTINGS = {
+    "NBA": {
+        "MARGIN_BIAS": 0.4,
+        "TOTAL_BIAS": 0.4,
+        "SPREAD_STD": 14.1837,
+        "TOTAL_STD": 19.1345,
+        "ML_EDGE": 0.020,
+        "SPREAD_EDGE": 0.050,
+        "TOTAL_EDGE": 0.030,
+    },
+    "NCAAM": {
+        "MARGIN_BIAS": 0.6,
+        "TOTAL_BIAS": 1.2,
+        "SPREAD_STD": 11.2375,
+        "TOTAL_STD": 17.7495,
+        "ML_EDGE": 0.015,
+        "SPREAD_EDGE": 0.100,
+        "TOTAL_EDGE": 0.030,
+    },
+    "WNBA": {
+        "MARGIN_BIAS": 0.5,
+        "TOTAL_BIAS": 0.0,
+        "SPREAD_STD": 13.0424,
+        "TOTAL_STD": 16.6675,
+        "ML_EDGE": 0.005,
+        "SPREAD_EDGE": 0.050,
+        "TOTAL_EDGE": 0.030,
+    },
+}
+
+# =============================================================================
+# THOROUGHNESS / VALIDATION SETTINGS
+# =============================================================================
+RANDOM_SEED = 20260813
+LOCKBOX_FRACTION = 0.15          # last 15% of season is never used for tuning
+TARGET_OUTER_FOLDS = 10
+MIN_OUTER_TEST_GAMES = 25
+MIN_TRAIN_FRACTION = 0.35
+
+# 10,000 block-resampled scenarios by default.
+STRESS_REPS = 10_000
+SEASON_BLOCK_DAYS = 14           # contiguous 2-week blocks
+TOP_CONFIGS_TO_STRESS = 20
+
+ROLLING_WINDOWS = [50, 100, 250, 500]
+STD_MODES = ["fixed", "q2", "q3", "q4"]
+STD_SHRINKAGE_GAMES = 50.0
+MIN_STD = 2.0
+MAX_STD = 50.0
+
+CALIBRATION_METHODS = [
+    "raw",
+    "intercept_only",
+    "temperature",
+    "platt",
+    "beta",
+    "isotonic",
+]
+MIN_CALIBRATION_GAMES = 50
+
+EDGE_GRID = np.round(np.arange(0.0, 0.2501, 0.005), 3)
+SPLIT_EDGE_GRID = np.round(np.arange(0.0, 0.2001, 0.010), 3)
+
+# Pre-declared evidence rules. They prevent a complicated model from being
+# recommended for microscopic gains that are unlikely to matter in production.
+MIN_CALIBRATION_FOLD_WIN_RATE = 0.60
+MIN_ADAPTIVE_STD_REL_NLL_IMPROVEMENT = 0.001      # 0.1%
+MIN_SPLIT_EDGE_DEV_PROFIT_IMPROVEMENT = 0.05      # 5% more dev OOS profit
+MIN_STRESS_POSITIVE_ROI_PROBABILITY = 0.60
+
+EPS = 1e-10
+
+# =============================================================================
+# BASIC HELPERS
+# =============================================================================
+def now_seconds() -> float:
+    return time.perf_counter()
+
+
+def progress(msg: str) -> None:
+    print(msg, flush=True)
+
+
+def safe_num(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors="coerce")
+
+
+def clip_prob(p: Any) -> np.ndarray:
+    return np.clip(np.asarray(p, dtype=float), 0.01, 0.99)
+
+
+def sigmoid(x: Any) -> np.ndarray:
+    x = np.clip(np.asarray(x, dtype=float), -35.0, 35.0)
+    return 1.0 / (1.0 + np.exp(-x))
+
+
+def logit(p: Any) -> np.ndarray:
+    p = np.clip(np.asarray(p, dtype=float), EPS, 1.0 - EPS)
+    return np.log(p / (1.0 - p))
+
+
+def brier_score(p: Any, y: Any) -> float:
+    p = np.asarray(p, dtype=float)
+    y = np.asarray(y, dtype=float)
+    mask = np.isfinite(p) & np.isfinite(y)
+    if not mask.any():
+        return np.nan
+    return float(np.mean((p[mask] - y[mask]) ** 2))
+
+
+def binary_log_loss(p: Any, y: Any) -> float:
+    p = np.asarray(p, dtype=float)
+    y = np.asarray(y, dtype=float)
+    mask = np.isfinite(p) & np.isfinite(y)
+    if not mask.any():
+        return np.nan
+    q = np.clip(p[mask], EPS, 1.0 - EPS)
+    yy = y[mask]
+    return float(-np.mean(yy * np.log(q) + (1.0 - yy) * np.log(1.0 - q)))
+
+
+def rmse(x: Any) -> float:
+    x = np.asarray(x, dtype=float)
+    x = x[np.isfinite(x)]
+    return float(np.sqrt(np.mean(x * x))) if len(x) else np.nan
+
+
+def mae(x: Any) -> float:
+    x = np.asarray(x, dtype=float)
+    x = x[np.isfinite(x)]
+    return float(np.mean(np.abs(x))) if len(x) else np.nan
+
+
+def percentile(values: Any, q: float) -> float:
+    x = np.asarray(values, dtype=float)
+    x = x[np.isfinite(x)]
+    return float(np.percentile(x, q)) if len(x) else np.nan
+
+
+def devig_pair(decimal_a: Any, decimal_b: Any) -> tuple[np.ndarray, np.ndarray]:
+    a = np.asarray(decimal_a, dtype=float)
+    b = np.asarray(decimal_b, dtype=float)
+    pa = np.where(a > 1.0, 1.0 / a, np.nan)
+    pb = np.where(b > 1.0, 1.0 / b, np.nan)
+    s = pa + pb
+    return pa / s, pb / s
+
+
+def unit_profit_from_result(result: Any, decimal_odds: Any) -> np.ndarray:
+    r = np.asarray(result, dtype=float)
+    o = np.asarray(decimal_odds, dtype=float)
+    out = np.full(len(r), np.nan, dtype=float)
+    valid = np.isfinite(o) & (o > 1.0)
+    out[valid & (r == 1.0)] = o[valid & (r == 1.0)] - 1.0
+    out[valid & (r == 0.0)] = -1.0
+    # Push/tie rows use result=0.5 and return stake.
+    out[valid & (r == 0.5)] = 0.0
+    return out
+
+
+def normal_residual_nll(error: Any, sigma: Any) -> np.ndarray:
+    e = np.asarray(error, dtype=float)
+    s = np.asarray(sigma, dtype=float)
+    s = np.clip(s, MIN_STD, MAX_STD)
+    return np.log(s) + 0.5 * (e / s) ** 2
+
+
+def save_csv(df: pd.DataFrame, path: Path) -> Path:
+    df.to_csv(path, index=False)
+    return path
+
+
+def json_compact(obj: Any) -> str:
+    return json.dumps(obj, separators=(",", ":"), sort_keys=True)
+
+
+def format_float(v: Any, digits: int = 5) -> str:
+    try:
+        if v is None or not np.isfinite(float(v)):
+            return ""
+        return f"{float(v):.{digits}f}"
+    except Exception:
+        return str(v)
+
+
+def make_prefix(league: str, season: str) -> str:
+    return f"{league}_{season}_FINAL_MASTER"
+
+
+def infer_season_label(df: pd.DataFrame, fallback: str) -> str:
+    years = pd.to_datetime(df["_date"], errors="coerce").dt.year.dropna().astype(int)
+    if years.empty:
+        return fallback
+    return str(int(years.min()))
+
+# =============================================================================
+# DATA LOADING / EXACT PRE-BIAS RECONSTRUCTION
+# =============================================================================
+def load_data(input_file: Path, league: str, settings: dict[str, float]) -> pd.DataFrame:
+    if not input_file.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    df = pd.read_csv(input_file)
+
+    required = [
+        "game_date", "game_id", "home_team", "away_team",
+        "home_spread", "away_spread", "total",
+        "home_dk_moneyline_decimal", "away_dk_moneyline_decimal",
+        "home_dk_spread_decimal", "away_dk_spread_decimal",
+        "dk_total_over_decimal", "dk_total_under_decimal",
+        "home_prob", "away_prob",
+        "home_projected_points", "away_projected_points", "total_projected_points",
+        "home_score", "away_score",
+    ]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise ValueError("Missing required columns: " + ", ".join(missing))
+
+    if "bias_applied" not in df.columns:
+        df["bias_applied"] = 0
+
+    numeric = [
+        "home_spread", "away_spread", "total",
+        "home_dk_moneyline_decimal", "away_dk_moneyline_decimal",
+        "home_dk_spread_decimal", "away_dk_spread_decimal",
+        "dk_total_over_decimal", "dk_total_under_decimal",
+        "home_prob", "away_prob",
+        "home_projected_points", "away_projected_points", "total_projected_points",
+        "home_score", "away_score", "bias_applied",
+    ]
+    for c in numeric:
+        df[c] = safe_num(df[c])
+
+    df["_date"] = pd.to_datetime(
+        df["game_date"].astype(str).str.replace("_", "-", regex=False),
+        errors="coerce",
+    )
+    df = df[df["_date"].notna()].copy()
+    df = df.sort_values(["_date", "game_id"], kind="stable").reset_index(drop=True)
+    df["_row_id"] = np.arange(len(df), dtype=int)
+    df["_week"] = df["_date"].dt.to_period("W-SUN").astype(str)
+    df["_month"] = df["_date"].dt.to_period("M").astype(str)
+
+    # Ground-truth score values are recomputed from final scores.
+    df["actual_margin"] = df["home_score"] - df["away_score"]
+    df["actual_total_calc"] = df["home_score"] + df["away_score"]
+
+    # Current stored predictions may already contain cleaner bias. Reverse it
+    # row by row ONLY where bias_applied == 1.
+    flagged = df["bias_applied"].fillna(0).eq(1)
+    current_margin = df["home_projected_points"] - df["away_projected_points"]
+    current_total = df["total_projected_points"]
+
+    df["raw_margin"] = current_margin
+    df.loc[flagged, "raw_margin"] = (
+        df.loc[flagged, "raw_margin"] + settings["MARGIN_BIAS"]
+    )
+
+    df["raw_total"] = current_total
+    df.loc[flagged, "raw_total"] = (
+        df.loc[flagged, "raw_total"] + settings["TOTAL_BIAS"]
+    )
+
+    # Exact raw score components from clean_basketball_inputs.py equations.
+    df["raw_home_projected"] = df["home_projected_points"]
+    df["raw_away_projected"] = df["away_projected_points"]
+    df.loc[flagged, "raw_home_projected"] = (
+        df.loc[flagged, "home_projected_points"]
+        + settings["MARGIN_BIAS"] / 2.0
+        + settings["TOTAL_BIAS"] / 2.0
+    )
+    df.loc[flagged, "raw_away_projected"] = (
+        df.loc[flagged, "away_projected_points"]
+        - settings["MARGIN_BIAS"] / 2.0
+        + settings["TOTAL_BIAS"] / 2.0
+    )
+
+    # Bias value that would have made each raw prediction exact.
+    # Cleaner applies adjusted = raw - bias, so required_bias = raw - actual.
+    df["required_margin_bias"] = df["raw_margin"] - df["actual_margin"]
+    df["required_total_bias"] = df["raw_total"] - df["actual_total_calc"]
+
+    # Outcomes. 0.5 = push/tie for betting profit. NaN is used for probability scoring.
+    df["home_win_result"] = np.where(
+        df["actual_margin"] > 0, 1.0,
+        np.where(df["actual_margin"] < 0, 0.0, 0.5),
+    )
+    spread_value = df["actual_margin"] + df["home_spread"]
+    df["home_spread_result"] = np.where(
+        spread_value > 0, 1.0,
+        np.where(spread_value < 0, 0.0, 0.5),
+    )
+    total_value = df["actual_total_calc"] - df["total"]
+    df["over_result"] = np.where(
+        total_value > 0, 1.0,
+        np.where(total_value < 0, 0.0, 0.5),
+    )
+
+    # Probability-scoring outcomes exclude pushes/ties.
+    df["home_win_y"] = df["home_win_result"].replace({0.5: np.nan})
+    df["away_win_y"] = 1.0 - df["home_win_y"]
+    df["home_spread_y"] = df["home_spread_result"].replace({0.5: np.nan})
+    df["away_spread_y"] = 1.0 - df["home_spread_y"]
+    df["over_y"] = df["over_result"].replace({0.5: np.nan})
+    df["under_y"] = 1.0 - df["over_y"]
+
+    # Devigged market probabilities for comparison only.
+    h, a = devig_pair(df["home_dk_moneyline_decimal"], df["away_dk_moneyline_decimal"])
+    df["market_home_ml_prob"] = h
+    df["market_away_ml_prob"] = a
+    h, a = devig_pair(df["home_dk_spread_decimal"], df["away_dk_spread_decimal"])
+    df["market_home_spread_prob"] = h
+    df["market_away_spread_prob"] = a
+    o, u = devig_pair(df["dk_total_over_decimal"], df["dk_total_under_decimal"])
+    df["market_over_prob"] = o
+    df["market_under_prob"] = u
+
+    if "league" in df.columns:
+        league_values = df["league"].astype(str).str.upper().dropna().unique().tolist()
+        if league_values and league not in league_values:
+            print(f"WARNING: configured league={league}, file league values={league_values}")
+
+    return df
+
+# =============================================================================
+# DEVELOPMENT / LOCKBOX SPLIT AND CHRONOLOGICAL FOLDS
+# =============================================================================
+def split_development_lockbox(df: pd.DataFrame, fraction: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+    n = len(df)
+    raw_cut = int(math.floor(n * (1.0 - fraction)))
+    raw_cut = min(max(raw_cut, 1), n - 1)
+
+    # Do not split games from the same calendar date across dev/lockbox.
+    cut_date = df.iloc[raw_cut]["_date"]
+    first_lock = int(df.index[df["_date"] >= cut_date][0])
+    if first_lock < int(n * 0.70):
+        first_lock = raw_cut
+
+    dev = df.iloc[:first_lock].copy().reset_index(drop=True)
+    lockbox = df.iloc[first_lock:].copy().reset_index(drop=True)
+    return dev, lockbox
+
+
+def make_outer_folds(dev: pd.DataFrame, target_folds: int) -> list[tuple[int, np.ndarray, np.ndarray]]:
+    n = len(dev)
+    if n < 120:
+        raise ValueError(f"Not enough development games for final test: {n}")
+
+    min_train = max(80, int(round(n * MIN_TRAIN_FRACTION)))
+    remaining = n - min_train
+    folds_target = min(target_folds, max(4, remaining // MIN_OUTER_TEST_GAMES))
+    test_target = max(MIN_OUTER_TEST_GAMES, remaining // folds_target)
+
+    folds: list[tuple[int, np.ndarray, np.ndarray]] = []
+    start = min_train
+    fold_id = 1
+
+    # Move first start to the beginning of a date block.
+    if start < n:
+        d = dev.iloc[start]["_date"]
+        while start > 0 and dev.iloc[start - 1]["_date"] == d:
+            start -= 1
+
+    while start < n and fold_id <= target_folds + 2:
+        end = min(start + test_target, n)
+        if end < n:
+            d = dev.iloc[end - 1]["_date"]
+            while end < n and dev.iloc[end]["_date"] == d:
+                end += 1
+
+        if end - start < MIN_OUTER_TEST_GAMES and folds:
+            # Merge final tiny remainder into previous fold.
+            prev_id, tr, te = folds[-1]
+            folds[-1] = (prev_id, tr, np.arange(te[0], n))
+            break
+
+        train_idx = np.arange(0, start)
+        test_idx = np.arange(start, end)
+        folds.append((fold_id, train_idx, test_idx))
+        fold_id += 1
+        start = end
+
+    return folds
+
+
+def all_oos_indices(folds: list[tuple[int, np.ndarray, np.ndarray]]) -> np.ndarray:
+    return np.concatenate([test for _, _, test in folds])
+
+# =============================================================================
+# BIAS STRATEGIES
+# =============================================================================
+def bias_strategy_names(n_dev: int) -> list[str]:
+    names = ["none", "fixed"]
+    for w in ROLLING_WINDOWS:
+        if w <= max(50, n_dev):
+            names.append(f"rolling_{w}")
+    return names
+
+
+def estimate_bias(train: pd.DataFrame, market: str, strategy: str) -> float:
+    col = "required_margin_bias" if market == "spread" else "required_total_bias"
+    vals = pd.to_numeric(train[col], errors="coerce").dropna()
+    if vals.empty or strategy == "none":
+        return 0.0
+    if strategy == "fixed":
+        return float(vals.mean())
+    if strategy.startswith("rolling_"):
+        w = int(strategy.split("_")[1])
+        return float(vals.tail(w).mean())
+    raise ValueError(f"Unknown bias strategy: {strategy}")
+
+
+def evaluate_bias_strategies(
+    dev: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    market: str,
+    strategies: list[str],
+    current_bias: float,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    raw_col = "raw_margin" if market == "spread" else "raw_total"
+    actual_col = "actual_margin" if market == "spread" else "actual_total_calc"
+
+    details = []
+    candidates = strategies + ["current_pipeline"]
+    for fold_id, train_idx, test_idx in folds:
+        train = dev.iloc[train_idx]
+        test = dev.iloc[test_idx]
+        for strategy in candidates:
+            if strategy == "current_pipeline":
+                bias = float(current_bias)
+            else:
+                bias = estimate_bias(train, market, strategy)
+            pred = test[raw_col].to_numpy(float) - bias
+            actual = test[actual_col].to_numpy(float)
+            err = actual - pred
+            for row_id, week, date, e in zip(
+                test["_row_id"], test["_week"], test["_date"], err
+            ):
+                if np.isfinite(e):
+                    details.append({
+                        "market": market,
+                        "fold_id": fold_id,
+                        "strategy": strategy,
+                        "bias_used": bias,
+                        "row_id": int(row_id),
+                        "week": str(week),
+                        "date": date,
+                        "error": float(e),
+                    })
+
+    detail_df = pd.DataFrame(details)
+    summary_rows = []
+    for strategy, g in detail_df.groupby("strategy", sort=False):
+        fold_metrics = g.groupby("fold_id").agg(
+            fold_rmse=("error", lambda x: float(np.sqrt(np.mean(np.square(x))))),
+            fold_mae=("error", lambda x: float(np.mean(np.abs(x)))),
+        )
+        summary_rows.append({
+            "market": market,
+            "strategy": strategy,
+            "oos_games": len(g),
+            "oos_rmse": rmse(g["error"]),
+            "oos_mae": mae(g["error"]),
+            "oos_mean_error": float(g["error"].mean()),
+            "median_fold_rmse": float(fold_metrics["fold_rmse"].median()),
+            "positive_error_folds": int((g.groupby("fold_id")["error"].mean() > 0).sum()),
+            "folds": int(g["fold_id"].nunique()),
+        })
+    summary_df = pd.DataFrame(summary_rows).sort_values(["oos_rmse", "oos_mae"]).reset_index(drop=True)
+    return detail_df, summary_df
+
+
+def stress_bias_strategies(
+    detail: pd.DataFrame,
+    strategies: list[str],
+    reps: int,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    x = detail[detail["strategy"].isin(strategies)].copy()
+    weeks = sorted(x["week"].unique().tolist())
+    if not weeks:
+        return pd.DataFrame()
+
+    strat_index = {s: i for i, s in enumerate(strategies)}
+    week_index = {w: i for i, w in enumerate(weeks)}
+    sse = np.zeros((len(weeks), len(strategies)), dtype=float)
+    cnt = np.zeros((len(weeks), len(strategies)), dtype=float)
+
+    for (week, strategy), g in x.groupby(["week", "strategy"]):
+        wi = week_index[week]
+        si = strat_index[strategy]
+        e = g["error"].to_numpy(float)
+        sse[wi, si] = np.nansum(e * e)
+        cnt[wi, si] = np.sum(np.isfinite(e))
+
+    draw_counts = rng.multinomial(len(weeks), np.repeat(1.0 / len(weeks), len(weeks)), size=reps)
+    total_sse = draw_counts @ sse
+    total_cnt = draw_counts @ cnt
+    rmses = np.sqrt(np.divide(total_sse, total_cnt, out=np.full_like(total_sse, np.nan), where=total_cnt > 0))
+    winners = np.nanargmin(rmses, axis=1)
+
+    rows = []
+    for s, si in strat_index.items():
+        vals = rmses[:, si]
+        rows.append({
+            "strategy": s,
+            "selection_frequency": float(np.mean(winners == si)),
+            "bootstrap_rmse_median": percentile(vals, 50),
+            "bootstrap_rmse_2_5": percentile(vals, 2.5),
+            "bootstrap_rmse_97_5": percentile(vals, 97.5),
+        })
+    return pd.DataFrame(rows).sort_values("selection_frequency", ascending=False).reset_index(drop=True)
+
+# =============================================================================
+# STD MODELS
+# =============================================================================
+@dataclass
+class StdModel:
+    mode: str
+    global_sigma: float
+    edges: list[float]
+    sigmas: list[float]
+    counts: list[int]
+
+
+def _std_feature(df: pd.DataFrame, market: str) -> np.ndarray:
+    if market == "spread":
+        return np.abs(df["home_spread"].to_numpy(float))
+    return df["total"].to_numpy(float)
+
+
+def _residual_after_bias(df: pd.DataFrame, market: str, bias: float) -> np.ndarray:
+    if market == "spread":
+        pred = df["raw_margin"].to_numpy(float) - bias
+        actual = df["actual_margin"].to_numpy(float)
+    else:
+        pred = df["raw_total"].to_numpy(float) - bias
+        actual = df["actual_total_calc"].to_numpy(float)
+    return actual - pred
+
+
+def fit_std_model(train: pd.DataFrame, market: str, bias: float, mode: str) -> StdModel:
+    err = _residual_after_bias(train, market, bias)
+    feature = _std_feature(train, market)
+    mask = np.isfinite(err)
+    global_var = float(np.mean(err[mask] ** 2)) if mask.any() else 100.0
+    global_sigma = float(np.clip(np.sqrt(max(global_var, 1e-8)), MIN_STD, MAX_STD))
+
+    if mode == "fixed":
+        return StdModel(mode=mode, global_sigma=global_sigma, edges=[], sigmas=[global_sigma], counts=[int(mask.sum())])
+
+    q = int(mode[1:])
+    valid = np.isfinite(feature) & np.isfinite(err)
+    if valid.sum() < max(q * 30, 80):
+        return StdModel(mode="fixed", global_sigma=global_sigma, edges=[], sigmas=[global_sigma], counts=[int(valid.sum())])
+
+    probs = np.arange(1, q) / q
+    cuts = np.unique(np.quantile(feature[valid], probs))
+    if len(cuts) != q - 1:
+        return StdModel(mode="fixed", global_sigma=global_sigma, edges=[], sigmas=[global_sigma], counts=[int(valid.sum())])
+
+    bin_id = np.digitize(feature, cuts, right=True)
+    sigmas: list[float] = []
+    counts: list[int] = []
+    for b in range(q):
+        m = valid & (bin_id == b)
+        n = int(m.sum())
+        counts.append(n)
+        if n == 0:
+            sigmas.append(global_sigma)
+            continue
+        bin_var = float(np.mean(err[m] ** 2))
+        shrunk_var = (
+            n * bin_var + STD_SHRINKAGE_GAMES * global_var
+        ) / (n + STD_SHRINKAGE_GAMES)
+        sigmas.append(float(np.clip(np.sqrt(max(shrunk_var, 1e-8)), MIN_STD, MAX_STD)))
+
+    return StdModel(
+        mode=mode,
+        global_sigma=global_sigma,
+        edges=[float(x) for x in cuts],
+        sigmas=sigmas,
+        counts=counts,
+    )
+
+
+def apply_std_model(model: StdModel, df: pd.DataFrame, market: str) -> tuple[np.ndarray, np.ndarray]:
+    feature = _std_feature(df, market)
+    if model.mode == "fixed" or not model.edges:
+        return np.repeat(model.global_sigma, len(df)), np.zeros(len(df), dtype=int)
+    bins = np.digitize(feature, np.asarray(model.edges, dtype=float), right=True)
+    sigma = np.asarray([model.sigmas[min(max(int(b), 0), len(model.sigmas) - 1)] for b in bins], dtype=float)
+    return sigma, bins
+
+
+def home_spread_probability(mean_margin: Any, home_spread: Any, sigma: Any) -> np.ndarray:
+    mean_margin = np.asarray(mean_margin, dtype=float)
+    home_spread = np.asarray(home_spread, dtype=float)
+    sigma = np.asarray(sigma, dtype=float)
+    # Home covers iff actual_margin > -home_spread.
+    return clip_prob(1.0 - norm.cdf(-home_spread, loc=mean_margin, scale=sigma))
+
+
+def over_probability(mean_total: Any, book_total: Any, sigma: Any) -> np.ndarray:
+    mean_total = np.asarray(mean_total, dtype=float)
+    book_total = np.asarray(book_total, dtype=float)
+    sigma = np.asarray(sigma, dtype=float)
+    return clip_prob(1.0 - norm.cdf(book_total, loc=mean_total, scale=sigma))
+
+
+def fit_base_model(
+    train: pd.DataFrame,
+    market: str,
+    bias_strategy: str,
+    std_mode: str,
+) -> dict[str, Any]:
+    if market == "moneyline":
+        return {"market": market}
+    bias = estimate_bias(train, market, bias_strategy)
+    std_model = fit_std_model(train, market, bias, std_mode)
+    return {
+        "market": market,
+        "bias_strategy": bias_strategy,
+        "bias": float(bias),
+        "std_model": std_model,
+    }
+
+
+def apply_base_model(model: dict[str, Any], df: pd.DataFrame) -> dict[str, np.ndarray]:
+    market = model["market"]
+    if market == "moneyline":
+        return {
+            "side1_prob": clip_prob(df["home_prob"].to_numpy(float)),
+            "side2_prob": clip_prob(df["away_prob"].to_numpy(float)),
+            "mean": np.full(len(df), np.nan),
+            "sigma": np.full(len(df), np.nan),
+            "range_bin": np.full(len(df), -1, dtype=int),
+        }
+
+    bias = float(model["bias"])
+    std_model: StdModel = model["std_model"]
+    sigma, bins = apply_std_model(std_model, df, market)
+
+    if market == "spread":
+        mean = df["raw_margin"].to_numpy(float) - bias
+        p1 = home_spread_probability(mean, df["home_spread"].to_numpy(float), sigma)
+    else:
+        mean = df["raw_total"].to_numpy(float) - bias
+        p1 = over_probability(mean, df["total"].to_numpy(float), sigma)
+
+    return {
+        "side1_prob": p1,
+        "side2_prob": 1.0 - p1,
+        "mean": mean,
+        "sigma": sigma,
+        "range_bin": bins,
+    }
+
+
+def evaluate_std_modes(
+    dev: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    market: str,
+    bias_strategy: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    details = []
+    for fold_id, train_idx, test_idx in folds:
+        train = dev.iloc[train_idx]
+        test = dev.iloc[test_idx]
+        bias = estimate_bias(train, market, bias_strategy)
+        err = _residual_after_bias(test, market, bias)
+
+        for mode in STD_MODES:
+            sm = fit_std_model(train, market, bias, mode)
+            sigma, bins = apply_std_model(sm, test, market)
+            if market == "spread":
+                mean = test["raw_margin"].to_numpy(float) - bias
+                p = home_spread_probability(mean, test["home_spread"].to_numpy(float), sigma)
+                y = test["home_spread_y"].to_numpy(float)
+            else:
+                mean = test["raw_total"].to_numpy(float) - bias
+                p = over_probability(mean, test["total"].to_numpy(float), sigma)
+                y = test["over_y"].to_numpy(float)
+
+            nll = normal_residual_nll(err, sigma)
+            prob_ll = np.full(len(test), np.nan)
+            valid = np.isfinite(y)
+            if valid.any():
+                yy = y[valid]
+                pp = np.clip(p[valid], EPS, 1.0 - EPS)
+                prob_ll[valid] = -(yy * np.log(pp) + (1.0 - yy) * np.log(1.0 - pp))
+
+            for i in range(len(test)):
+                if np.isfinite(err[i]) and np.isfinite(sigma[i]):
+                    details.append({
+                        "market": market,
+                        "fold_id": fold_id,
+                        "mode": mode,
+                        "row_id": int(test.iloc[i]["_row_id"]),
+                        "week": str(test.iloc[i]["_week"]),
+                        "date": test.iloc[i]["_date"],
+                        "bias_used": bias,
+                        "range_bin": int(bins[i]),
+                        "sigma_used": float(sigma[i]),
+                        "residual_error": float(err[i]),
+                        "residual_nll": float(nll[i]),
+                        "prob_log_loss": float(prob_ll[i]) if np.isfinite(prob_ll[i]) else np.nan,
+                    })
+
+    detail_df = pd.DataFrame(details)
+    summary_rows = []
+    for mode, g in detail_df.groupby("mode", sort=False):
+        fold_nll = g.groupby("fold_id")["residual_nll"].mean()
+        summary_rows.append({
+            "market": market,
+            "bias_strategy": bias_strategy,
+            "std_mode": mode,
+            "oos_games": len(g),
+            "mean_residual_nll": float(g["residual_nll"].mean()),
+            "mean_probability_log_loss": float(g["prob_log_loss"].mean()),
+            "oos_residual_rmse": rmse(g["residual_error"]),
+            "median_sigma_used": float(g["sigma_used"].median()),
+            "folds_winning_residual_nll": 0,
+            "folds": int(g["fold_id"].nunique()),
+        })
+
+    summary = pd.DataFrame(summary_rows)
+    # Fold winner counts.
+    pivot = detail_df.groupby(["fold_id", "mode"])["residual_nll"].mean().unstack("mode")
+    if not pivot.empty:
+        winners = pivot.idxmin(axis=1)
+        for mode in summary["std_mode"]:
+            summary.loc[summary["std_mode"] == mode, "folds_winning_residual_nll"] = int((winners == mode).sum())
+    summary = summary.sort_values(["mean_residual_nll", "mean_probability_log_loss"]).reset_index(drop=True)
+    return detail_df, summary
+
+
+def stress_std_modes(detail: pd.DataFrame, modes: list[str], reps: int, rng: np.random.Generator) -> pd.DataFrame:
+    x = detail[detail["mode"].isin(modes)].copy()
+    weeks = sorted(x["week"].unique().tolist())
+    if not weeks:
+        return pd.DataFrame()
+    mi = {m: i for i, m in enumerate(modes)}
+    wi = {w: i for i, w in enumerate(weeks)}
+    sum_nll = np.zeros((len(weeks), len(modes)))
+    cnt = np.zeros((len(weeks), len(modes)))
+    for (week, mode), g in x.groupby(["week", "mode"]):
+        i, j = wi[week], mi[mode]
+        vals = g["residual_nll"].to_numpy(float)
+        sum_nll[i, j] = np.nansum(vals)
+        cnt[i, j] = np.sum(np.isfinite(vals))
+    draws = rng.multinomial(len(weeks), np.repeat(1 / len(weeks), len(weeks)), size=reps)
+    numer = draws @ sum_nll
+    denom = draws @ cnt
+    means = np.divide(numer, denom, out=np.full_like(numer, np.nan), where=denom > 0)
+    winners = np.nanargmin(means, axis=1)
+    rows = []
+    for mode, j in mi.items():
+        vals = means[:, j]
+        rows.append({
+            "std_mode": mode,
+            "selection_frequency": float(np.mean(winners == j)),
+            "bootstrap_mean_nll_median": percentile(vals, 50),
+            "bootstrap_mean_nll_2_5": percentile(vals, 2.5),
+            "bootstrap_mean_nll_97_5": percentile(vals, 97.5),
+        })
+    return pd.DataFrame(rows).sort_values("selection_frequency", ascending=False).reset_index(drop=True)
+
+# =============================================================================
+# CALIBRATION METHODS
+# =============================================================================
+def _clean_py(p: Any, y: Any) -> tuple[np.ndarray, np.ndarray]:
+    pp = np.asarray(p, dtype=float)
+    yy = np.asarray(y, dtype=float)
+    mask = np.isfinite(pp) & np.isfinite(yy)
+    return np.clip(pp[mask], 0.01, 0.99), yy[mask]
+
+
+def fit_calibrator(p: Any, y: Any, method: str) -> dict[str, Any]:
+    pp, yy = _clean_py(p, y)
+    if method == "raw" or len(pp) < MIN_CALIBRATION_GAMES or len(np.unique(yy)) < 2:
+        return {"method": "raw"}
+
+    if method == "isotonic":
+        try:
+            iso = IsotonicRegression(y_min=0.01, y_max=0.99, out_of_bounds="clip")
+            iso.fit(pp, yy)
+            return {
+                "method": "isotonic",
+                "model": iso,
+                "x_thresholds": [float(x) for x in iso.X_thresholds_],
+                "y_thresholds": [float(x) for x in iso.y_thresholds_],
+            }
+        except Exception:
+            return {"method": "raw"}
+
+    x = logit(pp)
+
+    def nll_from_q(q: np.ndarray) -> float:
+        q = np.clip(q, EPS, 1.0 - EPS)
+        return float(-np.sum(yy * np.log(q) + (1.0 - yy) * np.log(1.0 - q)))
+
+    if method == "intercept_only":
+        res = minimize(
+            lambda b: nll_from_q(sigmoid(b[0] + x)),
+            np.array([0.0]), method="L-BFGS-B", bounds=[(-5.0, 5.0)],
+        )
+        return {"method": method, "intercept": float(res.x[0]), "slope": 1.0}
+
+    if method == "temperature":
+        res = minimize(
+            lambda b: nll_from_q(sigmoid(b[0] * x)),
+            np.array([1.0]), method="L-BFGS-B", bounds=[(0.05, 5.0)],
+        )
+        return {"method": method, "intercept": 0.0, "slope": float(res.x[0])}
+
+    if method == "platt":
+        res = minimize(
+            lambda b: nll_from_q(sigmoid(b[0] + b[1] * x)),
+            np.array([0.0, 1.0]), method="L-BFGS-B",
+            bounds=[(-5.0, 5.0), (0.05, 5.0)],
+        )
+        return {"method": method, "intercept": float(res.x[0]), "slope": float(res.x[1])}
+
+    if method == "beta":
+        lp = np.log(np.clip(pp, EPS, 1.0))
+        lq = np.log(np.clip(1.0 - pp, EPS, 1.0))
+        res = minimize(
+            lambda b: nll_from_q(sigmoid(b[0] + b[1] * lp + b[2] * lq)),
+            np.array([0.0, 1.0, -1.0]), method="L-BFGS-B",
+            bounds=[(-10.0, 10.0), (-10.0, 10.0), (-10.0, 10.0)],
+        )
+        return {
+            "method": method,
+            "intercept": float(res.x[0]),
+            "coef_log_p": float(res.x[1]),
+            "coef_log_1mp": float(res.x[2]),
+        }
+
+    raise ValueError(f"Unknown calibration method: {method}")
+
+
+def apply_calibrator(model: dict[str, Any], p: Any) -> np.ndarray:
+    pp = clip_prob(p)
+    method = model.get("method", "raw")
+    if method == "raw":
+        return pp
+    if method in {"intercept_only", "temperature", "platt"}:
+        return clip_prob(sigmoid(float(model["intercept"]) + float(model["slope"]) * logit(pp)))
+    if method == "beta":
+        lp = np.log(np.clip(pp, EPS, 1.0))
+        lq = np.log(np.clip(1.0 - pp, EPS, 1.0))
+        z = (
+            float(model["intercept"])
+            + float(model["coef_log_p"]) * lp
+            + float(model["coef_log_1mp"]) * lq
+        )
+        return clip_prob(sigmoid(z))
+    if method == "isotonic":
+        iso = model.get("model")
+        if iso is not None:
+            return clip_prob(iso.predict(pp))
+        xs = np.asarray(model.get("x_thresholds", []), dtype=float)
+        ys = np.asarray(model.get("y_thresholds", []), dtype=float)
+        if len(xs) >= 2:
+            return clip_prob(np.interp(pp, xs, ys, left=ys[0], right=ys[-1]))
+        return pp
+    return pp
+
+
+def calibrator_formula(model: dict[str, Any]) -> str:
+    method = model.get("method", "raw")
+    if method == "raw":
+        return "NO ADJUSTMENT"
+    if method in {"intercept_only", "temperature", "platt"}:
+        return (
+            f"p_adj = logistic({model.get('intercept', 0):.8f} + "
+            f"{model.get('slope', 1):.8f} * logit(p_raw))"
+        )
+    if method == "beta":
+        return (
+            f"p_adj = logistic({model['intercept']:.8f} + "
+            f"{model['coef_log_p']:.8f}*ln(p_raw) + "
+            f"{model['coef_log_1mp']:.8f}*ln(1-p_raw))"
+        )
+    if method == "isotonic":
+        return "ISOTONIC LOOKUP TABLE - see calibration knots CSV"
+    return method
+
+# =============================================================================
+# MARKET DEFINITIONS
+# =============================================================================
+def market_sides(market: str) -> tuple[str, str]:
+    if market == "moneyline":
+        return "HOME", "AWAY"
+    if market == "spread":
+        return "HOME", "AWAY"
+    return "OVER", "UNDER"
+
+
+def side_outcome_columns(market: str) -> tuple[str, str]:
+    if market == "moneyline":
+        return "home_win_y", "away_win_y"
+    if market == "spread":
+        return "home_spread_y", "away_spread_y"
+    return "over_y", "under_y"
+
+
+def side_result_arrays(df: pd.DataFrame, market: str) -> tuple[np.ndarray, np.ndarray]:
+    if market == "moneyline":
+        r1 = df["home_win_result"].to_numpy(float)
+    elif market == "spread":
+        r1 = df["home_spread_result"].to_numpy(float)
+    else:
+        r1 = df["over_result"].to_numpy(float)
+    r2 = np.where(r1 == 0.5, 0.5, 1.0 - r1)
+    return r1, r2
+
+
+def side_odds_arrays(df: pd.DataFrame, market: str) -> tuple[np.ndarray, np.ndarray]:
+    if market == "moneyline":
+        return (
+            df["home_dk_moneyline_decimal"].to_numpy(float),
+            df["away_dk_moneyline_decimal"].to_numpy(float),
+        )
+    if market == "spread":
+        return (
+            df["home_dk_spread_decimal"].to_numpy(float),
+            df["away_dk_spread_decimal"].to_numpy(float),
+        )
+    return (
+        df["dk_total_over_decimal"].to_numpy(float),
+        df["dk_total_under_decimal"].to_numpy(float),
+    )
+
+# =============================================================================
+# OOS CACHE FOR JOINT OPTIMIZATION
+# =============================================================================
+def oos_meta(dev: pd.DataFrame, folds: list[tuple[int, np.ndarray, np.ndarray]]) -> pd.DataFrame:
+    rows = []
+    for fold_id, _, test_idx in folds:
+        t = dev.iloc[test_idx].copy()
+        t["fold_id"] = fold_id
+        rows.append(t)
+    out = pd.concat(rows, ignore_index=True)
+    out["oos_pos"] = np.arange(len(out), dtype=int)
+    return out
+
+
+def build_oos_prediction_cache(
+    dev: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    meta: pd.DataFrame,
+    market: str,
+    bias_strategy: str = "none",
+    std_mode: str = "fixed",
+) -> dict[str, Any]:
+    n = len(meta)
+    side1_methods = {m: np.full(n, np.nan) for m in CALIBRATION_METHODS}
+    side2_methods = {m: np.full(n, np.nan) for m in CALIBRATION_METHODS}
+    raw_side1 = np.full(n, np.nan)
+    raw_side2 = np.full(n, np.nan)
+    means = np.full(n, np.nan)
+    sigmas = np.full(n, np.nan)
+    bins = np.full(n, -1, dtype=int)
+    biases = np.full(n, np.nan)
+    fold_params = []
+
+    # Map original dev index -> OOS position.
+    oos_idx = all_oos_indices(folds)
+    pos_map = {int(idx): pos for pos, idx in enumerate(oos_idx)}
+
+    y1_col, y2_col = side_outcome_columns(market)
+
+    for fold_id, train_idx, test_idx in folds:
+        train = dev.iloc[train_idx]
+        test = dev.iloc[test_idx]
+        model = fit_base_model(train, market, bias_strategy, std_mode)
+        train_base = apply_base_model(model, train)
+        test_base = apply_base_model(model, test)
+
+        positions = np.asarray([pos_map[int(i)] for i in test_idx], dtype=int)
+        raw_side1[positions] = test_base["side1_prob"]
+        raw_side2[positions] = test_base["side2_prob"]
+        means[positions] = test_base["mean"]
+        sigmas[positions] = test_base["sigma"]
+        bins[positions] = test_base["range_bin"]
+        if market != "moneyline":
+            biases[positions] = float(model["bias"])
+
+        for method in CALIBRATION_METHODS:
+            cal1 = fit_calibrator(train_base["side1_prob"], train[y1_col].to_numpy(float), method)
+            cal2 = fit_calibrator(train_base["side2_prob"], train[y2_col].to_numpy(float), method)
+            side1_methods[method][positions] = apply_calibrator(cal1, test_base["side1_prob"])
+            side2_methods[method][positions] = apply_calibrator(cal2, test_base["side2_prob"])
+
+        if market == "moneyline":
+            fold_params.append({
+                "market": market,
+                "fold_id": fold_id,
+                "train_games": len(train),
+                "test_games": len(test),
+                "bias_strategy": "NA",
+                "std_mode": "NA",
+                "bias": np.nan,
+                "global_sigma": np.nan,
+                "std_edges": "",
+                "std_sigmas": "",
+            })
+        else:
+            sm: StdModel = model["std_model"]
+            fold_params.append({
+                "market": market,
+                "fold_id": fold_id,
+                "train_games": len(train),
+                "test_games": len(test),
+                "bias_strategy": bias_strategy,
+                "std_mode": std_mode,
+                "bias": float(model["bias"]),
+                "global_sigma": sm.global_sigma,
+                "std_edges": json_compact(sm.edges),
+                "std_sigmas": json_compact(sm.sigmas),
+            })
+
+    return {
+        "market": market,
+        "bias_strategy": bias_strategy,
+        "std_mode": std_mode,
+        "side1": side1_methods,
+        "side2": side2_methods,
+        "raw_side1": raw_side1,
+        "raw_side2": raw_side2,
+        "mean": means,
+        "sigma": sigmas,
+        "range_bin": bins,
+        "bias": biases,
+        "fold_params": pd.DataFrame(fold_params),
+    }
+
+# =============================================================================
+# BET OPPORTUNITIES / EDGE SCANS
+# =============================================================================
+def best_side_opportunity(
+    meta: pd.DataFrame,
+    market: str,
+    p1: Any,
+    p2: Any,
+) -> pd.DataFrame:
+    p1 = np.asarray(p1, dtype=float)
+    p2 = np.asarray(p2, dtype=float)
+    o1, o2 = side_odds_arrays(meta, market)
+    r1, r2 = side_result_arrays(meta, market)
+    side1, side2 = market_sides(market)
+
+    ev1 = p1 * o1 - 1.0
+    ev2 = p2 * o2 - 1.0
+    profit1 = unit_profit_from_result(r1, o1)
+    profit2 = unit_profit_from_result(r2, o2)
+
+    valid1 = np.isfinite(ev1) & np.isfinite(profit1) & np.isfinite(o1) & (o1 > 1.0)
+    valid2 = np.isfinite(ev2) & np.isfinite(profit2) & np.isfinite(o2) & (o2 > 1.0)
+    ev1 = np.where(valid1, ev1, -np.inf)
+    ev2 = np.where(valid2, ev2, -np.inf)
+    choose1 = ev1 >= ev2
+    no_valid = (~valid1) & (~valid2)
+
+    best_ev = np.where(choose1, ev1, ev2)
+    best_profit = np.where(choose1, profit1, profit2)
+    best_prob = np.where(choose1, p1, p2)
+    best_odds = np.where(choose1, o1, o2)
+    best_result = np.where(choose1, r1, r2)
+    best_side = np.where(choose1, side1, side2).astype(object)
+
+    best_ev[no_valid] = np.nan
+    best_profit[no_valid] = np.nan
+    best_prob[no_valid] = np.nan
+    best_odds[no_valid] = np.nan
+    best_result[no_valid] = np.nan
+    best_side[no_valid] = ""
+
+    return pd.DataFrame({
+        "row_id": meta["_row_id"].to_numpy(int),
+        "game_id": meta["game_id"].astype(str).to_numpy(),
+        "date": meta["_date"].to_numpy(),
+        "week": meta["_week"].astype(str).to_numpy(),
+        "fold_id": meta["fold_id"].to_numpy(int) if "fold_id" in meta.columns else np.zeros(len(meta), dtype=int),
+        "market": market,
+        "best_side": best_side,
+        "best_ev": best_ev,
+        "probability": best_prob,
+        "decimal_odds": best_odds,
+        "result": best_result,
+        "unit_profit": best_profit,
+        "side1_ev": ev1,
+        "side2_ev": ev2,
+        "side1_profit": profit1,
+        "side2_profit": profit2,
+        "side1_prob": p1,
+        "side2_prob": p2,
+    })
+
+
+def edge_scan(opps: pd.DataFrame, grid: np.ndarray, min_bets: int) -> pd.DataFrame:
+    rows = []
+    ev = opps["best_ev"].to_numpy(float)
+    profit = opps["unit_profit"].to_numpy(float)
+    fold = opps["fold_id"].to_numpy(int)
+    valid = np.isfinite(ev) & np.isfinite(profit)
+
+    for edge in grid:
+        m = valid & (ev >= float(edge))
+        n = int(m.sum())
+        if n:
+            p = float(np.sum(profit[m]))
+            roi = p / n
+            fold_profits = pd.Series(profit[m]).groupby(pd.Series(fold[m])).sum()
+            positive_fold_rate = float((fold_profits > 0).mean()) if len(fold_profits) else np.nan
+        else:
+            p, roi, positive_fold_rate = 0.0, np.nan, np.nan
+        rows.append({
+            "edge": float(edge),
+            "bets": n,
+            "profit_units": p,
+            "roi": roi,
+            "positive_fold_rate": positive_fold_rate,
+            "eligible_min_bets": n >= min_bets,
+        })
+    return pd.DataFrame(rows)
+
+
+def choose_edge(scan: pd.DataFrame, min_bets: int) -> pd.Series:
+    eligible = scan[scan["bets"] >= min_bets].copy()
+    if eligible.empty:
+        eligible = scan[scan["bets"] > 0].copy()
+    if eligible.empty:
+        return scan.iloc[0]
+    # Primary objective = total flat-stake profit. Stability and lower threshold break ties.
+    eligible = eligible.sort_values(
+        ["profit_units", "positive_fold_rate", "bets", "edge"],
+        ascending=[False, False, False, True],
+    )
+    return eligible.iloc[0]
+
+
+def probability_pair_score(meta: pd.DataFrame, market: str, p1: Any, p2: Any) -> tuple[float, float]:
+    y1_col, y2_col = side_outcome_columns(market)
+    y1 = meta[y1_col].to_numpy(float)
+    y2 = meta[y2_col].to_numpy(float)
+    ll1 = binary_log_loss(p1, y1)
+    ll2 = binary_log_loss(p2, y2)
+    br1 = brier_score(p1, y1)
+    br2 = brier_score(p2, y2)
+    return float(np.nanmean([ll1, ll2])), float(np.nanmean([br1, br2]))
+
+
+
+def calibration_acceptance_for_cache(
+    meta: pd.DataFrame,
+    market: str,
+    cache: dict[str, Any],
+) -> pd.DataFrame:
+    """
+    A non-raw calibration method is allowed into JOINT optimization only if it:
+      1) improves pooled OOS log loss vs raw,
+      2) improves pooled OOS Brier vs raw, and
+      3) beats raw in at least MIN_CALIBRATION_FOLD_WIN_RATE of chronological folds
+         on BOTH scores.
+
+    This implements the user's explicit requirement that calibration must show
+    repeated future-game improvement, not merely produce profitable historical bets.
+    """
+    s1, s2 = market_sides(market)
+    y1_col, y2_col = side_outcome_columns(market)
+    rows = []
+    for side, ycol, pmap in [
+        (s1, y1_col, cache["side1"]),
+        (s2, y2_col, cache["side2"]),
+    ]:
+        y = meta[ycol].to_numpy(float)
+        raw_p = pmap["raw"]
+        raw_ll = binary_log_loss(raw_p, y)
+        raw_br = brier_score(raw_p, y)
+        for method in CALIBRATION_METHODS:
+            p = pmap[method]
+            ll = binary_log_loss(p, y)
+            br = brier_score(p, y)
+            folds = 0
+            wins_ll = 0
+            wins_br = 0
+            for fold_id, idxs in meta.groupby("fold_id").groups.items():
+                idx = np.asarray(list(idxs), dtype=int)
+                mll = binary_log_loss(p[idx], y[idx])
+                rll = binary_log_loss(raw_p[idx], y[idx])
+                mbr = brier_score(p[idx], y[idx])
+                rbr = brier_score(raw_p[idx], y[idx])
+                if np.isfinite(mll) and np.isfinite(rll) and np.isfinite(mbr) and np.isfinite(rbr):
+                    folds += 1
+                    wins_ll += int(mll < rll)
+                    wins_br += int(mbr < rbr)
+            win_ll_rate = wins_ll / folds if folds else np.nan
+            win_br_rate = wins_br / folds if folds else np.nan
+            allowed = (
+                method == "raw"
+                or (
+                    np.isfinite(ll) and np.isfinite(br)
+                    and ll < raw_ll
+                    and br < raw_br
+                    and win_ll_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
+                    and win_br_rate >= MIN_CALIBRATION_FOLD_WIN_RATE
+                )
+            )
+            rows.append({
+                "market": market,
+                "side": side,
+                "method": method,
+                "oos_log_loss": ll,
+                "raw_oos_log_loss": raw_ll,
+                "oos_brier": br,
+                "raw_oos_brier": raw_br,
+                "fold_win_rate_log_loss": win_ll_rate,
+                "fold_win_rate_brier": win_br_rate,
+                "allowed_in_joint_optimization": bool(allowed),
+            })
+    return pd.DataFrame(rows)
+
+
+def oos_std_acceptance_for_caches(
+    meta: pd.DataFrame,
+    market: str,
+    caches: dict[str, dict[str, Any]],
+) -> pd.DataFrame:
+    """
+    Range-specific STD modes may enter joint optimization only when their
+    repeated future-game residual NLL improves on fixed STD by at least the
+    pre-declared materiality threshold for the SAME bias strategy.
+    """
+    if market == "moneyline":
+        return pd.DataFrame([{
+            "market": market, "bias_strategy": "NA", "std_mode": "NA",
+            "oos_residual_nll": np.nan, "fixed_oos_residual_nll": np.nan,
+            "relative_improvement_vs_fixed": np.nan,
+            "allowed_in_joint_optimization": True,
+        }])
+    actual = (
+        meta["actual_margin"].to_numpy(float)
+        if market == "spread" else meta["actual_total_calc"].to_numpy(float)
+    )
+    rows = []
+    grouped = {}
+    for key, cache in caches.items():
+        bias = cache["bias_strategy"]
+        mode = cache["std_mode"]
+        err = actual - cache["mean"]
+        nll = float(np.nanmean(normal_residual_nll(err, cache["sigma"])))
+        grouped[(bias, mode)] = nll
+    for (bias, mode), nll in grouped.items():
+        fixed_nll = grouped.get((bias, "fixed"), np.nan)
+        rel = (fixed_nll - nll) / abs(fixed_nll) if np.isfinite(fixed_nll) and fixed_nll != 0 else np.nan
+        allowed = (
+            mode == "fixed"
+            or (np.isfinite(rel) and rel >= MIN_ADAPTIVE_STD_REL_NLL_IMPROVEMENT)
+        )
+        rows.append({
+            "market": market,
+            "bias_strategy": bias,
+            "std_mode": mode,
+            "oos_residual_nll": nll,
+            "fixed_oos_residual_nll": fixed_nll,
+            "relative_improvement_vs_fixed": rel,
+            "allowed_in_joint_optimization": bool(allowed),
+        })
+    return pd.DataFrame(rows)
+
+# =============================================================================
+# JOINT CONFIGURATION SEARCH ON REPEATED FUTURE-GAME OOS PREDICTIONS
+# =============================================================================
+def min_oos_bets(n_oos: int) -> int:
+    return int(max(30, min(150, round(n_oos * 0.08))))
+
+
+def evaluate_joint_configs_for_market(
+    dev: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    meta: pd.DataFrame,
+    market: str,
+    bias_strategies: list[str],
+    std_modes: list[str],
+    output_dir: Path,
+    prefix: str,
+) -> tuple[pd.DataFrame, dict[str, dict[str, Any]], list[Path]]:
+    files: list[Path] = []
+    caches: dict[str, dict[str, Any]] = {}
+
+    base_configs: list[tuple[str, str]]
+    if market == "moneyline":
+        base_configs = [("NA", "NA")]
+    else:
+        base_configs = [(b, s) for b in bias_strategies for s in std_modes]
+
+    progress(f"  {market}: building OOS probability cache for {len(base_configs)} base configurations...")
+    fold_param_frames = []
+    for bias_strategy, std_mode in base_configs:
+        key = f"{bias_strategy}|{std_mode}"
+        cache = build_oos_prediction_cache(
+            dev, folds, meta, market,
+            bias_strategy="none" if market == "moneyline" else bias_strategy,
+            std_mode="fixed" if market == "moneyline" else std_mode,
+        )
+        caches[key] = cache
+        fold_param_frames.append(cache["fold_params"])
+
+    fold_params_all = pd.concat(fold_param_frames, ignore_index=True).drop_duplicates()
+    files.append(save_csv(fold_params_all, output_dir / f"{prefix}_04_{market}_base_fold_parameters.csv"))
+
+    # Strict OOS eligibility gates before joint betting optimization.
+    # Calibration must repeatedly improve probability accuracy. Adaptive STD
+    # must materially improve future residual fit versus fixed STD for the same
+    # bias strategy. This prevents profit-only overfitting from smuggling a bad
+    # probability correction into the final configuration.
+    std_accept = oos_std_acceptance_for_caches(meta, market, caches)
+    files.append(save_csv(std_accept, output_dir / f"{prefix}_04_{market}_std_joint_acceptance.csv"))
+    std_allowed = {
+        (str(r["bias_strategy"]), str(r["std_mode"])): bool(r["allowed_in_joint_optimization"])
+        for _, r in std_accept.iterrows()
+    }
+
+    cal_accept_frames = []
+    allowed_cal: dict[tuple[str, str], dict[str, list[str]]] = {}
+    for bias_strategy, std_mode in base_configs:
+        key = f"{bias_strategy}|{std_mode}"
+        cache = caches[key]
+        ca = calibration_acceptance_for_cache(meta, market, cache)
+        ca["bias_strategy"] = bias_strategy
+        ca["std_mode"] = std_mode
+        ca["cache_key"] = key
+        cal_accept_frames.append(ca)
+        side_map = {}
+        for side in market_sides(market):
+            methods = ca[(ca["side"] == side) & (ca["allowed_in_joint_optimization"])]["method"].tolist()
+            if "raw" not in methods:
+                methods = ["raw"] + methods
+            side_map[side] = methods
+        allowed_cal[(bias_strategy, std_mode)] = side_map
+
+    cal_accept_all = pd.concat(cal_accept_frames, ignore_index=True)
+    files.append(save_csv(cal_accept_all, output_dir / f"{prefix}_04_{market}_calibration_joint_acceptance.csv"))
+
+    n_oos = len(meta)
+    minimum_bets = min_oos_bets(n_oos)
+    rows = []
+    side1_name, side2_name = market_sides(market)
+
+    progress(f"  {market}: evaluating OOS-approved calibration pairs + EDGE...")
+    for bias_strategy, std_mode in base_configs:
+        if not std_allowed.get((bias_strategy, std_mode), True):
+            continue
+        key = f"{bias_strategy}|{std_mode}"
+        cache = caches[key]
+        side_map = allowed_cal[(bias_strategy, std_mode)]
+        for cal1 in side_map[side1_name]:
+            p1 = cache["side1"][cal1]
+            for cal2 in side_map[side2_name]:
+                p2 = cache["side2"][cal2]
+                ll, br = probability_pair_score(meta, market, p1, p2)
+                opps = best_side_opportunity(meta, market, p1, p2)
+                scan = edge_scan(opps, EDGE_GRID, minimum_bets)
+                best = choose_edge(scan, minimum_bets)
+                rows.append({
+                    "market": market,
+                    "bias_strategy": bias_strategy,
+                    "std_mode": std_mode,
+                    f"calibration_{side1_name.lower()}": cal1,
+                    f"calibration_{side2_name.lower()}": cal2,
+                    "oos_probability_log_loss": ll,
+                    "oos_probability_brier": br,
+                    "selected_edge": float(best["edge"]),
+                    "oos_bets": int(best["bets"]),
+                    "oos_profit_units": float(best["profit_units"]),
+                    "oos_roi": float(best["roi"]) if np.isfinite(best["roi"]) else np.nan,
+                    "positive_fold_rate": float(best["positive_fold_rate"]) if np.isfinite(best["positive_fold_rate"]) else np.nan,
+                    "minimum_bets_required": minimum_bets,
+                    "cache_key": key,
+                })
+
+    ranking = pd.DataFrame(rows)
+    if ranking.empty:
+        raise RuntimeError(f"No joint configurations survived OOS gates for market={market}")
+
+    # Raw probability log-loss benchmark for sanity constraint.
+    raw_rows = ranking.copy()
+    raw_mask = (
+        raw_rows[f"calibration_{side1_name.lower()}"] == "raw"
+    ) & (
+        raw_rows[f"calibration_{side2_name.lower()}"] == "raw"
+    )
+    raw_best_ll = float(raw_rows.loc[raw_mask, "oos_probability_log_loss"].min()) if raw_mask.any() else np.nan
+    ranking["probability_sanity_pass"] = (
+        ranking["oos_probability_log_loss"] <= raw_best_ll + 0.01
+    ) if np.isfinite(raw_best_ll) else True
+    ranking["stability_pass"] = ranking["positive_fold_rate"].fillna(0) >= 0.50
+    ranking["bets_pass"] = ranking["oos_bets"] >= minimum_bets
+    ranking["joint_candidate_pass"] = ranking["probability_sanity_pass"] & ranking["bets_pass"] & ranking["stability_pass"]
+
+    ranking = ranking.sort_values(
+        ["joint_candidate_pass", "oos_profit_units", "positive_fold_rate", "oos_probability_log_loss"],
+        ascending=[False, False, False, True],
+    ).reset_index(drop=True)
+    ranking["rank"] = np.arange(1, len(ranking) + 1)
+    files.append(save_csv(ranking, output_dir / f"{prefix}_04_joint_rankings_{market}.csv"))
+    return ranking, caches, files
+
+# =============================================================================
+# BLOCK BOOTSTRAP STRESS FOR TOP JOINT CONFIGS
+# =============================================================================
+def season_block_id(dates: pd.Series) -> np.ndarray:
+    d = pd.to_datetime(dates)
+    origin = d.min()
+    return ((d - origin).dt.days // SEASON_BLOCK_DAYS).to_numpy(int)
+
+
+def config_opportunities(
+    meta: pd.DataFrame,
+    market: str,
+    config_row: pd.Series,
+    caches: dict[str, dict[str, Any]],
+) -> pd.DataFrame:
+    cache = caches[str(config_row["cache_key"])]
+    s1, s2 = market_sides(market)
+    cal1 = str(config_row[f"calibration_{s1.lower()}"])
+    cal2 = str(config_row[f"calibration_{s2.lower()}"])
+    return best_side_opportunity(meta, market, cache["side1"][cal1], cache["side2"][cal2])
+
+
+def stress_top_joint_configs(
+    meta: pd.DataFrame,
+    market: str,
+    ranking: pd.DataFrame,
+    caches: dict[str, dict[str, Any]],
+    reps: int,
+    rng: np.random.Generator,
+) -> tuple[pd.DataFrame, pd.Series]:
+    eligible_ranking = ranking[ranking["joint_candidate_pass"]].copy()
+    if eligible_ranking.empty:
+        eligible_ranking = ranking.copy()
+    top = eligible_ranking.head(
+        min(TOP_CONFIGS_TO_STRESS, len(eligible_ranking))
+    ).copy().reset_index(drop=True)
+    blocks = season_block_id(meta["_date"])
+    unique_blocks = np.unique(blocks)
+    B = len(unique_blocks)
+    K = len(top)
+
+    block_profit = np.zeros((B, K), dtype=float)
+    block_bets = np.zeros((B, K), dtype=float)
+
+    for k, row in top.iterrows():
+        opps = config_opportunities(meta, market, row, caches)
+        edge = float(row["selected_edge"])
+        selected = np.isfinite(opps["best_ev"].to_numpy(float)) & (opps["best_ev"].to_numpy(float) >= edge)
+        profits = np.where(selected, opps["unit_profit"].to_numpy(float), 0.0)
+        bets = selected.astype(float)
+        for bi, block in enumerate(unique_blocks):
+            m = blocks == block
+            block_profit[bi, k] = np.nansum(profits[m])
+            block_bets[bi, k] = np.sum(bets[m])
+
+    draws = rng.multinomial(B, np.repeat(1.0 / B, B), size=reps)
+    scenario_profit = draws @ block_profit
+    scenario_bets = draws @ block_bets
+    scenario_roi = np.divide(
+        scenario_profit, scenario_bets,
+        out=np.full_like(scenario_profit, np.nan),
+        where=scenario_bets > 0,
+    )
+    winners = np.nanargmax(scenario_profit, axis=1)
+
+    stress_rows = []
+    for k, row in top.iterrows():
+        stress_rows.append({
+            "rank_before_stress": int(row["rank"]),
+            "market": market,
+            "bias_strategy": row["bias_strategy"],
+            "std_mode": row["std_mode"],
+            "calibration_side1": row[f"calibration_{market_sides(market)[0].lower()}"],
+            "calibration_side2": row[f"calibration_{market_sides(market)[1].lower()}"],
+            "edge": float(row["selected_edge"]),
+            "selection_frequency_as_best_profit": float(np.mean(winners == k)),
+            "positive_roi_probability": float(np.nanmean(scenario_roi[:, k] > 0)),
+            "bootstrap_profit_median": percentile(scenario_profit[:, k], 50),
+            "bootstrap_profit_2_5": percentile(scenario_profit[:, k], 2.5),
+            "bootstrap_profit_97_5": percentile(scenario_profit[:, k], 97.5),
+            "bootstrap_roi_median": percentile(scenario_roi[:, k], 50),
+            "bootstrap_roi_2_5": percentile(scenario_roi[:, k], 2.5),
+            "bootstrap_roi_97_5": percentile(scenario_roi[:, k], 97.5),
+        })
+
+    stress = pd.DataFrame(stress_rows)
+    # Robust selection: prefer configurations with >=60% positive ROI probability,
+    # then highest median bootstrap profit. If none pass, use highest median profit.
+    eligible = stress[stress["positive_roi_probability"] >= MIN_STRESS_POSITIVE_ROI_PROBABILITY].copy()
+    if eligible.empty:
+        eligible = stress.copy()
+    chosen_stress = eligible.sort_values(
+        ["bootstrap_profit_median", "selection_frequency_as_best_profit", "positive_roi_probability"],
+        ascending=[False, False, False],
+    ).iloc[0]
+    chosen_rank = int(chosen_stress["rank_before_stress"])
+    chosen = ranking[ranking["rank"] == chosen_rank].iloc[0]
+    return stress.sort_values("bootstrap_profit_median", ascending=False).reset_index(drop=True), chosen
+
+# =============================================================================
+# CALIBRATION METHOD OOS SUMMARY FOR A CHOSEN BASE CONFIG
+# =============================================================================
+def calibration_method_summary(
+    meta: pd.DataFrame,
+    market: str,
+    cache: dict[str, Any],
+) -> pd.DataFrame:
+    s1, s2 = market_sides(market)
+    y1_col, y2_col = side_outcome_columns(market)
+    rows = []
+    for side, ycol, pmap in [
+        (s1, y1_col, cache["side1"]),
+        (s2, y2_col, cache["side2"]),
+    ]:
+        y = meta[ycol].to_numpy(float)
+        raw_ll = binary_log_loss(pmap["raw"], y)
+        raw_br = brier_score(pmap["raw"], y)
+        for method in CALIBRATION_METHODS:
+            p = pmap[method]
+            fold_wins_ll = 0
+            fold_wins_br = 0
+            folds = 0
+            for fold_id, gidx in meta.groupby("fold_id").groups.items():
+                idx = np.asarray(list(gidx), dtype=int)
+                ll = binary_log_loss(p[idx], y[idx])
+                ll_raw = binary_log_loss(pmap["raw"][idx], y[idx])
+                br = brier_score(p[idx], y[idx])
+                br_raw = brier_score(pmap["raw"][idx], y[idx])
+                if np.isfinite(ll) and np.isfinite(ll_raw):
+                    folds += 1
+                    fold_wins_ll += int(ll < ll_raw)
+                    fold_wins_br += int(br < br_raw)
+            rows.append({
+                "market": market,
+                "side": side,
+                "method": method,
+                "oos_games": int(np.isfinite(y).sum()),
+                "oos_log_loss": binary_log_loss(p, y),
+                "oos_brier": brier_score(p, y),
+                "log_loss_change_vs_raw": binary_log_loss(p, y) - raw_ll,
+                "brier_change_vs_raw": brier_score(p, y) - raw_br,
+                "fold_win_rate_log_loss": fold_wins_ll / folds if folds else np.nan,
+                "fold_win_rate_brier": fold_wins_br / folds if folds else np.nan,
+            })
+    return pd.DataFrame(rows)
+
+# =============================================================================
+# CURRENT PIPELINE BENCHMARK
+# =============================================================================
+def current_pipeline_probabilities(df: pd.DataFrame, market: str, settings: dict[str, float]) -> tuple[np.ndarray, np.ndarray]:
+    if market == "moneyline":
+        return clip_prob(df["home_prob"]), clip_prob(df["away_prob"])
+    if market == "spread":
+        mean = df["raw_margin"].to_numpy(float) - settings["MARGIN_BIAS"]
+        sigma = np.repeat(settings["SPREAD_STD"], len(df))
+        p1 = home_spread_probability(mean, df["home_spread"].to_numpy(float), sigma)
+        return p1, 1.0 - p1
+    mean = df["raw_total"].to_numpy(float) - settings["TOTAL_BIAS"]
+    sigma = np.repeat(settings["TOTAL_STD"], len(df))
+    p1 = over_probability(mean, df["total"].to_numpy(float), sigma)
+    return p1, 1.0 - p1
+
+
+def current_edge_for_market(market: str, settings: dict[str, float]) -> float:
+    return {
+        "moneyline": settings["ML_EDGE"],
+        "spread": settings["SPREAD_EDGE"],
+        "total": settings["TOTAL_EDGE"],
+    }[market]
+
+# =============================================================================
+# FIT SELECTED CONFIG ON DEVELOPMENT / APPLY TO LOCKBOX
+# =============================================================================
+def selected_config_components(row: pd.Series, market: str) -> tuple[str, str, str, str, float]:
+    s1, s2 = market_sides(market)
+    return (
+        str(row["bias_strategy"]),
+        str(row["std_mode"]),
+        str(row[f"calibration_{s1.lower()}"]),
+        str(row[f"calibration_{s2.lower()}"]),
+        float(row["selected_edge"]),
+    )
+
+
+def fit_selected_config(
+    train: pd.DataFrame,
+    market: str,
+    chosen: pd.Series,
+) -> dict[str, Any]:
+    bias_strategy, std_mode, cal1_method, cal2_method, edge = selected_config_components(chosen, market)
+    model = fit_base_model(
+        train,
+        market,
+        bias_strategy="none" if market == "moneyline" else bias_strategy,
+        std_mode="fixed" if market == "moneyline" else std_mode,
+    )
+    base_train = apply_base_model(model, train)
+    y1_col, y2_col = side_outcome_columns(market)
+    cal1 = fit_calibrator(base_train["side1_prob"], train[y1_col].to_numpy(float), cal1_method)
+    cal2 = fit_calibrator(base_train["side2_prob"], train[y2_col].to_numpy(float), cal2_method)
+    return {
+        "market": market,
+        "base_model": model,
+        "cal1": cal1,
+        "cal2": cal2,
+        "cal1_method": cal1_method,
+        "cal2_method": cal2_method,
+        "edge": edge,
+    }
+
+
+def apply_selected_config(fitted: dict[str, Any], df: pd.DataFrame) -> dict[str, Any]:
+    base = apply_base_model(fitted["base_model"], df)
+    p1 = apply_calibrator(fitted["cal1"], base["side1_prob"])
+    p2 = apply_calibrator(fitted["cal2"], base["side2_prob"])
+    return {
+        **base,
+        "p1_raw": base["side1_prob"],
+        "p2_raw": base["side2_prob"],
+        "p1": p1,
+        "p2": p2,
+    }
+
+# =============================================================================
+# LOCKBOX EVALUATION
+# =============================================================================
+def edge_mode_opportunities(
+    meta: pd.DataFrame,
+    market: str,
+    p1: Any,
+    p2: Any,
+    edge_mode: str,
+    shared_edge: float | None = None,
+    edge_side1: float | None = None,
+    edge_side2: float | None = None,
+) -> pd.DataFrame:
+    """
+    Build one-row-per-game betting opportunities for a FROZEN edge policy.
+
+    shared:
+      - choose the higher-EV valid side
+      - bet only if that side's EV >= shared_edge
+
+    split:
+      - each side must first clear its own preselected EDGE
+      - if both qualify, choose the higher-EV side
+      - if only one qualifies, choose that side
+
+    The returned dataframe includes every game and an explicit `selected` flag.
+    """
+    p1 = np.asarray(p1, dtype=float)
+    p2 = np.asarray(p2, dtype=float)
+    o1, o2 = side_odds_arrays(meta, market)
+    r1, r2 = side_result_arrays(meta, market)
+    s1, s2 = market_sides(market)
+
+    ev1 = p1 * o1 - 1.0
+    ev2 = p2 * o2 - 1.0
+    pr1 = unit_profit_from_result(r1, o1)
+    pr2 = unit_profit_from_result(r2, o2)
+
+    valid1 = np.isfinite(ev1) & np.isfinite(pr1) & np.isfinite(o1) & (o1 > 1.0)
+    valid2 = np.isfinite(ev2) & np.isfinite(pr2) & np.isfinite(o2) & (o2 > 1.0)
+
+    if edge_mode == "shared":
+        if shared_edge is None:
+            raise ValueError("shared_edge is required when edge_mode='shared'")
+        ev1_cmp = np.where(valid1, ev1, -np.inf)
+        ev2_cmp = np.where(valid2, ev2, -np.inf)
+        choose1 = valid1 & (ev1_cmp >= ev2_cmp)
+        choose2 = valid2 & (ev2_cmp > ev1_cmp)
+        selected = (choose1 & (ev1 >= float(shared_edge))) | (choose2 & (ev2 >= float(shared_edge)))
+
+    elif edge_mode == "split":
+        if edge_side1 is None or edge_side2 is None:
+            raise ValueError("edge_side1 and edge_side2 are required when edge_mode='split'")
+        pass1 = valid1 & (ev1 >= float(edge_side1))
+        pass2 = valid2 & (ev2 >= float(edge_side2))
+        choose1 = pass1 & (~pass2 | (ev1 >= ev2))
+        choose2 = pass2 & (~pass1 | (ev2 > ev1))
+        selected = choose1 | choose2
+
+    else:
+        raise ValueError(f"Unknown edge_mode: {edge_mode}")
+
+    chosen_side = np.where(choose1, s1, np.where(choose2, s2, "")).astype(object)
+    chosen_ev = np.where(choose1, ev1, np.where(choose2, ev2, np.nan))
+    chosen_prob = np.where(choose1, p1, np.where(choose2, p2, np.nan))
+    chosen_odds = np.where(choose1, o1, np.where(choose2, o2, np.nan))
+    chosen_result = np.where(choose1, r1, np.where(choose2, r2, np.nan))
+    chosen_profit = np.where(choose1, pr1, np.where(choose2, pr2, np.nan))
+
+    # For rows that do not qualify under a split policy, choose1/choose2 are both False.
+    # Under a shared policy choose1/choose2 identify the best available side even if it
+    # does not clear the threshold. The explicit `selected` flag is the source of truth.
+    return pd.DataFrame({
+        "row_id": meta["_row_id"].to_numpy(int),
+        "game_id": meta["game_id"].astype(str).to_numpy(),
+        "date": meta["_date"].to_numpy(),
+        "week": meta["_week"].astype(str).to_numpy(),
+        "fold_id": meta["fold_id"].to_numpy(int) if "fold_id" in meta.columns else np.zeros(len(meta), dtype=int),
+        "market": market,
+        "edge_mode": edge_mode,
+        "selected_side": chosen_side,
+        "selected_ev": chosen_ev,
+        "probability": chosen_prob,
+        "decimal_odds": chosen_odds,
+        "result": chosen_result,
+        "unit_profit": chosen_profit,
+        "selected": selected,
+        "side1_ev": ev1,
+        "side2_ev": ev2,
+        "side1_profit": pr1,
+        "side2_profit": pr2,
+        "side1_prob": p1,
+        "side2_prob": p2,
+    })
+
+
+def betting_summary_from_opportunities(opps: pd.DataFrame) -> tuple[int, float, float]:
+    selected = opps["selected"].to_numpy(bool)
+    bets = int(selected.sum())
+    if not bets:
+        return 0, 0.0, np.nan
+    profit = float(np.nansum(opps.loc[selected, "unit_profit"]))
+    roi = profit / bets
+    return bets, profit, roi
+
+
+def evaluate_frozen_candidate_on_lockbox(
+    dev: pd.DataFrame,
+    lockbox: pd.DataFrame,
+    market: str,
+    frozen: dict[str, Any],
+    settings: dict[str, float],
+) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any]]:
+    """
+    ONE-TIME lockbox evaluation.
+
+    Everything in `frozen` was selected using development/OOS data only.
+    The lockbox does not alter bias, STD, calibration, edge mode, or edge values.
+    It only compares the complete frozen candidate with the complete current pipeline.
+    """
+    chosen: pd.Series = frozen["chosen"]
+    fitted = fit_selected_config(dev, market, chosen)
+    pred = apply_selected_config(fitted, lockbox)
+
+    meta = lockbox.copy()
+    meta["fold_id"] = 999
+
+    candidate_opps = edge_mode_opportunities(
+        meta,
+        market,
+        pred["p1"],
+        pred["p2"],
+        edge_mode=str(frozen["edge_mode"]),
+        shared_edge=frozen.get("shared_edge"),
+        edge_side1=frozen.get("edge_side1"),
+        edge_side2=frozen.get("edge_side2"),
+    )
+    cand_bets, cand_profit, cand_roi = betting_summary_from_opportunities(candidate_opps)
+
+    cur_p1, cur_p2 = current_pipeline_probabilities(lockbox, market, settings)
+    current_opps = edge_mode_opportunities(
+        meta,
+        market,
+        cur_p1,
+        cur_p2,
+        edge_mode="shared",
+        shared_edge=current_edge_for_market(market, settings),
+    )
+    cur_bets, cur_profit, cur_roi = betting_summary_from_opportunities(current_opps)
+
+    y1_col, y2_col = side_outcome_columns(market)
+    y1 = lockbox[y1_col].to_numpy(float)
+    y2 = lockbox[y2_col].to_numpy(float)
+
+    candidate_ll = float(np.nanmean([
+        binary_log_loss(pred["p1"], y1),
+        binary_log_loss(pred["p2"], y2),
+    ]))
+    candidate_br = float(np.nanmean([
+        brier_score(pred["p1"], y1),
+        brier_score(pred["p2"], y2),
+    ]))
+    current_ll = float(np.nanmean([
+        binary_log_loss(cur_p1, y1),
+        binary_log_loss(cur_p2, y2),
+    ]))
+    current_br = float(np.nanmean([
+        brier_score(cur_p1, y1),
+        brier_score(cur_p2, y2),
+    ]))
+
+    rows = [
+        {
+            "market": market,
+            "system": "frozen_candidate",
+            "edge_mode": frozen["edge_mode"],
+            "edge": frozen.get("shared_edge", np.nan) if frozen["edge_mode"] == "shared" else np.nan,
+            "edge_side1": frozen.get("edge_side1", np.nan),
+            "edge_side2": frozen.get("edge_side2", np.nan),
+            "lockbox_games": len(lockbox),
+            "prob_log_loss": candidate_ll,
+            "prob_brier": candidate_br,
+            "bets": cand_bets,
+            "profit_units": cand_profit,
+            "roi": cand_roi,
+        },
+        {
+            "market": market,
+            "system": "current_pipeline",
+            "edge_mode": "shared",
+            "edge": current_edge_for_market(market, settings),
+            "edge_side1": np.nan,
+            "edge_side2": np.nan,
+            "lockbox_games": len(lockbox),
+            "prob_log_loss": current_ll,
+            "prob_brier": current_br,
+            "bets": cur_bets,
+            "profit_units": cur_profit,
+            "roi": cur_roi,
+        },
+        {
+            "market": market,
+            "system": "frozen_base_without_calibration",
+            "edge_mode": frozen["edge_mode"],
+            "edge": np.nan,
+            "edge_side1": np.nan,
+            "edge_side2": np.nan,
+            "lockbox_games": len(lockbox),
+            "prob_log_loss": float(np.nanmean([
+                binary_log_loss(pred["p1_raw"], y1),
+                binary_log_loss(pred["p2_raw"], y2),
+            ])),
+            "prob_brier": float(np.nanmean([
+                brier_score(pred["p1_raw"], y1),
+                brier_score(pred["p2_raw"], y2),
+            ])),
+            "bets": np.nan,
+            "profit_units": np.nan,
+            "roi": np.nan,
+        },
+    ]
+
+    lock_detail = candidate_opps.copy()
+    lock_detail["current_selected"] = current_opps["selected"].to_numpy(bool)
+    lock_detail["current_selected_side"] = current_opps["selected_side"].to_numpy(object)
+    lock_detail["current_selected_ev"] = current_opps["selected_ev"].to_numpy(float)
+    lock_detail["current_unit_profit"] = current_opps["unit_profit"].to_numpy(float)
+    lock_detail["selected_p1"] = pred["p1"]
+    lock_detail["selected_p2"] = pred["p2"]
+    lock_detail["selected_p1_raw"] = pred["p1_raw"]
+    lock_detail["selected_p2_raw"] = pred["p2_raw"]
+    lock_detail["selected_mean"] = pred["mean"]
+    lock_detail["selected_sigma"] = pred["sigma"]
+    lock_detail["selected_range_bin"] = pred["range_bin"]
+    lock_detail["side1_y"] = y1
+    lock_detail["side2_y"] = y2
+
+    return pd.DataFrame(rows), fitted, {"prediction": pred, "detail": lock_detail}
+
+
+def lockbox_market_validation(lockbox_summary: pd.DataFrame) -> pd.DataFrame:
+    """
+    Validate or reject each COMPLETE frozen market candidate.
+
+    A candidate passes only when, versus the current pipeline on the untouched
+    lockbox, it is:
+      - no worse on probability log loss,
+      - no worse on Brier score,
+      - no worse on total flat-stake profit, AND
+      - no worse on ROI.
+
+    Requiring both profit and ROI prevents a much smaller bet set from being
+    declared superior merely because it lost fewer total units.
+    """
+    rows = []
+    for market in ["moneyline", "spread", "total"]:
+        cand = lockbox_summary[
+            (lockbox_summary["market"] == market)
+            & (lockbox_summary["system"] == "frozen_candidate")
+        ].iloc[0]
+        cur = lockbox_summary[
+            (lockbox_summary["market"] == market)
+            & (lockbox_summary["system"] == "current_pipeline")
+        ].iloc[0]
+
+        probability_log_loss_pass = (
+            np.isfinite(float(cand["prob_log_loss"]))
+            and np.isfinite(float(cur["prob_log_loss"]))
+            and float(cand["prob_log_loss"]) <= float(cur["prob_log_loss"]) + 1e-12
+        )
+        probability_brier_pass = (
+            np.isfinite(float(cand["prob_brier"]))
+            and np.isfinite(float(cur["prob_brier"]))
+            and float(cand["prob_brier"]) <= float(cur["prob_brier"]) + 1e-12
+        )
+        profit_pass = (
+            np.isfinite(float(cand["profit_units"]))
+            and np.isfinite(float(cur["profit_units"]))
+            and float(cand["profit_units"]) >= float(cur["profit_units"]) - 1e-12
+        )
+        roi_pass = (
+            np.isfinite(float(cand["roi"]))
+            and np.isfinite(float(cur["roi"]))
+            and float(cand["roi"]) >= float(cur["roi"]) - 1e-12
+        )
+        market_validated = bool(
+            probability_log_loss_pass
+            and probability_brier_pass
+            and profit_pass
+            and roi_pass
+        )
+
+        rows.append({
+            "market": market,
+            "candidate_bets": int(cand["bets"]),
+            "current_bets": int(cur["bets"]),
+            "candidate_profit_units": float(cand["profit_units"]),
+            "current_profit_units": float(cur["profit_units"]),
+            "candidate_roi": float(cand["roi"]),
+            "current_roi": float(cur["roi"]),
+            "candidate_prob_log_loss": float(cand["prob_log_loss"]),
+            "current_prob_log_loss": float(cur["prob_log_loss"]),
+            "candidate_prob_brier": float(cand["prob_brier"]),
+            "current_prob_brier": float(cur["prob_brier"]),
+            "probability_log_loss_pass": bool(probability_log_loss_pass),
+            "probability_brier_pass": bool(probability_brier_pass),
+            "profit_pass": bool(profit_pass),
+            "roi_pass": bool(roi_pass),
+            "market_validated": market_validated,
+        })
+
+    return pd.DataFrame(rows)
+
+# =============================================================================
+# SHARED EDGE VS SIDE-SPECIFIC EDGE
+# =============================================================================
+def split_edge_scan(
+    meta: pd.DataFrame,
+    market: str,
+    p1: Any,
+    p2: Any,
+    grid: np.ndarray,
+    min_bets: int,
+) -> pd.DataFrame:
+    p1 = np.asarray(p1, dtype=float)
+    p2 = np.asarray(p2, dtype=float)
+    o1, o2 = side_odds_arrays(meta, market)
+    r1, r2 = side_result_arrays(meta, market)
+    ev1 = p1 * o1 - 1.0
+    ev2 = p2 * o2 - 1.0
+    pr1 = unit_profit_from_result(r1, o1)
+    pr2 = unit_profit_from_result(r2, o2)
+    fold = meta["fold_id"].to_numpy(int)
+    valid1 = np.isfinite(ev1) & np.isfinite(pr1)
+    valid2 = np.isfinite(ev2) & np.isfinite(pr2)
+
+    rows = []
+    for e1 in grid:
+        pass1 = valid1 & (ev1 >= e1)
+        for e2 in grid:
+            pass2 = valid2 & (ev2 >= e2)
+            choose1 = pass1 & (~pass2 | (ev1 >= ev2))
+            choose2 = pass2 & (~pass1 | (ev2 > ev1))
+            selected = choose1 | choose2
+            n = int(selected.sum())
+            if n:
+                profit_vec = np.where(choose1, pr1, np.where(choose2, pr2, 0.0))
+                profit = float(np.nansum(profit_vec[selected]))
+                roi = profit / n
+                fp = pd.Series(profit_vec[selected]).groupby(pd.Series(fold[selected])).sum()
+                pfr = float((fp > 0).mean()) if len(fp) else np.nan
+            else:
+                profit, roi, pfr = 0.0, np.nan, np.nan
+            rows.append({
+                "edge_side1": float(e1),
+                "edge_side2": float(e2),
+                "bets": n,
+                "profit_units": profit,
+                "roi": roi,
+                "positive_fold_rate": pfr,
+                "eligible_min_bets": n >= min_bets,
+            })
+    return pd.DataFrame(rows)
+
+
+def choose_split_edge(scan: pd.DataFrame, min_bets: int) -> pd.Series:
+    e = scan[scan["bets"] >= min_bets].copy()
+    if e.empty:
+        e = scan[scan["bets"] > 0].copy()
+    if e.empty:
+        return scan.iloc[0]
+    return e.sort_values(
+        ["profit_units", "positive_fold_rate", "bets"],
+        ascending=[False, False, False],
+    ).iloc[0]
+
+
+def build_frozen_candidates(
+    meta: pd.DataFrame,
+    chosen_by_market: dict[str, pd.Series],
+    caches_by_market: dict[str, dict[str, dict[str, Any]]],
+    output_dir: Path,
+    prefix: str,
+) -> tuple[dict[str, dict[str, Any]], pd.DataFrame, list[Path]]:
+    """
+    Freeze the COMPLETE candidate for each market using DEVELOPMENT OOS data only.
+
+    Shared-vs-split EDGE is decided here, before the lockbox is touched.
+    The lockbox may later accept or reject the entire frozen market candidate,
+    but it cannot change any component inside it.
+    """
+    frozen: dict[str, dict[str, Any]] = {}
+    split_rows = []
+    files: list[Path] = []
+
+    # Moneyline has one shared EDGE.
+    ml = chosen_by_market["moneyline"]
+    frozen["moneyline"] = {
+        "market": "moneyline",
+        "chosen": ml,
+        "edge_mode": "shared",
+        "shared_edge": float(ml["selected_edge"]),
+        "edge_side1": None,
+        "edge_side2": None,
+    }
+
+    for market in ["spread", "total"]:
+        chosen = chosen_by_market[market]
+        cache = caches_by_market[market][str(chosen["cache_key"])]
+        s1, s2 = market_sides(market)
+        p1 = cache["side1"][str(chosen[f"calibration_{s1.lower()}"])]
+        p2 = cache["side2"][str(chosen[f"calibration_{s2.lower()}"])]
+        minbets = min_oos_bets(len(meta))
+
+        shared_opps = edge_mode_opportunities(
+            meta,
+            market,
+            p1,
+            p2,
+            edge_mode="shared",
+            shared_edge=float(chosen["selected_edge"]),
+        )
+        shared_bets, shared_profit, shared_roi = betting_summary_from_opportunities(shared_opps)
+        shared_edge = float(chosen["selected_edge"])
+
+        split_scan_df = split_edge_scan(meta, market, p1, p2, SPLIT_EDGE_GRID, minbets)
+        split_best = choose_split_edge(split_scan_df, minbets)
+        split_profit = float(split_best["profit_units"])
+        split_bets = int(split_best["bets"])
+        split_roi = float(split_best["roi"]) if np.isfinite(split_best["roi"]) else np.nan
+        split_pfr = (
+            float(split_best["positive_fold_rate"])
+            if np.isfinite(split_best["positive_fold_rate"])
+            else np.nan
+        )
+        improvement = (
+            (split_profit - shared_profit) / max(abs(shared_profit), 1.0)
+        )
+
+        # All of these are DEVELOPMENT rules. No lockbox information is used.
+        dev_supports_split = bool(
+            improvement >= MIN_SPLIT_EDGE_DEV_PROFIT_IMPROVEMENT
+            and split_bets >= minbets
+            and np.isfinite(split_pfr)
+            and split_pfr >= 0.50
+        )
+
+        edge_mode = "split" if dev_supports_split else "shared"
+        frozen[market] = {
+            "market": market,
+            "chosen": chosen,
+            "edge_mode": edge_mode,
+            "shared_edge": shared_edge if edge_mode == "shared" else None,
+            "edge_side1": float(split_best["edge_side1"]) if edge_mode == "split" else None,
+            "edge_side2": float(split_best["edge_side2"]) if edge_mode == "split" else None,
+        }
+
+        split_rows.append({
+            "market": market,
+            "side1": s1,
+            "side2": s2,
+            "shared_edge": shared_edge,
+            "dev_shared_bets": shared_bets,
+            "dev_shared_profit": shared_profit,
+            "dev_shared_roi": shared_roi,
+            "split_edge_side1": float(split_best["edge_side1"]),
+            "split_edge_side2": float(split_best["edge_side2"]),
+            "dev_split_bets": split_bets,
+            "dev_split_profit": split_profit,
+            "dev_split_roi": split_roi,
+            "dev_split_positive_fold_rate": split_pfr,
+            "dev_split_profit_relative_improvement": improvement,
+            "minimum_bets_required": minbets,
+            "dev_supports_split": dev_supports_split,
+            "frozen_edge_mode": edge_mode,
+            "frozen_shared_edge": shared_edge if edge_mode == "shared" else np.nan,
+            "frozen_edge_side1": float(split_best["edge_side1"]) if edge_mode == "split" else np.nan,
+            "frozen_edge_side2": float(split_best["edge_side2"]) if edge_mode == "split" else np.nan,
+        })
+
+        files.append(save_csv(
+            split_scan_df,
+            output_dir / f"{prefix}_06_{market}_split_edge_scan.csv",
+        ))
+
+    split_summary = pd.DataFrame(split_rows)
+    files.append(save_csv(
+        split_summary,
+        output_dir / f"{prefix}_06_shared_vs_split_edges.csv",
+    ))
+    return frozen, split_summary, files
+
+
+# =============================================================================
+# SEGMENT ANALYSIS
+# =============================================================================
+def spread_size_bucket(abs_spread: pd.Series) -> pd.Series:
+    return pd.cut(
+        abs_spread,
+        bins=[-np.inf, 3.5, 7.5, 11.5, np.inf],
+        labels=["0_to_3.5", "over_3.5_to_7.5", "over_7.5_to_11.5", "over_11.5"],
+    )
+
+
+def disagreement_bucket(abs_diff: pd.Series) -> pd.Series:
+    return pd.cut(
+        abs_diff,
+        bins=[-np.inf, 1, 2, 3, 5, 8, np.inf],
+        labels=["under_1", "1_to_2", "2_to_3", "3_to_5", "5_to_8", "8_plus"],
+    )
+
+
+def segment_betting_summary(
+    meta: pd.DataFrame,
+    market: str,
+    p1: np.ndarray,
+    p2: np.ndarray,
+    mean: np.ndarray,
+    edge_mode: str,
+    shared_edge: float | None = None,
+    edge_side1: float | None = None,
+    edge_side2: float | None = None,
+) -> pd.DataFrame:
+    """
+    Descriptive segment analysis using the SAME development-frozen edge policy.
+    This analysis does not select or change any setting.
+    """
+    s1, s2 = market_sides(market)
+    o1, o2 = side_odds_arrays(meta, market)
+    r1, r2 = side_result_arrays(meta, market)
+    y1_col, y2_col = side_outcome_columns(market)
+    y1, y2 = meta[y1_col].to_numpy(float), meta[y2_col].to_numpy(float)
+    ev1, ev2 = p1 * o1 - 1.0, p2 * o2 - 1.0
+    pr1, pr2 = unit_profit_from_result(r1, o1), unit_profit_from_result(r2, o2)
+
+    if edge_mode == "shared":
+        if shared_edge is None:
+            raise ValueError("shared_edge required for segment analysis with shared edge")
+        thresholds = {s1: float(shared_edge), s2: float(shared_edge)}
+    elif edge_mode == "split":
+        if edge_side1 is None or edge_side2 is None:
+            raise ValueError("side edges required for segment analysis with split edges")
+        thresholds = {s1: float(edge_side1), s2: float(edge_side2)}
+    else:
+        raise ValueError(f"Unknown edge_mode: {edge_mode}")
+
+    temp_rows = []
+    for side, pp, yy, ev, pr in [
+        (s1, p1, y1, ev1, pr1),
+        (s2, p2, y2, ev2, pr2),
+    ]:
+        threshold = thresholds[side]
+        t = pd.DataFrame({
+            "side": side,
+            "p": pp,
+            "y": yy,
+            "ev": ev,
+            "profit": pr,
+            "home_spread": meta["home_spread"].to_numpy(float),
+            "book_total": meta["total"].to_numpy(float),
+            "model_mean": mean,
+        })
+        if market == "spread":
+            t["segment"] = spread_size_bucket(np.abs(t["home_spread"]))
+        else:
+            try:
+                t["total_range"] = pd.qcut(t["book_total"], q=4, duplicates="drop")
+            except Exception:
+                t["total_range"] = "all"
+            diff = np.abs(t["model_mean"] - t["book_total"])
+            t["disagreement"] = disagreement_bucket(diff)
+
+        if market == "spread":
+            groups = [("spread_size", t["segment"])]
+        else:
+            groups = [
+                ("sportsbook_total_range", t["total_range"]),
+                ("model_book_disagreement", t["disagreement"]),
+            ]
+
+        for segment_type, segment_series in groups:
+            t2 = t.copy()
+            t2["segment"] = segment_series.astype(str)
+            for seg, g in t2.groupby("segment", dropna=False):
+                betmask = (
+                    np.isfinite(g["ev"])
+                    & np.isfinite(g["profit"])
+                    & (g["ev"] >= threshold)
+                )
+                temp_rows.append({
+                    "market": market,
+                    "side": side,
+                    "edge_mode": edge_mode,
+                    "side_edge_threshold": threshold,
+                    "segment_type": segment_type,
+                    "segment": str(seg),
+                    "games": len(g),
+                    "mean_probability": float(np.nanmean(g["p"])),
+                    "actual_rate": float(np.nanmean(g["y"])),
+                    "brier": brier_score(g["p"], g["y"]),
+                    "log_loss": binary_log_loss(g["p"], g["y"]),
+                    "bets_at_frozen_edge": int(betmask.sum()),
+                    "profit_at_frozen_edge": float(np.nansum(g.loc[betmask, "profit"])),
+                    "roi_at_frozen_edge": (
+                        float(np.nanmean(g.loc[betmask, "profit"]))
+                        if betmask.any()
+                        else np.nan
+                    ),
+                })
+    return pd.DataFrame(temp_rows)
+
+
+# =============================================================================
+# FIT FULL-HISTORY PRODUCTION PARAMETERS AFTER VALIDATION
+# =============================================================================
+def production_parameter_tables(
+    full_df: pd.DataFrame,
+    frozen_candidates: dict[str, dict[str, Any]],
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Refit the DEVELOPMENT-SELECTED method on full history.
+
+    These tables are parameter refit candidates. Whether they are actually
+    recommended is determined only by the whole-market lockbox decision.
+    """
+    action_rows = []
+    std_rows = []
+    cal_rows = []
+
+    for market, frozen in frozen_candidates.items():
+        chosen: pd.Series = frozen["chosen"]
+        fitted = fit_selected_config(full_df, market, chosen)
+        s1, s2 = market_sides(market)
+
+        if market != "moneyline":
+            base = fitted["base_model"]
+            sm: StdModel = base["std_model"]
+            action_rows.append({
+                "market": market,
+                "component": "BIAS",
+                "side": "",
+                "mode": base["bias_strategy"],
+                "production_value": float(base["bias"]),
+                "notes": (
+                    "Full-history refit of the frozen development-selected bias method. "
+                    "If rolling mode is validated, recompute the trailing estimate as new results arrive."
+                ),
+            })
+            action_rows.append({
+                "market": market,
+                "component": "STD_MODE",
+                "side": "",
+                "mode": sm.mode,
+                "production_value": sm.global_sigma if sm.mode == "fixed" else np.nan,
+                "notes": (
+                    "One fixed STD is used for all games."
+                    if sm.mode == "fixed"
+                    else "Adaptive STD uses the bins in FINAL_STD_RANGES.csv."
+                ),
+            })
+
+            if sm.mode == "fixed":
+                std_rows.append({
+                    "market": market,
+                    "std_mode": sm.mode,
+                    "bin": 0,
+                    "feature_low_exclusive": -np.inf,
+                    "feature_high_inclusive": np.inf,
+                    "sigma": sm.global_sigma,
+                    "training_games": sm.counts[0],
+                })
+            else:
+                edges = [-np.inf] + sm.edges + [np.inf]
+                for i, sigma in enumerate(sm.sigmas):
+                    std_rows.append({
+                        "market": market,
+                        "std_mode": sm.mode,
+                        "bin": i,
+                        "feature_low_exclusive": edges[i],
+                        "feature_high_inclusive": edges[i + 1],
+                        "sigma": sigma,
+                        "training_games": sm.counts[i],
+                    })
+
+        if frozen["edge_mode"] == "shared":
+            action_rows.append({
+                "market": market,
+                "component": "EDGE",
+                "side": "",
+                "mode": "shared",
+                "production_value": float(frozen["shared_edge"]),
+                "notes": "Frozen on development OOS data; never retuned on lockbox.",
+            })
+        else:
+            action_rows.append({
+                "market": market,
+                "component": "EDGE_MODE",
+                "side": "",
+                "mode": "separate_by_side",
+                "production_value": np.nan,
+                "notes": "Split EDGE mode selected and frozen on development OOS data only.",
+            })
+            action_rows.append({
+                "market": market,
+                "component": "EDGE",
+                "side": s1,
+                "mode": "side_specific",
+                "production_value": float(frozen["edge_side1"]),
+                "notes": "Frozen on development OOS data; never retuned on lockbox.",
+            })
+            action_rows.append({
+                "market": market,
+                "component": "EDGE",
+                "side": s2,
+                "mode": "side_specific",
+                "production_value": float(frozen["edge_side2"]),
+                "notes": "Frozen on development OOS data; never retuned on lockbox.",
+            })
+
+        for side, cal in [(s1, fitted["cal1"]), (s2, fitted["cal2"])]:
+            cal_rows.append({
+                "market": market,
+                "side": side,
+                "method": cal.get("method", "raw"),
+                "formula": calibrator_formula(cal),
+                "intercept": cal.get("intercept", np.nan),
+                "slope": cal.get("slope", np.nan),
+                "coef_log_p": cal.get("coef_log_p", np.nan),
+                "coef_log_1mp": cal.get("coef_log_1mp", np.nan),
+                "isotonic_points": len(cal.get("x_thresholds", [])),
+            })
+
+    return pd.DataFrame(action_rows), pd.DataFrame(std_rows), pd.DataFrame(cal_rows)
+
+
+def build_final_recommendations(
+    settings: dict[str, float],
+    frozen_candidates: dict[str, dict[str, Any]],
+    lockbox_decisions: pd.DataFrame,
+    production_actions: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Final decision table with NO component-level lockbox tuning.
+
+    Each market has one complete frozen candidate. The untouched lockbox either:
+      - accepts the entire candidate, or
+      - rejects it and keeps the entire current market pipeline.
+
+    No individual bias, STD, calibration, or EDGE component is swapped after
+    seeing lockbox results.
+    """
+    rows = []
+    decisions = lockbox_decisions.set_index("market")
+
+    def evidence_for(market: str) -> str:
+        d = decisions.loc[market]
+        return (
+            f"WHOLE FROZEN MARKET: bets {int(d['candidate_bets'])} vs {int(d['current_bets'])}; "
+            f"profit {d['candidate_profit_units']:.4f} vs {d['current_profit_units']:.4f}; "
+            f"ROI {d['candidate_roi']:.5f} vs {d['current_roi']:.5f}; "
+            f"logloss {d['candidate_prob_log_loss']:.5f} vs {d['current_prob_log_loss']:.5f}; "
+            f"Brier {d['candidate_prob_brier']:.5f} vs {d['current_prob_brier']:.5f}; "
+            f"validated={bool(d['market_validated'])}"
+        )
+
+    def market_pass(market: str) -> bool:
+        return bool(decisions.loc[market, "market_validated"])
+
+    # -------------------------
+    # MONEYLINE
+    # -------------------------
+    market = "moneyline"
+    frozen = frozen_candidates[market]
+    chosen: pd.Series = frozen["chosen"]
+    passed = market_pass(market)
+    status_change = "FROZEN_MARKET_CHANGE_VALIDATED" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+    status_same = "NO_CHANGE_WITHIN_VALIDATED_MARKET" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+
+    rows.append({
+        "market": market,
+        "setting": "ML_EDGE",
+        "current_value": settings["ML_EDGE"],
+        "development_selected": float(frozen["shared_edge"]),
+        "production_refit": float(frozen["shared_edge"]),
+        "final_recommendation": float(frozen["shared_edge"]) if passed else settings["ML_EDGE"],
+        "status": status_change if float(frozen["shared_edge"]) != settings["ML_EDGE"] else status_same,
+        "requires_pipeline_code_change": False,
+        "evidence": evidence_for(market),
+    })
+
+    for side in market_sides(market):
+        method = str(chosen[f"calibration_{side.lower()}"])
+        changed = method != "raw"
+        rows.append({
+            "market": market,
+            "setting": f"{side}_CALIBRATION",
+            "current_value": "raw",
+            "development_selected": method,
+            "production_refit": method,
+            "final_recommendation": method if passed else "raw",
+            "status": (
+                status_change if changed and passed
+                else status_same if not changed and passed
+                else "KEEP_RAW_MARKET_LOCKBOX_FAILED"
+            ),
+            "requires_pipeline_code_change": bool(changed and passed),
+            "evidence": evidence_for(market),
+        })
+
+    # -------------------------
+    # SPREAD / TOTAL
+    # -------------------------
+    for market, bias_setting, std_setting, shared_edge_setting in [
+        ("spread", "MARGIN_BIAS", "SPREAD_STD", "SPREAD_EDGE"),
+        ("total", "TOTAL_BIAS", "TOTAL_STD", "TOTAL_EDGE"),
+    ]:
+        frozen = frozen_candidates[market]
+        chosen = frozen["chosen"]
+        passed = market_pass(market)
+        status_change = "FROZEN_MARKET_CHANGE_VALIDATED" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+        status_same = "NO_CHANGE_WITHIN_VALIDATED_MARKET" if passed else "KEEP_CURRENT_MARKET_LOCKBOX_FAILED"
+
+        pa = production_actions[production_actions["market"] == market]
+        bias_row = pa[pa["component"] == "BIAS"].iloc[0]
+        std_row = pa[pa["component"] == "STD_MODE"].iloc[0]
+
+        bias_mode = str(chosen["bias_strategy"])
+        prod_bias = float(bias_row["production_value"])
+        rows.append({
+            "market": market,
+            "setting": bias_setting,
+            "current_value": settings[bias_setting],
+            "development_selected": bias_mode,
+            "production_refit": prod_bias,
+            "final_recommendation": prod_bias if passed else settings[bias_setting],
+            "status": status_change,
+            "requires_pipeline_code_change": bool(passed and bias_mode.startswith("rolling_")),
+            "evidence": evidence_for(market),
+        })
+
+        std_mode = str(chosen["std_mode"])
+        prod_std_raw = pd.to_numeric(
+            pd.Series([std_row["production_value"]]),
+            errors="coerce",
+        ).iloc[0]
+        prod_std = float(prod_std_raw) if np.isfinite(prod_std_raw) else np.nan
+        if std_mode == "fixed":
+            production_refit_std: Any = prod_std
+            final_std: Any = prod_std if passed else settings[std_setting]
+        else:
+            production_refit_std = f"{std_mode}: see FINAL_STD_RANGES.csv"
+            final_std = production_refit_std if passed else settings[std_setting]
+
+        rows.append({
+            "market": market,
+            "setting": std_setting,
+            "current_value": settings[std_setting],
+            "development_selected": std_mode,
+            "production_refit": production_refit_std,
+            "final_recommendation": final_std,
+            "status": status_change,
+            "requires_pipeline_code_change": bool(passed and std_mode != "fixed"),
+            "evidence": evidence_for(market),
+        })
+
+        for side in market_sides(market):
+            method = str(chosen[f"calibration_{side.lower()}"])
+            changed = method != "raw"
+            rows.append({
+                "market": market,
+                "setting": f"{side}_CALIBRATION",
+                "current_value": "raw",
+                "development_selected": method,
+                "production_refit": method,
+                "final_recommendation": method if passed else "raw",
+                "status": (
+                    status_change if changed and passed
+                    else status_same if not changed and passed
+                    else "KEEP_RAW_MARKET_LOCKBOX_FAILED"
+                ),
+                "requires_pipeline_code_change": bool(changed and passed),
+                "evidence": evidence_for(market),
+            })
+
+        if frozen["edge_mode"] == "shared":
+            dev_edge = float(frozen["shared_edge"])
+            rows.append({
+                "market": market,
+                "setting": shared_edge_setting,
+                "current_value": settings[shared_edge_setting],
+                "development_selected": dev_edge,
+                "production_refit": dev_edge,
+                "final_recommendation": dev_edge if passed else settings[shared_edge_setting],
+                "status": status_change if dev_edge != settings[shared_edge_setting] else status_same,
+                "requires_pipeline_code_change": False,
+                "evidence": evidence_for(market),
+            })
+        else:
+            s1, s2 = market_sides(market)
+            e1 = float(frozen["edge_side1"])
+            e2 = float(frozen["edge_side2"])
+            rows.append({
+                "market": market,
+                "setting": f"{market.upper()}_EDGE_MODE",
+                "current_value": "shared",
+                "development_selected": "separate_by_side",
+                "production_refit": "separate_by_side",
+                "final_recommendation": "separate_by_side" if passed else "shared",
+                "status": status_change,
+                "requires_pipeline_code_change": bool(passed),
+                "evidence": evidence_for(market),
+            })
+            for side, edge_value in [(s1, e1), (s2, e2)]:
+                rows.append({
+                    "market": market,
+                    "setting": f"{side}_EDGE",
+                    "current_value": settings[shared_edge_setting],
+                    "development_selected": edge_value,
+                    "production_refit": edge_value,
+                    "final_recommendation": edge_value if passed else settings[shared_edge_setting],
+                    "status": status_change,
+                    "requires_pipeline_code_change": bool(passed),
+                    "evidence": evidence_for(market),
+                })
+
+    return pd.DataFrame(rows)
+
+
+# =============================================================================
+# ISOTONIC KNOT TABLE
+# =============================================================================
+def isotonic_knots_table(full_df: pd.DataFrame, chosen_by_market: dict[str, pd.Series]) -> pd.DataFrame:
+    rows = []
+    for market, chosen in chosen_by_market.items():
+        fitted = fit_selected_config(full_df, market, chosen)
+        for side, cal in [(market_sides(market)[0], fitted["cal1"]), (market_sides(market)[1], fitted["cal2"])]:
+            if cal.get("method") != "isotonic":
+                continue
+            xs = cal.get("x_thresholds", [])
+            ys = cal.get("y_thresholds", [])
+            for i, (x, y) in enumerate(zip(xs, ys)):
+                rows.append({
+                    "market": market,
+                    "side": side,
+                    "knot": i,
+                    "raw_probability": x,
+                    "adjusted_probability": y,
+                })
+    return pd.DataFrame(rows)
+
+# =============================================================================
+# REPORT WRITING
+# =============================================================================
+def dataframe_text(df: pd.DataFrame, max_rows: int = 100) -> str:
+    if df is None or df.empty:
+        return "No rows."
+    x = df.head(max_rows).copy()
+    return x.to_string(index=False, float_format=lambda v: f"{v:.5f}")
+
+
+def write_report(
+    path: Path,
+    league: str,
+    input_file: Path,
+    full_df: pd.DataFrame,
+    dev: pd.DataFrame,
+    lockbox: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    bias_summaries: dict[str, pd.DataFrame],
+    bias_stress: dict[str, pd.DataFrame],
+    std_summaries: dict[str, pd.DataFrame],
+    std_stress: dict[str, pd.DataFrame],
+    cal_summaries: dict[str, pd.DataFrame],
+    chosen_by_market: dict[str, pd.Series],
+    frozen_candidates: dict[str, dict[str, Any]],
+    stress_by_market: dict[str, pd.DataFrame],
+    lockbox_summary: pd.DataFrame,
+    lockbox_decisions: pd.DataFrame,
+    split_edge_summary: pd.DataFrame,
+    final_recommendations: pd.DataFrame,
+    production_actions: pd.DataFrame,
+    production_std: pd.DataFrame,
+    production_cal: pd.DataFrame,
+    output_files: list[Path],
+) -> None:
+    L: list[str] = []
+    line = "=" * 110
+    L += [line, f"{league} FINAL MASTER BASKETBALL PIPELINE TEST", line]
+    L += [
+        f"Input: {input_file}",
+        f"Full rows: {len(full_df):,}",
+        f"Full date range: {full_df['_date'].min().date()} through {full_df['_date'].max().date()}",
+        f"Development rows: {len(dev):,}",
+        f"Untouched lockbox rows: {len(lockbox):,}",
+        f"Chronological development OOS folds: {len(folds)}",
+        f"Stress scenarios: {STRESS_REPS:,}",
+        "",
+        "CORRECTED VALIDATION DESIGN:",
+        "- Development/OOS data selects BIAS, STD, calibration, EDGE mode, and EDGE value(s).",
+        "- One complete candidate is frozen for each market BEFORE the lockbox is touched.",
+        "- The lockbox evaluates each complete frozen candidate exactly once against the complete current pipeline.",
+        "- No component is accepted/rejected/swapped after seeing lockbox results.",
+        "- A market change passes only if lockbox log loss, Brier, total profit, and ROI are all no worse than current.",
+        "",
+        "EDGE uses the real pipeline formula: probability * decimal_odds - 1.",
+        "One side per game per market is selected by higher EV subject to the frozen shared/split EDGE policy.",
+        "Stored predictions with bias_applied=1 are first reversed back to pre-bias model values.",
+    ]
+
+    L += ["", line, "1. DEVELOPMENT-FROZEN COMPLETE MARKET CANDIDATES", line]
+    frozen_rows = []
+    for market in ["moneyline", "spread", "total"]:
+        f = frozen_candidates[market]
+        r: pd.Series = f["chosen"]
+        s1, s2 = market_sides(market)
+        row = {
+            "market": market,
+            "bias_strategy": r["bias_strategy"],
+            "std_mode": r["std_mode"],
+            f"cal_{s1}": r[f"calibration_{s1.lower()}"],
+            f"cal_{s2}": r[f"calibration_{s2.lower()}"],
+            "edge_mode": f["edge_mode"],
+            "shared_edge": f.get("shared_edge"),
+            f"{s1}_edge": f.get("edge_side1"),
+            f"{s2}_edge": f.get("edge_side2"),
+            "joint_dev_oos_bets": r["oos_bets"],
+            "joint_dev_oos_profit": r["oos_profit_units"],
+            "joint_dev_oos_roi": r["oos_roi"],
+            "positive_fold_rate": r["positive_fold_rate"],
+        }
+        frozen_rows.append(row)
+    L.append(dataframe_text(pd.DataFrame(frozen_rows)))
+
+    L += ["", line, "2. UNTOUCHED LOCKBOX: FROZEN CANDIDATE VS CURRENT PIPELINE", line]
+    L.append(dataframe_text(lockbox_summary))
+
+    L += ["", line, "3. WHOLE-MARKET LOCKBOX PASS / FAIL", line]
+    L.append(dataframe_text(lockbox_decisions))
+
+    L += ["", line, "4. BIAS: NONE VS FIXED VS ROLLING", line]
+    for market in ["spread", "total"]:
+        L += [f"\n{market.upper()} BIAS OOS SUMMARY", dataframe_text(bias_summaries[market])]
+        L += [f"\n{market.upper()} BIAS STRESS", dataframe_text(bias_stress[market])]
+
+    L += ["", line, "5. STD: ONE FIXED VALUE VS RANGE-SPECIFIC VALUES", line]
+    for market in ["spread", "total"]:
+        L += [f"\n{market.upper()} STD OOS SUMMARY", dataframe_text(std_summaries[market])]
+        L += [f"\n{market.upper()} STD STRESS", dataframe_text(std_stress[market])]
+
+    L += ["", line, "6. CALIBRATION METHODS (DEVELOPMENT OOS ONLY)", line]
+    for market in ["moneyline", "spread", "total"]:
+        L += [f"\n{market.upper()}", dataframe_text(cal_summaries[market])]
+
+    L += ["", line, "7. JOINT CONFIGURATION STRESS TESTS", line]
+    for market in ["moneyline", "spread", "total"]:
+        L += [f"\n{market.upper()} TOP CONFIGURATIONS", dataframe_text(stress_by_market[market], 25)]
+
+    L += ["", line, "8. SHARED VS SIDE-SPECIFIC EDGE (DEVELOPMENT SELECTION ONLY)", line]
+    L += [
+        "The frozen_edge_mode column is selected without using lockbox results.",
+        dataframe_text(split_edge_summary),
+    ]
+
+    L += ["", line, "9. FINAL ACTIONABLE RECOMMENDATIONS", line]
+    L += [
+        "FINAL_ACTIONS follows the whole-market decision. A failed market keeps the complete current pipeline.",
+        "A passed market keeps the complete frozen candidate; no post-lockbox component swapping is allowed.",
+        "",
+        dataframe_text(final_recommendations, 100),
+        "",
+        "PRODUCTION REFIT CANDIDATES / METHODS",
+        "Full-history refits are shown for audit. Use FINAL_ACTIONS.csv for actual implementation decisions.",
+        dataframe_text(production_actions),
+        "",
+        "STD RANGE TABLE",
+        dataframe_text(production_std),
+        "",
+        "CALIBRATION FORMULAS",
+        dataframe_text(production_cal),
+    ]
+
+    L += ["", line, "10. OUTPUT FILES", line]
+    for p in output_files:
+        L.append(str(p))
+
+    path.write_text("\n".join(L) + "\n", encoding="utf-8")
+
+# =============================================================================
+# MAIN
+# =============================================================================
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Final master basketball pipeline historical validation test")
+    parser.add_argument("--league", default=LEAGUE, choices=["NBA", "NCAAM", "WNBA"])
+    parser.add_argument("--input", default=str(INPUT_FILE))
+    parser.add_argument("--season", default=SEASON_LABEL)
+    parser.add_argument("--quick", action="store_true", help="Same logic, fewer bootstrap scenarios for code validation")
+    args = parser.parse_args()
+
+    league = args.league.upper()
+    input_file = Path(args.input)
+    settings = CURRENT_SETTINGS[league]
+    rng = np.random.default_rng(RANDOM_SEED)
+
+    global STRESS_REPS
+    if args.quick:
+        STRESS_REPS = 250
+
+    t0 = now_seconds()
+    progress(f"Loading {league} data: {input_file}")
+    full_df = load_data(input_file, league, settings)
+    season = args.season or infer_season_label(full_df, SEASON_LABEL)
+    output_dir = input_file.parent
+    prefix = make_prefix(league, season)
+
+    dev, lockbox = split_development_lockbox(full_df, LOCKBOX_FRACTION)
+    folds = make_outer_folds(dev, TARGET_OUTER_FOLDS)
+    meta = oos_meta(dev, folds)
+    strategies = bias_strategy_names(len(dev))
+
+    progress(
+        f"Rows={len(full_df):,}; development={len(dev):,}; untouched lockbox={len(lockbox):,}; "
+        f"OOS folds={len(folds)}; stress reps={STRESS_REPS:,}"
+    )
+
+    output_files: list[Path] = []
+
+    # ---------------------------------------------------------------------
+    # 1) BIAS STRATEGIES
+    # ---------------------------------------------------------------------
+    progress("[1/9] Bias: none vs fixed vs rolling...")
+    bias_details: dict[str, pd.DataFrame] = {}
+    bias_summaries: dict[str, pd.DataFrame] = {}
+    bias_stress: dict[str, pd.DataFrame] = {}
+    selected_bias_strategy: dict[str, str] = {}
+
+    for market, current_bias in [
+        ("spread", settings["MARGIN_BIAS"]),
+        ("total", settings["TOTAL_BIAS"]),
+    ]:
+        detail, summary = evaluate_bias_strategies(dev, folds, market, strategies, current_bias)
+        stress = stress_bias_strategies(detail, strategies, STRESS_REPS, rng)
+        bias_details[market] = detail
+        bias_summaries[market] = summary
+        bias_stress[market] = stress
+
+        merged = summary[summary["strategy"].isin(strategies)].merge(
+            stress,
+            on="strategy",
+            how="left",
+        )
+        selected = merged.sort_values(
+            ["selection_frequency", "oos_rmse"],
+            ascending=[False, True],
+        ).iloc[0]
+        selected_bias_strategy[market] = str(selected["strategy"])
+
+        output_files.append(save_csv(
+            summary,
+            output_dir / f"{prefix}_01_{market}_bias_strategy_oos.csv",
+        ))
+        output_files.append(save_csv(
+            stress,
+            output_dir / f"{prefix}_01_{market}_bias_strategy_stress.csv",
+        ))
+        output_files.append(save_csv(
+            detail,
+            output_dir / f"{prefix}_01_{market}_bias_oos_detail.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 2) STD MODES
+    # ---------------------------------------------------------------------
+    progress("[2/9] STD: fixed vs sportsbook-range-specific...")
+    std_details: dict[str, pd.DataFrame] = {}
+    std_summaries: dict[str, pd.DataFrame] = {}
+    std_stress: dict[str, pd.DataFrame] = {}
+    selected_std_mode: dict[str, str] = {}
+
+    for market in ["spread", "total"]:
+        detail, summary = evaluate_std_modes(
+            dev,
+            folds,
+            market,
+            selected_bias_strategy[market],
+        )
+        stress = stress_std_modes(detail, STD_MODES, STRESS_REPS, rng)
+        std_details[market] = detail
+        std_summaries[market] = summary
+        std_stress[market] = stress
+
+        fixed_nll = float(
+            summary.loc[
+                summary["std_mode"] == "fixed",
+                "mean_residual_nll",
+            ].iloc[0]
+        )
+        best = summary.iloc[0]
+        best_mode = str(best["std_mode"])
+        rel_improvement = (
+            (fixed_nll - float(best["mean_residual_nll"])) / abs(fixed_nll)
+            if fixed_nll
+            else 0.0
+        )
+        if (
+            best_mode != "fixed"
+            and rel_improvement < MIN_ADAPTIVE_STD_REL_NLL_IMPROVEMENT
+        ):
+            best_mode = "fixed"
+        selected_std_mode[market] = best_mode
+
+        output_files.append(save_csv(
+            summary,
+            output_dir / f"{prefix}_02_{market}_std_mode_oos.csv",
+        ))
+        output_files.append(save_csv(
+            stress,
+            output_dir / f"{prefix}_02_{market}_std_mode_stress.csv",
+        ))
+        output_files.append(save_csv(
+            detail,
+            output_dir / f"{prefix}_02_{market}_std_oos_detail.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 3) JOINT OOS CACHE + CONFIG SEARCH
+    # ---------------------------------------------------------------------
+    progress("[3/9] Joint optimization: BIAS + STD + calibration + shared EDGE...")
+    rankings: dict[str, pd.DataFrame] = {}
+    caches_by_market: dict[str, dict[str, dict[str, Any]]] = {}
+    stress_by_market: dict[str, pd.DataFrame] = {}
+    chosen_by_market: dict[str, pd.Series] = {}
+
+    for market in ["moneyline", "spread", "total"]:
+        if market == "moneyline":
+            bset, sset = ["NA"], ["NA"]
+        else:
+            bset, sset = strategies, STD_MODES
+
+        ranking, caches, files = evaluate_joint_configs_for_market(
+            dev,
+            folds,
+            meta,
+            market,
+            bset,
+            sset,
+            output_dir,
+            prefix,
+        )
+        rankings[market] = ranking
+        caches_by_market[market] = caches
+        output_files.extend(files)
+
+        stress, chosen = stress_top_joint_configs(
+            meta,
+            market,
+            ranking,
+            caches,
+            STRESS_REPS,
+            rng,
+        )
+        stress_by_market[market] = stress
+        chosen_by_market[market] = chosen
+        output_files.append(save_csv(
+            stress,
+            output_dir / f"{prefix}_04_joint_stress_{market}.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 4) CALIBRATION DETAIL FOR CHOSEN BASE CONFIGS
+    # ---------------------------------------------------------------------
+    progress("[4/9] Calibration: development OOS comparison by side...")
+    cal_summaries: dict[str, pd.DataFrame] = {}
+    for market in ["moneyline", "spread", "total"]:
+        chosen = chosen_by_market[market]
+        cache = caches_by_market[market][str(chosen["cache_key"])]
+        cal_summary = calibration_method_summary(meta, market, cache)
+        cal_summaries[market] = cal_summary
+        output_files.append(save_csv(
+            cal_summary,
+            output_dir / f"{prefix}_03_calibration_oos_{market}.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 5) FREEZE COMPLETE CANDIDATES USING DEVELOPMENT ONLY
+    # ---------------------------------------------------------------------
+    progress("[5/9] Freezing complete market candidates before lockbox...")
+    frozen_candidates, split_edge_summary, freeze_files = build_frozen_candidates(
+        meta,
+        chosen_by_market,
+        caches_by_market,
+        output_dir,
+        prefix,
+    )
+    output_files.extend(freeze_files)
+
+    # Descriptive segment analysis uses the frozen edge policy but does not
+    # choose or modify any configuration.
+    for market in ["spread", "total"]:
+        frozen = frozen_candidates[market]
+        chosen = frozen["chosen"]
+        cache = caches_by_market[market][str(chosen["cache_key"])]
+        s1, s2 = market_sides(market)
+        p1 = cache["side1"][str(chosen[f"calibration_{s1.lower()}"])]
+        p2 = cache["side2"][str(chosen[f"calibration_{s2.lower()}"])]
+
+        seg = segment_betting_summary(
+            meta,
+            market,
+            p1,
+            p2,
+            cache["mean"],
+            edge_mode=str(frozen["edge_mode"]),
+            shared_edge=frozen.get("shared_edge"),
+            edge_side1=frozen.get("edge_side1"),
+            edge_side2=frozen.get("edge_side2"),
+        )
+        output_files.append(save_csv(
+            seg,
+            output_dir / f"{prefix}_07_{market}_segment_analysis.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 6) ONE-TIME UNTOUCHED LOCKBOX EVALUATION
+    # ---------------------------------------------------------------------
+    progress("[6/9] One-time untouched lockbox validation of frozen candidates...")
+    lock_rows = []
+    fitted_dev: dict[str, dict[str, Any]] = {}
+    lock_payloads: dict[str, dict[str, Any]] = {}
+
+    for market in ["moneyline", "spread", "total"]:
+        summary, fitted, payload = evaluate_frozen_candidate_on_lockbox(
+            dev,
+            lockbox,
+            market,
+            frozen_candidates[market],
+            settings,
+        )
+        lock_rows.append(summary)
+        fitted_dev[market] = fitted
+        lock_payloads[market] = payload
+        output_files.append(save_csv(
+            payload["detail"],
+            output_dir / f"{prefix}_05_lockbox_detail_{market}.csv",
+        ))
+
+    lockbox_summary = pd.concat(lock_rows, ignore_index=True)
+    lockbox_decisions = lockbox_market_validation(lockbox_summary)
+
+    output_files.append(save_csv(
+        lockbox_summary,
+        output_dir / f"{prefix}_05_lockbox_validation.csv",
+    ))
+    output_files.append(save_csv(
+        lockbox_decisions,
+        output_dir / f"{prefix}_05_lockbox_market_decision.csv",
+    ))
+
+    # ---------------------------------------------------------------------
+    # 7) FULL-HISTORY PRODUCTION REFITS + FINAL ACTIONS
+    # ---------------------------------------------------------------------
+    progress("[7/9] Full-history refit of frozen methods and final decisions...")
+    production_actions, production_std, production_cal = production_parameter_tables(
+        full_df,
+        frozen_candidates,
+    )
+    isotonic_knots = isotonic_knots_table(full_df, chosen_by_market)
+
+    decision_map = lockbox_decisions.set_index("market")
+    for col in [
+        "candidate_bets",
+        "current_bets",
+        "candidate_profit_units",
+        "current_profit_units",
+        "candidate_roi",
+        "current_roi",
+        "candidate_prob_log_loss",
+        "current_prob_log_loss",
+        "candidate_prob_brier",
+        "current_prob_brier",
+        "market_validated",
+    ]:
+        production_actions[f"lockbox_{col}"] = production_actions["market"].map(
+            lambda m, c=col: decision_map.loc[m, c]
+        )
+
+    final_recommendations = build_final_recommendations(
+        settings,
+        frozen_candidates,
+        lockbox_decisions,
+        production_actions,
+    )
+
+    output_files.append(save_csv(
+        production_actions,
+        output_dir / f"{prefix}_PRODUCTION_REFIT_CANDIDATES.csv",
+    ))
+    output_files.append(save_csv(
+        production_std,
+        output_dir / f"{prefix}_FINAL_STD_RANGES.csv",
+    ))
+    output_files.append(save_csv(
+        production_cal,
+        output_dir / f"{prefix}_FINAL_CALIBRATION_FORMULAS.csv",
+    ))
+    output_files.append(save_csv(
+        final_recommendations,
+        output_dir / f"{prefix}_FINAL_ACTIONS.csv",
+    ))
+
+    if not isotonic_knots.empty:
+        output_files.append(save_csv(
+            isotonic_knots,
+            output_dir / f"{prefix}_FINAL_ISOTONIC_KNOTS.csv",
+        ))
+
+    # ---------------------------------------------------------------------
+    # 8) REPORT
+    # ---------------------------------------------------------------------
+    progress("[8/9] Writing final report...")
+    report_path = output_dir / f"{prefix}_REPORT.txt"
+    write_report(
+        report_path,
+        league,
+        input_file,
+        full_df,
+        dev,
+        lockbox,
+        folds,
+        bias_summaries,
+        bias_stress,
+        std_summaries,
+        std_stress,
+        cal_summaries,
+        chosen_by_market,
+        frozen_candidates,
+        stress_by_market,
+        lockbox_summary,
+        lockbox_decisions,
+        split_edge_summary,
+        final_recommendations,
+        production_actions,
+        production_std,
+        production_cal,
+        output_files,
+    )
+    output_files.append(report_path)
+
+    elapsed = now_seconds() - t0
+    progress("[9/9] Complete.")
+    progress(f"Report: {report_path}")
+    progress(f"Lockbox decisions: {output_dir / f'{prefix}_05_lockbox_market_decision.csv'}")
+    progress(f"Final actions: {output_dir / f'{prefix}_FINAL_ACTIONS.csv'}")
+    progress(f"Runtime: {elapsed/60.0:.2f} minutes")
+
+
+if __name__ == "__main__":
+    main()
