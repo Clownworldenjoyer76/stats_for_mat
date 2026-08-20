@@ -19,10 +19,12 @@ One self-contained historical test for NBA / WNBA / NCAAM that evaluates:
    - range-specific residual STDs using 2 / 3 / 4 sportsbook-line quantile bands
    - shrinkage toward the global STD so small bands do not become absurdly noisy
 
-3) EDGE
+3) EDGE / MARKET SELECTION
    - exact pipeline definition: model_probability * decimal_odds - 1 >= EDGE
    - repeated chronological future-game folds
-   - one pick per game per market, choosing the higher-EV qualifying side
+   - market selection_mode and pick_preference are read from docs/win/basketball/config/markets.yaml
+   - all_qualifying keeps every side that clears the frozen EDGE policy
+   - pick_one keeps one qualifying side using the configured pick_preference
    - block-bootstrap stress tests
 
 4) CALIBRATION
@@ -70,7 +72,9 @@ Important pipeline behavior mirrored here
 - Existing bias is reversed first when bias_applied == 1, using the exact cleaner equations.
 - Spread/total probability uses a normal distribution.
 - EDGE is expected return, not model-vs-market probability difference.
-- One side per game per market is selected using maximum EV, matching current pick_one behavior.
+- Side-selection behavior is read from docs/win/basketball/config/markets.yaml.
+- all_qualifying keeps every qualifying side.
+- pick_one uses that market's configured pick_preference metric/direction.
 
 This script DOES NOT edit the repository or source CSV.
 It writes reports/CSVs beside the input file.
@@ -88,6 +92,11 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
+try:
+    import yaml
+except Exception as exc:
+    raise SystemExit("This script requires PyYAML. Install with: pip install pyyaml") from exc
 
 try:
     from scipy.optimize import minimize
@@ -109,6 +118,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 LEAGUE = "NBA"
 INPUT_FILE = Path(r"C:\basketball\nba\2025\_NBA.csv")
 SEASON_LABEL = "2025"
+MARKETS_FILE = Path("docs/win/basketball/config/markets.yaml")
 
 # Current values from the basketball pipeline.
 CURRENT_SETTINGS = {
@@ -305,6 +315,142 @@ def infer_season_label(df: pd.DataFrame, fallback: str) -> str:
     if years.empty:
         return fallback
     return str(int(years.min()))
+
+
+@dataclass(frozen=True)
+class MarketSelectionPolicy:
+    selection_mode: str
+    preference_metric: str
+    preference_direction: str
+
+
+def resolve_markets_file(markets_file: Path) -> Path:
+    """
+    Resolve docs/win/basketball/config/markets.yaml without silently inventing a policy.
+
+    Resolution order:
+      1) the path passed through --markets-file,
+      2) the same relative path from the current working directory,
+      3) repository-relative discovery from this script's location.
+
+    The validator fails if the file cannot be found because side-selection
+    behavior must come from the same markets.yaml used by production.
+    """
+    candidates: list[Path] = []
+
+    if markets_file.is_absolute():
+        candidates.append(markets_file)
+    else:
+        candidates.append(Path.cwd() / markets_file)
+
+        script_path = Path(__file__).resolve()
+        for parent in [script_path.parent, *script_path.parents]:
+            candidates.append(parent / markets_file)
+            if parent.name == "basketball":
+                candidates.append(parent / "config" / "markets.yaml")
+
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate.resolve(strict=False))
+        if key in seen:
+            continue
+        seen.add(key)
+        if candidate.exists():
+            return candidate.resolve()
+
+    tried = "\n  - ".join(str(x) for x in candidates)
+    raise FileNotFoundError(
+        "Could not find production market-selection file "
+        "docs/win/basketball/config/markets.yaml. Tried:\n  - " + tried
+    )
+
+
+def load_market_selection_policies(
+    markets_file: Path,
+    league: str,
+) -> dict[str, MarketSelectionPolicy]:
+    """
+    Read selection_mode and pick_preference from
+    docs/win/basketball/config/markets.yaml for the configured league.
+
+    This validator intentionally does not hardcode "higher EV" as the side
+    selector. The production YAML is the source of truth:
+      - all_qualifying -> every qualifying side is retained.
+      - pick_one       -> one qualifying side is retained according to the
+                          configured metric and direction.
+    """
+    path = resolve_markets_file(markets_file)
+    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+
+    league_key = league.lower()
+    league_cfg = (payload.get("markets") or {}).get(league_key)
+    if not isinstance(league_cfg, dict):
+        raise ValueError(
+            f"{path}: missing markets.{league_key} configuration for league={league}"
+        )
+
+    valid_modes = {"pick_one", "all_qualifying"}
+    valid_metrics = {"ev", "kelly", "model_prob", "edge_vs_market"}
+    valid_directions = {"max", "min"}
+
+    policies: dict[str, MarketSelectionPolicy] = {}
+    for market in ["moneyline", "spread", "total"]:
+        market_cfg = league_cfg.get(market)
+        if not isinstance(market_cfg, dict):
+            raise ValueError(f"{path}: missing markets.{league_key}.{market}")
+
+        selection_mode = str(
+            market_cfg.get("selection_mode", "pick_one")
+        ).strip().lower()
+
+        # Match basketball_select_bets_core.py exactly: the per-market
+        # pick_preference defaults to EV/max when absent.
+        pref = market_cfg.get("pick_preference") or {
+            "metric": "ev",
+            "direction": "max",
+        }
+        metric = str(pref.get("metric", "ev")).strip().lower()
+        direction = str(pref.get("direction", "max")).strip().lower()
+
+        if selection_mode not in valid_modes:
+            raise ValueError(
+                f"{path}: markets.{league_key}.{market}.selection_mode="
+                f"{selection_mode!r}; expected one of {sorted(valid_modes)}"
+            )
+        if metric not in valid_metrics:
+            raise ValueError(
+                f"{path}: markets.{league_key}.{market}.pick_preference.metric="
+                f"{metric!r}; expected one of {sorted(valid_metrics)}"
+            )
+        if direction not in valid_directions:
+            raise ValueError(
+                f"{path}: markets.{league_key}.{market}.pick_preference.direction="
+                f"{direction!r}; expected one of {sorted(valid_directions)}"
+            )
+
+        policies[market] = MarketSelectionPolicy(
+            selection_mode=selection_mode,
+            preference_metric=metric,
+            preference_direction=direction,
+        )
+
+    return policies
+
+
+def market_selection_policy_table(
+    policies: dict[str, MarketSelectionPolicy],
+    markets_file: Path,
+) -> pd.DataFrame:
+    return pd.DataFrame([
+        {
+            "markets_file": str(markets_file),
+            "market": market,
+            "selection_mode": policy.selection_mode,
+            "pick_preference_metric": policy.preference_metric,
+            "pick_preference_direction": policy.preference_direction,
+        }
+        for market, policy in policies.items()
+    ])
 
 # =============================================================================
 # DATA LOADING / EXACT PRE-BIAS RECONSTRUCTION
@@ -1153,12 +1299,30 @@ def build_oos_prediction_cache(
 # =============================================================================
 # BET OPPORTUNITIES / EDGE SCANS
 # =============================================================================
-def best_side_opportunity(
+def raw_kelly_fraction(probability: Any, decimal_odds: Any) -> np.ndarray:
+    p = np.asarray(probability, dtype=float)
+    o = np.asarray(decimal_odds, dtype=float)
+    b = o - 1.0
+    q = 1.0 - p
+    out = np.full(len(p), np.nan, dtype=float)
+    valid = np.isfinite(p) & np.isfinite(o) & (o > 1.0) & (b > 0.0)
+    out[valid] = np.maximum((b[valid] * p[valid] - q[valid]) / b[valid], 0.0)
+    return out
+
+
+def market_opportunities(
     meta: pd.DataFrame,
     market: str,
     p1: Any,
     p2: Any,
 ) -> pd.DataFrame:
+    """
+    Build one row per game with both sides preserved.
+
+    No side is discarded here. Selection happens later from the frozen EDGE
+    policy plus the exact selection_mode / pick_preference read from
+    docs/win/basketball/config/markets.yaml.
+    """
     p1 = np.asarray(p1, dtype=float)
     p2 = np.asarray(p2, dtype=float)
     o1, o2 = side_odds_arrays(meta, market)
@@ -1172,24 +1336,12 @@ def best_side_opportunity(
 
     valid1 = np.isfinite(ev1) & np.isfinite(profit1) & np.isfinite(o1) & (o1 > 1.0)
     valid2 = np.isfinite(ev2) & np.isfinite(profit2) & np.isfinite(o2) & (o2 > 1.0)
-    ev1 = np.where(valid1, ev1, -np.inf)
-    ev2 = np.where(valid2, ev2, -np.inf)
-    choose1 = ev1 >= ev2
-    no_valid = (~valid1) & (~valid2)
 
-    best_ev = np.where(choose1, ev1, ev2)
-    best_profit = np.where(choose1, profit1, profit2)
-    best_prob = np.where(choose1, p1, p2)
-    best_odds = np.where(choose1, o1, o2)
-    best_result = np.where(choose1, r1, r2)
-    best_side = np.where(choose1, side1, side2).astype(object)
-
-    best_ev[no_valid] = np.nan
-    best_profit[no_valid] = np.nan
-    best_prob[no_valid] = np.nan
-    best_odds[no_valid] = np.nan
-    best_result[no_valid] = np.nan
-    best_side[no_valid] = ""
+    market_p1, market_p2 = devig_pair(o1, o2)
+    edge_market1 = (p1 - market_p1) * 100.0
+    edge_market2 = (p2 - market_p2) * 100.0
+    kelly1 = raw_kelly_fraction(p1, o1)
+    kelly2 = raw_kelly_fraction(p2, o2)
 
     return pd.DataFrame({
         "row_id": meta["_row_id"].to_numpy(int),
@@ -1198,40 +1350,216 @@ def best_side_opportunity(
         "week": meta["_week"].astype(str).to_numpy(),
         "fold_id": meta["fold_id"].to_numpy(int) if "fold_id" in meta.columns else np.zeros(len(meta), dtype=int),
         "market": market,
-        "best_side": best_side,
-        "best_ev": best_ev,
-        "probability": best_prob,
-        "decimal_odds": best_odds,
-        "result": best_result,
-        "unit_profit": best_profit,
+        "side1_name": side1,
+        "side2_name": side2,
+        "side1_valid": valid1,
+        "side2_valid": valid2,
         "side1_ev": ev1,
         "side2_ev": ev2,
         "side1_profit": profit1,
         "side2_profit": profit2,
         "side1_prob": p1,
         "side2_prob": p2,
+        "side1_odds": o1,
+        "side2_odds": o2,
+        "side1_result": r1,
+        "side2_result": r2,
+        "side1_market_prob": market_p1,
+        "side2_market_prob": market_p2,
+        "side1_edge_vs_market": edge_market1,
+        "side2_edge_vs_market": edge_market2,
+        "side1_kelly": kelly1,
+        "side2_kelly": kelly2,
     })
 
 
-def edge_scan(opps: pd.DataFrame, grid: np.ndarray, min_bets: int) -> pd.DataFrame:
+def _preference_arrays(
+    opps: pd.DataFrame,
+    policy: MarketSelectionPolicy,
+) -> tuple[np.ndarray, np.ndarray]:
+    metric = policy.preference_metric
+    if metric == "ev":
+        return opps["side1_ev"].to_numpy(float), opps["side2_ev"].to_numpy(float)
+    if metric == "kelly":
+        return opps["side1_kelly"].to_numpy(float), opps["side2_kelly"].to_numpy(float)
+    if metric == "model_prob":
+        return opps["side1_prob"].to_numpy(float), opps["side2_prob"].to_numpy(float)
+    if metric == "edge_vs_market":
+        return (
+            opps["side1_edge_vs_market"].to_numpy(float),
+            opps["side2_edge_vs_market"].to_numpy(float),
+        )
+    raise ValueError(f"Unsupported pick_preference metric: {metric}")
+
+
+def select_opportunities(
+    opps: pd.DataFrame,
+    policy: MarketSelectionPolicy,
+    edge_mode: str,
+    shared_edge: float | None = None,
+    edge_side1: float | None = None,
+    edge_side2: float | None = None,
+) -> pd.DataFrame:
+    """
+    Apply the frozen EDGE threshold(s), then apply production side-selection.
+
+    all_qualifying:
+      Every valid side that clears its frozen EDGE threshold is selected.
+
+    pick_one:
+      Eligible sides are determined by the frozen EDGE threshold(s), then one
+      side is selected using pick_preference from
+      docs/win/basketball/config/markets.yaml.
+    """
+    out = opps.copy()
+
+    ev1 = out["side1_ev"].to_numpy(float)
+    ev2 = out["side2_ev"].to_numpy(float)
+    valid1 = out["side1_valid"].to_numpy(bool)
+    valid2 = out["side2_valid"].to_numpy(bool)
+
+    if edge_mode == "shared":
+        if shared_edge is None:
+            raise ValueError("shared_edge is required when edge_mode='shared'")
+        pass1 = valid1 & (ev1 >= float(shared_edge))
+        pass2 = valid2 & (ev2 >= float(shared_edge))
+    elif edge_mode == "split":
+        if edge_side1 is None or edge_side2 is None:
+            raise ValueError("edge_side1 and edge_side2 are required when edge_mode='split'")
+        pass1 = valid1 & (ev1 >= float(edge_side1))
+        pass2 = valid2 & (ev2 >= float(edge_side2))
+    else:
+        raise ValueError(f"Unknown edge_mode: {edge_mode}")
+
+    if policy.selection_mode == "all_qualifying":
+        choose1 = pass1.copy()
+        choose2 = pass2.copy()
+
+    elif policy.selection_mode == "pick_one":
+        pref1, pref2 = _preference_arrays(out, policy)
+
+        # A non-finite preference value cannot win a two-side comparison, but
+        # a lone qualifying side remains eligible.
+        if policy.preference_direction == "max":
+            cmp1 = np.where(np.isfinite(pref1), pref1, -np.inf)
+            cmp2 = np.where(np.isfinite(pref2), pref2, -np.inf)
+            choose1 = pass1 & (~pass2 | (cmp1 >= cmp2))
+            choose2 = pass2 & (~pass1 | (cmp2 > cmp1))
+        elif policy.preference_direction == "min":
+            cmp1 = np.where(np.isfinite(pref1), pref1, np.inf)
+            cmp2 = np.where(np.isfinite(pref2), pref2, np.inf)
+            choose1 = pass1 & (~pass2 | (cmp1 <= cmp2))
+            choose2 = pass2 & (~pass1 | (cmp2 < cmp1))
+        else:
+            raise ValueError(
+                f"Unsupported pick_preference direction: {policy.preference_direction}"
+            )
+    else:
+        raise ValueError(f"Unsupported selection_mode: {policy.selection_mode}")
+
+    selected_bets = choose1.astype(int) + choose2.astype(int)
+
+    pr1 = out["side1_profit"].to_numpy(float)
+    pr2 = out["side2_profit"].to_numpy(float)
+    total_profit = (
+        np.where(choose1, np.nan_to_num(pr1, nan=0.0), 0.0)
+        + np.where(choose2, np.nan_to_num(pr2, nan=0.0), 0.0)
+    )
+
+    p1 = out["side1_prob"].to_numpy(float)
+    p2 = out["side2_prob"].to_numpy(float)
+    o1 = out["side1_odds"].to_numpy(float)
+    o2 = out["side2_odds"].to_numpy(float)
+    r1 = out["side1_result"].to_numpy(float)
+    r2 = out["side2_result"].to_numpy(float)
+
+    selected_side = np.full(len(out), "", dtype=object)
+    only1 = choose1 & ~choose2
+    only2 = choose2 & ~choose1
+    both = choose1 & choose2
+    selected_side[only1] = str(out["side1_name"].iloc[0]) if len(out) else ""
+    selected_side[only2] = str(out["side2_name"].iloc[0]) if len(out) else ""
+    if both.any():
+        s1 = str(out["side1_name"].iloc[0])
+        s2 = str(out["side2_name"].iloc[0])
+        selected_side[both] = f"{s1}|{s2}"
+
+    # Backward-compatible one-bet detail columns are populated only when
+    # exactly one side is selected. When all_qualifying selects both sides,
+    # the side-specific columns below are the source of truth.
+    one = selected_bets == 1
+    selected_ev = np.where(only1, ev1, np.where(only2, ev2, np.nan))
+    selected_prob = np.where(only1, p1, np.where(only2, p2, np.nan))
+    selected_odds = np.where(only1, o1, np.where(only2, o2, np.nan))
+    selected_result = np.where(only1, r1, np.where(only2, r2, np.nan))
+
+    out["selection_mode"] = policy.selection_mode
+    out["pick_preference_metric"] = policy.preference_metric
+    out["pick_preference_direction"] = policy.preference_direction
+    out["edge_mode"] = edge_mode
+    out["side1_pass_edge"] = pass1
+    out["side2_pass_edge"] = pass2
+    out["side1_selected"] = choose1
+    out["side2_selected"] = choose2
+    out["selected_bets"] = selected_bets
+    out["selected"] = selected_bets > 0
+    out["selected_side"] = selected_side
+    out["selected_ev"] = selected_ev
+    out["probability"] = selected_prob
+    out["decimal_odds"] = selected_odds
+    out["result"] = selected_result
+    out["unit_profit"] = total_profit
+    out["selected_ev_sum"] = (
+        np.where(choose1, np.nan_to_num(ev1, nan=0.0), 0.0)
+        + np.where(choose2, np.nan_to_num(ev2, nan=0.0), 0.0)
+    )
+    out["single_selection_detail_available"] = one
+    return out
+
+
+def edge_scan(
+    opps: pd.DataFrame,
+    grid: np.ndarray,
+    min_bets: int,
+    policy: MarketSelectionPolicy,
+) -> pd.DataFrame:
     rows = []
-    ev = opps["best_ev"].to_numpy(float)
-    profit = opps["unit_profit"].to_numpy(float)
-    fold = opps["fold_id"].to_numpy(int)
-    valid = np.isfinite(ev) & np.isfinite(profit)
 
     for edge in grid:
-        m = valid & (ev >= float(edge))
-        n = int(m.sum())
+        selected = select_opportunities(
+            opps,
+            policy,
+            edge_mode="shared",
+            shared_edge=float(edge),
+        )
+        bets_by_game = selected["selected_bets"].to_numpy(int)
+        profit_by_game = selected["unit_profit"].to_numpy(float)
+        fold = selected["fold_id"].to_numpy(int)
+
+        n = int(np.sum(bets_by_game))
         if n:
-            p = float(np.sum(profit[m]))
+            p = float(np.nansum(profit_by_game))
             roi = p / n
-            fold_profits = pd.Series(profit[m]).groupby(pd.Series(fold[m])).sum()
-            positive_fold_rate = float((fold_profits > 0).mean()) if len(fold_profits) else np.nan
+            fold_frame = pd.DataFrame({
+                "fold_id": fold,
+                "profit": profit_by_game,
+                "bets": bets_by_game,
+            })
+            fold_frame = fold_frame[fold_frame["bets"] > 0]
+            fold_profits = fold_frame.groupby("fold_id")["profit"].sum()
+            positive_fold_rate = (
+                float((fold_profits > 0).mean())
+                if len(fold_profits)
+                else np.nan
+            )
         else:
             p, roi, positive_fold_rate = 0.0, np.nan, np.nan
+
         rows.append({
             "edge": float(edge),
+            "selection_mode": policy.selection_mode,
+            "pick_preference_metric": policy.preference_metric,
+            "pick_preference_direction": policy.preference_direction,
             "bets": n,
             "profit_units": p,
             "roi": roi,
@@ -1398,6 +1726,7 @@ def evaluate_joint_configs_for_market(
     market: str,
     bias_strategies: list[str],
     std_modes: list[str],
+    selection_policy: MarketSelectionPolicy,
     output_dir: Path,
     prefix: str,
 ) -> tuple[pd.DataFrame, dict[str, dict[str, Any]], list[Path]]:
@@ -1475,11 +1804,14 @@ def evaluate_joint_configs_for_market(
             for cal2 in side_map[side2_name]:
                 p2 = cache["side2"][cal2]
                 ll, br = probability_pair_score(meta, market, p1, p2)
-                opps = best_side_opportunity(meta, market, p1, p2)
-                scan = edge_scan(opps, EDGE_GRID, minimum_bets)
+                opps = market_opportunities(meta, market, p1, p2)
+                scan = edge_scan(opps, EDGE_GRID, minimum_bets, selection_policy)
                 best = choose_edge(scan, minimum_bets)
                 rows.append({
                     "market": market,
+                    "selection_mode": selection_policy.selection_mode,
+                    "pick_preference_metric": selection_policy.preference_metric,
+                    "pick_preference_direction": selection_policy.preference_direction,
                     "bias_strategy": bias_strategy,
                     "std_mode": std_mode,
                     f"calibration_{side1_name.lower()}": cal1,
@@ -1541,7 +1873,7 @@ def config_opportunities(
     s1, s2 = market_sides(market)
     cal1 = str(config_row[f"calibration_{s1.lower()}"])
     cal2 = str(config_row[f"calibration_{s2.lower()}"])
-    return best_side_opportunity(meta, market, cache["side1"][cal1], cache["side2"][cal2])
+    return market_opportunities(meta, market, cache["side1"][cal1], cache["side2"][cal2])
 
 
 def stress_top_joint_configs(
@@ -1549,6 +1881,7 @@ def stress_top_joint_configs(
     market: str,
     ranking: pd.DataFrame,
     caches: dict[str, dict[str, Any]],
+    selection_policy: MarketSelectionPolicy,
     reps: int,
     rng: np.random.Generator,
 ) -> tuple[pd.DataFrame, pd.Series]:
@@ -1569,9 +1902,14 @@ def stress_top_joint_configs(
     for k, row in top.iterrows():
         opps = config_opportunities(meta, market, row, caches)
         edge = float(row["selected_edge"])
-        selected = np.isfinite(opps["best_ev"].to_numpy(float)) & (opps["best_ev"].to_numpy(float) >= edge)
-        profits = np.where(selected, opps["unit_profit"].to_numpy(float), 0.0)
-        bets = selected.astype(float)
+        selected_opps = select_opportunities(
+            opps,
+            selection_policy,
+            edge_mode="shared",
+            shared_edge=edge,
+        )
+        profits = selected_opps["unit_profit"].to_numpy(float)
+        bets = selected_opps["selected_bets"].to_numpy(float)
         for bi, block in enumerate(unique_blocks):
             m = blocks == block
             block_profit[bi, k] = np.nansum(profits[m])
@@ -1592,6 +1930,9 @@ def stress_top_joint_configs(
         stress_rows.append({
             "rank_before_stress": int(row["rank"]),
             "market": market,
+            "selection_mode": selection_policy.selection_mode,
+            "pick_preference_metric": selection_policy.preference_metric,
+            "pick_preference_direction": selection_policy.preference_direction,
             "bias_strategy": row["bias_strategy"],
             "std_mode": row["std_mode"],
             "calibration_side1": row[f"calibration_{market_sides(market)[0].lower()}"],
@@ -1753,100 +2094,44 @@ def edge_mode_opportunities(
     market: str,
     p1: Any,
     p2: Any,
+    policy: MarketSelectionPolicy,
     edge_mode: str,
     shared_edge: float | None = None,
     edge_side1: float | None = None,
     edge_side2: float | None = None,
 ) -> pd.DataFrame:
     """
-    Build one-row-per-game betting opportunities for a FROZEN edge policy.
+    Apply a FROZEN edge policy using the market's production selection behavior
+    from docs/win/basketball/config/markets.yaml.
 
-    shared:
-      - choose the higher-EV valid side
-      - bet only if that side's EV >= shared_edge
+    all_qualifying:
+      - every valid side clearing its frozen EDGE threshold is selected.
 
-    split:
-      - each side must first clear its own preselected EDGE
-      - if both qualify, choose the higher-EV side
-      - if only one qualifies, choose that side
+    pick_one:
+      - qualifying sides are determined by the frozen EDGE threshold(s);
+      - if both qualify, one is selected using pick_preference from docs/win/basketball/config/markets.yaml.
 
-    The returned dataframe includes every game and an explicit `selected` flag.
+    The returned dataframe preserves both side-level selections and records
+    selected_bets as 0, 1, or 2 per game.
     """
-    p1 = np.asarray(p1, dtype=float)
-    p2 = np.asarray(p2, dtype=float)
-    o1, o2 = side_odds_arrays(meta, market)
-    r1, r2 = side_result_arrays(meta, market)
-    s1, s2 = market_sides(market)
-
-    ev1 = p1 * o1 - 1.0
-    ev2 = p2 * o2 - 1.0
-    pr1 = unit_profit_from_result(r1, o1)
-    pr2 = unit_profit_from_result(r2, o2)
-
-    valid1 = np.isfinite(ev1) & np.isfinite(pr1) & np.isfinite(o1) & (o1 > 1.0)
-    valid2 = np.isfinite(ev2) & np.isfinite(pr2) & np.isfinite(o2) & (o2 > 1.0)
-
-    if edge_mode == "shared":
-        if shared_edge is None:
-            raise ValueError("shared_edge is required when edge_mode='shared'")
-        ev1_cmp = np.where(valid1, ev1, -np.inf)
-        ev2_cmp = np.where(valid2, ev2, -np.inf)
-        choose1 = valid1 & (ev1_cmp >= ev2_cmp)
-        choose2 = valid2 & (ev2_cmp > ev1_cmp)
-        selected = (choose1 & (ev1 >= float(shared_edge))) | (choose2 & (ev2 >= float(shared_edge)))
-
-    elif edge_mode == "split":
-        if edge_side1 is None or edge_side2 is None:
-            raise ValueError("edge_side1 and edge_side2 are required when edge_mode='split'")
-        pass1 = valid1 & (ev1 >= float(edge_side1))
-        pass2 = valid2 & (ev2 >= float(edge_side2))
-        choose1 = pass1 & (~pass2 | (ev1 >= ev2))
-        choose2 = pass2 & (~pass1 | (ev2 > ev1))
-        selected = choose1 | choose2
-
-    else:
-        raise ValueError(f"Unknown edge_mode: {edge_mode}")
-
-    chosen_side = np.where(choose1, s1, np.where(choose2, s2, "")).astype(object)
-    chosen_ev = np.where(choose1, ev1, np.where(choose2, ev2, np.nan))
-    chosen_prob = np.where(choose1, p1, np.where(choose2, p2, np.nan))
-    chosen_odds = np.where(choose1, o1, np.where(choose2, o2, np.nan))
-    chosen_result = np.where(choose1, r1, np.where(choose2, r2, np.nan))
-    chosen_profit = np.where(choose1, pr1, np.where(choose2, pr2, np.nan))
-
-    # For rows that do not qualify under a split policy, choose1/choose2 are both False.
-    # Under a shared policy choose1/choose2 identify the best available side even if it
-    # does not clear the threshold. The explicit `selected` flag is the source of truth.
-    return pd.DataFrame({
-        "row_id": meta["_row_id"].to_numpy(int),
-        "game_id": meta["game_id"].astype(str).to_numpy(),
-        "date": meta["_date"].to_numpy(),
-        "week": meta["_week"].astype(str).to_numpy(),
-        "fold_id": meta["fold_id"].to_numpy(int) if "fold_id" in meta.columns else np.zeros(len(meta), dtype=int),
-        "market": market,
-        "edge_mode": edge_mode,
-        "selected_side": chosen_side,
-        "selected_ev": chosen_ev,
-        "probability": chosen_prob,
-        "decimal_odds": chosen_odds,
-        "result": chosen_result,
-        "unit_profit": chosen_profit,
-        "selected": selected,
-        "side1_ev": ev1,
-        "side2_ev": ev2,
-        "side1_profit": pr1,
-        "side2_profit": pr2,
-        "side1_prob": p1,
-        "side2_prob": p2,
-    })
+    base = market_opportunities(meta, market, p1, p2)
+    return select_opportunities(
+        base,
+        policy,
+        edge_mode=edge_mode,
+        shared_edge=shared_edge,
+        edge_side1=edge_side1,
+        edge_side2=edge_side2,
+    )
 
 
 def betting_summary_from_opportunities(opps: pd.DataFrame) -> tuple[int, float, float]:
-    selected = opps["selected"].to_numpy(bool)
-    bets = int(selected.sum())
+    if "selected_bets" not in opps.columns:
+        raise ValueError("Opportunity frame is missing selected_bets")
+    bets = int(np.nansum(opps["selected_bets"].to_numpy(float)))
     if not bets:
         return 0, 0.0, np.nan
-    profit = float(np.nansum(opps.loc[selected, "unit_profit"]))
+    profit = float(np.nansum(opps["unit_profit"].to_numpy(float)))
     roi = profit / bets
     return bets, profit, roi
 
@@ -1857,6 +2142,7 @@ def evaluate_frozen_candidate_on_lockbox(
     market: str,
     frozen: dict[str, Any],
     settings: dict[str, float],
+    selection_policy: MarketSelectionPolicy,
 ) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any]]:
     """
     ONE-TIME lockbox evaluation.
@@ -1877,6 +2163,7 @@ def evaluate_frozen_candidate_on_lockbox(
         market,
         pred["p1"],
         pred["p2"],
+        policy=selection_policy,
         edge_mode=str(frozen["edge_mode"]),
         shared_edge=frozen.get("shared_edge"),
         edge_side1=frozen.get("edge_side1"),
@@ -1890,6 +2177,7 @@ def evaluate_frozen_candidate_on_lockbox(
         market,
         cur_p1,
         cur_p2,
+        policy=selection_policy,
         edge_mode="shared",
         shared_edge=current_edge_for_market(market, settings),
     )
@@ -1920,6 +2208,9 @@ def evaluate_frozen_candidate_on_lockbox(
         {
             "market": market,
             "system": "frozen_candidate",
+            "selection_mode": selection_policy.selection_mode,
+            "pick_preference_metric": selection_policy.preference_metric,
+            "pick_preference_direction": selection_policy.preference_direction,
             "edge_mode": frozen["edge_mode"],
             "edge": frozen.get("shared_edge", np.nan) if frozen["edge_mode"] == "shared" else np.nan,
             "edge_side1": frozen.get("edge_side1", np.nan),
@@ -1934,6 +2225,9 @@ def evaluate_frozen_candidate_on_lockbox(
         {
             "market": market,
             "system": "current_pipeline",
+            "selection_mode": selection_policy.selection_mode,
+            "pick_preference_metric": selection_policy.preference_metric,
+            "pick_preference_direction": selection_policy.preference_direction,
             "edge_mode": "shared",
             "edge": current_edge_for_market(market, settings),
             "edge_side1": np.nan,
@@ -1948,6 +2242,9 @@ def evaluate_frozen_candidate_on_lockbox(
         {
             "market": market,
             "system": "frozen_base_without_calibration",
+            "selection_mode": selection_policy.selection_mode,
+            "pick_preference_metric": selection_policy.preference_metric,
+            "pick_preference_direction": selection_policy.preference_direction,
             "edge_mode": frozen["edge_mode"],
             "edge": np.nan,
             "edge_side1": np.nan,
@@ -1969,8 +2266,12 @@ def evaluate_frozen_candidate_on_lockbox(
 
     lock_detail = candidate_opps.copy()
     lock_detail["current_selected"] = current_opps["selected"].to_numpy(bool)
+    lock_detail["current_selected_bets"] = current_opps["selected_bets"].to_numpy(int)
+    lock_detail["current_side1_selected"] = current_opps["side1_selected"].to_numpy(bool)
+    lock_detail["current_side2_selected"] = current_opps["side2_selected"].to_numpy(bool)
     lock_detail["current_selected_side"] = current_opps["selected_side"].to_numpy(object)
     lock_detail["current_selected_ev"] = current_opps["selected_ev"].to_numpy(float)
+    lock_detail["current_selected_ev_sum"] = current_opps["selected_ev_sum"].to_numpy(float)
     lock_detail["current_unit_profit"] = current_opps["unit_profit"].to_numpy(float)
     lock_detail["selected_p1"] = pred["p1"]
     lock_detail["selected_p2"] = pred["p2"]
@@ -2068,39 +2369,53 @@ def split_edge_scan(
     p2: Any,
     grid: np.ndarray,
     min_bets: int,
+    selection_policy: MarketSelectionPolicy,
 ) -> pd.DataFrame:
-    p1 = np.asarray(p1, dtype=float)
-    p2 = np.asarray(p2, dtype=float)
-    o1, o2 = side_odds_arrays(meta, market)
-    r1, r2 = side_result_arrays(meta, market)
-    ev1 = p1 * o1 - 1.0
-    ev2 = p2 * o2 - 1.0
-    pr1 = unit_profit_from_result(r1, o1)
-    pr2 = unit_profit_from_result(r2, o2)
-    fold = meta["fold_id"].to_numpy(int)
-    valid1 = np.isfinite(ev1) & np.isfinite(pr1)
-    valid2 = np.isfinite(ev2) & np.isfinite(pr2)
-
+    """
+    Scan side-specific EDGE thresholds while preserving the production
+    selection_mode / pick_preference from docs/win/basketball/config/markets.yaml.
+    """
+    base = market_opportunities(meta, market, p1, p2)
     rows = []
+
     for e1 in grid:
-        pass1 = valid1 & (ev1 >= e1)
         for e2 in grid:
-            pass2 = valid2 & (ev2 >= e2)
-            choose1 = pass1 & (~pass2 | (ev1 >= ev2))
-            choose2 = pass2 & (~pass1 | (ev2 > ev1))
-            selected = choose1 | choose2
-            n = int(selected.sum())
+            selected = select_opportunities(
+                base,
+                selection_policy,
+                edge_mode="split",
+                edge_side1=float(e1),
+                edge_side2=float(e2),
+            )
+            bets_by_game = selected["selected_bets"].to_numpy(int)
+            profit_by_game = selected["unit_profit"].to_numpy(float)
+            fold = selected["fold_id"].to_numpy(int)
+
+            n = int(np.sum(bets_by_game))
             if n:
-                profit_vec = np.where(choose1, pr1, np.where(choose2, pr2, 0.0))
-                profit = float(np.nansum(profit_vec[selected]))
+                profit = float(np.nansum(profit_by_game))
                 roi = profit / n
-                fp = pd.Series(profit_vec[selected]).groupby(pd.Series(fold[selected])).sum()
-                pfr = float((fp > 0).mean()) if len(fp) else np.nan
+                fold_frame = pd.DataFrame({
+                    "fold_id": fold,
+                    "profit": profit_by_game,
+                    "bets": bets_by_game,
+                })
+                fold_frame = fold_frame[fold_frame["bets"] > 0]
+                fold_profits = fold_frame.groupby("fold_id")["profit"].sum()
+                pfr = (
+                    float((fold_profits > 0).mean())
+                    if len(fold_profits)
+                    else np.nan
+                )
             else:
                 profit, roi, pfr = 0.0, np.nan, np.nan
+
             rows.append({
                 "edge_side1": float(e1),
                 "edge_side2": float(e2),
+                "selection_mode": selection_policy.selection_mode,
+                "pick_preference_metric": selection_policy.preference_metric,
+                "pick_preference_direction": selection_policy.preference_direction,
                 "bets": n,
                 "profit_units": profit,
                 "roi": roi,
@@ -2126,6 +2441,7 @@ def build_frozen_candidates(
     meta: pd.DataFrame,
     chosen_by_market: dict[str, pd.Series],
     caches_by_market: dict[str, dict[str, dict[str, Any]]],
+    selection_policies: dict[str, MarketSelectionPolicy],
     output_dir: Path,
     prefix: str,
 ) -> tuple[dict[str, dict[str, Any]], pd.DataFrame, list[Path]]:
@@ -2159,18 +2475,29 @@ def build_frozen_candidates(
         p2 = cache["side2"][str(chosen[f"calibration_{s2.lower()}"])]
         minbets = min_oos_bets(len(meta))
 
+        selection_policy = selection_policies[market]
+
         shared_opps = edge_mode_opportunities(
             meta,
             market,
             p1,
             p2,
+            policy=selection_policy,
             edge_mode="shared",
             shared_edge=float(chosen["selected_edge"]),
         )
         shared_bets, shared_profit, shared_roi = betting_summary_from_opportunities(shared_opps)
         shared_edge = float(chosen["selected_edge"])
 
-        split_scan_df = split_edge_scan(meta, market, p1, p2, SPLIT_EDGE_GRID, minbets)
+        split_scan_df = split_edge_scan(
+            meta,
+            market,
+            p1,
+            p2,
+            SPLIT_EDGE_GRID,
+            minbets,
+            selection_policy,
+        )
         split_best = choose_split_edge(split_scan_df, minbets)
         split_profit = float(split_best["profit_units"])
         split_bets = int(split_best["bets"])
@@ -2204,6 +2531,9 @@ def build_frozen_candidates(
 
         split_rows.append({
             "market": market,
+            "selection_mode": selection_policy.selection_mode,
+            "pick_preference_metric": selection_policy.preference_metric,
+            "pick_preference_direction": selection_policy.preference_direction,
             "side1": s1,
             "side2": s2,
             "shared_edge": shared_edge,
@@ -2263,6 +2593,7 @@ def segment_betting_summary(
     p1: np.ndarray,
     p2: np.ndarray,
     mean: np.ndarray,
+    selection_policy: MarketSelectionPolicy,
     edge_mode: str,
     shared_edge: float | None = None,
     edge_side1: float | None = None,
@@ -2280,6 +2611,18 @@ def segment_betting_summary(
     ev1, ev2 = p1 * o1 - 1.0, p2 * o2 - 1.0
     pr1, pr2 = unit_profit_from_result(r1, o1), unit_profit_from_result(r2, o2)
 
+    selected_opps = edge_mode_opportunities(
+        meta,
+        market,
+        p1,
+        p2,
+        policy=selection_policy,
+        edge_mode=edge_mode,
+        shared_edge=shared_edge,
+        edge_side1=edge_side1,
+        edge_side2=edge_side2,
+    )
+
     if edge_mode == "shared":
         if shared_edge is None:
             raise ValueError("shared_edge required for segment analysis with shared edge")
@@ -2292,9 +2635,9 @@ def segment_betting_summary(
         raise ValueError(f"Unknown edge_mode: {edge_mode}")
 
     temp_rows = []
-    for side, pp, yy, ev, pr in [
-        (s1, p1, y1, ev1, pr1),
-        (s2, p2, y2, ev2, pr2),
+    for side, pp, yy, ev, pr, selected_mask in [
+        (s1, p1, y1, ev1, pr1, selected_opps["side1_selected"].to_numpy(bool)),
+        (s2, p2, y2, ev2, pr2, selected_opps["side2_selected"].to_numpy(bool)),
     ]:
         threshold = thresholds[side]
         t = pd.DataFrame({
@@ -2306,6 +2649,7 @@ def segment_betting_summary(
             "home_spread": meta["home_spread"].to_numpy(float),
             "book_total": meta["total"].to_numpy(float),
             "model_mean": mean,
+            "selected_by_production_policy": selected_mask,
         })
         if market == "spread":
             t["segment"] = spread_size_bucket(np.abs(t["home_spread"]))
@@ -2330,13 +2674,15 @@ def segment_betting_summary(
             t2["segment"] = segment_series.astype(str)
             for seg, g in t2.groupby("segment", dropna=False):
                 betmask = (
-                    np.isfinite(g["ev"])
-                    & np.isfinite(g["profit"])
-                    & (g["ev"] >= threshold)
+                    np.isfinite(g["profit"])
+                    & g["selected_by_production_policy"].astype(bool)
                 )
                 temp_rows.append({
                     "market": market,
                     "side": side,
+                    "selection_mode": selection_policy.selection_mode,
+                    "pick_preference_metric": selection_policy.preference_metric,
+                    "pick_preference_direction": selection_policy.preference_direction,
                     "edge_mode": edge_mode,
                     "side_edge_threshold": threshold,
                     "segment_type": segment_type,
@@ -2709,6 +3055,8 @@ def write_report(
     path: Path,
     league: str,
     input_file: Path,
+    markets_file: Path,
+    selection_policies: dict[str, MarketSelectionPolicy],
     full_df: pd.DataFrame,
     dev: pd.DataFrame,
     lockbox: pd.DataFrame,
@@ -2735,6 +3083,7 @@ def write_report(
     L += [line, f"{league} FINAL MASTER BASKETBALL PIPELINE TEST", line]
     L += [
         f"Input: {input_file}",
+        f"Production market-selection config: {markets_file}",
         f"Full rows: {len(full_df):,}",
         f"Full date range: {full_df['_date'].min().date()} through {full_df['_date'].max().date()}",
         f"Development rows: {len(dev):,}",
@@ -2750,8 +3099,13 @@ def write_report(
         "- A market change passes only if lockbox log loss, Brier, total profit, and ROI are all no worse than current.",
         "",
         "EDGE uses the real pipeline formula: probability * decimal_odds - 1.",
-        "One side per game per market is selected by higher EV subject to the frozen shared/split EDGE policy.",
+        "Side selection is read from docs/win/basketball/config/markets.yaml.",
+        "all_qualifying keeps every side clearing the frozen EDGE policy.",
+        "pick_one keeps one qualifying side using that market's configured pick_preference.",
         "Stored predictions with bias_applied=1 are first reversed back to pre-bias model values.",
+        "",
+        "PRODUCTION MARKET-SELECTION POLICY:",
+        dataframe_text(market_selection_policy_table(selection_policies, markets_file)),
     ]
 
     L += ["", line, "1. DEVELOPMENT-FROZEN COMPLETE MARKET CANDIDATES", line]
@@ -2760,8 +3114,12 @@ def write_report(
         f = frozen_candidates[market]
         r: pd.Series = f["chosen"]
         s1, s2 = market_sides(market)
+        policy = selection_policies[market]
         row = {
             "market": market,
+            "selection_mode": policy.selection_mode,
+            "pick_preference_metric": policy.preference_metric,
+            "pick_preference_direction": policy.preference_direction,
             "bias_strategy": r["bias_strategy"],
             "std_mode": r["std_mode"],
             f"cal_{s1}": r[f"calibration_{s1.lower()}"],
@@ -2840,6 +3198,11 @@ def main() -> None:
     parser.add_argument("--league", default=LEAGUE, choices=["NBA", "NCAAM", "WNBA"])
     parser.add_argument("--input", default=str(INPUT_FILE))
     parser.add_argument("--season", default=SEASON_LABEL)
+    parser.add_argument(
+        "--markets-file",
+        default=str(MARKETS_FILE),
+        help="Production selection config: docs/win/basketball/config/markets.yaml",
+    )
     parser.add_argument("--quick", action="store_true", help="Same logic, fewer bootstrap scenarios for code validation")
     args = parser.parse_args()
 
@@ -2847,6 +3210,9 @@ def main() -> None:
     input_file = Path(args.input)
     settings = CURRENT_SETTINGS[league]
     rng = np.random.default_rng(RANDOM_SEED)
+
+    markets_file = resolve_markets_file(Path(args.markets_file))
+    selection_policies = load_market_selection_policies(markets_file, league)
 
     global STRESS_REPS
     if args.quick:
@@ -2868,8 +3234,20 @@ def main() -> None:
         f"Rows={len(full_df):,}; development={len(dev):,}; untouched lockbox={len(lockbox):,}; "
         f"OOS folds={len(folds)}; stress reps={STRESS_REPS:,}"
     )
+    progress(f"Production market-selection config: {markets_file}")
+    for market in ["moneyline", "spread", "total"]:
+        policy = selection_policies[market]
+        progress(
+            f"  {market}: selection_mode={policy.selection_mode}; "
+            f"pick_preference={policy.preference_metric}/{policy.preference_direction}"
+        )
 
     output_files: list[Path] = []
+    selection_policy_path = output_dir / f"{prefix}_00_MARKET_SELECTION_POLICY.csv"
+    output_files.append(save_csv(
+        market_selection_policy_table(selection_policies, markets_file),
+        selection_policy_path,
+    ))
 
     # ---------------------------------------------------------------------
     # 1) BIAS STRATEGIES
@@ -2990,6 +3368,7 @@ def main() -> None:
             market,
             bset,
             sset,
+            selection_policies[market],
             output_dir,
             prefix,
         )
@@ -3002,6 +3381,7 @@ def main() -> None:
             market,
             ranking,
             caches,
+            selection_policies[market],
             STRESS_REPS,
             rng,
         )
@@ -3035,6 +3415,7 @@ def main() -> None:
         meta,
         chosen_by_market,
         caches_by_market,
+        selection_policies,
         output_dir,
         prefix,
     )
@@ -3056,6 +3437,7 @@ def main() -> None:
             p1,
             p2,
             cache["mean"],
+            selection_policy=selection_policies[market],
             edge_mode=str(frozen["edge_mode"]),
             shared_edge=frozen.get("shared_edge"),
             edge_side1=frozen.get("edge_side1"),
@@ -3081,6 +3463,7 @@ def main() -> None:
             market,
             frozen_candidates[market],
             settings,
+            selection_policies[market],
         )
         lock_rows.append(summary)
         fitted_dev[market] = fitted
@@ -3169,6 +3552,8 @@ def main() -> None:
         report_path,
         league,
         input_file,
+        markets_file,
+        selection_policies,
         full_df,
         dev,
         lockbox,
@@ -3202,3 +3587,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
