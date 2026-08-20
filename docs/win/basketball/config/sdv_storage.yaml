@@ -1,0 +1,44 @@
+# SportsDataVerse historical warehouse configuration.
+#
+# Historical backfill is intentionally limited to completed internal seasons.
+# Current/live seasons are not downloaded by default.
+#
+# All SDV warehouse tables are written as Parquet under:
+#   docs/win/basketball/00_intake/sdv/history/{league}/{internal_season}/
+#
+# Sportsbook odds are NOT copied into this warehouse. Existing immutable odds
+# snapshots remain canonical at:
+#   docs/win/basketball/00_intake/sportsbook_snapshots/
+
+schema_version: 1
+
+sportsdataverse:
+  expected_version: "0.0.75"
+
+storage:
+  root: docs/win/basketball/00_intake/sdv/history
+  format: parquet
+  compression: zstd
+
+sportsbook_snapshots:
+  root: docs/win/basketball/00_intake/sportsbook_snapshots
+  reuse_existing: true
+  duplicate_into_sdv_storage: false
+
+tables:
+  - games
+  - team_game
+  - player_game
+  - rosters
+  - pbp
+  - possessions
+  - lineups
+  - shots
+
+historical_internal_seasons:
+  nba:
+    - 2025
+  ncaam:
+    - 2025
+  wnba:
+    - 2025
