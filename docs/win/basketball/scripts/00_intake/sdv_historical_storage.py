@@ -23,14 +23,19 @@ Writes season partitions:
 Sportsbook odds are deliberately not copied. Existing immutable snapshots remain:
   docs/win/basketball/00_intake/sportsbook_snapshots/
 
-Source availability in SportsDataVerse 0.0.75:
-- NBA: all eight requested tables have release loaders.
-- WNBA: all eight requested tables have release loaders.
-- NCAAM: games, team_game, player_game, rosters, pbp and shots have release
-  loaders. SportsDataVerse 0.0.75 does not publish equivalent season-release
-  loaders for NCAAM possessions or lineups. Those two partitions are written
-  as explicit zero-row Parquet tables and marked unavailable in manifest.json
-  rather than fabricating possession/lineup data from a different source.
+NCAAM possessions and lineups use the separate stats.ncaa.org/bigballR path
+provided by SportsDataVerse 0.0.75. The release-loader ESPN game id remains
+the warehouse game_id. The stats.ncaa.org contest id is preserved separately
+as ncaa_game_id in derived possession/lineup rows.
+
+NCAA contest ids are resolved deterministically:
+  ESPN team ids from games.parquet
+    -> sportsdataverse.mbb.ncaa_espn_team_crosswalk()
+    -> season-specific NCAA team ids
+    -> both teams' sportsdataverse.mbb.ncaa_mbb_team_schedule()
+    -> shared stats.ncaa.org contest id for that matchup/date.
+
+No fuzzy matching is used.
 
 The warehouse keeps source columns, normalizes column names to snake_case,
 adds stable canonical aliases where possible, and adds provenance columns:
@@ -48,7 +53,7 @@ import importlib.metadata
 import json
 import re
 import traceback
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -75,9 +80,8 @@ VALID_TABLES = (
     "shots",
 )
 
-# Exact SportsDataVerse 0.0.75 historical release-loader mapping.
-# A None loader means the requested partition exists in the warehouse contract
-# but SDV does not publish an equivalent season-release dataset for that league.
+NCAAM_DERIVED_TABLES = ("possessions", "lineups")
+
 LOADER_REGISTRY: dict[str, dict[str, tuple[str, str] | None]] = {
     "nba": {
         "games": ("sportsdataverse.nba", "load_nba_schedule"),
@@ -109,6 +113,17 @@ LOADER_REGISTRY: dict[str, dict[str, tuple[str, str] | None]] = {
         "lineups": ("sportsdataverse.wnba", "load_wnba_stats_game_lineups"),
         "shots": ("sportsdataverse.wnba", "load_wnba_shots"),
     },
+}
+
+NCAAM_SOURCE_FUNCTIONS = {
+    "possessions": (
+        "sportsdataverse.mbb.ncaa_mbb_game_pbp -> "
+        "sportsdataverse.mbb.ncaa_mbb_possessions"
+    ),
+    "lineups": (
+        "sportsdataverse.mbb.ncaa_mbb_game_pbp -> "
+        "sportsdataverse.mbb.ncaa_mbb_lineups"
+    ),
 }
 
 CANONICAL_ALIAS_CANDIDATES: dict[str, dict[str, tuple[str, ...]]] = {
@@ -197,6 +212,7 @@ CANONICAL_ALIAS_CANDIDATES: dict[str, dict[str, tuple[str, ...]]] = {
 
 ID_COLUMNS = {
     "game_id",
+    "ncaa_game_id",
     "play_id",
     "shot_id",
     "player_id",
@@ -234,7 +250,7 @@ def get_polars():
     except ImportError as exc:
         raise RuntimeError(
             "polars is required for SDV Parquet storage. "
-            "It is a dependency of sportsdataverse==0.0.75."
+            "Install it explicitly in requirements.txt."
         ) from exc
 
 
@@ -275,14 +291,11 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
         raise ValueError(f"{path} missing sportsbook_snapshots mapping")
 
     if snapshots.get("reuse_existing") is not True:
-        raise ValueError(
-            f"{path} sportsbook_snapshots.reuse_existing must be true"
-        )
+        raise ValueError(f"{path} sportsbook_snapshots.reuse_existing must be true")
 
     if snapshots.get("duplicate_into_sdv_storage") is not False:
         raise ValueError(
-            f"{path} sportsbook_snapshots.duplicate_into_sdv_storage "
-            "must be false"
+            f"{path} sportsbook_snapshots.duplicate_into_sdv_storage must be false"
         )
 
     tables = config.get("tables")
@@ -291,9 +304,7 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
 
     normalized_tables = [clean(item).lower() for item in tables]
     if normalized_tables != list(VALID_TABLES):
-        raise ValueError(
-            f"{path} tables must exactly equal {list(VALID_TABLES)}"
-        )
+        raise ValueError(f"{path} tables must exactly equal {list(VALID_TABLES)}")
 
     if "odds" in normalized_tables or "sportsbook" in normalized_tables:
         raise ValueError(
@@ -324,15 +335,11 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
 
 
 def verify_sdv_version(config: dict[str, Any]) -> str:
-    expected = clean(
-        config["sportsdataverse"]["expected_version"]
-    )
+    expected = clean(config["sportsdataverse"]["expected_version"])
     try:
         installed = importlib.metadata.version("sportsdataverse")
     except importlib.metadata.PackageNotFoundError as exc:
-        raise RuntimeError(
-            "sportsdataverse is not installed"
-        ) from exc
+        raise RuntimeError("sportsdataverse is not installed") from exc
 
     if installed != expected:
         raise RuntimeError(
@@ -378,8 +385,7 @@ def resolve_jobs(
         if internal_seasons:
             requested = {int(v) for v in internal_seasons}
             league_seasons = [
-                season for season in league_seasons
-                if season in requested
+                season for season in league_seasons if season in requested
             ]
 
         for season in sorted(set(league_seasons)):
@@ -411,7 +417,9 @@ def call_loader(
 ):
     spec = loader_spec(league, table)
     if spec is None:
-        return None, None
+        raise RuntimeError(
+            f"{league}.{table} does not use a season-release loader"
+        )
 
     module_name, function_name = spec
     module = importlib.import_module(module_name)
@@ -420,8 +428,7 @@ def call_loader(
         loader = getattr(module, function_name)
     except AttributeError as exc:
         raise RuntimeError(
-            f"SportsDataVerse loader missing: "
-            f"{module_name}.{function_name}"
+            f"SportsDataVerse loader missing: {module_name}.{function_name}"
         ) from exc
 
     frame = loader(
@@ -452,7 +459,7 @@ def to_polars(frame):
         return pl.DataFrame(frame)
     except Exception as exc:
         raise TypeError(
-            f"Cannot convert loader result to polars DataFrame: "
+            "Cannot convert loader result to polars DataFrame: "
             f"{type(frame).__name__}"
         ) from exc
 
@@ -500,13 +507,9 @@ def add_canonical_aliases(df, table: str):
     expressions = []
     for canonical, candidates in aliases.items():
         source = first_existing_column(df, candidates)
-        if source is None:
+        if source is None or canonical == source:
             continue
-        if canonical == source:
-            continue
-        expressions.append(
-            pl.col(source).alias(canonical)
-        )
+        expressions.append(pl.col(source).alias(canonical))
 
     if expressions:
         df = df.with_columns(expressions)
@@ -597,39 +600,6 @@ def normalize_table(
     return df
 
 
-def empty_unavailable_table(
-    *,
-    league: str,
-    internal_season: int,
-    sdv_season: int,
-    reason: str,
-    ingested_at_utc: str,
-):
-    pl = get_polars()
-
-    return pl.DataFrame(
-        schema={
-            "league": pl.Utf8,
-            "internal_season": pl.Int32,
-            "sdv_season": pl.Int32,
-            "source_loader": pl.Utf8,
-            "ingested_at_utc": pl.Utf8,
-            "availability_reason": pl.Utf8,
-        }
-    ).with_columns(
-        pl.lit(league.upper()).alias("league"),
-        pl.lit(int(internal_season))
-        .cast(pl.Int32)
-        .alias("internal_season"),
-        pl.lit(int(sdv_season))
-        .cast(pl.Int32)
-        .alias("sdv_season"),
-        pl.lit("").alias("source_loader"),
-        pl.lit(ingested_at_utc).alias("ingested_at_utc"),
-        pl.lit(reason).alias("availability_reason"),
-    ).head(0)
-
-
 def write_parquet_atomic(
     df,
     path: Path,
@@ -706,7 +676,40 @@ def validate_game_id_presence(df, table: str) -> None:
             )
 
 
-def build_table(
+def manifest_entry(
+    *,
+    df,
+    output: Path,
+    source_loader: str,
+    status: str,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "rows": int(df.height),
+        "columns": list(df.columns),
+        "file": str(output),
+        "output_filename": output.name,
+        "source_loader": source_loader,
+        "source_function": source_loader,
+    }
+
+
+def existing_manifest_entry(
+    *,
+    output: Path,
+    source_loader: str,
+) -> dict[str, Any]:
+    pl = get_polars()
+    df = pl.read_parquet(output)
+    return manifest_entry(
+        df=df,
+        output=output,
+        source_loader=source_loader,
+        status="existing_not_rebuilt",
+    )
+
+
+def build_release_table(
     *,
     league: str,
     internal_season: int,
@@ -725,36 +728,10 @@ def build_table(
     )
 
     spec = loader_spec(league, table)
-
     if spec is None:
-        reason = (
-            "SportsDataVerse 0.0.75 does not publish an equivalent "
-            f"historical season-release loader for {league}.{table}"
+        raise RuntimeError(
+            f"{league}.{table} requires its dedicated build path"
         )
-        df = empty_unavailable_table(
-            league=league,
-            internal_season=internal_season,
-            sdv_season=sdv_season,
-            reason=reason,
-            ingested_at_utc=ingested_at_utc,
-        )
-        write_parquet_atomic(
-            df,
-            output,
-            compression=compression,
-        )
-        log(
-            f"UNAVAILABLE | {league} {internal_season} {table} | "
-            f"{reason}"
-        )
-        return {
-            "status": "unavailable_from_sdv_release",
-            "rows": 0,
-            "columns": list(df.columns),
-            "file": str(output),
-            "source_loader": None,
-            "reason": reason,
-        }
 
     module_name, function_name = spec
     source_loader = f"{module_name}.{function_name}"
@@ -764,13 +741,10 @@ def build_table(
             f"SKIP EXISTING | {league} {internal_season} {table} | "
             f"{output}"
         )
-        return {
-            "status": "existing_not_rebuilt",
-            "rows": None,
-            "columns": None,
-            "file": str(output),
-            "source_loader": source_loader,
-        }
+        return existing_manifest_entry(
+            output=output,
+            source_loader=source_loader,
+        )
 
     log(
         f"LOAD START | league={league} internal={internal_season} "
@@ -807,13 +781,489 @@ def build_table(
         f"table={table} rows={df.height} status={status} file={output}"
     )
 
-    return {
-        "status": status,
-        "rows": int(df.height),
-        "columns": list(df.columns),
-        "file": str(output),
-        "source_loader": actual_loader or source_loader,
+    return manifest_entry(
+        df=df,
+        output=output,
+        source_loader=actual_loader or source_loader,
+        status=status,
+    )
+
+
+def ncaa_season_label(sdv_season: int) -> str:
+    start = int(sdv_season) - 1
+    return f"{start}-{str(int(sdv_season))[-2:]}"
+
+
+def normalize_date(value: Any) -> str:
+    text = clean(value)
+    if not text:
+        return ""
+
+    if "T" in text and re.match(r"^\d{4}-\d{2}-\d{2}T", text):
+        return text[:10]
+
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        return text
+
+    for fmt in (
+        "%m/%d/%Y",
+        "%m/%d/%y",
+        "%m-%d-%Y",
+        "%Y/%m/%d",
+        "%b %d, %Y",
+        "%B %d, %Y",
+    ):
+        try:
+            return datetime.strptime(text, fmt).date().isoformat()
+        except ValueError:
+            pass
+
+    match = re.search(r"(\d{4}-\d{2}-\d{2})", text)
+    if match:
+        return match.group(1)
+
+    return text
+
+
+def ncaam_team_crosswalk(sdv_season: int) -> dict[str, int]:
+    mbb = importlib.import_module("sportsdataverse.mbb")
+    pl = get_polars()
+
+    crosswalk = to_polars(
+        mbb.ncaa_espn_team_crosswalk(
+            league="mbb",
+            return_as_pandas=False,
+        )
+    )
+
+    required = {"season", "ncaa_team_id", "espn_team_id"}
+    missing = required - set(crosswalk.columns)
+    if missing:
+        raise RuntimeError(
+            "NCAA/ESPN team crosswalk missing columns: "
+            f"{sorted(missing)}"
+        )
+
+    season = ncaa_season_label(sdv_season)
+    crosswalk = crosswalk.filter(
+        (pl.col("season") == season)
+        & pl.col("espn_team_id").is_not_null()
+        & pl.col("ncaa_team_id").is_not_null()
+    )
+
+    mapping: dict[str, int] = {}
+    duplicates: set[str] = set()
+
+    for row in crosswalk.select(
+        "espn_team_id",
+        "ncaa_team_id",
+    ).iter_rows(named=True):
+        espn_id = clean(row["espn_team_id"])
+        ncaa_id = int(row["ncaa_team_id"])
+        if espn_id in mapping and mapping[espn_id] != ncaa_id:
+            duplicates.add(espn_id)
+        mapping[espn_id] = ncaa_id
+
+    if duplicates:
+        raise RuntimeError(
+            "NCAA/ESPN team crosswalk has conflicting ESPN ids: "
+            f"{sorted(duplicates)}"
+        )
+
+    if not mapping:
+        raise RuntimeError(
+            f"NCAA/ESPN team crosswalk has no rows for season {season}"
+        )
+
+    return mapping
+
+
+def schedule_index(schedule_df) -> dict[str, str]:
+    if "game_id" not in schedule_df.columns:
+        raise RuntimeError("NCAA team schedule is missing game_id")
+
+    has_date = "game_date" in schedule_df.columns
+    out: dict[str, str] = {}
+
+    for row in schedule_df.iter_rows(named=True):
+        game_id = clean(row.get("game_id"))
+        if not game_id:
+            continue
+        out[game_id] = (
+            normalize_date(row.get("game_date"))
+            if has_date
+            else ""
+        )
+
+    return out
+
+
+def resolve_ncaa_contest_id(
+    *,
+    espn_game_id: str,
+    game_date: str,
+    home_espn_team_id: str,
+    away_espn_team_id: str,
+    team_map: dict[str, int],
+    schedule_cache: dict[int, dict[str, str]],
+    mbb,
+    fetcher,
+) -> str:
+    try:
+        home_ncaa_team_id = team_map[home_espn_team_id]
+        away_ncaa_team_id = team_map[away_espn_team_id]
+    except KeyError as exc:
+        missing_team = clean(exc.args[0])
+        raise RuntimeError(
+            f"game_id={espn_game_id}: no NCAA team mapping for "
+            f"ESPN team_id={missing_team}"
+        ) from exc
+
+    def get_schedule(team_id: int) -> dict[str, str]:
+        if team_id not in schedule_cache:
+            frame = mbb.ncaa_mbb_team_schedule(
+                team_id=int(team_id),
+                fetcher=fetcher,
+                return_as_pandas=False,
+            )
+            schedule_cache[team_id] = schedule_index(to_polars(frame))
+        return schedule_cache[team_id]
+
+    home_schedule = get_schedule(home_ncaa_team_id)
+    away_schedule = get_schedule(away_ncaa_team_id)
+
+    common = sorted(
+        set(home_schedule).intersection(away_schedule)
+    )
+
+    if not common:
+        raise RuntimeError(
+            f"game_id={espn_game_id}: teams have no shared NCAA contest id"
+        )
+
+    target_date = normalize_date(game_date)
+
+    if len(common) == 1:
+        return common[0]
+
+    dated = [
+        game_id
+        for game_id in common
+        if target_date
+        and (
+            home_schedule.get(game_id) == target_date
+            or away_schedule.get(game_id) == target_date
+        )
+    ]
+
+    if len(dated) == 1:
+        return dated[0]
+
+    raise RuntimeError(
+        f"game_id={espn_game_id}: NCAA contest id is ambiguous; "
+        f"candidates={common} date={target_date or 'unknown'}"
+    )
+
+
+def prepare_ncaam_games(
+    games_df,
+    *,
+    sdv_season: int,
+    mbb,
+    fetcher,
+):
+    pl = get_polars()
+
+    required = {
+        "game_id",
+        "game_date",
+        "home_team_id",
+        "away_team_id",
     }
+    missing = required - set(games_df.columns)
+    if missing:
+        raise RuntimeError(
+            "NCAAM games.parquet missing required columns: "
+            f"{sorted(missing)}"
+        )
+
+    team_map = ncaam_team_crosswalk(sdv_season)
+    schedule_cache: dict[int, dict[str, str]] = {}
+    resolved: dict[str, str] = {}
+
+    games = games_df.select(
+        "game_id",
+        "game_date",
+        "home_team_id",
+        "away_team_id",
+    ).unique(
+        subset=["game_id"],
+        maintain_order=True,
+    )
+
+    for row in games.iter_rows(named=True):
+        espn_game_id = clean(row["game_id"])
+        if not espn_game_id:
+            raise RuntimeError("NCAAM games.parquet contains a blank game_id")
+
+        try:
+            resolved[espn_game_id] = resolve_ncaa_contest_id(
+                espn_game_id=espn_game_id,
+                game_date=clean(row["game_date"]),
+                home_espn_team_id=clean(row["home_team_id"]),
+                away_espn_team_id=clean(row["away_team_id"]),
+                team_map=team_map,
+                schedule_cache=schedule_cache,
+                mbb=mbb,
+                fetcher=fetcher,
+            )
+        except Exception as exc:
+            log(
+                f"NCAAM GAME FAILED | game_id={espn_game_id} | "
+                f"stage=resolve_ncaa_contest_id | error={exc}"
+            )
+            raise
+
+    return games.with_columns(
+        pl.col("game_id")
+        .replace(resolved)
+        .alias("ncaa_game_id")
+    ).select(
+        "game_id",
+        "ncaa_game_id",
+    )
+
+
+def remap_ncaam_derived_game_id(
+    frame,
+    *,
+    espn_game_id: str,
+    ncaa_game_id: str,
+):
+    pl = get_polars()
+    df = to_polars(frame)
+
+    if df.height == 0:
+        return df
+
+    if "game_id" in df.columns:
+        df = df.with_columns(
+            pl.col("game_id")
+            .cast(pl.Utf8, strict=False)
+            .alias("ncaa_game_id"),
+            pl.lit(espn_game_id).alias("game_id"),
+        )
+    else:
+        df = df.with_columns(
+            pl.lit(espn_game_id).alias("game_id"),
+            pl.lit(ncaa_game_id).alias("ncaa_game_id"),
+        )
+
+    return df
+
+
+def build_ncaam_derived_tables(
+    *,
+    internal_season: int,
+    sdv_season: int,
+    selected_tables: list[str],
+    storage_root: Path,
+    compression: str,
+    ingested_at_utc: str,
+    force: bool,
+) -> dict[str, dict[str, Any]]:
+    pl = get_polars()
+    mbb = importlib.import_module("sportsdataverse.mbb")
+    fetch_module = importlib.import_module(
+        "sportsdataverse.mbb.mbb_ncaa_fetch"
+    )
+    NcaaFetcher = getattr(fetch_module, "NcaaFetcher")
+
+    requested = [
+        table
+        for table in NCAAM_DERIVED_TABLES
+        if table in selected_tables
+    ]
+    if not requested:
+        return {}
+
+    outputs = {
+        table: table_path(
+            storage_root,
+            "ncaam",
+            internal_season,
+            table,
+        )
+        for table in requested
+    }
+
+    entries: dict[str, dict[str, Any]] = {}
+    needs_build: list[str] = []
+
+    for table in requested:
+        output = outputs[table]
+        source = NCAAM_SOURCE_FUNCTIONS[table]
+        if output.exists() and not force:
+            entries[table] = existing_manifest_entry(
+                output=output,
+                source_loader=source,
+            )
+            log(
+                f"SKIP EXISTING | ncaam {internal_season} {table} | "
+                f"{output}"
+            )
+        else:
+            needs_build.append(table)
+
+    if not needs_build:
+        return entries
+
+    games_path = table_path(
+        storage_root,
+        "ncaam",
+        internal_season,
+        "games",
+    )
+    if not games_path.exists():
+        raise RuntimeError(
+            "NCAAM games.parquet must exist before possessions/lineups: "
+            f"{games_path}"
+        )
+
+    games_df = pl.read_parquet(games_path)
+    if games_df.height == 0:
+        raise RuntimeError(
+            f"NCAAM games.parquet has zero rows: {games_path}"
+        )
+
+    frames: dict[str, list[Any]] = {
+        table: []
+        for table in needs_build
+    }
+
+    with NcaaFetcher.with_browser() as fetcher:
+        id_map = prepare_ncaam_games(
+            games_df,
+            sdv_season=sdv_season,
+            mbb=mbb,
+            fetcher=fetcher,
+        )
+
+        for row in id_map.iter_rows(named=True):
+            espn_game_id = clean(row["game_id"])
+            ncaa_game_id = clean(row["ncaa_game_id"])
+
+            log(
+                f"NCAAM GAME START | game_id={espn_game_id} | "
+                f"ncaa_game_id={ncaa_game_id}"
+            )
+
+            try:
+                pbp = mbb.ncaa_mbb_game_pbp(
+                    ncaa_game_id,
+                    fetcher=fetcher,
+                    return_as_pandas=False,
+                )
+                pbp = to_polars(pbp)
+
+                if pbp.height == 0:
+                    raise RuntimeError(
+                        "ncaa_mbb_game_pbp returned zero rows"
+                    )
+
+                if "possessions" in needs_build:
+                    possessions = mbb.ncaa_mbb_possessions(
+                        pbp,
+                        simple=False,
+                        fix_cross_game_leak=True,
+                        return_as_pandas=False,
+                    )
+                    possessions = remap_ncaam_derived_game_id(
+                        possessions,
+                        espn_game_id=espn_game_id,
+                        ncaa_game_id=ncaa_game_id,
+                    )
+                    frames["possessions"].append(possessions)
+
+                if "lineups" in needs_build:
+                    lineups = mbb.ncaa_mbb_lineups(
+                        pbp,
+                        include_transition=False,
+                        fix_tip_in=True,
+                        return_as_pandas=False,
+                    )
+                    lineups = remap_ncaam_derived_game_id(
+                        lineups,
+                        espn_game_id=espn_game_id,
+                        ncaa_game_id=ncaa_game_id,
+                    )
+                    frames["lineups"].append(lineups)
+
+            except Exception as exc:
+                log(
+                    f"NCAAM GAME FAILED | game_id={espn_game_id} | "
+                    f"ncaa_game_id={ncaa_game_id} | "
+                    f"stage=pbp_or_transform | error={exc}"
+                )
+                raise RuntimeError(
+                    f"NCAAM game failed: game_id={espn_game_id}, "
+                    f"ncaa_game_id={ncaa_game_id}: {exc}"
+                ) from exc
+
+            log(
+                f"NCAAM GAME COMPLETE | game_id={espn_game_id} | "
+                f"ncaa_game_id={ncaa_game_id}"
+            )
+
+    for table in needs_build:
+        if not frames[table]:
+            raise RuntimeError(
+                f"NCAAM {table}: no game outputs were produced"
+            )
+
+        combined = pl.concat(
+            [to_polars(frame) for frame in frames[table]],
+            how="diagonal_relaxed",
+        )
+
+        if combined.height == 0:
+            raise RuntimeError(
+                f"NCAAM {table}: concatenated season output has zero rows"
+            )
+
+        source = NCAAM_SOURCE_FUNCTIONS[table]
+        df = normalize_table(
+            combined,
+            table=table,
+            league="ncaam",
+            internal_season=internal_season,
+            sdv_season=sdv_season,
+            source_loader=source,
+            ingested_at_utc=ingested_at_utc,
+        )
+
+        validate_game_id_presence(df, table)
+
+        output = outputs[table]
+        write_parquet_atomic(
+            df,
+            output,
+            compression=compression,
+        )
+
+        log(
+            f"LOAD COMPLETE | league=ncaam internal={internal_season} "
+            f"table={table} rows={df.height} status=ready file={output}"
+        )
+
+        entries[table] = manifest_entry(
+            df=df,
+            output=output,
+            source_loader=source,
+            status="ready",
+        )
+
+    return entries
 
 
 def build_season(
@@ -860,8 +1310,13 @@ def build_season(
         "tables": {},
     }
 
+    # Build every release-backed table first. NCAAM possessions/lineups need
+    # games.parquet and are built together afterward so NCAA PBP is fetched once.
     for table in selected_tables:
-        manifest["tables"][table] = build_table(
+        if league == "ncaam" and table in NCAAM_DERIVED_TABLES:
+            continue
+
+        manifest["tables"][table] = build_release_table(
             league=league,
             internal_season=internal_season,
             sdv_season=mapped_sdv_season,
@@ -872,6 +1327,54 @@ def build_season(
             force=force,
         )
 
+    if league == "ncaam":
+        requested_derived = [
+            table
+            for table in NCAAM_DERIVED_TABLES
+            if table in selected_tables
+        ]
+
+        if requested_derived:
+            games_path = table_path(
+                storage_root,
+                "ncaam",
+                internal_season,
+                "games",
+            )
+
+            # A partial --table possessions/lineups run still needs games.parquet.
+            if not games_path.exists():
+                games_entry = build_release_table(
+                    league="ncaam",
+                    internal_season=internal_season,
+                    sdv_season=mapped_sdv_season,
+                    table="games",
+                    storage_root=storage_root,
+                    compression=compression,
+                    ingested_at_utc=ingested_at_utc,
+                    force=force,
+                )
+                if "games" in selected_tables:
+                    manifest["tables"]["games"] = games_entry
+
+            derived_entries = build_ncaam_derived_tables(
+                internal_season=internal_season,
+                sdv_season=mapped_sdv_season,
+                selected_tables=selected_tables,
+                storage_root=storage_root,
+                compression=compression,
+                ingested_at_utc=ingested_at_utc,
+                force=force,
+            )
+            manifest["tables"].update(derived_entries)
+
+    # Preserve configured table order in manifest.
+    manifest["tables"] = {
+        table: manifest["tables"][table]
+        for table in selected_tables
+        if table in manifest["tables"]
+    }
+
     manifest_path = (
         season_partition_path(
             storage_root,
@@ -880,6 +1383,7 @@ def build_season(
         )
         / "manifest.json"
     )
+
     write_json_atomic(manifest_path, manifest)
     log(
         f"MANIFEST | league={league} internal={internal_season} "
