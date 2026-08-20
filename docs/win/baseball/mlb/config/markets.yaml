@@ -1,0 +1,184 @@
+# docs/win/baseball/mlb/config/markets.yaml
+
+markets:
+  mlb:
+    # ── Context / Environment Settings ──────────────────────────
+    #
+    # rain_exclude_on_will_it_rain:
+    #   true  = exclude outdoor/weather-applicable games when will_it_rain == 1
+    #   false = do not exclude from will_it_rain
+    #
+    # rain_exclude_on_symbol_code:
+    #   true  = exclude outdoor/weather-applicable games when symbol_code contains
+    #           one of rain_symbol_terms
+    #   false = do not exclude from symbol_code terms
+    #
+    # Step 5 separates these controls so false on will_it_rain does not
+    # accidentally leave symbol-code rain filtering enabled.
+    rain_exclude_on_will_it_rain: false
+    rain_exclude_on_symbol_code: false
+
+    rain_symbol_terms:
+      - rain
+      - heavyrain
+      - lightrain
+      - sleet
+      - snow
+      - thunder
+
+    # Set false to allow more totals through even when one/both SP samples are low.
+    sp_sample_exclude_totals: false
+
+    # Flag only. Does not exclude bets.
+    lineup_low_sample_warn: 4
+
+    # Require complete lineup and starting-pitcher data.
+    context_data_filters:
+      enabled: true
+      home_batters_found_min: 5
+      away_batters_found_min: 5
+      home_sp_found_required: 1
+      away_sp_found_required: 1
+
+
+    ###################################################
+    # ── Moneyline ────────────────────────────────────
+    ###################################################
+
+    moneyline:
+      enabled: true
+
+      # best_ev = one ML side max per game
+      # best_prob = one ML side max per game, highest model probability
+      # all = can select both if both pass
+      pick_preference: best_prob
+
+      home:
+        enabled: true
+
+        odds_bands:
+          - [-1000, -200]
+          - [-100, 125]
+
+        ev_bands:
+          - [0.050, 0.0749]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.40, 1.00]
+
+      away:
+        enabled: true
+
+        odds_bands:
+          - [-1000, 125]
+
+        ev_bands:
+          - [0.075, 0.099]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.40, 1.00]
+
+    ###################################################
+    # ── Run Line ─────────────────────────────────────
+    ###################################################
+
+    run_line:
+      enabled: true
+
+      # Step 5 blocks all for run-line so both sides of the same run-line
+      # market cannot be selected for one game.
+      # Valid values: best_ev, best_prob.
+      pick_preference: best_prob
+
+      home:
+        enabled: true
+
+        line_bands:
+          - [-2.5, 2.5]
+
+        odds_bands:
+          - [-1000, -150]
+
+        ev_bands:
+          - [0.020, 0.0299]
+          - [0.040, 0.0499]
+          - [0.075, 99.99]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.65, 0.7499]
+          - [0.80, 0.99]
+
+      away:
+        enabled: true
+
+        line_bands:
+          - [-2.5, 2.5]
+
+        odds_bands:
+          - [-199, -150]
+
+        ev_bands:
+          - [-10.00, 0.0099]
+          - [0.03, 0.075]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.50, 0.6499]
+
+    ###################################################
+    # ── Totals ───────────────────────────────────────
+    ###################################################
+
+    total:
+      enabled: true
+
+      # best_ev = one total side max per game.
+      # all = can select both over and under if both pass.
+      pick_preference: all
+
+      over:
+        enabled: true
+
+        line_bands:
+          - [0.0, 20.0]
+
+        odds_bands:
+          - [-100, 125]
+
+        ev_bands:
+          - [-10.00, 99.99]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.00, 1.00]
+
+      under:
+        enabled: true
+
+        line_bands:
+          - [0.0, 20.0]
+
+        odds_bands:
+          - [-1000, 1000]
+
+        ev_bands:
+          - [-10.00, 99.99]
+
+        kelly_bands:
+          - [-10.00, 99.99]
+
+        prob_bands:
+          - [0.70, 0.75]

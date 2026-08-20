@@ -1,0 +1,61 @@
+# Curated Python->R function-name equivalents where the names diverge from
+# strict identity (which generate.py handles automatically). Verified to exist in
+# the target package's r_exports.yaml. Shape: {league: {python_fn: r_fn}}.
+# - NFL: sdv's canonical `load_nfl_*` loaders map to nflreadr's bare `load_*` (nflreadpy-style).
+# MLB wrappers were renamed from `mlb_api_*` to `mlb_*` in 0.0.65+ and now match
+# baseballr's names exactly — generate.py handles identity automatically; no mlb: section needed.
+nfl:
+  load_nfl_combine: load_combine
+  load_nfl_contracts: load_contracts
+  load_nfl_depth_charts: load_depth_charts
+  load_nfl_draft_picks: load_draft_picks
+  load_nfl_espn_qbr: load_espn_qbr
+  load_nfl_ff_opportunity: load_ff_opportunity
+  load_nfl_ff_playerids: load_ff_playerids
+  load_nfl_ff_rankings: load_ff_rankings
+  load_nfl_ftn_charting: load_ftn_charting
+  load_nfl_injuries: load_injuries
+  load_nfl_nextgen_stats: load_nextgen_stats
+  load_nfl_officials: load_officials
+  load_nfl_pbp: load_pbp
+  load_nfl_pbp_participation: load_participation
+  load_nfl_pfr_advstats: load_pfr_advstats
+  load_nfl_player_stats: load_player_stats
+  load_nfl_players: load_players
+  load_nfl_rosters: load_rosters
+  load_nfl_schedule: load_schedules
+  load_nfl_snap_counts: load_snap_counts
+  load_nfl_team_stats: load_team_stats
+  load_nfl_teams: load_teams
+  load_nfl_trades: load_trades
+  load_nfl_weekly_rosters: load_rosters_weekly
+nhl:
+  nhl_web_schedule: nhl_schedule
+pwhl:
+  # Live API wrappers — sdv-py names match fastRhockey exactly; listed here
+  # so the parity table generator picks them up explicitly.
+  pwhl_schedule: pwhl_schedule
+  pwhl_pbp: pwhl_pbp
+  pwhl_standings: pwhl_standings
+  pwhl_teams: pwhl_teams
+  pwhl_team_roster: pwhl_team_roster
+  pwhl_player_stats: pwhl_player_stats
+  pwhl_leaders: pwhl_leaders
+  pwhl_game_summary: pwhl_game_summary
+  pwhl_season_id: pwhl_season_id
+  pwhl_player_info: pwhl_player_info
+  pwhl_player_game_log: pwhl_player_game_log
+  pwhl_player_search: pwhl_player_search
+  pwhl_stats: pwhl_stats
+  pwhl_streaks: pwhl_streaks
+  pwhl_transactions: pwhl_transactions
+  pwhl_playoff_bracket: pwhl_playoff_bracket
+  pwhl_scorebar: pwhl_scorebar
+  pwhl_game_info: pwhl_game_info
+  pwhl_player_box: pwhl_player_box
+  most_recent_pwhl_season: most_recent_pwhl_season
+  # Analytics functions — Part B will add these to fastRhockey; mapping to
+  # themselves for now so the table shows them as Python-only until then.
+  pwhl_game_shifts: pwhl_game_shifts
+  pwhl_player_toi: pwhl_player_toi
+  pwhl_game_corsi: pwhl_game_corsi

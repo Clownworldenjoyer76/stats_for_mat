@@ -1,0 +1,91 @@
+# Run the full test suite (live API tests included) on push to main and
+# workflow_dispatch. Live tests are gated by SDV_PY_LIVE_TESTS=1 and run by
+# default; the workflow_dispatch input can flip them off (live_tests:
+# "false") for runs where third-party API churn would produce
+# false-negative failures.
+#
+# SCOPE (deliberately narrowed 2026-08-12, operator decision): a SINGLE job —
+# macos-latest on the canonical interpreter — running ONLY on main. Two
+# consequences to know about, because neither is caught anywhere else:
+#   - Python 3.9 (the declared floor) and Linux/Windows are no longer
+#     exercised. CONTRIBUTING.md promises the floor is covered; it is not.
+#     A 3.9-incompatible construct or a platform-specific regression now
+#     ships and surfaces at release time.
+#   - PRs no longer run tests. Merge-time signal is the codegen drift gate
+#     plus whatever ran locally, so `uv run pytest` before pushing is now
+#     load-bearing rather than a convenience.
+# Restore by re-adding the matrix `include:` block and the `pull_request:`
+# trigger below.
+#
+# Uses `uv sync --all-extras --all-groups` against the committed uv.lock for
+# reproducible installs, then `uv run --frozen pytest` for execution. See
+# CONTRIBUTING.md.
+name: tests
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      live_tests:
+        description: "Set SDV_PY_LIVE_TESTS=1 to include live API tests"
+        required: false
+        default: "true"
+# Cancel in-flight runs on the same ref when a new push comes in.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  test:
+    name: pytest (${{ matrix.os }} / py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Single job by operator decision (2026-08-12): macOS on the
+        # canonical interpreter. 3.14 is still excluded — pyarrow / polars
+        # wheels for cp314 are landing across the index. The dropped legs
+        # were ubuntu 3.9 (the declared floor), ubuntu 3.13.2, and windows
+        # 3.13.2; see the scope note in the header before assuming a green
+        # run means the floor or Linux/Windows are covered.
+        os: [macos-latest]
+        python-version: ["3.13.2"]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        # setup-uv stopped publishing major/minor tags at v8 for supply-chain
+        # hardening (https://github.com/astral-sh/setup-uv/releases/tag/v8.0.0).
+        # Pin to an immutable patch tag; @v8 / @v8.0 no longer resolve.
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          version: "latest"
+          enable-cache: true
+          # Cache key tracks the lockfile; re-resolves on dep bumps.
+          cache-dependency-glob: "uv.lock"
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+      # xgboost on macOS dynamically links against libomp.dylib and
+      # apple-clang doesn't ship OpenMP. The macos-15 runner image
+      # stopped pre-installing libomp via Homebrew, so xgboost.core
+      # raises "OpenMP runtime is not installed" at import time.
+      - name: Install macOS runtime deps for xgboost (libomp)
+        if: runner.os == 'macOS'
+        run: brew install libomp
+      # `uv sync` against the committed lockfile installs:
+      #   - the project (editable)
+      #   - every [project.optional-dependencies] group (--all-extras)
+      #   - every [dependency-groups] group (--all-groups)
+      # into a managed .venv. --frozen guarantees CI doesn't drift from
+      # the lockfile.
+      - name: Install project + extras + dep groups
+        run: uv sync --all-extras --all-groups --frozen --python ${{ matrix.python-version }}
+      - name: Run tests (live API tests included)
+        env:
+          # On by default for every trigger (push, PR, workflow_dispatch).
+          # The workflow_dispatch input can override with live_tests: "false"
+          # to skip live tests for a one-off run when upstream APIs are flaky.
+          SDV_PY_LIVE_TESTS: ${{ github.event.inputs.live_tests != 'false' && '1' || '' }}
+        # --cov reports coverage (term-missing) without a hard fail-under floor
+        # yet; once a baseline is established a ratchet floor can be added.
+        run: uv run --frozen pytest --maxfail=10 --cov=sportsdataverse --cov-report=term-missing:skip-covered
