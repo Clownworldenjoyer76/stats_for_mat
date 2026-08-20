@@ -1,0 +1,195 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+#
+# Note: the standalone isort hook was removed in 0.0.51 because its
+# alphabetical re-sort broke the load-bearing import order in
+# ``sportsdataverse/__init__.py`` (see the ``# isort: off`` block there —
+# the league wildcards must run before the top-level QoL imports so
+# ``sportsdataverse.cache`` resolves to the top-level module rather than
+# ``sportsdataverse.nfl.cache``). Ruff-check is left in place; its
+# default rule set does not include I001, so import ordering is no
+# longer auto-enforced. The ``# isort: off`` markers will continue to
+# protect the __init__.py block if I001 is opted back in later.
+# Install all three stages with a plain `pre-commit install` (the local
+# commit-msg + pre-push hooks below need their stages wired, not just pre-commit).
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version. Kept in sync with the dev-group ``ruff`` pin in pyproject.toml
+    # so the codegen generator's format pass and this hook agree byte-for-byte.
+    rev: v0.15.12
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+      - id: ruff-format
+        # # Run the formatter.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+        # Captured fixtures are byte-faithful oracles (e.g. the R-written
+        # release parity CSV carries a semantically-load-bearing trailing
+        # space); rewriting them corrupts golden-master tests.
+        exclude: ^tests/fixtures/
+      - id: check-merge-conflict
+      - id: check-ast
+        # Deliberately-malformed lint fixture (tests the unparseable-file path).
+        exclude: ^tests/contracts/fixtures/lint_python/broken\.py$
+      - id: check-toml
+      - id: check-json
+      - id: check-xml
+      - id: check-yaml
+        exclude: ^recipe/meta\.yaml$
+      - id: check-symlinks
+      - id: end-of-file-fixer
+        # Same rationale as trailing-whitespace: don't rewrite captured fixtures.
+        exclude: ^tests/fixtures/
+        # - id: check-vcs-permalinks
+      - id: requirements-txt-fixer
+      - id: check-added-large-files
+        args: [--maxkb=10000]
+        # fd_model.ubj is the bundled 76-class fourth-down model (~16 MB, ~12k trees).
+        # It exceeds the 10 MB guard by design; exempt this one known file rather than
+        # loosen the limit for everything.
+        exclude: '^sportsdataverse/cfb/models/fd_model\.ubj$'
+      - id: debug-statements
+        # Deliberately-malformed lint fixture (tests the unparseable-file path).
+        exclude: ^tests/contracts/fixtures/lint_python/broken\.py$
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0 # Use the ref you want to point at
+    hooks:
+      - id: python-use-type-annotations
+      - id: python-no-eval
+      - id: python-no-log-warn
+      - id: rst-backticks
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+      - id: text-unicode-replacement-char
+      - id: python-check-mock-methods
+      - id: python-check-blanket-noqa
+      - id: python-check-blanket-type-ignore
+  # NOTE: add-trailing-comma was removed — ruff-format (skip-magic-trailing-comma=false)
+  # already manages trailing commas, so the extra hook only caused re-commit churn.
+  - repo: https://github.com/pre-commit/sync-pre-commit-deps
+    rev: v0.0.3
+    hooks:
+      - id: sync-pre-commit-deps
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.1
+    hooks:
+      - id: check-github-workflows
+        args: ["--verbose"]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.10
+    hooks:
+      - id: actionlint
+  # NOTE: yamlfmt was removed — it reformatted the codegen-generated endpoint YAML
+  # (tools/codegen/endpoints/*.yaml) on every commit, fighting extract.py's output
+  # and forcing a re-add/re-commit cycle. check-yaml still validates YAML syntax.
+  - repo: https://github.com/thlorenz/doctoc
+    rev: "v2.2.0" # substitute a tagged version
+    hooks:
+      - id: doctoc
+        # Docusaurus pages under docs/docs/ carry YAML frontmatter that must be
+        # the first content in the file; a doctoc TOC injected above it breaks the
+        # page render. Exclude that tree (docs/architecture/ etc. still get TOCs).
+        # docs/versioned_docs/ holds frozen `yarn version:docs` snapshots of
+        # docs/docs/ — same frontmatter pages, so it must be excluded too.
+        exclude: ^(docs/(docs|versioned_docs)|\.claude)/
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.20.0
+    hooks:
+      - id: markdownlint-cli2
+        args: ["--config", ".markdownlint-cli2.yaml"]
+  # Sync the docusaurus CHANGELOG copy from the repo-root master copy
+  # whenever CHANGELOG.md is touched. Until 0.0.51 this sync was done
+  # manually (`cp CHANGELOG.md docs/src/pages/CHANGELOG.md`); the hook
+  # makes drift impossible. The hook stages the synced file
+  # automatically so `git commit` sees both copies in the same commit.
+  - repo: local
+    hooks:
+      - id: sync-docs-changelog
+        name: sync-docs-changelog
+        entry: python -c "import shutil, subprocess, sys; shutil.copy('CHANGELOG.md', 'docs/src/pages/CHANGELOG.md'); subprocess.run(['git', 'add', 'docs/src/pages/CHANGELOG.md'])"
+        language: system
+        files: ^CHANGELOG\.md$
+        pass_filenames: false
+      # Gate: the committed generated wrappers must stay in sync with the codegen
+      # metadata (endpoint YAML / schema / template). Runs `--check` (re-render to a
+      # temp dir + byte-diff) rather than write-mode, so it fails clearly on drift
+      # without rewriting files mid-commit (the write-mode hook reported spurious
+      # "files were modified" on byte-identical regens). Regenerate manually with
+      # `python tools/codegen/generate.py` when this fails. Same gate runs in CI
+      # (.github/workflows/codegen.yml).
+      - id: sdv-codegen
+        name: codegen drift check (generated wrappers in sync with metadata)
+        entry: uv run python tools/codegen/generate.py --check
+        language: system
+        files: ^tools/codegen/(endpoints|schemas|templates)/.*$
+        pass_filenames: false
+      # commit-msg: enforce Conventional Commits + forbid AI Co-Authored-By
+      # trailers (both are CLAUDE.md rules that were previously unenforced).
+      - id: conventional-commit-no-ai
+        name: conventional commit + no AI co-author
+        entry: python tools/hooks/check_commit_msg.py
+        language: system
+        stages: [commit-msg]
+      # pre-push: CI parity for manual terminal pushes. Each is self-gating via
+      # `files:` (pre-commit's pre-push stage filters by the pushed range), so the
+      # slow codegen --check only runs when codegen inputs are actually pushed.
+      - id: mypy-ratchet-prepush
+        name: mypy strict ratchet (pre-push)
+        entry: uv run mypy
+        language: system
+        files: ^sportsdataverse/.*\.py$
+        pass_filenames: false
+        stages: [pre-push]
+      - id: codegen-drift-prepush
+        name: codegen drift check (pre-push)
+        entry: uv run python tools/codegen/generate.py --check
+        language: system
+        files: ^(tools/codegen/(endpoints|schemas|templates)|docs/docs)/.*$
+        pass_filenames: false
+        stages: [pre-push]
+      # pre-push: the /preflight offline guard. Runs the ID-type / name-matching
+      # convention contract (tests/test_id_conventions.py) — the sub-second, fully
+      # offline regression for the recurring int-vs-str / `id -> Utf8` paper-over /
+      # case-sensitive-regex bug class. Gated to fire only when sportsdataverse/**.py
+      # is in the pushed range; pass_filenames: false so it runs once, not per-file.
+      # The heavier targeted-test sweep stays the manual /preflight inner loop on
+      # purpose — per-push pytest would tax every push. See CLAUDE.md "ID column
+      # types" and .claude/skills/preflight/SKILL.md.
+      - id: preflight-id-contract-prepush
+        name: preflight ID/name-matching contract (pre-push)
+        entry: uv run pytest tests/test_id_conventions.py -q
+        language: system
+        files: ^sportsdataverse/.*\.py$
+        pass_filenames: false
+        stages: [pre-push]
+      - id: validation-contracts-prepush
+        name: validation harness contract tests (pre-push)
+        # --frozen: run against the committed lockfile and never re-lock, so the
+        # hook can't trip pre-commit's "files were modified" check on uv's no-op
+        # uv.lock re-serialization (matches the quality.yml CI step).
+        entry: uv run --frozen pytest tests/contracts/ -q
+        language: system
+        files: ^(tools/validation/|tests/contracts/).*$
+        pass_filenames: false
+        stages: [pre-push]
+# - repo: https://github.com/nbQA-dev/nbQA
+#   rev: 1.9.1
+#   hooks:
+#     - id: nbqa-black
+#     - id: nbqa-isort
+#     - id: nbqa-pylint
+#     - id: nbqa-flake8
+#     - id: nbqa-autopep8
+# - repo: https://github.com/codespell-project/codespell
+#   rev: v2.4.1
+#   hooks:
+#     - id: codespell
+# - repo: https://github.com/crate-ci/typos
+#   rev: v1.42.3
+#   hooks:
+#     - id: typos

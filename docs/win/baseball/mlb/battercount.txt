@@ -1,0 +1,88 @@
+## Answer
+
+For files at:
+
+`docs/win/baseball/mlb/03_edges/ev_kelly/{date}_mlb_moneyline.csv`
+
+these columns are **not calculated in the 03_edges stage**. They are context fields created upstream, then carried forward.
+
+| Column                  | Where it is calculated                                       | What it means                                                                                      |
+| ----------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `home_low_sample_count` | `docs/win/baseball/scripts/00_intake/enrich_game_context.py` | Count of home lineup batters whose batting Statcast row has `sample_flag == "low"`                 |
+| `away_low_sample_count` | `docs/win/baseball/scripts/00_intake/enrich_game_context.py` | Count of away lineup batters whose batting Statcast row has `sample_flag == "low"`                 |
+| `sp_data_available`     | `docs/win/baseball/scripts/00_intake/enrich_game_context.py` | `1` only if **both** home and away starting pitcher Statcast rows are found; otherwise `0`         |
+| `lineup_data_available` | `docs/win/baseball/scripts/00_intake/enrich_game_context.py` | `1` only if all **9 home batters and 9 away batters** are found in batting Statcast; otherwise `0` |
+
+## Exact calculation source
+
+### `home_low_sample_count` / `away_low_sample_count`
+
+Inside `aggregate_lineup(...)`, the script initializes:
+
+`low_sample = 0`
+
+Then for each batter, if the batter’s Statcast row has:
+
+`sample_flag == "low"`
+
+it increments the count:
+
+`low_sample += 1`
+
+Then it writes:
+
+`result[f"{side}_low_sample_count"] = low_sample`
+
+So when `side = "home"`, it becomes `home_low_sample_count`; when `side = "away"`, it becomes `away_low_sample_count`.   
+
+### `sp_data_available`
+
+In `process_date(...)`, the script calls `get_pitcher_stats(...)` for both starters:
+
+`hpstats, home_sp_found = get_pitcher_stats(home_pid, pitching)`
+`apstats, away_sp_found = get_pitcher_stats(away_pid, pitching)`
+
+Then it writes:
+
+`sp_data_available = 1 if (home_sp_found and away_sp_found) else 0`
+
+So it is a both-starters-present flag.  
+
+### `lineup_data_available`
+
+The same script aggregates both lineups and tracks how many batters were found:
+
+`home_batters_found`
+`away_batters_found`
+
+Then it writes:
+
+`lineup_data_available = 1 if (home_batters_found == 9 and away_batters_found == 9) else 0`
+
+So one missing batter on either team makes it `0`.  
+
+## How they get into the EV/Kelly moneyline file
+
+Flow:
+
+```text
+00_intake/enrich_game_context.py
+    writes docs/win/baseball/mlb/00_intake/mlb_raw/{date}_game_context.csv
+
+01_merge/merge_intake.py
+    reads {date}_game_context.csv
+    appends CONTEXT_COLS to merged moneyline/run_line/total rows
+
+01_merge/build_juice_files.py
+    requires those context columns
+    copies them into docs/win/baseball/mlb/01_merge/01_merguiced/{date}_mlb_moneyline.csv
+
+03_edges/ev_kelly
+    preserves those existing columns while adding EV/Kelly fields
+```
+
+`merge_intake.py` includes all four fields in `CONTEXT_COLS`, loads them from `{date}_game_context.csv`, appends `ctx_vals` to the moneyline rows, then writes `{date}_mlb_moneyline.csv`.   
+
+`build_juice_files.py` also includes the same fields in `CONTEXT_COLS` and treats them as required moneyline columns before writing the juiced moneyline file.  
+
+The final EV/Kelly moneyline output still contains those same fields before the added EV/Kelly columns. 

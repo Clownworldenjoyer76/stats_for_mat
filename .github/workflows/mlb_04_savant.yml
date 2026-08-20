@@ -1,0 +1,80 @@
+name: _MLB 04 Clean Savant Data
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prep-savant-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas
+
+      - name: Ensure output folders exist
+        run: |
+          mkdir -p docs/win/baseball/mlb/data/batting
+          mkdir -p docs/win/baseball/mlb/data/pitching
+          mkdir -p docs/win/baseball/mlb/data/fielding
+          mkdir -p docs/win/baseball/mlb/data/baserunning
+          mkdir -p docs/win/baseball/mlb/data/park_factors
+          mkdir -p docs/win/baseball/mlb/errors/00_parsing
+
+      - name: Run prep_savant_data.py
+        run: |
+          python -u docs/win/baseball/mlb/scripts/00_parsing/prep_savant_data.py
+
+      - name: Run mlb_savant_park_data.py
+        run: |
+          python -u docs/win/baseball/mlb/scripts/00_parsing/mlb_savant_park_data.py
+
+      - name: Verify output folders, log, and park-factor clean files exist
+        run: |
+          test -d docs/win/baseball/mlb/data/batting
+          test -d docs/win/baseball/mlb/data/pitching
+          test -d docs/win/baseball/mlb/data/fielding
+          test -d docs/win/baseball/mlb/data/baserunning
+          test -d docs/win/baseball/mlb/data/park_factors
+          test -d docs/win/baseball/mlb/errors/00_parsing
+          test -f docs/win/baseball/mlb/errors/00_parsing/prep_savant_data.txt
+
+          test -f docs/win/baseball/mlb/data/park_factors/park_B_day_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_B_night_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_B_open_air_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_B_roof_closed_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_L_day_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_L_night_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_L_open_air_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_L_roof_closed_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_R_day_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_R_night_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_R_open_air_clean.csv
+          test -f docs/win/baseball/mlb/data/park_factors/park_R_roof_closed_clean.csv
+
+      - name: Commit and push outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add docs/win/baseball/mlb/data/batting \
+                  docs/win/baseball/mlb/data/pitching \
+                  docs/win/baseball/mlb/data/fielding \
+                  docs/win/baseball/mlb/data/baserunning \
+                  docs/win/baseball/mlb/data/park_factors \
+                  docs/win/baseball/mlb/errors/00_parsing
+
+          git diff --cached --quiet || git commit -m "Run manual Savant data cleaning"
+          git push
