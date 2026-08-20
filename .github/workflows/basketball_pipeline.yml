@@ -229,7 +229,7 @@ jobs:
       #     contents as its prefix. Entire current file is scanned.
       #
       #   NEW
-      #     File did not exist at workflow start. Entire file is scanned.
+      #     File did not exist at workflow start. Entire current file is scanned.
       #
       #   TOUCHED_SAME_CONTENT
       #     Same final size/hash but modified after the run marker.
@@ -857,6 +857,16 @@ jobs:
           fi
 
           git commit -m "chore: basketball daily status failed run $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          # The failed pipeline may have modified tracked files or created new
+          # output files before the failure occurred. Only daily_status.txt
+          # belongs in the failed-run commit. Reset every other tracked change
+          # and remove untracked basketball outputs before rebasing.
+          git reset --hard HEAD
+          git clean -fd -- docs/win/basketball
+
+          echo "--- git status after failed-run cleanup ---"
+          git status --short
 
           git fetch origin main --depth=2
           git rebase origin/main
