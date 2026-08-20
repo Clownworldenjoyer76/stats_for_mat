@@ -4,6 +4,12 @@
 Identity is league + game_date + normalized home + normalized away. Numeric ESPN
 IDs are preferred over legacy/custom IDs. Distinct numeric IDs for one identity are
 fatal because that indicates a genuine identity conflict rather than an alias.
+
+Sportsbook provenance fields are preserved through normalization, alias
+consolidation, and file rewrites:
+- sportsbook_provider
+- scraped_at_utc
+- provider_updated_at_utc
 """
 from __future__ import annotations
 
@@ -25,7 +31,9 @@ LEAGUES = {
 }
 
 FIELDNAMES = [
-    "sport", "league", "game_date", "game_id", "odds_last_update", "game_time",
+    "sport", "league", "game_date", "game_id", "odds_last_update",
+    "sportsbook_provider", "scraped_at_utc", "provider_updated_at_utc",
+    "game_time",
     "home_team", "away_team", "home_spread", "away_spread", "total",
     "home_dk_moneyline_american", "away_dk_moneyline_american",
     "home_dk_spread_american", "away_dk_spread_american",
