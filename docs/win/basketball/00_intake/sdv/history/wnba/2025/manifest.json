@@ -1,6 +1,6 @@
 {
   "compression": "zstd",
-  "generated_at_utc": "2026-08-24T16:46:49.374644+00:00",
+  "generated_at_utc": "2026-08-24T17:32:40.057063+00:00",
   "internal_season": 2025,
   "league": "WNBA",
   "schema_version": 1,
@@ -100,15 +100,14 @@
         "home_team_id",
         "away_team_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\games.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/games.parquet",
       "filename": "games.parquet",
       "rows": 312,
       "source_function": "sportsdataverse.wnba.load_wnba_schedule",
       "source_loader": "sportsdataverse.wnba.load_wnba_schedule",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "lineups": {
-      "canonical_games": 312,
       "columns": [
         "league",
         "internal_season",
@@ -131,22 +130,12 @@
         "wnba_game_id",
         "game_id"
       ],
-      "crosswalk_kept_games": 243,
-      "crosswalk_outside_schedule_games": 0,
-      "crosswalk_unmapped_source_games": 0,
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\lineups.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/lineups.parquet",
       "filename": "lineups.parquet",
-      "game_id_crosswalk_source": "sportsdataverse.wnba.load_wnba_stats_schedules -> deterministic game_date/home-away team/score match",
-      "game_id_namespace": "espn",
       "rows": 99114,
-      "rows_after_game_id_crosswalk": 99114,
-      "rows_before_game_id_crosswalk": 99114,
-      "rows_filtered_by_game_id_crosswalk": 0,
-      "source_function": "sportsdataverse.wnba.load_wnba_stats_game_lineups [release fallback]",
-      "source_game_id_column": "wnba_game_id",
-      "source_loader": "sportsdataverse.wnba.load_wnba_stats_game_lineups [release fallback]",
-      "source_unique_games": 243,
-      "status": "ready"
+      "source_function": "sportsdataverse.wnba.load_wnba_stats_game_lineups",
+      "source_loader": "sportsdataverse.wnba.load_wnba_stats_game_lineups",
+      "status": "existing_not_rebuilt"
     },
     "pbp": {
       "columns": [
@@ -224,12 +213,12 @@
         "type_abbreviation",
         "play_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\pbp.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/pbp.parquet",
       "filename": "pbp.parquet",
       "rows": 121342,
       "source_function": "sportsdataverse.wnba.load_wnba_pbp",
       "source_loader": "sportsdataverse.wnba.load_wnba_pbp",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "player_game": {
       "columns": [
@@ -297,15 +286,14 @@
         "opponent_team_score",
         "player_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\player_game.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/player_game.parquet",
       "filename": "player_game.parquet",
       "rows": 7140,
       "source_function": "sportsdataverse.wnba.load_wnba_player_boxscore",
       "source_loader": "sportsdataverse.wnba.load_wnba_player_boxscore",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "possessions": {
-      "canonical_games": 312,
       "columns": [
         "league",
         "internal_season",
@@ -348,22 +336,12 @@
         "wnba_game_id",
         "game_id"
       ],
-      "crosswalk_kept_games": 310,
-      "crosswalk_outside_schedule_games": 0,
-      "crosswalk_unmapped_source_games": 0,
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\possessions.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/possessions.parquet",
       "filename": "possessions.parquet",
-      "game_id_crosswalk_source": "sportsdataverse.wnba.load_wnba_stats_schedules -> deterministic game_date/home-away team/score match",
-      "game_id_namespace": "espn",
       "rows": 48401,
-      "rows_after_game_id_crosswalk": 48401,
-      "rows_before_game_id_crosswalk": 48401,
-      "rows_filtered_by_game_id_crosswalk": 0,
-      "source_function": "sportsdataverse.wnba.load_wnba_stats_possessions [release fallback]",
-      "source_game_id_column": "wnba_game_id",
-      "source_loader": "sportsdataverse.wnba.load_wnba_stats_possessions [release fallback]",
-      "source_unique_games": 310,
-      "status": "ready"
+      "source_function": "sportsdataverse.wnba.load_wnba_stats_possessions",
+      "source_loader": "sportsdataverse.wnba.load_wnba_stats_possessions",
+      "status": "existing_not_rebuilt"
     },
     "rosters": {
       "columns": [
@@ -410,12 +388,12 @@
         "status_type",
         "player_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\rosters.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/rosters.parquet",
       "filename": "rosters.parquet",
       "rows": 181,
       "source_function": "sportsdataverse.wnba.load_wnba_rosters",
       "source_loader": "sportsdataverse.wnba.load_wnba_rosters",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "shots": {
       "columns": [
@@ -445,12 +423,12 @@
         "team_mascot",
         "team_abbrev"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\shots.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/shots.parquet",
       "filename": "shots.parquet",
       "rows": 53525,
       "source_function": "sportsdataverse.wnba.load_wnba_shots",
       "source_loader": "sportsdataverse.wnba.load_wnba_shots",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "team_game": {
       "columns": [
@@ -517,12 +495,12 @@
         "opponent_team_logo",
         "opponent_team_score"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\wnba\\2025\\team_game.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/wnba/2025/team_game.parquet",
       "filename": "team_game.parquet",
       "rows": 624,
       "source_function": "sportsdataverse.wnba.load_wnba_team_boxscore",
       "source_loader": "sportsdataverse.wnba.load_wnba_team_boxscore",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     }
   }
 }

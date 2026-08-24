@@ -1,6 +1,6 @@
 {
   "compression": "zstd",
-  "generated_at_utc": "2026-08-24T14:20:08.002912+00:00",
+  "generated_at_utc": "2026-08-24T17:32:39.565531+00:00",
   "internal_season": 2025,
   "league": "NCAAM",
   "schema_version": 1,
@@ -109,15 +109,14 @@
         "home_team_id",
         "away_team_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\games.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/games.parquet",
       "filename": "games.parquet",
       "rows": 6318,
       "source_function": "sportsdataverse.mbb.load_mbb_schedule",
       "source_loader": "sportsdataverse.mbb.load_mbb_schedule",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "lineups": {
-      "canonical_games": 6318,
       "columns": [
         "league",
         "internal_season",
@@ -202,50 +201,12 @@
         "game_id",
         "ncaa_game_id"
       ],
-      "coverage_status": "partial_source_coverage",
-      "crosswalk_mapped_games": 6300,
-      "crosswalk_url": "https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-raw/main/mbb/xwalk/espn_game_id/2026.json",
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\lineups.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/lineups.parquet",
       "filename": "lineups.parquet",
-      "missing_pbp_games": 3,
       "rows": 205029,
-      "skipped_game_ids": [
-        "401805178",
-        "401808536",
-        "401808646",
-        "401808712",
-        "401808713",
-        "401812370",
-        "401812393",
-        "401817640",
-        "401822368",
-        "401822396",
-        "401822772",
-        "401823218",
-        "401825587",
-        "401826052",
-        "401827053",
-        "401827060",
-        "401828335",
-        "401828693",
-        "401829287",
-        "401829375",
-        "401829453",
-        "401829472",
-        "401830244",
-        "401830280",
-        "401830826",
-        "401831241",
-        "401831378"
-      ],
       "source_function": "sportsdataverse/ncaa-mbb-hoops-data:stats.ncaa.org PBP -> sportsdataverse.mbb.ncaa_mbb_lineups",
       "source_loader": "sportsdataverse/ncaa-mbb-hoops-data:stats.ncaa.org PBP -> sportsdataverse.mbb.ncaa_mbb_lineups",
-      "source_pbp_url": "https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-data/main/mbb/pbp/parquet/ncaa_mbb_pbp_2026.parquet",
-      "status": "ready",
-      "transform_failed_games": 0,
-      "transformed_games": 6291,
-      "unmapped_games": 18,
-      "zero_output_games": 6
+      "status": "existing_not_rebuilt"
     },
     "pbp": {
       "columns": [
@@ -318,12 +279,12 @@
         "home_win_prob",
         "play_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\pbp.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/pbp.parquet",
       "filename": "pbp.parquet",
       "rows": 2915731,
       "source_function": "sportsdataverse.mbb.load_mbb_pbp",
       "source_loader": "sportsdataverse.mbb.load_mbb_pbp",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "player_game": {
       "columns": [
@@ -389,15 +350,14 @@
         "active",
         "player_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\player_game.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/player_game.parquet",
       "filename": "player_game.parquet",
       "rows": 196876,
       "source_function": "sportsdataverse.mbb.load_mbb_player_boxscore",
       "source_loader": "sportsdataverse.mbb.load_mbb_player_boxscore",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "possessions": {
-      "canonical_games": 6318,
       "columns": [
         "league",
         "internal_season",
@@ -434,50 +394,12 @@
         "game_id",
         "ncaa_game_id"
       ],
-      "coverage_status": "partial_source_coverage",
-      "crosswalk_mapped_games": 6300,
-      "crosswalk_url": "https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-raw/main/mbb/xwalk/espn_game_id/2026.json",
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\possessions.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/possessions.parquet",
       "filename": "possessions.parquet",
-      "missing_pbp_games": 3,
       "rows": 878168,
-      "skipped_game_ids": [
-        "401805178",
-        "401808536",
-        "401808646",
-        "401808712",
-        "401808713",
-        "401812370",
-        "401812393",
-        "401817640",
-        "401822368",
-        "401822396",
-        "401822772",
-        "401823218",
-        "401825587",
-        "401826052",
-        "401827053",
-        "401827060",
-        "401828335",
-        "401828693",
-        "401829287",
-        "401829375",
-        "401829453",
-        "401829472",
-        "401830244",
-        "401830280",
-        "401830826",
-        "401831241",
-        "401831378"
-      ],
       "source_function": "sportsdataverse/ncaa-mbb-hoops-data:stats.ncaa.org PBP -> sportsdataverse.mbb.ncaa_mbb_possessions",
       "source_loader": "sportsdataverse/ncaa-mbb-hoops-data:stats.ncaa.org PBP -> sportsdataverse.mbb.ncaa_mbb_possessions",
-      "source_pbp_url": "https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-data/main/mbb/pbp/parquet/ncaa_mbb_pbp_2026.parquet",
-      "status": "ready",
-      "transform_failed_games": 0,
-      "transformed_games": 6291,
-      "unmapped_games": 18,
-      "zero_output_games": 6
+      "status": "existing_not_rebuilt"
     },
     "rosters": {
       "columns": [
@@ -524,12 +446,12 @@
         "status_type",
         "player_id"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\rosters.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/rosters.parquet",
       "filename": "rosters.parquet",
       "rows": 12438,
       "source_function": "sportsdataverse.mbb.load_mbb_rosters",
       "source_loader": "sportsdataverse.mbb.load_mbb_rosters",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "shots": {
       "columns": [
@@ -559,12 +481,12 @@
         "team_mascot",
         "team_abbrev"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\shots.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/shots.parquet",
       "filename": "shots.parquet",
       "rows": 991836,
       "source_function": "sportsdataverse.mbb.load_mbb_shots",
       "source_loader": "sportsdataverse.mbb.load_mbb_shots",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     },
     "team_game": {
       "columns": [
@@ -633,12 +555,12 @@
         "lead_changes",
         "lead_percentage"
       ],
-      "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2025\\team_game.parquet",
+      "file": "docs/win/basketball/00_intake/sdv/history/ncaam/2025/team_game.parquet",
       "filename": "team_game.parquet",
       "rows": 12598,
       "source_function": "sportsdataverse.mbb.load_mbb_team_boxscore",
       "source_loader": "sportsdataverse.mbb.load_mbb_team_boxscore",
-      "status": "ready"
+      "status": "existing_not_rebuilt"
     }
   }
 }
