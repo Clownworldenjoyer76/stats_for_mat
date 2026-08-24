@@ -1,0 +1,206 @@
+name: Basketball SDV History
+
+on:
+  workflow_dispatch:
+    inputs:
+      league:
+        description: "League to rebuild"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - nba
+          - ncaam
+          - wnba
+
+      internal_season:
+        description: "Internal season to rebuild, for example 2025"
+        required: true
+        default: "2025"
+        type: string
+
+      force_rebuild:
+        description: "Force rebuild even when SDV historical files already exist"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: basketball-sdv-history-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  basketball-sdv-history:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Ensure SDV directories
+        run: |
+          set -euo pipefail
+
+          mkdir -p docs/win/basketball/00_intake/sdv/history
+          mkdir -p docs/win/basketball/errors/99_validation
+
+      - name: Run SDV historical storage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LEAGUE="${{ inputs.league }}"
+          INTERNAL_SEASON="${{ inputs.internal_season }}"
+          FORCE_REBUILD="${{ inputs.force_rebuild }}"
+
+          ARGS=(
+            --internal-season "$INTERNAL_SEASON"
+          )
+
+          if [[ "$LEAGUE" != "all" ]]; then
+            ARGS+=(
+              --league "$LEAGUE"
+            )
+          fi
+
+          if [[ "$FORCE_REBUILD" == "true" ]]; then
+            ARGS+=(
+              --force
+            )
+          fi
+
+          echo "League: $LEAGUE"
+          echo "Internal season: $INTERNAL_SEASON"
+          echo "Force rebuild: $FORCE_REBUILD"
+
+          python docs/win/basketball/scripts/00_intake/sdv_historical_storage.py \
+            "${ARGS[@]}"
+
+      - name: Run SDV storage validation
+        run: |
+          set -euo pipefail
+
+          VALIDATOR="docs/win/basketball/scripts/testing/sdv_storage_test.py"
+
+          if [[ ! -f "$VALIDATOR" ]]; then
+            echo "ERROR: Required SDV validation script does not exist:"
+            echo "$VALIDATOR"
+            echo "This script is created by basketball TODO item 4."
+            exit 1
+          fi
+
+          python "$VALIDATOR"
+
+      - name: Check Parquet file-size limit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ROOT="docs/win/basketball/00_intake/sdv/history"
+
+          # GitHub blocks regular Git files larger than 100 MiB.
+          MAX_BYTES=$((100 * 1024 * 1024))
+
+          FAILED=0
+
+          while IFS= read -r -d '' FILE; do
+            SIZE="$(stat -c '%s' "$FILE")"
+
+            echo "$SIZE bytes | $FILE"
+
+            if (( SIZE > MAX_BYTES )); then
+              echo "ERROR: Parquet exceeds GitHub's 100 MiB file limit:"
+              echo "$FILE"
+              echo "Size: $SIZE bytes"
+              FAILED=1
+            fi
+          done < <(
+            find "$ROOT" \
+              -type f \
+              -name '*.parquet' \
+              -print0
+          )
+
+          if (( FAILED != 0 )); then
+            exit 1
+          fi
+
+      - name: Show SDV outputs
+        run: |
+          set -euo pipefail
+
+          echo "=== SDV historical files ==="
+
+          find \
+            docs/win/basketball/00_intake/sdv/history \
+            -type f \
+            -print \
+            | sort
+
+          echo ""
+          echo "=== SDV validation log ==="
+
+          if [[ -f \
+            docs/win/basketball/errors/99_validation/sdv_storage_validation.txt \
+          ]]; then
+            cat \
+              docs/win/basketball/errors/99_validation/sdv_storage_validation.txt
+          else
+            echo "Validation log not found."
+            exit 1
+          fi
+
+      - name: Commit SDV historical outputs
+        run: |
+          set -euo pipefail
+
+          git config \
+            user.name \
+            "github-actions[bot]"
+
+          git config \
+            user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Persist only SDV historical storage and its validation log.
+          git add \
+            docs/win/basketball/00_intake/sdv/history/
+
+          git add \
+            docs/win/basketball/errors/99_validation/sdv_storage_validation.txt
+
+          echo "--- git status before commit ---"
+          git status --short
+
+          if git diff --cached --quiet; then
+            echo "No SDV historical changes to commit."
+            exit 0
+          fi
+
+          git commit \
+            -m "chore: update basketball SDV history ${{ inputs.internal_season }}"
+
+          git pull \
+            --rebase \
+            --autostash \
+            origin main
+
+          git push
