@@ -1,0 +1,26 @@
+=== SDV HISTORICAL STORAGE 2026-08-24T16:46:49.365095+00:00 ===
+2026-08-24T16:46:49.372731+00:00 | CONFIG VALID | sportsdataverse=0.0.75 jobs=[('wnba', 2025)] mappings={'wnba:2025': 2025}
+2026-08-24T16:46:49.374865+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=games loader=sportsdataverse.wnba.load_wnba_schedule
+2026-08-24T16:46:51.737788+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=games rows=312 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\games.parquet
+2026-08-24T16:46:51.738254+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=team_game loader=sportsdataverse.wnba.load_wnba_team_boxscore
+2026-08-24T16:46:51.983247+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=team_game rows=624 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\team_game.parquet
+2026-08-24T16:46:51.983850+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=player_game loader=sportsdataverse.wnba.load_wnba_player_boxscore
+2026-08-24T16:46:52.246983+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=player_game rows=7140 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\player_game.parquet
+2026-08-24T16:46:52.247402+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=rosters loader=sportsdataverse.wnba.load_wnba_rosters
+2026-08-24T16:46:52.537044+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=rosters rows=181 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\rosters.parquet
+2026-08-24T16:46:52.537391+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=pbp loader=sportsdataverse.wnba.load_wnba_pbp
+2026-08-24T16:46:53.078401+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=pbp rows=121342 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\pbp.parquet
+2026-08-24T16:46:53.078901+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=possessions loader=sportsdataverse.wnba.load_wnba_stats_possessions
+2026-08-24T16:46:53.079186+00:00 | RELEASE FALLBACK | league=wnba table=possessions asset_year=2025 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/wnba_stats_possessions/wnba_possessions_2025.parquet
+2026-08-24T16:46:54.488406+00:00 | WNBA LEGACY GAME CROSSWALK | internal=2025 sdv=2025 stats_games=310 mapped=310 unmatched=0 ambiguous=0 source=sportsdataverse.wnba.load_wnba_stats_schedules
+2026-08-24T16:46:54.499028+00:00 | PRO GAME ID CROSSWALK | league=wnba internal=2025 sdv=2025 table=possessions source_games=310 canonical_games=312 kept_games=310 unmapped_source_games=0 outside_schedule_games=0 rows_before=48401 rows_after=48401 dropped_rows=0 crosswalk=sportsdataverse.wnba.load_wnba_stats_schedules -> deterministic game_date/home-away team/score match
+2026-08-24T16:46:54.508348+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=possessions rows=48401 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\possessions.parquet
+2026-08-24T16:46:54.508731+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=lineups loader=sportsdataverse.wnba.load_wnba_stats_game_lineups
+2026-08-24T16:46:54.508964+00:00 | RELEASE FALLBACK | league=wnba table=lineups asset_year=2025 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/wnba_stats_game_lineups/wnba_lineups_2025.parquet
+2026-08-24T16:46:55.712160+00:00 | WNBA LEGACY GAME CROSSWALK | internal=2025 sdv=2025 stats_games=310 mapped=310 unmatched=0 ambiguous=0 source=sportsdataverse.wnba.load_wnba_stats_schedules
+2026-08-24T16:46:55.727692+00:00 | PRO GAME ID CROSSWALK | league=wnba internal=2025 sdv=2025 table=lineups source_games=243 canonical_games=312 kept_games=243 unmapped_source_games=0 outside_schedule_games=0 rows_before=99114 rows_after=99114 dropped_rows=0 crosswalk=sportsdataverse.wnba.load_wnba_stats_schedules -> deterministic game_date/home-away team/score match
+2026-08-24T16:46:55.738312+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=lineups rows=99114 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\lineups.parquet
+2026-08-24T16:46:55.738772+00:00 | LOAD START | league=wnba internal=2025 sdv=2025 loader_season=2025 table=shots loader=sportsdataverse.wnba.load_wnba_shots
+2026-08-24T16:46:56.149058+00:00 | LOAD COMPLETE | league=wnba internal=2025 table=shots rows=53525 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2025\shots.parquet
+2026-08-24T16:46:56.150188+00:00 | MANIFEST | league=wnba internal=2025 path=docs\win\basketball\00_intake\sdv\history\wnba\2025\manifest.json
+2026-08-24T16:46:56.150427+00:00 | STATUS: SUCCESS | manifests=1

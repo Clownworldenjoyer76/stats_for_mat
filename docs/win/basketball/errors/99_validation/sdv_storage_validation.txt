@@ -1,0 +1,80 @@
+=== SDV STORAGE VALIDATION 2026-08-24T16:46:56.889876+00:00 ===
+storage_config=docs\win\basketball\config\sdv_storage.yaml
+season_config=docs\win\basketball\config\sdv_seasons.yaml
+validation_log=docs\win\basketball\errors\99_validation\sdv_storage_validation.txt
+PASS | sdv_storage.yaml schema_version=1
+PASS | sdv_seasons.yaml schema_version=1
+PASS | Configured SportsDataVerse version=0.0.75
+PASS | Installed SportsDataVerse version=0.0.75
+PASS | Configured required table list matches validator
+INFO | configured_truncation_limits=[]
+INFO | configured_jobs=[('nba', 2025), ('ncaam', 2025), ('wnba', 2025)]
+--- LEAGUE=NBA INTERNAL_SEASON=2025 ---
+PASS | nba:2025 maps to SDV 2026
+PASS | nba:2025 required file set present
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\games.parquet rows=1330 columns=84
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\team_game.parquet rows=2652 columns=64
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\player_game.parquet rows=34883 columns=63
+INFO | docs\win\basketball\00_intake\sdv\history\nba\2025\player_game.parquet player_id nullable source rows nulls=33 blanks=0
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\rosters.parquet rows=537 columns=42
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\pbp.parquet rows=642472 columns=73
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\possessions.parquet rows=263315 columns=41
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\lineups.parquet rows=668793 columns=20
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\lineups.parquet NBA lineup identity type=game/action/period plus home/away five-player identity columns=['game_id', 'action_number', 'period', 'home_player_1', 'home_player_2', 'home_player_3', 'home_player_4', 'home_player_5', 'away_player_1', 'away_player_2', 'away_player_3', 'away_player_4', 'away_player_5']
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\shots.parquet rows=298411 columns=25
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\games.parquet canonical game_id unique count=1330
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\team_game.parquet game_id integrity passed unique_games=1326
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\player_game.parquet game_id integrity passed unique_games=1326
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\pbp.parquet game_id integrity passed unique_games=1325
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\possessions.parquet game_id integrity passed unique_games=1322
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\lineups.parquet game_id integrity passed unique_games=1322
+PASS | docs\win\basketball\00_intake\sdv\history\nba\2025\shots.parquet game_id integrity passed unique_games=1325
+PASS | nba:2025 manifest compared to parquet tables
+PASS | nba:2025 no configured loader truncation guard
+--- LEAGUE=NCAAM INTERNAL_SEASON=2025 ---
+PASS | ncaam:2025 maps to SDV 2026
+PASS | ncaam:2025 required file set present
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\games.parquet rows=6318 columns=93
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\team_game.parquet rows=12598 columns=64
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\player_game.parquet rows=196876 columns=61
+INFO | docs\win\basketball\00_intake\sdv\history\ncaam\2025\player_game.parquet player_id nullable source rows nulls=11 blanks=0
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\rosters.parquet rows=12438 columns=42
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\pbp.parquet rows=2915731 columns=68
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\possessions.parquet rows=878168 columns=34
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\lineups.parquet rows=205029 columns=82
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\lineups.parquet NCAAM lineup identity=['game_id', 'team', 'p1', 'p2', 'p3', 'p4', 'p5']
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\shots.parquet rows=991836 columns=25
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\games.parquet canonical game_id unique count=6318
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\team_game.parquet game_id integrity passed unique_games=6299
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\player_game.parquet game_id integrity passed unique_games=6300
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\pbp.parquet game_id integrity passed unique_games=6275
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\possessions.parquet game_id integrity passed unique_games=6291
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\lineups.parquet game_id integrity passed unique_games=6291
+PASS | docs\win\basketball\00_intake\sdv\history\ncaam\2025\shots.parquet game_id integrity passed unique_games=6275
+WARN | docs\win\basketball\00_intake\sdv\history\ncaam\2025\manifest.json table=possessions coverage_status=partial_source_coverage
+WARN | docs\win\basketball\00_intake\sdv\history\ncaam\2025\manifest.json table=lineups coverage_status=partial_source_coverage
+PASS | ncaam:2025 manifest compared to parquet tables
+PASS | ncaam:2025 no configured loader truncation guard
+--- LEAGUE=WNBA INTERNAL_SEASON=2025 ---
+PASS | wnba:2025 maps to SDV 2025
+PASS | wnba:2025 required file set present
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\games.parquet rows=312 columns=84
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\team_game.parquet rows=624 columns=62
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\player_game.parquet rows=7140 columns=63
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\rosters.parquet rows=181 columns=42
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\pbp.parquet rows=121342 columns=73
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\possessions.parquet rows=48401 columns=40
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\lineups.parquet rows=99114 columns=20
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\lineups.parquet WNBA lineup identity type=game/action/period plus home/away five-player identity columns=['game_id', 'action_number', 'period', 'home_player_1', 'home_player_2', 'home_player_3', 'home_player_4', 'home_player_5', 'away_player_1', 'away_player_2', 'away_player_3', 'away_player_4', 'away_player_5']
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\shots.parquet rows=53525 columns=25
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\games.parquet canonical game_id unique count=312
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\team_game.parquet game_id integrity passed unique_games=312
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\player_game.parquet game_id integrity passed unique_games=312
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\pbp.parquet game_id integrity passed unique_games=312
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\possessions.parquet game_id integrity passed unique_games=310
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\lineups.parquet game_id integrity passed unique_games=243
+PASS | docs\win\basketball\00_intake\sdv\history\wnba\2025\shots.parquet game_id integrity passed unique_games=312
+PASS | wnba:2025 manifest compared to parquet tables
+PASS | wnba:2025 no configured loader truncation guard
+SUMMARY | seasons_checked=3 tables_checked=24 warnings=2 errors=0
+STATUS: SUCCESS
