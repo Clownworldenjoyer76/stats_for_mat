@@ -86,6 +86,28 @@ LOADERS: dict[str, dict[str, tuple[str, str] | None]] = {
     },
 }
 
+
+LOADER_FALLBACKS: dict[
+    tuple[str, str],
+    tuple[str, str, str],
+] = {
+    ("nba", "rosters"): (
+        "sportsdataverse.nba",
+        "load_nba_player_core",
+        "sdv",
+    ),
+    ("ncaam", "rosters"): (
+        "sportsdataverse.mbb",
+        "load_mbb_player_core",
+        "sdv",
+    ),
+    ("wnba", "rosters"): (
+        "sportsdataverse.wnba",
+        "load_wnba_player_core",
+        "sdv",
+    ),
+}
+
 RELEASE_FALLBACKS = {
     ("nba", "possessions"): (
         "sportsdataverse.nba.load_nba_stats_possessions",
@@ -100,6 +122,20 @@ RELEASE_FALLBACKS = {
         "sportsdataverse-data/releases/download/"
         "nba_stats_game_lineups/"
         "nba_lineups_{year}.parquet",
+    ),
+    ("ncaam", "shots"): (
+        "sportsdataverse.mbb.load_mbb_shots",
+        "https://github.com/sportsdataverse/"
+        "sportsdataverse-data/releases/download/"
+        "espn_mens_college_basketball_shots/"
+        "shots_{year}.parquet",
+    ),
+    ("wnba", "shots"): (
+        "sportsdataverse.wnba.load_wnba_shots",
+        "https://github.com/sportsdataverse/"
+        "sportsdataverse-data/releases/download/"
+        "espn_wnba_shots/"
+        "shots_{year}.parquet",
     ),
     ("wnba", "possessions"): (
         "sportsdataverse.wnba.load_wnba_stats_possessions",
@@ -182,7 +218,7 @@ ALIASES = {
     },
     "rosters": {
         "player_id": ("player_id", "athlete_id"),
-        "team_id": ("team_id",),
+        "team_id": ("team_id", "current_team_id"),
     },
     "pbp": {
         "game_id": ("game_id",),
@@ -459,6 +495,27 @@ def release_loader_season(
 
     return int(
         sdv_season
+    )
+
+
+def loader_fallback_season(
+    mode: str,
+    internal_season: int,
+    sdv_season: int,
+) -> int:
+    if mode == "internal":
+        return int(
+            internal_season
+        )
+
+    if mode == "sdv":
+        return int(
+            sdv_season
+        )
+
+    raise ValueError(
+        "Unsupported loader fallback "
+        f"season mode: {mode}"
     )
 
 
@@ -2187,6 +2244,11 @@ def call_loader(
         )
     )
 
+    fallback_key = (
+        league,
+        table,
+    )
+
     if (
         league == "wnba"
         and table
@@ -2225,6 +2287,8 @@ def call_loader(
         None,
     )
 
+    primary_error: Exception | None = None
+
     if loader is not None:
         try:
             return (
@@ -2242,25 +2306,142 @@ def call_loader(
             )
 
         except Exception as exc:
+            primary_error = exc
+
             if (
-                league,
-                table,
-            ) not in RELEASE_FALLBACKS:
+                fallback_key
+                in LOADER_FALLBACKS
+            ):
+                action = (
+                    "loader_fallback"
+                )
+            elif (
+                fallback_key
+                in RELEASE_FALLBACKS
+            ):
+                action = (
+                    "release_fallback"
+                )
+            else:
                 raise
 
             log(
                 "RELEASE LOADER FAILED | "
                 f"league={league} "
                 f"table={table} "
+                f"loader={module_name}.{function_name} "
                 f"loader_season={loader_season} "
                 f"error={exc} "
-                "action=release_fallback"
+                f"action={action}"
             )
 
+    else:
+        primary_error = RuntimeError(
+            "SportsDataVerse loader missing: "
+            f"{module_name}.{function_name}"
+        )
+
     if (
-        league,
-        table,
-    ) in RELEASE_FALLBACKS:
+        fallback_key
+        in LOADER_FALLBACKS
+    ):
+        (
+            fallback_module_name,
+            fallback_function_name,
+            fallback_season_mode,
+        ) = LOADER_FALLBACKS[
+            fallback_key
+        ]
+
+        fallback_season = (
+            loader_fallback_season(
+                fallback_season_mode,
+                internal_season,
+                sdv_season,
+            )
+        )
+
+        fallback_module = (
+            importlib.import_module(
+                fallback_module_name
+            )
+        )
+
+        fallback_loader = getattr(
+            fallback_module,
+            fallback_function_name,
+            None,
+        )
+
+        if fallback_loader is None:
+            fallback_error = RuntimeError(
+                "SportsDataVerse fallback "
+                "loader missing: "
+                f"{fallback_module_name}."
+                f"{fallback_function_name}"
+            )
+
+        else:
+            try:
+                frame = fallback_loader(
+                    seasons=[
+                        fallback_season
+                    ],
+                    return_as_pandas=False,
+                )
+
+                source = (
+                    f"{fallback_module_name}."
+                    f"{fallback_function_name} "
+                    f"[{table} fallback]"
+                )
+
+                log(
+                    "LOADER FALLBACK COMPLETE | "
+                    f"league={league} "
+                    f"table={table} "
+                    f"fallback_loader="
+                    f"{fallback_module_name}."
+                    f"{fallback_function_name} "
+                    f"fallback_season={fallback_season}"
+                )
+
+                return (
+                    frame,
+                    source,
+                    fallback_season,
+                )
+
+            except Exception as exc:
+                fallback_error = exc
+
+        log(
+            "LOADER FALLBACK FAILED | "
+            f"league={league} "
+            f"table={table} "
+            f"fallback_loader="
+            f"{fallback_module_name}."
+            f"{fallback_function_name} "
+            f"fallback_season={fallback_season} "
+            f"error={fallback_error}"
+        )
+
+        if (
+            fallback_key
+            not in RELEASE_FALLBACKS
+        ):
+            raise RuntimeError(
+                f"{league}.{table}: "
+                "primary and fallback loaders "
+                "both failed; "
+                f"primary_error={primary_error}; "
+                f"fallback_error={fallback_error}"
+            ) from fallback_error
+
+    if (
+        fallback_key
+        in RELEASE_FALLBACKS
+    ):
         (
             frame,
             source,
@@ -2276,6 +2457,12 @@ def call_loader(
             source,
             loader_season,
         )
+
+    if primary_error is not None:
+        raise RuntimeError(
+            f"{league}.{table}: "
+            f"loader failed: {primary_error}"
+        ) from primary_error
 
     raise RuntimeError(
         "SportsDataVerse loader missing: "
