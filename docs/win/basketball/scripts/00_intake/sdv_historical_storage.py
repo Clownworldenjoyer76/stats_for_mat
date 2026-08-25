@@ -164,7 +164,11 @@ PRO_SCHEDULE_CROSSWALKS = {
             "nba_crosswalk/"
             "nba_schedule_crosswalk_{season}.parquet"
         ),
-        "minimum_season": 2002,
+        # SportsDataVerse 0.0.75 load_nba_schedule_crosswalk
+        # explicitly rejects seasons below 2026. Older NBA seasons
+        # use load_nba_stats_schedules plus deterministic matching to
+        # the canonical ESPN schedule already stored in games.parquet.
+        "minimum_season": 2026,
     },
     "wnba": {
         "module": "sportsdataverse.wnba",
@@ -180,11 +184,18 @@ PRO_SCHEDULE_CROSSWALKS = {
     },
 }
 
+NBA_STATS_SCHEDULE_FALLBACK_URL = (
+    "https://github.com/sportsdataverse/"
+    "sportsdataverse-data/releases/download/"
+    "nba_stats_schedules/"
+    "nba_schedule_{season}.parquet"
+)
+
 WNBA_STATS_SCHEDULE_FALLBACK_URL = (
     "https://github.com/sportsdataverse/"
     "sportsdataverse-data/releases/download/"
     "wnba_stats_schedules/"
-    "wnba_stats_schedule_{season}.parquet"
+    "wnba_schedule_{season}.parquet"
 )
 
 NCAAM_NCAA_PBP_URL = (
@@ -701,6 +712,791 @@ def normalize_frame_columns(
         )
 
     return df
+
+
+def normalize_legacy_schedule_date(value: Any) -> str:
+    """Return YYYY-MM-DD for schedule dates without assuming one source format."""
+    text = clean(value)
+
+    if not text:
+        return ""
+
+    iso_match = re.match(
+        r"^(\d{4}-\d{2}-\d{2})",
+        text,
+    )
+
+    if iso_match:
+        return iso_match.group(1)
+
+    for date_format in (
+        "%b %d, %Y",
+        "%B %d, %Y",
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%Y/%m/%d",
+    ):
+        try:
+            return datetime.strptime(
+                text,
+                date_format,
+            ).date().isoformat()
+        except ValueError:
+            continue
+
+    return ""
+
+
+def load_nba_stats_schedule(
+    sdv_season: int,
+):
+    """Load the published NBA Stats schedule used for legacy ID matching."""
+    P = pl()
+
+    module_name = (
+        "sportsdataverse.nba"
+    )
+
+    loader_name = (
+        "load_nba_stats_schedules"
+    )
+
+    module = importlib.import_module(
+        module_name
+    )
+
+    loader = getattr(
+        module,
+        loader_name,
+        None,
+    )
+
+    loader_error = None
+
+    if loader is not None:
+        try:
+            frame = loader(
+                seasons=[
+                    int(
+                        sdv_season
+                    )
+                ],
+                return_as_pandas=False,
+            )
+
+            df = normalize_frame_columns(
+                frame
+            )
+
+            if df.height:
+                return (
+                    df,
+                    (
+                        f"{module_name}."
+                        f"{loader_name}"
+                    ),
+                )
+
+            loader_error = RuntimeError(
+                "loader returned zero rows"
+            )
+
+        except Exception as exc:
+            loader_error = exc
+
+        log(
+            "NBA STATS SCHEDULE LOADER FAILED | "
+            f"season={sdv_season} "
+            f"error={loader_error} "
+            "action=release_fallback"
+        )
+
+    else:
+        loader_error = RuntimeError(
+            "SportsDataVerse loader missing: "
+            f"{module_name}.{loader_name}"
+        )
+
+        log(
+            "NBA STATS SCHEDULE LOADER FAILED | "
+            f"season={sdv_season} "
+            f"error={loader_error} "
+            "action=release_fallback"
+        )
+
+    url = (
+        NBA_STATS_SCHEDULE_FALLBACK_URL.format(
+            season=int(
+                sdv_season
+            )
+        )
+    )
+
+    try:
+        response = http_get(
+            url
+        )
+
+        df = normalize_frame_columns(
+            P.read_parquet(
+                io.BytesIO(
+                    response.content
+                )
+            )
+        )
+
+    except Exception as exc:
+        raise RuntimeError(
+            "NBA Stats schedule loader and published "
+            "release fallback both failed; "
+            f"season={sdv_season}; "
+            f"loader_error={loader_error}; "
+            f"fallback_error={exc}"
+        ) from exc
+
+    if df.height == 0:
+        raise RuntimeError(
+            "NBA Stats schedule published release "
+            "returned zero rows; "
+            f"season={sdv_season}; "
+            f"loader_error={loader_error}; "
+            f"url={url}"
+        )
+
+    return (
+        df,
+        (
+            f"{module_name}."
+            f"{loader_name} "
+            "[release fallback]"
+        ),
+    )
+
+
+def build_nba_legacy_schedule_crosswalk(
+    cfg: dict[str, Any],
+    internal_season: int,
+    sdv_season: int,
+):
+    """Map historical NBA Stats game IDs to canonical ESPN game IDs.
+
+    SportsDataVerse 0.0.75 does not support load_nba_schedule_crosswalk
+    before season 2026. This uses the published NBA Stats schedule and matches
+    it to the canonical
+    ESPN schedule already written for the same internal season. Matches require
+    the same game date and both home/away teams. Score is used only to resolve
+    multiple team-matched candidates; score alone never establishes identity.
+    """
+    P = pl()
+
+    (
+        stats_schedule,
+        stats_source,
+    ) = load_nba_stats_schedule(
+        sdv_season
+    )
+
+    required = {
+        "game_id",
+        "game_date",
+        "team_name",
+        "team_abbreviation",
+        "matchup",
+    }
+
+    missing = sorted(
+        required
+        - set(
+            stats_schedule.columns
+        )
+    )
+
+    if missing:
+        raise RuntimeError(
+            "NBA Stats schedule "
+            f"missing columns={missing}; "
+            f"columns={stats_schedule.columns}"
+        )
+
+    selected_columns = [
+        "game_id",
+        "game_date",
+        "team_name",
+        "team_abbreviation",
+        "matchup",
+    ]
+
+    if "pts" in stats_schedule.columns:
+        selected_columns.append(
+            "pts"
+        )
+
+    stats_games: dict[
+        str,
+        dict[str, Any],
+    ] = {}
+
+    bad_matchup_ids: set[str] = set()
+    duplicate_side_ids: set[str] = set()
+    bad_date_ids: set[str] = set()
+
+    for row in (
+        stats_schedule
+        .select(
+            selected_columns
+        )
+        .iter_rows(
+            named=True
+        )
+    ):
+        native_game_id = clean(
+            row.get(
+                "game_id"
+            )
+        )
+
+        if not native_game_id:
+            continue
+
+        date_key = normalize_legacy_schedule_date(
+            row.get(
+                "game_date"
+            )
+        )
+
+        if not date_key:
+            bad_date_ids.add(
+                native_game_id
+            )
+            continue
+
+        matchup = clean(
+            row.get(
+                "matchup"
+            )
+        ).lower()
+
+        if "@" in matchup:
+            side = "away"
+        elif "vs" in matchup:
+            side = "home"
+        else:
+            bad_matchup_ids.add(
+                native_game_id
+            )
+            continue
+
+        game = stats_games.setdefault(
+            native_game_id,
+            {
+                "game_date_key": date_key,
+                "home": None,
+                "away": None,
+            },
+        )
+
+        if (
+            game["game_date_key"]
+            != date_key
+        ):
+            bad_date_ids.add(
+                native_game_id
+            )
+            continue
+
+        if game[side] is not None:
+            duplicate_side_ids.add(
+                native_game_id
+            )
+            continue
+
+        points = None
+
+        if "pts" in row:
+            raw_points = row.get(
+                "pts"
+            )
+
+            if raw_points is not None:
+                try:
+                    points = float(
+                        raw_points
+                    )
+                except (
+                    TypeError,
+                    ValueError,
+                ):
+                    points = None
+
+        game[side] = {
+            "team_name": clean(
+                row.get(
+                    "team_name"
+                )
+            ),
+            "team_abbreviation": clean(
+                row.get(
+                    "team_abbreviation"
+                )
+            ),
+            "pts": points,
+        }
+
+    if bad_matchup_ids:
+        raise RuntimeError(
+            "NBA Stats schedule has unrecognized "
+            "matchup format for game_ids="
+            f"{sorted(bad_matchup_ids)[:20]}"
+        )
+
+    if bad_date_ids:
+        raise RuntimeError(
+            "NBA Stats schedule has unparseable or "
+            "conflicting game_date values for game_ids="
+            f"{sorted(bad_date_ids)[:20]}"
+        )
+
+    if duplicate_side_ids:
+        raise RuntimeError(
+            "NBA Stats schedule has multiple home or "
+            "away rows for game_ids="
+            f"{sorted(duplicate_side_ids)[:20]}"
+        )
+
+    incomplete_ids = sorted(
+        game_id
+        for game_id, game
+        in stats_games.items()
+        if (
+            game.get("home") is None
+            or game.get("away") is None
+        )
+    )
+
+    if incomplete_ids:
+        raise RuntimeError(
+            "NBA Stats schedule cannot identify both "
+            "teams for game_ids="
+            f"{incomplete_ids[:20]}"
+        )
+
+    if not stats_games:
+        raise RuntimeError(
+            "NBA Stats schedule produced zero usable games "
+            f"for SDV season={sdv_season}"
+        )
+
+    root = storage_root(
+        cfg
+    )
+
+    games_file = table_path(
+        root,
+        "nba",
+        internal_season,
+        "games",
+    )
+
+    if not games_file.exists():
+        raise RuntimeError(
+            "NBA canonical games file missing: "
+            f"{games_file}"
+        )
+
+    games = P.read_parquet(
+        games_file
+    )
+
+    required_games = {
+        "game_id",
+        "game_date",
+    }
+
+    missing_games = sorted(
+        required_games
+        - set(
+            games.columns
+        )
+    )
+
+    if missing_games:
+        raise RuntimeError(
+            "NBA games.parquet "
+            f"missing columns={missing_games}"
+        )
+
+    home_name_columns = [
+        column
+        for column
+        in (
+            "home_display_name",
+            "home_name",
+            "home_short_display_name",
+            "home_location",
+            "home_abbreviation",
+        )
+        if column
+        in games.columns
+    ]
+
+    away_name_columns = [
+        column
+        for column
+        in (
+            "away_display_name",
+            "away_name",
+            "away_short_display_name",
+            "away_location",
+            "away_abbreviation",
+        )
+        if column
+        in games.columns
+    ]
+
+    if (
+        not home_name_columns
+        or not away_name_columns
+    ):
+        raise RuntimeError(
+            "NBA games.parquet does not expose usable "
+            "home/away team-name columns"
+        )
+
+    canonical_columns = [
+        "game_id",
+        "game_date",
+        *home_name_columns,
+        *away_name_columns,
+    ]
+
+    for score_column in (
+        "home_score",
+        "away_score",
+    ):
+        if score_column in games.columns:
+            canonical_columns.append(
+                score_column
+            )
+
+    by_date: dict[
+        str,
+        list[dict[str, Any]],
+    ] = {}
+
+    canonical_bad_dates: list[str] = []
+
+    for row in (
+        games
+        .select(
+            canonical_columns
+        )
+        .iter_rows(
+            named=True
+        )
+    ):
+        espn_game_id = clean(
+            row.get(
+                "game_id"
+            )
+        )
+
+        date_key = normalize_legacy_schedule_date(
+            row.get(
+                "game_date"
+            )
+        )
+
+        if not date_key:
+            if espn_game_id:
+                canonical_bad_dates.append(
+                    espn_game_id
+                )
+            continue
+
+        by_date.setdefault(
+            date_key,
+            [],
+        ).append(
+            row
+        )
+
+    if canonical_bad_dates:
+        raise RuntimeError(
+            "NBA games.parquet has unparseable game_date "
+            "values for game_ids="
+            f"{sorted(canonical_bad_dates)[:20]}"
+        )
+
+    mappings: list[
+        dict[str, str]
+    ] = []
+
+    unmatched: list[str] = []
+    ambiguous: list[str] = []
+
+    for native_game_id in sorted(
+        stats_games
+    ):
+        game = stats_games[
+            native_game_id
+        ]
+
+        candidates = by_date.get(
+            game[
+                "game_date_key"
+            ],
+            [],
+        )
+
+        stats_home_variants = (
+            team_variants(
+                game["home"]["team_name"]
+            )
+            | team_variants(
+                game["home"]["team_abbreviation"]
+            )
+        )
+
+        stats_away_variants = (
+            team_variants(
+                game["away"]["team_name"]
+            )
+            | team_variants(
+                game["away"]["team_abbreviation"]
+            )
+        )
+
+        name_matches: list[
+            dict[str, Any]
+        ] = []
+
+        for candidate in candidates:
+            home_variants: set[str] = set()
+            away_variants: set[str] = set()
+
+            for column in home_name_columns:
+                home_variants.update(
+                    team_variants(
+                        candidate.get(
+                            column
+                        )
+                    )
+                )
+
+            for column in away_name_columns:
+                away_variants.update(
+                    team_variants(
+                        candidate.get(
+                            column
+                        )
+                    )
+                )
+
+            if (
+                stats_home_variants
+                & home_variants
+                and stats_away_variants
+                & away_variants
+            ):
+                name_matches.append(
+                    candidate
+                )
+
+        chosen = None
+        method = ""
+
+        if len(name_matches) == 1:
+            chosen = name_matches[0]
+            method = "date_home_away_team"
+
+        elif len(name_matches) > 1:
+            home_pts = game[
+                "home"
+            ].get(
+                "pts"
+            )
+
+            away_pts = game[
+                "away"
+            ].get(
+                "pts"
+            )
+
+            if (
+                home_pts is not None
+                and away_pts is not None
+            ):
+                score_matches = []
+
+                for candidate in name_matches:
+                    try:
+                        home_score = float(
+                            candidate.get(
+                                "home_score"
+                            )
+                        )
+                        away_score = float(
+                            candidate.get(
+                                "away_score"
+                            )
+                        )
+                    except (
+                        TypeError,
+                        ValueError,
+                    ):
+                        continue
+
+                    if (
+                        home_score
+                        == home_pts
+                        and away_score
+                        == away_pts
+                    ):
+                        score_matches.append(
+                            candidate
+                        )
+
+                if len(score_matches) == 1:
+                    chosen = score_matches[0]
+                    method = (
+                        "date_home_away_team_score"
+                    )
+
+        if chosen is None:
+            if len(name_matches) > 1:
+                ambiguous.append(
+                    native_game_id
+                )
+            else:
+                unmatched.append(
+                    native_game_id
+                )
+            continue
+
+        espn_game_id = clean(
+            chosen.get(
+                "game_id"
+            )
+        )
+
+        if not espn_game_id:
+            unmatched.append(
+                native_game_id
+            )
+            continue
+
+        mappings.append(
+            {
+                "nba_game_id": native_game_id,
+                "espn_game_id": espn_game_id,
+                "match_method": method,
+            }
+        )
+
+    if not mappings:
+        raise RuntimeError(
+            "NBA historical Stats->ESPN crosswalk "
+            "produced zero mapped games for "
+            f"internal={internal_season} sdv={sdv_season}"
+        )
+
+    xwalk = P.DataFrame(
+        mappings
+    )
+
+    duplicate_native = (
+        xwalk
+        .group_by(
+            "nba_game_id"
+        )
+        .agg(
+            P.col(
+                "espn_game_id"
+            )
+            .n_unique()
+            .alias(
+                "n"
+            )
+        )
+        .filter(
+            P.col(
+                "n"
+            )
+            > 1
+        )
+    )
+
+    duplicate_espn = (
+        xwalk
+        .group_by(
+            "espn_game_id"
+        )
+        .agg(
+            P.col(
+                "nba_game_id"
+            )
+            .n_unique()
+            .alias(
+                "n"
+            )
+        )
+        .filter(
+            P.col(
+                "n"
+            )
+            > 1
+        )
+    )
+
+    if (
+        duplicate_native.height
+        or duplicate_espn.height
+    ):
+        raise RuntimeError(
+            "NBA historical Stats->ESPN crosswalk "
+            "is not one-to-one"
+        )
+
+    for game_id in sorted(
+        unmatched
+    ):
+        log(
+            "NBA GAME UNMAPPED | "
+            f"nba_game_id={game_id} "
+            "reason=no_unique_date_home_away_team_match"
+        )
+
+    for game_id in sorted(
+        ambiguous
+    ):
+        log(
+            "NBA GAME AMBIGUOUS | "
+            f"nba_game_id={game_id} "
+            "reason=multiple_date_home_away_team_matches"
+        )
+
+    log(
+        "NBA LEGACY GAME CROSSWALK | "
+        f"internal={internal_season} "
+        f"sdv={sdv_season} "
+        f"stats_games={len(stats_games)} "
+        f"mapped={xwalk.height} "
+        f"unmatched={len(unmatched)} "
+        f"ambiguous={len(ambiguous)} "
+        f"source={stats_source}"
+    )
+
+    return (
+        xwalk.select(
+            "nba_game_id",
+            "espn_game_id",
+        ),
+        (
+            f"{stats_source} -> deterministic "
+            "game_date/home-away team match"
+        ),
+        "nba_game_id",
+    )
 
 
 def load_wnba_stats_schedule(
@@ -1465,7 +2261,7 @@ def build_wnba_legacy_schedule_crosswalk(
 
     if not mappings:
         raise RuntimeError(
-            "WNBA 2025 Stats->ESPN "
+            "WNBA Stats->ESPN "
             "crosswalk produced zero "
             "mapped games"
         )
@@ -1523,7 +2319,7 @@ def build_wnba_legacy_schedule_crosswalk(
         or duplicate_espn.height
     ):
         raise RuntimeError(
-            "WNBA 2025 Stats->ESPN "
+            "WNBA Stats->ESPN "
             "crosswalk is not one-to-one"
         )
 
@@ -1595,18 +2391,33 @@ def load_pro_schedule_crosswalk(
     )
 
     if (
-        league == "wnba"
-        and int(
+        int(
             sdv_season
         )
         < minimum_season
     ):
-        return (
-            build_wnba_legacy_schedule_crosswalk(
-                cfg,
-                internal_season,
-                sdv_season,
+        if league == "nba":
+            return (
+                build_nba_legacy_schedule_crosswalk(
+                    cfg,
+                    internal_season,
+                    sdv_season,
+                )
             )
+
+        if league == "wnba":
+            return (
+                build_wnba_legacy_schedule_crosswalk(
+                    cfg,
+                    internal_season,
+                    sdv_season,
+                )
+            )
+
+        raise RuntimeError(
+            "No historical schedule crosswalk strategy "
+            f"configured for league={league} "
+            f"sdv_season={sdv_season}"
         )
 
     P = pl()
