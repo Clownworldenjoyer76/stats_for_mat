@@ -1,6 +1,12 @@
 name: Basketball SDV History
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/basketball_sdv_history.yml"
+
   workflow_dispatch:
     inputs:
       league:
@@ -15,9 +21,9 @@ on:
           - wnba
 
       internal_season:
-        description: "Internal season to rebuild, for example 2025"
+        description: "Internal season to rebuild, or all configured seasons"
         required: true
-        default: "2025"
+        default: "all"
         type: string
 
       force_rebuild:
@@ -71,13 +77,29 @@ jobs:
           INTERNAL_SEASON="${{ inputs.internal_season }}"
           FORCE_REBUILD="${{ inputs.force_rebuild }}"
 
-          ARGS=(
-            --internal-season "$INTERNAL_SEASON"
-          )
+          if [[ -z "$LEAGUE" ]]; then
+            LEAGUE="all"
+          fi
+
+          if [[ -z "$INTERNAL_SEASON" ]]; then
+            INTERNAL_SEASON="all"
+          fi
+
+          if [[ -z "$FORCE_REBUILD" ]]; then
+            FORCE_REBUILD="false"
+          fi
+
+          ARGS=()
 
           if [[ "$LEAGUE" != "all" ]]; then
             ARGS+=(
               --league "$LEAGUE"
+            )
+          fi
+
+          if [[ "$INTERNAL_SEASON" != "all" ]]; then
+            ARGS+=(
+              --internal-season "$INTERNAL_SEASON"
             )
           fi
 
@@ -196,7 +218,7 @@ jobs:
           fi
 
           git commit \
-            -m "chore: update basketball SDV history ${{ inputs.internal_season }}"
+            -m "chore: update basketball SDV history"
 
           git pull \
             --rebase \
