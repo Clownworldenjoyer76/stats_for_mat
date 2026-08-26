@@ -881,11 +881,12 @@ def build_nba_legacy_schedule_crosswalk(
     """Map historical NBA Stats game IDs to canonical ESPN game IDs.
 
     SportsDataVerse 0.0.75 does not support load_nba_schedule_crosswalk
-    before season 2026. This uses the published NBA Stats schedule and matches
-    it to the canonical
-    ESPN schedule already written for the same internal season. Matches require
-    the same game date and both home/away teams. Score is used only to resolve
-    multiple team-matched candidates; score alone never establishes identity.
+    before season 2026. Historical NBA Stats schedules are one row per game
+    with explicit home_* and away_* columns. This matches those rows to the
+    canonical ESPN schedule already written for the same internal season.
+    Matches require the same game date and both home/away teams. Score is used
+    only to resolve multiple team-matched candidates; score alone never
+    establishes identity.
     """
     P = pl()
 
@@ -899,9 +900,10 @@ def build_nba_legacy_schedule_crosswalk(
     required = {
         "game_id",
         "game_date",
-        "team_name",
-        "team_abbreviation",
-        "matchup",
+        "home_team_name",
+        "home_team_abbreviation",
+        "away_team_name",
+        "away_team_abbreviation",
     }
 
     missing = sorted(
@@ -921,24 +923,82 @@ def build_nba_legacy_schedule_crosswalk(
     selected_columns = [
         "game_id",
         "game_date",
-        "team_name",
-        "team_abbreviation",
-        "matchup",
+        "home_team_name",
+        "home_team_abbreviation",
+        "away_team_name",
+        "away_team_abbreviation",
     ]
 
-    if "pts" in stats_schedule.columns:
-        selected_columns.append(
-            "pts"
-        )
+    for optional_column in (
+        "home_pts",
+        "away_pts",
+    ):
+        if optional_column in stats_schedule.columns:
+            selected_columns.append(
+                optional_column
+            )
 
     stats_games: dict[
         str,
         dict[str, Any],
     ] = {}
 
-    bad_matchup_ids: set[str] = set()
-    duplicate_side_ids: set[str] = set()
     bad_date_ids: set[str] = set()
+    conflicting_duplicate_ids: set[str] = set()
+
+    def maybe_float(value: Any) -> float | None:
+        if value is None:
+            return None
+
+        text = clean(value)
+
+        if not text:
+            return None
+
+        try:
+            return float(text)
+        except (
+            TypeError,
+            ValueError,
+        ):
+            return None
+
+    def normalized_identity(
+        game: dict[str, Any],
+    ) -> tuple[Any, ...]:
+        return (
+            clean(
+                game.get(
+                    "game_date_key"
+                )
+            ),
+            clean(
+                game["home"].get(
+                    "team_name"
+                )
+            ).lower(),
+            clean(
+                game["home"].get(
+                    "team_abbreviation"
+                )
+            ).lower(),
+            clean(
+                game["away"].get(
+                    "team_name"
+                )
+            ).lower(),
+            clean(
+                game["away"].get(
+                    "team_abbreviation"
+                )
+            ).lower(),
+            game["home"].get(
+                "pts"
+            ),
+            game["away"].get(
+                "pts"
+            ),
+        )
 
     for row in (
         stats_schedule
@@ -970,97 +1030,78 @@ def build_nba_legacy_schedule_crosswalk(
             )
             continue
 
-        matchup = clean(
-            row.get(
-                "matchup"
-            )
-        ).lower()
-
-        if "@" in matchup:
-            side = "away"
-        elif "vs" in matchup:
-            side = "home"
-        else:
-            bad_matchup_ids.add(
-                native_game_id
-            )
-            continue
-
-        game = stats_games.setdefault(
-            native_game_id,
-            {
-                "game_date_key": date_key,
-                "home": None,
-                "away": None,
-            },
-        )
-
-        if (
-            game["game_date_key"]
-            != date_key
-        ):
-            bad_date_ids.add(
-                native_game_id
-            )
-            continue
-
-        if game[side] is not None:
-            duplicate_side_ids.add(
-                native_game_id
-            )
-            continue
-
-        points = None
-
-        if "pts" in row:
-            raw_points = row.get(
-                "pts"
-            )
-
-            if raw_points is not None:
-                try:
-                    points = float(
-                        raw_points
+        game = {
+            "game_date_key": date_key,
+            "home": {
+                "team_name": clean(
+                    row.get(
+                        "home_team_name"
                     )
-                except (
-                    TypeError,
-                    ValueError,
-                ):
-                    points = None
-
-        game[side] = {
-            "team_name": clean(
-                row.get(
-                    "team_name"
-                )
-            ),
-            "team_abbreviation": clean(
-                row.get(
-                    "team_abbreviation"
-                )
-            ),
-            "pts": points,
+                ),
+                "team_abbreviation": clean(
+                    row.get(
+                        "home_team_abbreviation"
+                    )
+                ),
+                "pts": maybe_float(
+                    row.get(
+                        "home_pts"
+                    )
+                ),
+            },
+            "away": {
+                "team_name": clean(
+                    row.get(
+                        "away_team_name"
+                    )
+                ),
+                "team_abbreviation": clean(
+                    row.get(
+                        "away_team_abbreviation"
+                    )
+                ),
+                "pts": maybe_float(
+                    row.get(
+                        "away_pts"
+                    )
+                ),
+            },
         }
 
-    if bad_matchup_ids:
-        raise RuntimeError(
-            "NBA Stats schedule has unrecognized "
-            "matchup format for game_ids="
-            f"{sorted(bad_matchup_ids)[:20]}"
+        existing = stats_games.get(
+            native_game_id
         )
+
+        if existing is None:
+            stats_games[
+                native_game_id
+            ] = game
+            continue
+
+        if (
+            normalized_identity(
+                existing
+            )
+            != normalized_identity(
+                game
+            )
+        ):
+            conflicting_duplicate_ids.add(
+                native_game_id
+            )
 
     if bad_date_ids:
         raise RuntimeError(
-            "NBA Stats schedule has unparseable or "
-            "conflicting game_date values for game_ids="
+            "NBA Stats schedule has unparseable "
+            "game_date values for game_ids="
             f"{sorted(bad_date_ids)[:20]}"
         )
 
-    if duplicate_side_ids:
+    if conflicting_duplicate_ids:
         raise RuntimeError(
-            "NBA Stats schedule has multiple home or "
-            "away rows for game_ids="
-            f"{sorted(duplicate_side_ids)[:20]}"
+            "NBA Stats schedule has conflicting duplicate "
+            "rows for game_ids="
+            f"{sorted(conflicting_duplicate_ids)[:20]}"
         )
 
     incomplete_ids = sorted(
@@ -1068,8 +1109,30 @@ def build_nba_legacy_schedule_crosswalk(
         for game_id, game
         in stats_games.items()
         if (
-            game.get("home") is None
-            or game.get("away") is None
+            not (
+                team_variants(
+                    game["home"][
+                        "team_name"
+                    ]
+                )
+                | team_variants(
+                    game["home"][
+                        "team_abbreviation"
+                    ]
+                )
+            )
+            or not (
+                team_variants(
+                    game["away"][
+                        "team_name"
+                    ]
+                )
+                | team_variants(
+                    game["away"][
+                        "team_abbreviation"
+                    ]
+                )
+            )
         )
     )
 
