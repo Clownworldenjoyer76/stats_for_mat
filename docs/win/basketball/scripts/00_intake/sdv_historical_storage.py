@@ -748,9 +748,14 @@ def normalize_legacy_schedule_date(value: Any) -> str:
 
 
 def load_nba_stats_schedule(
+    internal_season: int,
     sdv_season: int,
 ):
-    """Load the published NBA Stats schedule used for legacy ID matching."""
+    """Load the published NBA Stats schedule used for legacy ID matching.
+
+    The SportsDataVerse loader uses the NBA season start year, while the
+    published release asset used as fallback is keyed by the season end year.
+    """
     P = pl()
 
     module_name = (
@@ -778,7 +783,7 @@ def load_nba_stats_schedule(
             frame = loader(
                 seasons=[
                     int(
-                        sdv_season
+                        internal_season
                     )
                 ],
                 return_as_pandas=False,
@@ -806,7 +811,8 @@ def load_nba_stats_schedule(
 
         log(
             "NBA STATS SCHEDULE LOADER FAILED | "
-            f"season={sdv_season} "
+            f"loader_season={internal_season} "
+            f"fallback_asset_season={sdv_season} "
             f"error={loader_error} "
             "action=release_fallback"
         )
@@ -819,7 +825,8 @@ def load_nba_stats_schedule(
 
         log(
             "NBA STATS SCHEDULE LOADER FAILED | "
-            f"season={sdv_season} "
+            f"loader_season={internal_season} "
+            f"fallback_asset_season={sdv_season} "
             f"error={loader_error} "
             "action=release_fallback"
         )
@@ -849,7 +856,8 @@ def load_nba_stats_schedule(
         raise RuntimeError(
             "NBA Stats schedule loader and published "
             "release fallback both failed; "
-            f"season={sdv_season}; "
+            f"loader_season={internal_season}; "
+            f"fallback_asset_season={sdv_season}; "
             f"loader_error={loader_error}; "
             f"fallback_error={exc}"
         ) from exc
@@ -858,7 +866,8 @@ def load_nba_stats_schedule(
         raise RuntimeError(
             "NBA Stats schedule published release "
             "returned zero rows; "
-            f"season={sdv_season}; "
+            f"loader_season={internal_season}; "
+            f"fallback_asset_season={sdv_season}; "
             f"loader_error={loader_error}; "
             f"url={url}"
         )
@@ -892,7 +901,8 @@ def build_nba_legacy_schedule_crosswalk(
         stats_schedule,
         stats_source,
     ) = load_nba_stats_schedule(
-        sdv_season
+        internal_season,
+        sdv_season,
     )
 
     columns = set(
