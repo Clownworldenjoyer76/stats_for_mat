@@ -1,0 +1,214 @@
+{
+  "calibration_compatibility": {
+    "moneyline": "HOME/AWAY calibration methods are none; raw probabilities remain complementary",
+    "spread": "HOME is canonical calibrated side; AWAY is 1-HOME",
+    "status": "PASS",
+    "total": "OVER is canonical calibrated side; UNDER is 1-OVER"
+  },
+  "design_matrix": {
+    "categorical_inputs": [
+      "venue_id"
+    ],
+    "columns": 114,
+    "numeric_inputs": [
+      "is_neutral_site",
+      "home_court_indicator",
+      "away_court_indicator",
+      "diff_court_indicator",
+      "home_rest_days",
+      "away_rest_days",
+      "diff_rest_days",
+      "home_player_strength",
+      "away_player_strength",
+      "diff_player_strength",
+      "home_player_minutes",
+      "away_player_minutes",
+      "diff_player_minutes",
+      "home_adj_off_eff_5",
+      "away_adj_off_eff_5",
+      "diff_adj_off_eff_5",
+      "home_adj_def_eff_5",
+      "away_adj_def_eff_5",
+      "diff_adj_def_eff_5",
+      "home_pace_5",
+      "away_pace_5",
+      "diff_pace_5",
+      "home_efg_pct_5",
+      "away_efg_pct_5",
+      "diff_efg_pct_5",
+      "home_tov_rate_5",
+      "away_tov_rate_5",
+      "diff_tov_rate_5",
+      "home_orb_rate_5",
+      "away_orb_rate_5",
+      "diff_orb_rate_5",
+      "home_ft_rate_5",
+      "away_ft_rate_5",
+      "diff_ft_rate_5",
+      "home_recent_margin_5",
+      "away_recent_margin_5",
+      "diff_recent_margin_5",
+      "home_recent_net_eff_5",
+      "away_recent_net_eff_5",
+      "diff_recent_net_eff_5",
+      "home_adj_off_eff_10",
+      "away_adj_off_eff_10",
+      "diff_adj_off_eff_10",
+      "home_adj_def_eff_10",
+      "away_adj_def_eff_10",
+      "diff_adj_def_eff_10",
+      "home_pace_10",
+      "away_pace_10",
+      "diff_pace_10",
+      "home_efg_pct_10",
+      "away_efg_pct_10",
+      "diff_efg_pct_10",
+      "home_tov_rate_10",
+      "away_tov_rate_10",
+      "diff_tov_rate_10",
+      "home_orb_rate_10",
+      "away_orb_rate_10",
+      "diff_orb_rate_10",
+      "home_ft_rate_10",
+      "away_ft_rate_10",
+      "diff_ft_rate_10",
+      "home_recent_margin_10",
+      "away_recent_margin_10",
+      "diff_recent_margin_10",
+      "home_recent_net_eff_10",
+      "away_recent_net_eff_10",
+      "diff_recent_net_eff_10",
+      "home_adj_off_eff_20",
+      "away_adj_off_eff_20",
+      "diff_adj_off_eff_20",
+      "home_adj_def_eff_20",
+      "away_adj_def_eff_20",
+      "diff_adj_def_eff_20",
+      "home_pace_20",
+      "away_pace_20",
+      "diff_pace_20",
+      "home_efg_pct_20",
+      "away_efg_pct_20",
+      "diff_efg_pct_20",
+      "home_tov_rate_20",
+      "away_tov_rate_20",
+      "diff_tov_rate_20",
+      "home_orb_rate_20",
+      "away_orb_rate_20",
+      "diff_orb_rate_20",
+      "home_ft_rate_20",
+      "away_ft_rate_20",
+      "diff_ft_rate_20",
+      "home_recent_margin_20",
+      "away_recent_margin_20",
+      "diff_recent_margin_20",
+      "home_recent_net_eff_20",
+      "away_recent_net_eff_20",
+      "diff_recent_net_eff_20"
+    ],
+    "rows": 527
+  },
+  "development": {
+    "rows": 527,
+    "rows_by_season": {
+      "2023": 263,
+      "2024": 264
+    },
+    "seasons": [
+      2023,
+      2024
+    ]
+  },
+  "feature_version": "sdv_model_v1_pit_v2",
+  "generated_at_utc": "2026-08-26T20:07:51.922620+00:00",
+  "league": "WNBA",
+  "lockbox": {
+    "read_during_training": false,
+    "reserved": true,
+    "season": 2025,
+    "used_for_model_fit": false,
+    "used_for_model_selection": false,
+    "used_for_residual_distribution": false
+  },
+  "model_type": "ridge_linear",
+  "model_version": "sdv_model_v1",
+  "models": {
+    "margin": {
+      "contradictory_home_away_models": false,
+      "development_fit_metrics": {
+        "mae": 9.121314842931103,
+        "mean_residual": 7.07335570069583e-08,
+        "rmse": 11.326930618769746
+      },
+      "single_model": true
+    },
+    "total": {
+      "contradictory_over_under_models": false,
+      "development_fit_metrics": {
+        "mae": 12.946043118360784,
+        "mean_residual": 1.6657135568819862e-08,
+        "rmse": 17.359198011287713
+      },
+      "single_model": true
+    }
+  },
+  "ncaam_venue_home_court_validation": {
+    "league": "WNBA",
+    "status": "NOT_APPLICABLE"
+  },
+  "oos": {
+    "configured_folds": 5,
+    "method": "expanding_window",
+    "minimum_training_date_fraction": 0.5,
+    "prediction_rows": 264
+  },
+  "probability_engine": {
+    "moneyline": "derived from expected margin and OOS margin residual distribution",
+    "spread": "derived from expected margin + home spread line and OOS margin residual distribution",
+    "total": "derived from expected total + total line and OOS total residual distribution",
+    "validation": {
+      "home_ml_plus_away_ml": "exact complement",
+      "home_spread_plus_away_spread": "exact complement",
+      "maximum_complement_error": 0.0,
+      "over_plus_under": "exact complement",
+      "tests": 225
+    }
+  },
+  "production_safety": {
+    "dratings_model_overwritten": false,
+    "models_directory_touched": false,
+    "production_model_written": false
+  },
+  "residual_distributions": {
+    "family": "normal",
+    "lockbox_used": false,
+    "margin": {
+      "mae": 10.436956474741079,
+      "mean": 0.4339896389074053,
+      "n": 264,
+      "p05": -20.21931313699741,
+      "p50": 0.28635759779764647,
+      "p95": 22.458144502405023,
+      "rmse": 13.10178854960499,
+      "std": 13.119469796311789
+    },
+    "source": "expanding_window_oos_only",
+    "total": {
+      "mae": 18.21533068854877,
+      "mean": 3.6899710475720893,
+      "n": 264,
+      "p05": -30.27916296134106,
+      "p50": 0.8436750106762503,
+      "p95": 33.14623378269822,
+      "rmse": 31.980936736781082,
+      "std": 31.827685359347296
+    }
+  },
+  "ridge_alpha": 10.0,
+  "schema_version": 1,
+  "status": "PASS",
+  "targets": {
+    "margin": "actual_home_points - actual_away_points",
+    "total": "actual_home_points + actual_away_points"
+  }
+}
