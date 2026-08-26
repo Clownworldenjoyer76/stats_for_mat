@@ -15,7 +15,10 @@ import yaml
 BASE = Path("docs/win/basketball")
 STORAGE_CONFIG = BASE / "config/sdv_storage.yaml"
 SEASON_CONFIG = BASE / "config/sdv_seasons.yaml"
-VALIDATION_LOG = BASE / "errors/99_validation/sdv_storage_validation.txt"
+VALIDATION_LOG = (
+    BASE
+    / "errors/99_validation/sdv_storage_validation.txt"
+)
 
 EXPECTED_SDV_VERSION = "0.0.75"
 
@@ -37,7 +40,10 @@ TABLES = (
 )
 
 REQUIRED_FILES = (
-    *(f"{table}.parquet" for table in TABLES),
+    *(
+        f"{table}.parquet"
+        for table in TABLES
+    ),
     "manifest.json",
 )
 
@@ -76,10 +82,6 @@ REQUIRED_COLUMNS = {
     ),
 }
 
-# Required normalized columns must exist. Null-value enforcement is separate:
-# source player boxscore releases legitimately contain a small number of rows
-# without an athlete/player id, so player_game.player_id is schema-required
-# but not required to be non-null on every source row.
 NON_NULL_REQUIRED_COLUMNS = {
     "games": (
         "game_id",
@@ -106,6 +108,20 @@ NON_NULL_REQUIRED_COLUMNS = {
     ),
 }
 
+NCAAM_GAMES_VENUE_COLUMNS = (
+    "neutral_site",
+    "venue_id",
+    "venue_full_name",
+    "venue_name",
+    "home_team_id",
+    "away_team_id",
+)
+
+NCAAM_GAMES_SOURCE_TEAM_ID_COLUMNS = (
+    "home_id",
+    "away_id",
+)
+
 GAME_KEY_TABLES = (
     "team_game",
     "player_game",
@@ -120,7 +136,6 @@ VALID_MANIFEST_STATUSES = {
     "existing_not_rebuilt",
 }
 
-# SportsDataVerse 0.0.75 NCAAM ncaa_mbb_lineups() identity.
 NCAAM_LINEUP_IDENTITY = (
     "game_id",
     "team",
@@ -131,9 +146,6 @@ NCAAM_LINEUP_IDENTITY = (
     "p5",
 )
 
-# SportsDataVerse NBA/WNBA per-game lineup releases expose one row per
-# action with the period plus the five home and five away players on court.
-# This is intentionally different from the NCAAM bigballR p1..p5/team schema.
 PRO_LINEUP_IDENTITY = (
     "game_id",
     "action_number",
@@ -185,9 +197,7 @@ class Validation:
         self,
         text: str,
     ) -> None:
-        self.lines.append(
-            text
-        )
+        self.lines.append(text)
 
     def passed(
         self,
@@ -201,9 +211,7 @@ class Validation:
         self,
         text: str,
     ) -> None:
-        self.warnings.append(
-            text
-        )
+        self.warnings.append(text)
         self.emit(
             f"WARN | {text}"
         )
@@ -212,16 +220,12 @@ class Validation:
         self,
         text: str,
     ) -> None:
-        self.errors.append(
-            text
-        )
+        self.errors.append(text)
         self.emit(
             f"FAIL | {text}"
         )
 
-    def write_log(
-        self,
-    ) -> None:
+    def write_log(self) -> None:
         VALIDATION_LOG.parent.mkdir(
             parents=True,
             exist_ok=True,
@@ -242,18 +246,14 @@ def clean(
     if value is None:
         return ""
 
-    return str(
-        value
-    ).strip()
+    return str(value).strip()
 
 
 def read_yaml(
     path: Path,
 ) -> dict[str, Any]:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        raise FileNotFoundError(path)
 
     payload = (
         yaml.safe_load(
@@ -264,10 +264,7 @@ def read_yaml(
         or {}
     )
 
-    if not isinstance(
-        payload,
-        dict,
-    ):
+    if not isinstance(payload, dict):
         raise ValueError(
             "YAML root must be a mapping: "
             f"{path}"
@@ -293,9 +290,7 @@ def storage_root(
         )
 
     root = clean(
-        storage.get(
-            "root"
-        )
+        storage.get("root")
     )
 
     if not root:
@@ -303,9 +298,7 @@ def storage_root(
             "storage.root is empty"
         )
 
-    return Path(
-        root
-    )
+    return Path(root)
 
 
 def configured_jobs(
@@ -357,9 +350,7 @@ def configured_jobs(
             jobs.append(
                 (
                     league,
-                    int(
-                        season
-                    ),
+                    int(season),
                 )
             )
 
@@ -380,8 +371,7 @@ def mapped_sdv_season(
             leagues,
             dict,
         )
-        or league
-        not in leagues
+        or league not in leagues
     ):
         raise KeyError(
             "Missing league mapping: "
@@ -419,9 +409,7 @@ def mapped_sdv_season(
 
     if value is None:
         value = mappings.get(
-            str(
-                internal_season
-            )
+            str(internal_season)
         )
 
     if value is None:
@@ -430,9 +418,7 @@ def mapped_sdv_season(
             f"{league}:{internal_season}"
         )
 
-    return int(
-        value
-    )
+    return int(value)
 
 
 def parquet_info(
@@ -441,9 +427,7 @@ def parquet_info(
     int,
     list[str],
 ]:
-    scan = pl.scan_parquet(
-        path
-    )
+    scan = pl.scan_parquet(path)
 
     columns = (
         scan.collect_schema()
@@ -472,9 +456,7 @@ def metadata_stats(
     str,
     dict[str, Any],
 ]:
-    scan = pl.scan_parquet(
-        path
-    )
+    scan = pl.scan_parquet(path)
 
     available = set(
         scan.collect_schema()
@@ -483,10 +465,8 @@ def metadata_stats(
 
     present = [
         column
-        for column
-        in METADATA_COLUMNS
-        if column
-        in available
+        for column in METADATA_COLUMNS
+        if column in available
     ]
 
     if not present:
@@ -499,24 +479,18 @@ def metadata_stats(
     for column in present:
         expressions.extend(
             [
-                pl.col(
-                    column
-                )
+                pl.col(column)
                 .null_count()
                 .alias(
                     f"{column}__nulls"
                 ),
-                pl.col(
-                    column
-                )
+                pl.col(column)
                 .drop_nulls()
                 .n_unique()
                 .alias(
                     f"{column}__unique"
                 ),
-                pl.col(
-                    column
-                )
+                pl.col(column)
                 .drop_nulls()
                 .first()
                 .alias(
@@ -526,9 +500,7 @@ def metadata_stats(
         )
 
     row = (
-        scan.select(
-            expressions
-        )
+        scan.select(expressions)
         .collect()
         .to_dicts()[0]
     )
@@ -549,8 +521,7 @@ def metadata_stats(
                 f"{column}__first"
             ],
         }
-        for column
-        in present
+        for column in present
     }
 
 
@@ -564,9 +535,7 @@ def null_blank_counts(
         int,
     ],
 ]:
-    scan = pl.scan_parquet(
-        path
-    )
+    scan = pl.scan_parquet(path)
 
     available = set(
         scan.collect_schema()
@@ -575,10 +544,8 @@ def null_blank_counts(
 
     present = [
         column
-        for column
-        in columns
-        if column
-        in available
+        for column in columns
+        if column in available
     ]
 
     if not present:
@@ -591,25 +558,19 @@ def null_blank_counts(
     for column in present:
         expressions.extend(
             [
-                pl.col(
-                    column
-                )
+                pl.col(column)
                 .null_count()
                 .alias(
                     f"{column}__nulls"
                 ),
-                pl.col(
-                    column
-                )
+                pl.col(column)
                 .cast(
                     pl.String,
                     strict=False,
                 )
                 .str.strip_chars()
                 .eq("")
-                .fill_null(
-                    False
-                )
+                .fill_null(False)
                 .sum()
                 .alias(
                     f"{column}__blanks"
@@ -618,9 +579,7 @@ def null_blank_counts(
         )
 
     row = (
-        scan.select(
-            expressions
-        )
+        scan.select(expressions)
         .collect()
         .to_dicts()[0]
     )
@@ -638,8 +597,7 @@ def null_blank_counts(
                 ]
             ),
         )
-        for column
-        in present
+        for column in present
     }
 
 
@@ -647,30 +605,20 @@ def unique_game_ids(
     path: Path,
 ) -> set[str]:
     frame = (
-        pl.scan_parquet(
-            path
-        )
+        pl.scan_parquet(path)
         .select(
-            pl.col(
-                "game_id"
-            )
+            pl.col("game_id")
             .cast(
                 pl.String,
                 strict=False,
             )
             .str.strip_chars()
-            .alias(
-                "game_id"
-            )
+            .alias("game_id")
         )
         .filter(
-            pl.col(
-                "game_id"
-            ).is_not_null()
+            pl.col("game_id").is_not_null()
             & (
-                pl.col(
-                    "game_id"
-                )
+                pl.col("game_id")
                 != ""
             )
         )
@@ -692,16 +640,12 @@ def validate_metadata(
     internal_season: int,
     sdv_season: int,
 ) -> str:
-    stats = metadata_stats(
-        path
-    )
+    stats = metadata_stats(path)
 
     missing = [
         column
-        for column
-        in METADATA_COLUMNS
-        if column
-        not in stats
+        for column in METADATA_COLUMNS
+        if column not in stats
     ]
 
     if missing:
@@ -712,15 +656,11 @@ def validate_metadata(
         return ""
 
     expected = {
-        "league": (
-            league.upper()
-        ),
+        "league": league.upper(),
         "internal_season": (
             internal_season
         ),
-        "sdv_season": (
-            sdv_season
-        ),
+        "sdv_season": sdv_season,
     }
 
     for (
@@ -734,10 +674,7 @@ def validate_metadata(
                 f"{info['nulls']} null rows"
             )
 
-        if (
-            info["unique"]
-            != 1
-        ):
+        if info["unique"] != 1:
             validation.fail(
                 f"{path} metadata "
                 f"{column} has "
@@ -751,32 +688,25 @@ def validate_metadata(
     ) in expected.items():
         actual = stats[
             column
-        ][
-            "first"
-        ]
+        ]["first"]
 
         if column in {
             "internal_season",
             "sdv_season",
         }:
             try:
-                actual = int(
-                    actual
-                )
+                actual = int(actual)
+
             except (
                 TypeError,
                 ValueError,
             ):
                 pass
-        else:
-            actual = clean(
-                actual
-            )
 
-        if (
-            actual
-            != expected_value
-        ):
+        else:
+            actual = clean(actual)
+
+        if actual != expected_value:
             validation.fail(
                 f"{path} metadata "
                 f"{column}={actual!r}; "
@@ -788,11 +718,7 @@ def validate_metadata(
         "ingested_at_utc",
     ):
         if not clean(
-            stats[
-                column
-            ][
-                "first"
-            ]
+            stats[column]["first"]
         ):
             validation.fail(
                 f"{path} metadata "
@@ -802,9 +728,7 @@ def validate_metadata(
     return clean(
         stats[
             "source_loader"
-        ][
-            "first"
-        ]
+        ]["first"]
     )
 
 
@@ -821,10 +745,8 @@ def validate_required_keys(
 
     missing = [
         column
-        for column
-        in required
-        if column
-        not in columns
+        for column in required
+        if column not in columns
     ]
 
     if missing:
@@ -853,10 +775,7 @@ def validate_required_keys(
             blanks,
         ),
     ) in counts.items():
-        if (
-            nulls
-            or blanks
-        ):
+        if nulls or blanks:
             validation.fail(
                 f"{path} required key "
                 f"{column} has "
@@ -865,17 +784,13 @@ def validate_required_keys(
             )
 
     if (
-        table
-        == "player_game"
-        and "player_id"
-        in columns
+        table == "player_game"
+        and "player_id" in columns
     ):
         player_id_counts = (
             null_blank_counts(
                 path,
-                (
-                    "player_id",
-                ),
+                ("player_id",),
             )
         )
 
@@ -903,6 +818,227 @@ def validate_required_keys(
             )
 
 
+def normalize_venue_name_expr(
+    column: str,
+) -> pl.Expr:
+    return (
+        pl.col(column)
+        .cast(
+            pl.String,
+            strict=False,
+        )
+        .fill_null("")
+        .str.strip_chars()
+        .str.replace_all(
+            r"\s+",
+            " ",
+        )
+    )
+
+
+def normalize_id_expr(
+    column: str,
+) -> pl.Expr:
+    return (
+        pl.col(column)
+        .cast(
+            pl.String,
+            strict=False,
+        )
+        .fill_null("")
+        .str.strip_chars()
+        .str.replace(
+            r"\.0$",
+            "",
+        )
+    )
+
+
+def validate_ncaam_venue_context(
+    validation: Validation,
+    path: Path,
+    columns: list[str],
+) -> None:
+    column_set = set(columns)
+
+    missing = [
+        column
+        for column
+        in NCAAM_GAMES_VENUE_COLUMNS
+        if column not in column_set
+    ]
+
+    missing_source_ids = [
+        column
+        for column
+        in NCAAM_GAMES_SOURCE_TEAM_ID_COLUMNS
+        if column not in column_set
+    ]
+
+    if missing:
+        validation.fail(
+            f"{path} NCAAM venue context "
+            f"missing columns {missing}"
+        )
+        return
+
+    if missing_source_ids:
+        validation.fail(
+            f"{path} NCAAM source team IDs "
+            f"missing columns {missing_source_ids}"
+        )
+        return
+
+    frame = pl.scan_parquet(path)
+
+    neutral_text = (
+        pl.col("neutral_site")
+        .cast(
+            pl.String,
+            strict=False,
+        )
+        .fill_null("")
+        .str.strip_chars()
+        .str.to_lowercase()
+    )
+
+    stats = (
+        frame.select(
+            [
+                pl.col("neutral_site")
+                .null_count()
+                .alias(
+                    "neutral_nulls"
+                ),
+                neutral_text
+                .eq("")
+                .sum()
+                .alias(
+                    "neutral_blanks"
+                ),
+                (
+                    ~neutral_text.is_in(
+                        [
+                            "true",
+                            "false",
+                            "1",
+                            "0",
+                            "yes",
+                            "no",
+                        ]
+                    )
+                    & neutral_text.ne("")
+                )
+                .sum()
+                .alias(
+                    "neutral_invalid"
+                ),
+                (
+                    normalize_id_expr(
+                        "home_id"
+                    )
+                    != normalize_id_expr(
+                        "home_team_id"
+                    )
+                )
+                .sum()
+                .alias(
+                    "home_id_mismatch"
+                ),
+                (
+                    normalize_id_expr(
+                        "away_id"
+                    )
+                    != normalize_id_expr(
+                        "away_team_id"
+                    )
+                )
+                .sum()
+                .alias(
+                    "away_id_mismatch"
+                ),
+                (
+                    normalize_venue_name_expr(
+                        "venue_full_name"
+                    )
+                    != normalize_venue_name_expr(
+                        "venue_name"
+                    )
+                )
+                .sum()
+                .alias(
+                    "venue_name_mismatch"
+                ),
+                pl.col("venue_id")
+                .is_not_null()
+                .sum()
+                .alias(
+                    "venue_id_present"
+                ),
+                normalize_venue_name_expr(
+                    "venue_full_name"
+                )
+                .ne("")
+                .sum()
+                .alias(
+                    "venue_name_present"
+                ),
+            ]
+        )
+        .collect()
+        .to_dicts()[0]
+    )
+
+    if stats["neutral_invalid"]:
+        validation.fail(
+            f"{path} neutral_site has "
+            "unrecognized nonblank values="
+            f"{stats['neutral_invalid']}"
+        )
+
+    if stats["home_id_mismatch"]:
+        validation.fail(
+            f"{path} home_team_id does not "
+            "preserve source home_id rows="
+            f"{stats['home_id_mismatch']}"
+        )
+
+    if stats["away_id_mismatch"]:
+        validation.fail(
+            f"{path} away_team_id does not "
+            "preserve source away_id rows="
+            f"{stats['away_id_mismatch']}"
+        )
+
+    if stats["venue_name_mismatch"]:
+        validation.fail(
+            f"{path} venue_name is not the "
+            "normalized venue_full_name rows="
+            f"{stats['venue_name_mismatch']}"
+        )
+
+    if (
+        not stats["neutral_invalid"]
+        and not stats["home_id_mismatch"]
+        and not stats["away_id_mismatch"]
+        and not stats[
+            "venue_name_mismatch"
+        ]
+    ):
+        validation.passed(
+            f"{path} NCAAM venue context "
+            "preserved "
+            f"neutral_nulls="
+            f"{stats['neutral_nulls']} "
+            f"neutral_blanks="
+            f"{stats['neutral_blanks']} "
+            f"venue_id_present="
+            f"{stats['venue_id_present']} "
+            f"venue_name_present="
+            f"{stats['venue_name_present']}"
+        )
+
+
 def detect_pro_lineup_identity(
     columns: list[str],
 ) -> tuple[
@@ -910,16 +1046,13 @@ def detect_pro_lineup_identity(
     list[str],
     str,
 ]:
-    column_set = set(
-        columns
-    )
+    column_set = set(columns)
 
     missing = [
         column
         for column
         in PRO_LINEUP_IDENTITY
-        if column
-        not in column_set
+        if column not in column_set
     ]
 
     if missing:
@@ -934,9 +1067,7 @@ def detect_pro_lineup_identity(
 
     return (
         True,
-        list(
-            PRO_LINEUP_IDENTITY
-        ),
+        list(PRO_LINEUP_IDENTITY),
         (
             "game/action/period plus "
             "home/away five-player identity"
@@ -950,17 +1081,14 @@ def validate_lineups(
     league: str,
     columns: list[str],
 ) -> None:
-    column_set = set(
-        columns
-    )
+    column_set = set(columns)
 
     if league == "ncaam":
         missing = [
             column
             for column
             in NCAAM_LINEUP_IDENTITY
-            if column
-            not in column_set
+            if column not in column_set
         ]
 
         if missing:
@@ -970,6 +1098,7 @@ def validate_lineups(
                 "expected "
                 f"{list(NCAAM_LINEUP_IDENTITY)}"
             )
+
         else:
             validation.passed(
                 f"{path} NCAAM lineup "
@@ -994,6 +1123,7 @@ def validate_lineups(
             f"identity type={identity_type} "
             f"columns={identity_columns}"
         )
+
     else:
         validation.fail(
             f"{path} "
@@ -1021,10 +1151,7 @@ def collect_configured_limits(
         ]
     ] = []
 
-    if isinstance(
-        node,
-        dict,
-    ):
+    if isinstance(node, dict):
         for (
             raw_key,
             value,
@@ -1054,36 +1181,23 @@ def collect_configured_limits(
                         float,
                     ),
                 )
-                and int(
-                    value
-                )
-                > 0
+                and int(value) > 0
             ):
-                if (
-                    key
-                    in GAME_LIMIT_KEYS
-                ):
+                if key in GAME_LIMIT_KEYS:
                     found.append(
                         (
                             path_text,
                             "games",
-                            int(
-                                value
-                            ),
+                            int(value),
                         )
                     )
 
-                elif (
-                    key
-                    in ROW_LIMIT_KEYS
-                ):
+                elif key in ROW_LIMIT_KEYS:
                     found.append(
                         (
                             path_text,
                             "rows",
-                            int(
-                                value
-                            ),
+                            int(value),
                         )
                     )
 
@@ -1094,8 +1208,7 @@ def collect_configured_limits(
                         in ".".join(
                             path
                         ).lower()
-                        for token
-                        in (
+                        for token in (
                             "loader",
                             "truncate",
                             "truncation",
@@ -1107,9 +1220,7 @@ def collect_configured_limits(
                         (
                             path_text,
                             "generic",
-                            int(
-                                value
-                            ),
+                            int(value),
                         )
                     )
 
@@ -1120,24 +1231,17 @@ def collect_configured_limits(
                 )
             )
 
-    elif isinstance(
-        node,
-        list,
-    ):
+    elif isinstance(node, list):
         for (
             index,
             value,
-        ) in enumerate(
-            node
-        ):
+        ) in enumerate(node):
             found.extend(
                 collect_configured_limits(
                     value,
                     (
                         *path,
-                        str(
-                            index
-                        ),
+                        str(index),
                     ),
                 )
             )
@@ -1151,10 +1255,7 @@ def true_truncation_flags(
 ) -> list[str]:
     found: list[str] = []
 
-    if isinstance(
-        node,
-        dict,
-    ):
+    if isinstance(node, dict):
         for (
             raw_key,
             value,
@@ -1186,24 +1287,17 @@ def true_truncation_flags(
                 )
             )
 
-    elif isinstance(
-        node,
-        list,
-    ):
+    elif isinstance(node, list):
         for (
             index,
             value,
-        ) in enumerate(
-            node
-        ):
+        ) in enumerate(node):
             found.extend(
                 true_truncation_flags(
                     value,
                     (
                         *path,
-                        str(
-                            index
-                        ),
+                        str(index),
                     ),
                 )
             )
@@ -1228,6 +1322,7 @@ def validate_manifest(
                 encoding="utf-8"
             )
         )
+
     except Exception as exc:
         validation.fail(
             f"Cannot read manifest "
@@ -1240,8 +1335,7 @@ def validate_manifest(
         dict,
     ):
         validation.fail(
-            f"{path} root is not "
-            "an object"
+            f"{path} root is not an object"
         )
         return
 
@@ -1259,15 +1353,13 @@ def validate_manifest(
             f"{path} "
             "sportsdataverse_version="
             f"{manifest_version!r}; "
-            f"expected="
+            "expected="
             f"{EXPECTED_SDV_VERSION!r}"
         )
 
     if (
         clean(
-            manifest.get(
-                "league"
-            )
+            manifest.get("league")
         ).upper()
         != league.upper()
     ):
@@ -1283,6 +1375,7 @@ def validate_manifest(
                 "internal_season"
             )
         )
+
     except (
         TypeError,
         ValueError,
@@ -1301,44 +1394,35 @@ def validate_manifest(
 
     try:
         manifest_sdv = int(
-            manifest.get(
-                "sdv_season"
-            )
+            manifest.get("sdv_season")
         )
+
     except (
         TypeError,
         ValueError,
     ):
         manifest_sdv = None
 
-    if (
-        manifest_sdv
-        != sdv_season
-    ):
+    if manifest_sdv != sdv_season:
         validation.fail(
             f"{path} sdv_season="
             f"{manifest.get('sdv_season')!r}; "
             f"expected={sdv_season}"
         )
 
-    entries = manifest.get(
-        "tables"
-    )
+    entries = manifest.get("tables")
 
     if not isinstance(
         entries,
         dict,
     ):
         validation.fail(
-            f"{path} tables is "
-            "not an object"
+            f"{path} tables is not an object"
         )
         return
 
     for table in TABLES:
-        entry = entries.get(
-            table
-        )
+        entry = entries.get(table)
 
         if not isinstance(
             entry,
@@ -1359,10 +1443,9 @@ def validate_manifest(
 
         try:
             manifest_rows = int(
-                entry.get(
-                    "rows"
-                )
+                entry.get("rows")
             )
+
         except (
             TypeError,
             ValueError,
@@ -1375,18 +1458,14 @@ def validate_manifest(
         ):
             validation.fail(
                 f"{path} table={table} "
-                f"rows manifest="
+                "rows manifest="
                 f"{entry.get('rows')!r} "
                 f"actual={actual['rows']}"
             )
 
         if (
-            entry.get(
-                "columns"
-            )
-            != actual[
-                "columns"
-            ]
+            entry.get("columns")
+            != actual["columns"]
         ):
             validation.fail(
                 f"{path} table={table} "
@@ -1400,22 +1479,18 @@ def validate_manifest(
 
         if (
             clean(
-                entry.get(
-                    "filename"
-                )
+                entry.get("filename")
             )
             != expected_filename
         ):
             validation.fail(
                 f"{path} table={table} "
-                f"wrong filename="
+                "wrong filename="
                 f"{entry.get('filename')!r}"
             )
 
         status = clean(
-            entry.get(
-                "status"
-            )
+            entry.get("status")
         )
 
         if (
@@ -1428,9 +1503,7 @@ def validate_manifest(
             )
 
         if not clean(
-            entry.get(
-                "source_loader"
-            )
+            entry.get("source_loader")
         ):
             validation.fail(
                 f"{path} table={table} "
@@ -1438,9 +1511,7 @@ def validate_manifest(
             )
 
         if not clean(
-            entry.get(
-                "source_function"
-            )
+            entry.get("source_function")
         ):
             validation.fail(
                 f"{path} table={table} "
@@ -1525,21 +1596,15 @@ def validate_truncation_limits(
                     "unique_games",
                     actual_tables[
                         "games"
-                    ][
-                        "rows"
-                    ],
+                    ]["rows"],
                 )
             )
 
-            if (
-                game_count
-                == limit
-            ):
+            if game_count == limit:
                 validation.fail(
                     f"{league}:{internal_season} "
-                    "games stopped exactly "
-                    "at configured limit="
-                    f"{limit} "
+                    "games stopped exactly at "
+                    f"configured limit={limit} "
                     f"({config_path})"
                 )
 
@@ -1555,18 +1620,14 @@ def validate_truncation_limits(
                 info,
             ) in actual_tables.items():
                 if (
-                    int(
-                        info[
-                            "rows"
-                        ]
-                    )
+                    int(info["rows"])
                     == limit
                 ):
                     validation.fail(
                         f"{league}:{internal_season} "
                         f"table={table} rows "
-                        "equal configured limit="
-                        f"{limit} "
+                        "equal configured "
+                        f"limit={limit} "
                         f"({config_path})"
                     )
 
@@ -1592,9 +1653,7 @@ def validate_season(
     season_dir = (
         root
         / league
-        / str(
-            internal_season
-        )
+        / str(internal_season)
     )
 
     validation.emit(
@@ -1606,11 +1665,14 @@ def validate_season(
     )
 
     try:
-        sdv_season = mapped_sdv_season(
-            season_cfg,
-            league,
-            internal_season,
+        sdv_season = (
+            mapped_sdv_season(
+                season_cfg,
+                league,
+                internal_season,
+            )
         )
+
     except Exception as exc:
         validation.fail(
             f"{league}:{internal_season} "
@@ -1636,8 +1698,7 @@ def validate_season(
             season_dir
             / filename
         )
-        for filename
-        in REQUIRED_FILES
+        for filename in REQUIRED_FILES
         if not (
             season_dir
             / filename
@@ -1663,6 +1724,7 @@ def validate_season(
             "forbidden odds.parquet "
             "exists in SDV history"
         )
+
     else:
         validation.passed(
             f"{league}:{internal_season} "
@@ -1684,9 +1746,8 @@ def validate_season(
             (
                 row_count,
                 columns,
-            ) = parquet_info(
-                path
-            )
+            ) = parquet_info(path)
+
         except Exception as exc:
             validation.fail(
                 f"Cannot read {path}: "
@@ -1696,10 +1757,7 @@ def validate_season(
 
         validation.tables_checked += 1
 
-        if (
-            row_count
-            <= 0
-        ):
+        if row_count <= 0:
             validation.fail(
                 f"{path} has zero rows"
             )
@@ -1729,9 +1787,16 @@ def validate_season(
         )
 
         if (
-            table
-            == "lineups"
+            league == "ncaam"
+            and table == "games"
         ):
+            validate_ncaam_venue_context(
+                validation,
+                path,
+                columns,
+            )
+
+        if table == "lineups":
             validate_lineups(
                 validation,
                 path,
@@ -1742,12 +1807,8 @@ def validate_season(
         actual_tables[
             table
         ] = {
-            "rows": (
-                row_count
-            ),
-            "columns": (
-                columns
-            ),
+            "rows": row_count,
+            "columns": columns,
             "source_loader": (
                 source_loader
             ),
@@ -1764,9 +1825,7 @@ def validate_season(
         and "game_id"
         in actual_tables[
             "games"
-        ][
-            "columns"
-        ]
+        ]["columns"]
     ):
         try:
             game_ids = (
@@ -1774,22 +1833,16 @@ def validate_season(
                     games_path
                 )
                 .select(
-                    pl.col(
-                        "game_id"
-                    )
+                    pl.col("game_id")
                     .cast(
                         pl.String,
                         strict=False,
                     )
                     .str.strip_chars()
-                    .alias(
-                        "game_id"
-                    )
+                    .alias("game_id")
                 )
                 .collect()
-                .get_column(
-                    "game_id"
-                )
+                .get_column("game_id")
             )
 
             null_count = (
@@ -1848,6 +1901,7 @@ def validate_season(
                     "game_id rows="
                     f"{duplicate_count}"
                 )
+
             else:
                 validation.passed(
                     f"{games_path} "
@@ -1863,9 +1917,7 @@ def validate_season(
                 "games"
             ][
                 "unique_games"
-            ] = (
-                unique_count
-            )
+            ] = unique_count
 
             for table in GAME_KEY_TABLES:
                 table_info = (
@@ -1895,10 +1947,8 @@ def validate_season(
                     )
                     continue
 
-                child_ids = (
-                    unique_game_ids(
-                        child_path
-                    )
+                child_ids = unique_game_ids(
+                    child_path
                 )
 
                 orphan_ids = sorted(
@@ -1914,6 +1964,7 @@ def validate_season(
                         "games.parquet "
                         f"sample={orphan_ids[:20]}"
                     )
+
                 else:
                     validation.passed(
                         f"{child_path} "
@@ -1925,9 +1976,7 @@ def validate_season(
 
                 table_info[
                     "unique_games"
-                ] = len(
-                    child_ids
-                )
+                ] = len(child_ids)
 
         except Exception as exc:
             validation.fail(
@@ -2020,6 +2069,7 @@ def main() -> int:
             "sdv_storage.yaml "
             "schema_version=1"
         )
+
     else:
         validation.fail(
             "sdv_storage.yaml "
@@ -2036,6 +2086,7 @@ def main() -> int:
             "sdv_seasons.yaml "
             "schema_version=1"
         )
+
     else:
         validation.fail(
             "sdv_seasons.yaml "
@@ -2070,6 +2121,7 @@ def main() -> int:
             "SportsDataVerse version="
             f"{configured_version}"
         )
+
     else:
         validation.fail(
             "Configured "
@@ -2085,6 +2137,7 @@ def main() -> int:
                 "sportsdataverse"
             )
         )
+
     except (
         importlib.metadata.PackageNotFoundError
     ):
@@ -2101,6 +2154,7 @@ def main() -> int:
             "SportsDataVerse version="
             f"{installed_version}"
         )
+
     else:
         validation.fail(
             "Installed "
@@ -2111,22 +2165,19 @@ def main() -> int:
         )
 
     configured_tables = (
-        storage_cfg.get(
-            "tables"
-        )
+        storage_cfg.get("tables")
     )
 
     if (
         configured_tables
-        == list(
-            TABLES
-        )
+        == list(TABLES)
     ):
         validation.passed(
             "Configured required "
             "table list matches "
             "validator"
         )
+
     else:
         validation.fail(
             "Configured tables="
@@ -2151,6 +2202,7 @@ def main() -> int:
         jobs = configured_jobs(
             storage_cfg
         )
+
     except Exception as exc:
         jobs = []
 
@@ -2178,6 +2230,7 @@ def main() -> int:
                 internal_season,
                 configured_limits,
             )
+
         except Exception as exc:
             validation.fail(
                 "Unexpected validation "
