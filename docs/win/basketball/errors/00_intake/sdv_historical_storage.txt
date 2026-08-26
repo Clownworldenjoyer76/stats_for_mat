@@ -1,63 +1,39 @@
-=== SDV HISTORICAL STORAGE 2026-08-26T13:06:22.213929+00:00 ===
-2026-08-26T13:06:22.222236+00:00 | CONFIG VALID | sportsdataverse=0.0.75 jobs=[('nba', 2024)] mappings={'nba:2024': 2025}
-2026-08-26T13:06:22.484983+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2024 table=possessions loader=sportsdataverse.nba.load_nba_stats_possessions
-2026-08-26T13:06:24.180989+00:00 | RELEASE FALLBACK | league=nba table=possessions asset_year=2025 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/nba_stats_possessions/nba_possessions_2025.parquet
-2026-08-26T13:06:25.853964+00:00 | FATAL: NBA Stats schedule has conflicting duplicate or home/away rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
-2026-08-26T13:06:25.856226+00:00 | Traceback (most recent call last):
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 5602, in main
-    build_season(
-    ~~~~~~~~~~~~^
-        cfg,
-        ^^^^
-    ...<2 lines>...
-        args.force,
-        ^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 5357, in build_season
-    ] = build_release_table(
-        ~~~~~~~~~~~~~~~~~~~^
-        cfg,
-        ^^^^
-    ...<5 lines>...
-        force,
-        ^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 4261, in build_release_table
-    ) = canonicalize_pro_game_ids(
-        ~~~~~~~~~~~~~~~~~~~~~~~~~^
-        cfg,
-        ^^^^
-    ...<4 lines>...
-        table=table,
-        ^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3422, in canonicalize_pro_game_ids
-    ) = load_pro_schedule_crosswalk(
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        cfg,
-        ^^^^
-    ...<2 lines>...
-        sdv_season,
-        ^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3043, in load_pro_schedule_crosswalk
-    build_nba_legacy_schedule_crosswalk(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        cfg,
-        ^^^^
-        internal_season,
-        ^^^^^^^^^^^^^^^^
-        sdv_season,
-        ^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 1528, in build_nba_legacy_schedule_crosswalk
-    raise RuntimeError(
-    ...<3 lines>...
-    )
-RuntimeError: NBA Stats schedule has conflicting duplicate or home/away rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
-2026-08-26T13:06:25.856586+00:00 | STATUS: FAILED
+=== SDV HISTORICAL STORAGE 2026-08-26T14:20:41.838401+00:00 ===
+2026-08-26T14:20:41.847303+00:00 | CONFIG VALID | sportsdataverse=0.0.75 jobs=[('ncaam', 2023)] mappings={'ncaam:2023': 2024}
+2026-08-26T14:20:41.850747+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=games loader=sportsdataverse.mbb.load_mbb_schedule
+2026-08-26T14:20:44.692102+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=games rows=6249 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\games.parquet
+2026-08-26T14:20:44.692983+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=team_game loader=sportsdataverse.mbb.load_mbb_team_boxscore
+2026-08-26T14:20:45.153126+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=team_game rows=12480 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\team_game.parquet
+2026-08-26T14:20:45.153852+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=player_game loader=sportsdataverse.mbb.load_mbb_player_boxscore
+2026-08-26T14:20:45.877621+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=player_game rows=198586 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\player_game.parquet
+2026-08-26T14:20:45.878669+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=rosters loader=sportsdataverse.mbb.load_mbb_rosters
+2026-08-26T14:20:45.879341+00:00 | RELEASE LOADER FAILED | league=ncaam table=rosters loader=sportsdataverse.mbb.load_mbb_rosters loader_season=2024 error=season cannot be less than 2025 action=loader_fallback
+2026-08-26T14:20:46.410210+00:00 | LOADER FALLBACK COMPLETE | league=ncaam table=rosters fallback_loader=sportsdataverse.mbb.load_mbb_player_core fallback_season=2024
+2026-08-26T14:20:46.421958+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=rosters rows=12548 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\rosters.parquet
+2026-08-26T14:20:46.422438+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=pbp loader=sportsdataverse.mbb.load_mbb_pbp
+2026-08-26T14:20:49.538113+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=pbp rows=2004997 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\pbp.parquet
+2026-08-26T14:20:49.657133+00:00 | LOAD START | league=ncaam internal=2023 sdv=2024 loader_season=2024 table=shots loader=sportsdataverse.mbb.load_mbb_shots
+2026-08-26T14:20:49.657665+00:00 | RELEASE LOADER FAILED | league=ncaam table=shots loader=sportsdataverse.mbb.load_mbb_shots loader_season=2024 error=season cannot be less than 2025 action=release_fallback
+2026-08-26T14:20:49.658099+00:00 | RELEASE FALLBACK | league=ncaam table=shots asset_year=2024 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_mens_college_basketball_shots/shots_2024.parquet
+2026-08-26T14:20:51.428756+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=shots rows=957173 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\shots.parquet
+2026-08-26T14:20:52.128479+00:00 | NCAAM CROSSWALK | internal=2023 sdv=2024 espn_games=6249 mapped=6240 unmapped=9 source=https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-raw/main/mbb/xwalk/espn_game_id/2024.json
+2026-08-26T14:20:52.129044+00:00 | NCAAM GAME UNMAPPED | game_id=401576633 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.129542+00:00 | NCAAM GAME UNMAPPED | game_id=401577535 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.130051+00:00 | NCAAM GAME UNMAPPED | game_id=401581556 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.130544+00:00 | NCAAM GAME UNMAPPED | game_id=401581618 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.131015+00:00 | NCAAM GAME UNMAPPED | game_id=401589679 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.131511+00:00 | NCAAM GAME UNMAPPED | game_id=401591553 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.131984+00:00 | NCAAM GAME UNMAPPED | game_id=401598025 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.132469+00:00 | NCAAM GAME UNMAPPED | game_id=401604309 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.132989+00:00 | NCAAM GAME UNMAPPED | game_id=401625646 ncaa_game_id=UNRESOLVED
+2026-08-26T14:20:52.133450+00:00 | NCAAM NCAA PBP DOWNLOAD START | internal=2023 sdv=2024 url=https://raw.githubusercontent.com/sportsdataverse/ncaa-mbb-hoops-data/main/mbb/pbp/parquet/ncaa_mbb_pbp_2024.parquet
+2026-08-26T14:21:18.487855+00:00 | NCAAM NCAA PBP DOWNLOAD COMPLETE | rows=2979865 games=6240
+2026-08-26T14:24:35.187096+00:00 | NCAAM GAME ZERO POSSESSIONS | game_id=401598760 ncaa_game_id=3955917 action=skipped
+2026-08-26T14:24:35.250225+00:00 | NCAAM GAME ZERO LINEUPS | game_id=401598760 ncaa_game_id=3955917 action=skipped
+2026-08-26T14:25:42.161090+00:00 | NCAAM GAME ZERO POSSESSIONS | game_id=401604449 ncaa_game_id=3961053 action=skipped
+2026-08-26T14:25:42.192461+00:00 | NCAAM GAME ZERO LINEUPS | game_id=401604449 ncaa_game_id=3961053 action=skipped
+2026-08-26T14:26:29.197863+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=possessions rows=871823 games=6238 coverage=partial_source_coverage skipped_games=11 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\possessions.parquet
+2026-08-26T14:26:29.198699+00:00 | LOAD COMPLETE | league=ncaam internal=2023 table=lineups rows=195923 games=6238 coverage=partial_source_coverage skipped_games=11 status=ready file=docs\win\basketball\00_intake\sdv\history\ncaam\2023\lineups.parquet
+2026-08-26T14:26:29.199074+00:00 | NCAAM DERIVED COMPLETE | canonical_games=6249 crosswalk_mapped=6240 unmapped=9 published_pbp_games=6240 missing_pbp=0 possession_games=6238 possession_failures=0 possession_zero=2 lineup_games=6238 lineup_failures=0 lineup_zero=2
+2026-08-26T14:26:32.886576+00:00 | MANIFEST | league=ncaam internal=2023 path=docs\win\basketball\00_intake\sdv\history\ncaam\2023\manifest.json
+2026-08-26T14:26:32.891068+00:00 | STATUS: SUCCESS | manifests=1

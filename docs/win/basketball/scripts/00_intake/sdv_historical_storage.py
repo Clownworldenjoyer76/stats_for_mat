@@ -887,13 +887,16 @@ def build_nba_legacy_schedule_crosswalk(
 
     SportsDataVerse 0.0.75 does not support load_nba_schedule_crosswalk
     before season 2026. Historical NBA Stats schedule data can arrive as
-    either team rows (team_name/team_abbreviation/matchup) or game rows
-    (explicit home_*/away_* columns).
+    either team rows (one row per team) or game rows (explicit home/away
+    columns).
 
-    Normal team-row games are matched by date plus explicit home/away teams.
-    Neutral-site team-row games can contain "vs" for both teams; those games
-    are matched by date plus an unordered pair of teams, and the canonical
-    ESPN schedule supplies the final home/away orientation.
+    NBA Stats team-row ``matchup`` values are not reliable for determining
+    home/away. Some games contain ``@`` on both team rows. For every team-row
+    game, this function therefore ignores ``matchup`` entirely, requires
+    exactly two unique teams, and matches the game to the canonical ESPN
+    schedule by game date plus the unordered pair of teams. The canonical ESPN
+    schedule supplies the final home/away orientation. Scores are used only as
+    a deterministic disambiguator if more than one canonical candidate remains.
     """
     P = pl()
 
@@ -914,7 +917,6 @@ def build_nba_legacy_schedule_crosswalk(
         "game_date",
         "team_name",
         "team_abbreviation",
-        "matchup",
     }
 
     game_row_required = {
@@ -950,13 +952,12 @@ def build_nba_legacy_schedule_crosswalk(
         dict[str, Any],
     ] = {}
 
-    bad_matchup_ids: set[str] = set()
     bad_date_ids: set[str] = set()
     conflicting_duplicate_ids: set[str] = set()
     incomplete_ids: set[str] = set()
 
     exact_duplicate_rows = 0
-    neutral_site_games = 0
+    unordered_team_row_games = 0
 
     def maybe_float(
         value: Any,
@@ -1064,9 +1065,9 @@ def build_nba_legacy_schedule_crosswalk(
                     "game_date_key"
                 )
             ),
-            bool(
+            clean(
                 game.get(
-                    "neutral_site"
+                    "match_mode"
                 )
             ),
             side_identity(
@@ -1144,7 +1145,7 @@ def build_nba_legacy_schedule_crosswalk(
 
             game = {
                 "game_date_key": date_key,
-                "neutral_site": False,
+                "match_mode": "explicit_home_away",
                 "home": side_payload(
                     team_name=row.get(
                         "home_team_name"
@@ -1220,7 +1221,6 @@ def build_nba_legacy_schedule_crosswalk(
             "game_date",
             "team_name",
             "team_abbreviation",
-            "matchup",
         ]
 
         if "pts" in columns:
@@ -1263,22 +1263,6 @@ def build_nba_legacy_schedule_crosswalk(
                 )
                 continue
 
-            matchup = clean(
-                row.get(
-                    "matchup"
-                )
-            ).lower()
-
-            if "@" in matchup:
-                marker = "away"
-            elif "vs" in matchup:
-                marker = "vs"
-            else:
-                bad_matchup_ids.add(
-                    native_game_id
-                )
-                continue
-
             side = side_payload(
                 team_name=row.get(
                     "team_name"
@@ -1303,7 +1287,7 @@ def build_nba_legacy_schedule_crosswalk(
                 native_game_id,
                 {
                     "game_date_key": date_key,
-                    "rows": [],
+                    "teams": [],
                 },
             )
 
@@ -1319,66 +1303,49 @@ def build_nba_legacy_schedule_crosswalk(
                 continue
 
             duplicate_found = False
-            team_conflict_found = False
+            conflict_found = False
 
-            for existing_row in raw_game[
-                "rows"
+            for existing_side in raw_game[
+                "teams"
             ]:
                 if (
-                    existing_row[
-                        "marker"
-                    ]
-                    == marker
-                    and side_identity(
-                        existing_row[
-                            "side"
-                        ]
+                    side_team_identity(
+                        existing_side
+                    )
+                    != side_team_identity(
+                        side
+                    )
+                ):
+                    continue
+
+                if (
+                    side_identity(
+                        existing_side
                     )
                     == side_identity(
                         side
                     )
                 ):
                     duplicate_found = True
-                    break
+                else:
+                    conflict_found = True
 
-                if (
-                    side_team_identity(
-                        existing_row[
-                            "side"
-                        ]
-                    )
-                    == side_team_identity(
-                        side
-                    )
-                    and side_identity(
-                        existing_row[
-                            "side"
-                        ]
-                    )
-                    != side_identity(
-                        side
-                    )
-                ):
-                    team_conflict_found = True
-                    break
+                break
 
             if duplicate_found:
                 exact_duplicate_rows += 1
                 continue
 
-            if team_conflict_found:
+            if conflict_found:
                 conflicting_duplicate_ids.add(
                     native_game_id
                 )
                 continue
 
             raw_game[
-                "rows"
+                "teams"
             ].append(
-                {
-                    "marker": marker,
-                    "side": side,
-                }
+                side
             )
 
         for (
@@ -1391,31 +1358,24 @@ def build_nba_legacy_schedule_crosswalk(
             ):
                 continue
 
-            rows = raw_game[
-                "rows"
+            teams = raw_game[
+                "teams"
             ]
 
             if len(
-                rows
+                teams
             ) != 2:
                 incomplete_ids.add(
                     native_game_id
                 )
                 continue
 
-            first = rows[0]
-            second = rows[1]
-
             if (
                 side_team_identity(
-                    first[
-                        "side"
-                    ]
+                    teams[0]
                 )
                 == side_team_identity(
-                    second[
-                        "side"
-                    ]
+                    teams[1]
                 )
             ):
                 incomplete_ids.add(
@@ -1423,99 +1383,20 @@ def build_nba_legacy_schedule_crosswalk(
                 )
                 continue
 
-            markers = {
-                first[
-                    "marker"
+            stats_games[
+                native_game_id
+            ] = {
+                "game_date_key": raw_game[
+                    "game_date_key"
                 ],
-                second[
-                    "marker"
-                ],
+                "match_mode": "unordered_teams",
+                "home": None,
+                "away": None,
+                "team_a": teams[0],
+                "team_b": teams[1],
             }
 
-            if markers == {
-                "away",
-                "vs",
-            }:
-                away_side = next(
-                    item[
-                        "side"
-                    ]
-                    for item
-                    in rows
-                    if item[
-                        "marker"
-                    ]
-                    == "away"
-                )
-
-                home_side = next(
-                    item[
-                        "side"
-                    ]
-                    for item
-                    in rows
-                    if item[
-                        "marker"
-                    ]
-                    == "vs"
-                )
-
-                stats_games[
-                    native_game_id
-                ] = {
-                    "game_date_key": raw_game[
-                        "game_date_key"
-                    ],
-                    "neutral_site": False,
-                    "home": home_side,
-                    "away": away_side,
-                    "team_a": None,
-                    "team_b": None,
-                }
-
-                continue
-
-            if (
-                first[
-                    "marker"
-                ]
-                == "vs"
-                and second[
-                    "marker"
-                ]
-                == "vs"
-            ):
-                neutral_site_games += 1
-
-                stats_games[
-                    native_game_id
-                ] = {
-                    "game_date_key": raw_game[
-                        "game_date_key"
-                    ],
-                    "neutral_site": True,
-                    "home": None,
-                    "away": None,
-                    "team_a": first[
-                        "side"
-                    ],
-                    "team_b": second[
-                        "side"
-                    ],
-                }
-
-                continue
-
-            conflicting_duplicate_ids.add(
-                native_game_id
-            )
-
-    if bad_matchup_ids:
-        raise RuntimeError(
-            "NBA Stats schedule has unrecognized "
-            "matchup format for game_ids="
-            f"{sorted(bad_matchup_ids)[:20]}"
-        )
+            unordered_team_row_games += 1
 
     if bad_date_ids:
         raise RuntimeError(
@@ -1527,14 +1408,14 @@ def build_nba_legacy_schedule_crosswalk(
     if conflicting_duplicate_ids:
         raise RuntimeError(
             "NBA Stats schedule has conflicting duplicate "
-            "or home/away rows for game_ids="
+            "team rows for game_ids="
             f"{sorted(conflicting_duplicate_ids)[:20]}"
         )
 
     if incomplete_ids:
         raise RuntimeError(
             "NBA Stats schedule cannot identify exactly "
-            "two usable teams for game_ids="
+            "two unique teams for game_ids="
             f"{sorted(incomplete_ids)[:20]}"
         )
 
@@ -1551,7 +1432,7 @@ def build_nba_legacy_schedule_crosswalk(
         f"schema={schema_used} "
         f"rows={stats_schedule.height} "
         f"games={len(stats_games)} "
-        f"neutral_site_games={neutral_site_games} "
+        f"unordered_team_row_games={unordered_team_row_games} "
         f"exact_duplicate_rows_ignored={exact_duplicate_rows}"
     )
 
@@ -1713,7 +1594,7 @@ def build_nba_legacy_schedule_crosswalk(
 
         return variants
 
-    def neutral_orientations(
+    def unordered_orientations(
         team_a: dict[str, Any],
         team_b: dict[str, Any],
         candidate: dict[str, Any],
@@ -1785,11 +1666,14 @@ def build_nba_legacy_schedule_crosswalk(
             dict[str, Any]
         ] = []
 
-        if game[
-            "neutral_site"
-        ]:
+        if (
+            game[
+                "match_mode"
+            ]
+            == "unordered_teams"
+        ):
             for candidate in candidates:
-                orientations = neutral_orientations(
+                orientations = unordered_orientations(
                     game[
                         "team_a"
                     ],
@@ -1858,9 +1742,12 @@ def build_nba_legacy_schedule_crosswalk(
                 "candidate"
             ]
 
-            if game[
-                "neutral_site"
-            ]:
+            if (
+                game[
+                    "match_mode"
+                ]
+                == "unordered_teams"
+            ):
                 method = (
                     "date_unordered_team_pair_"
                     "canonical_home_away"
@@ -1901,9 +1788,12 @@ def build_nba_legacy_schedule_crosswalk(
                 ):
                     continue
 
-                if game[
-                    "neutral_site"
-                ]:
+                if (
+                    game[
+                        "match_mode"
+                    ]
+                    == "unordered_teams"
+                ):
                     team_a_pts = game[
                         "team_a"
                     ].get(
@@ -1987,9 +1877,12 @@ def build_nba_legacy_schedule_crosswalk(
                     "candidate"
                 ]
 
-                if game[
-                    "neutral_site"
-                ]:
+                if (
+                    game[
+                        "match_mode"
+                    ]
+                    == "unordered_teams"
+                ):
                     method = (
                         "date_unordered_team_pair_score_"
                         "canonical_home_away"
@@ -2103,7 +1996,7 @@ def build_nba_legacy_schedule_crosswalk(
         log(
             "NBA GAME UNMAPPED | "
             f"nba_game_id={game_id} "
-            "reason=no_unique_date_team_match"
+            "reason=no_unique_date_unordered_team_match"
         )
 
     for game_id in sorted(
@@ -2112,7 +2005,7 @@ def build_nba_legacy_schedule_crosswalk(
         log(
             "NBA GAME AMBIGUOUS | "
             f"nba_game_id={game_id} "
-            "reason=multiple_date_team_matches"
+            "reason=multiple_date_unordered_team_matches"
         )
 
     log(
@@ -2120,7 +2013,7 @@ def build_nba_legacy_schedule_crosswalk(
         f"internal={internal_season} "
         f"sdv={sdv_season} "
         f"stats_games={len(stats_games)} "
-        f"neutral_site_games={neutral_site_games} "
+        f"unordered_team_row_games={unordered_team_row_games} "
         f"mapped={xwalk.height} "
         f"unmatched={len(unmatched)} "
         f"ambiguous={len(ambiguous)} "
@@ -2134,8 +2027,8 @@ def build_nba_legacy_schedule_crosswalk(
         ),
         (
             f"{stats_source} -> deterministic "
-            "game_date/team match with canonical ESPN "
-            "home-away orientation"
+            "game_date/unordered-team-pair match with "
+            "canonical ESPN home-away orientation"
         ),
         "nba_game_id",
     )
