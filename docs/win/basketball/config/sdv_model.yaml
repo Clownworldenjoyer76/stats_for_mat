@@ -1,0 +1,131 @@
+schema_version: 1
+feature_version: sdv_pit_v1
+
+paths:
+  history_input_root: docs/win/basketball/00_intake/sdv/history
+  history_output_root: docs/win/basketball/00_intake/sdv/features/history
+  current_output_root: docs/win/basketball/00_intake/sdv/features/current
+  canonical_current_root: docs/win/basketball/00_intake/sdv/canonical_games
+
+feature_windows:
+  team_games: [5, 10, 20]
+  player_team_games: 10
+  player_top_n: 8
+
+shrinkage:
+  team_pseudo_games: 3.0
+  player_pseudo_games: 2.0
+
+player_strength:
+  definition: prior_player_game_only
+  weights:
+    points: 1.0
+    rebounds: 0.4
+    assists: 0.7
+    steals: 1.0
+    blocks: 1.0
+    turnovers: -1.0
+
+point_in_time:
+  strict_before_target: true
+  allow_same_day_only_with_earlier_timestamp: true
+  abort_on_target_game_id_in_source_slice: true
+  roster_availability_from_season_roster_forbidden: true
+  target_boxscore_forbidden: true
+  target_pbp_forbidden: true
+  target_possessions_forbidden: true
+  target_shots_forbidden: true
+  target_final_score_forbidden: true
+
+venue_context:
+  neutral_site_column: is_neutral_site
+  home_court_indicator_column: home_court_indicator
+  venue_id_column: venue_id
+  neutral_home_court_value: 0
+  fixed_point_home_court_adjustment: null
+  derive_home_court_from_home_team_field_only: false
+
+model_inputs:
+  categorical:
+    - venue_id
+
+  numeric:
+    - is_neutral_site
+    - home_court_indicator
+
+    - home_games_prior
+    - away_games_prior
+    - home_days_since_last_game
+    - away_days_since_last_game
+
+    - home_games_used_5
+    - away_games_used_5
+    - home_points_for_5
+    - away_points_for_5
+    - home_points_against_5
+    - away_points_against_5
+    - home_margin_5
+    - away_margin_5
+    - home_fg_pct_5
+    - away_fg_pct_5
+    - home_three_pct_5
+    - away_three_pct_5
+    - home_ft_pct_5
+    - away_ft_pct_5
+    - home_rebounds_5
+    - away_rebounds_5
+    - home_assists_5
+    - away_assists_5
+    - home_turnovers_5
+    - away_turnovers_5
+
+    - home_games_used_10
+    - away_games_used_10
+    - home_points_for_10
+    - away_points_for_10
+    - home_points_against_10
+    - away_points_against_10
+    - home_margin_10
+    - away_margin_10
+    - home_fg_pct_10
+    - away_fg_pct_10
+    - home_three_pct_10
+    - away_three_pct_10
+    - home_ft_pct_10
+    - away_ft_pct_10
+    - home_rebounds_10
+    - away_rebounds_10
+    - home_assists_10
+    - away_assists_10
+    - home_turnovers_10
+    - away_turnovers_10
+
+    - home_games_used_20
+    - away_games_used_20
+    - home_points_for_20
+    - away_points_for_20
+    - home_points_against_20
+    - away_points_against_20
+    - home_margin_20
+    - away_margin_20
+    - home_fg_pct_20
+    - away_fg_pct_20
+    - home_three_pct_20
+    - away_three_pct_20
+    - home_ft_pct_20
+    - away_ft_pct_20
+    - home_rebounds_20
+    - away_rebounds_20
+    - home_assists_20
+    - away_assists_20
+    - home_turnovers_20
+    - away_turnovers_20
+
+    - home_player_games_used
+    - away_player_games_used
+    - home_player_recent_count
+    - away_player_recent_count
+    - home_player_strength
+    - away_player_strength
+    - home_player_minutes
+    - away_player_minutes
