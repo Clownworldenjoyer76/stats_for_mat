@@ -1,5 +1,5 @@
 schema_version: 1
-feature_version: sdv_pit_v1
+feature_version: sdv_model_v1_pit_v2
 
 paths:
   history_input_root: docs/win/basketball/00_intake/sdv/history
@@ -9,15 +9,50 @@ paths:
 
 feature_windows:
   team_games: [5, 10, 20]
+  opponent_rating_games: 20
   player_team_games: 10
   player_top_n: 8
+  venue_history_games: 50
 
 shrinkage:
   team_pseudo_games: 3.0
+  opponent_pseudo_games: 5.0
   player_pseudo_games: 2.0
 
+possessions:
+  prefer_sdv: true
+
+  sdv_method:
+    id: sdv_possession_rows_divided_by_two
+    definition: Count valid possession rows for a game and divide by 2 to obtain per-team game possessions.
+    count_as_possession_policy: When count_as_possession exists and is populated, count only true rows; otherwise count all possession rows.
+
+  fallback_estimate:
+    id: averaged_team_boxscore_estimate
+    free_throw_coefficient: 0.44
+    formula: 0.5 * ((FGA - ORB + TOV + 0.44 * FTA)_team + (FGA - ORB + TOV + 0.44 * FTA)_opponent)
+
+  validation:
+    min_team_possessions: 30.0
+    max_team_possessions: 160.0
+
+formulas:
+  offensive_efficiency: 100 * points_for / possessions
+  defensive_efficiency: 100 * points_against / possessions
+  efg_pct: (FGM + 0.5 * 3PM) / FGA
+  turnover_rate: TOV / possessions
+  offensive_rebound_rate: ORB / (ORB + opponent_DRB)
+  free_throw_rate: FTA / FGA
+  pace: per-team game possessions
+  rest_days: max(calendar_day_difference_from_previous_game - 1, 0)
+  opponent_adjusted_offense: raw_off_eff - (opponent_prior_def_eff - prior_league_efficiency)
+  opponent_adjusted_defense: raw_def_eff - (opponent_prior_off_eff - prior_league_efficiency)
+  differential: home_feature - away_feature
+  recent_form: recent window mean shrunk toward the same team's all-prior mean using team_pseudo_games
+
 player_strength:
-  definition: prior_player_game_only
+  definition: Prior player_game.parquet rows only; select recent participants by prior minutes and shrink each player toward the prior team-player baseline.
+
   weights:
     points: 1.0
     rebounds: 0.4
@@ -36,14 +71,58 @@ point_in_time:
   target_possessions_forbidden: true
   target_shots_forbidden: true
   target_final_score_forbidden: true
+  future_games_forbidden: true
 
 venue_context:
   neutral_site_column: is_neutral_site
   home_court_indicator_column: home_court_indicator
+  away_court_indicator_column: away_court_indicator
   venue_id_column: venue_id
   neutral_home_court_value: 0
+  neutral_away_court_value: 0
   fixed_point_home_court_adjustment: null
   derive_home_court_from_home_team_field_only: false
+
+training:
+  model_version: sdv_model_v1
+  model_type: ridge_linear
+
+  targets:
+    margin: actual_home_points - actual_away_points
+    total: actual_home_points + actual_away_points
+
+  ridge_alpha: 10.0
+
+  lockbox:
+    policy: latest_internal_season
+    read_during_training: false
+    use_for_residual_distribution: false
+
+  oos:
+    method: expanding_window
+    folds: 5
+    minimum_training_date_fraction: 0.50
+
+  residual_distribution:
+    family: normal
+    source: expanding_window_oos_only
+
+  probability:
+    moneyline:
+      definition: P(actual_margin > 0)
+    spread:
+      home_line_convention: home spread is added to actual home margin; for example -3.5 means home must win by more than 3.5
+      home_definition: P(actual_margin + home_spread_line > 0)
+      away_definition: 1 - home_spread_prob
+    total:
+      over_definition: P(actual_total > total_line)
+      under_definition: 1 - over_prob
+
+  evaluation_output_root: docs/win/basketball/errors/99_validation/sdv_model_v1
+
+  production:
+    write_models: false
+    overwrite_dratings: false
 
 model_inputs:
   categorical:
@@ -52,80 +131,98 @@ model_inputs:
   numeric:
     - is_neutral_site
     - home_court_indicator
-
-    - home_games_prior
-    - away_games_prior
-    - home_days_since_last_game
-    - away_days_since_last_game
-
-    - home_games_used_5
-    - away_games_used_5
-    - home_points_for_5
-    - away_points_for_5
-    - home_points_against_5
-    - away_points_against_5
-    - home_margin_5
-    - away_margin_5
-    - home_fg_pct_5
-    - away_fg_pct_5
-    - home_three_pct_5
-    - away_three_pct_5
-    - home_ft_pct_5
-    - away_ft_pct_5
-    - home_rebounds_5
-    - away_rebounds_5
-    - home_assists_5
-    - away_assists_5
-    - home_turnovers_5
-    - away_turnovers_5
-
-    - home_games_used_10
-    - away_games_used_10
-    - home_points_for_10
-    - away_points_for_10
-    - home_points_against_10
-    - away_points_against_10
-    - home_margin_10
-    - away_margin_10
-    - home_fg_pct_10
-    - away_fg_pct_10
-    - home_three_pct_10
-    - away_three_pct_10
-    - home_ft_pct_10
-    - away_ft_pct_10
-    - home_rebounds_10
-    - away_rebounds_10
-    - home_assists_10
-    - away_assists_10
-    - home_turnovers_10
-    - away_turnovers_10
-
-    - home_games_used_20
-    - away_games_used_20
-    - home_points_for_20
-    - away_points_for_20
-    - home_points_against_20
-    - away_points_against_20
-    - home_margin_20
-    - away_margin_20
-    - home_fg_pct_20
-    - away_fg_pct_20
-    - home_three_pct_20
-    - away_three_pct_20
-    - home_ft_pct_20
-    - away_ft_pct_20
-    - home_rebounds_20
-    - away_rebounds_20
-    - home_assists_20
-    - away_assists_20
-    - home_turnovers_20
-    - away_turnovers_20
-
-    - home_player_games_used
-    - away_player_games_used
-    - home_player_recent_count
-    - away_player_recent_count
+    - away_court_indicator
+    - diff_court_indicator
+    - home_rest_days
+    - away_rest_days
+    - diff_rest_days
     - home_player_strength
     - away_player_strength
+    - diff_player_strength
     - home_player_minutes
     - away_player_minutes
+    - diff_player_minutes
+
+    - home_adj_off_eff_5
+    - away_adj_off_eff_5
+    - diff_adj_off_eff_5
+    - home_adj_def_eff_5
+    - away_adj_def_eff_5
+    - diff_adj_def_eff_5
+    - home_pace_5
+    - away_pace_5
+    - diff_pace_5
+    - home_efg_pct_5
+    - away_efg_pct_5
+    - diff_efg_pct_5
+    - home_tov_rate_5
+    - away_tov_rate_5
+    - diff_tov_rate_5
+    - home_orb_rate_5
+    - away_orb_rate_5
+    - diff_orb_rate_5
+    - home_ft_rate_5
+    - away_ft_rate_5
+    - diff_ft_rate_5
+    - home_recent_margin_5
+    - away_recent_margin_5
+    - diff_recent_margin_5
+    - home_recent_net_eff_5
+    - away_recent_net_eff_5
+    - diff_recent_net_eff_5
+
+    - home_adj_off_eff_10
+    - away_adj_off_eff_10
+    - diff_adj_off_eff_10
+    - home_adj_def_eff_10
+    - away_adj_def_eff_10
+    - diff_adj_def_eff_10
+    - home_pace_10
+    - away_pace_10
+    - diff_pace_10
+    - home_efg_pct_10
+    - away_efg_pct_10
+    - diff_efg_pct_10
+    - home_tov_rate_10
+    - away_tov_rate_10
+    - diff_tov_rate_10
+    - home_orb_rate_10
+    - away_orb_rate_10
+    - diff_orb_rate_10
+    - home_ft_rate_10
+    - away_ft_rate_10
+    - diff_ft_rate_10
+    - home_recent_margin_10
+    - away_recent_margin_10
+    - diff_recent_margin_10
+    - home_recent_net_eff_10
+    - away_recent_net_eff_10
+    - diff_recent_net_eff_10
+
+    - home_adj_off_eff_20
+    - away_adj_off_eff_20
+    - diff_adj_off_eff_20
+    - home_adj_def_eff_20
+    - away_adj_def_eff_20
+    - diff_adj_def_eff_20
+    - home_pace_20
+    - away_pace_20
+    - diff_pace_20
+    - home_efg_pct_20
+    - away_efg_pct_20
+    - diff_efg_pct_20
+    - home_tov_rate_20
+    - away_tov_rate_20
+    - diff_tov_rate_20
+    - home_orb_rate_20
+    - away_orb_rate_20
+    - diff_orb_rate_20
+    - home_ft_rate_20
+    - away_ft_rate_20
+    - diff_ft_rate_20
+    - home_recent_margin_20
+    - away_recent_margin_20
+    - diff_recent_margin_20
+    - home_recent_net_eff_20
+    - away_recent_net_eff_20
+    - diff_recent_net_eff_20

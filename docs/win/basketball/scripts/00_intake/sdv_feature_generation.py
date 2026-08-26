@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/00_intake/sdv_feature_generation.py
-"""Build strict point-in-time SportsDataVerse basketball features."""
+"""Build strict point-in-time SportsDataVerse Model V1 basketball features."""
 from __future__ import annotations
 
 import argparse
+import bisect
 import csv
 import math
 import re
@@ -30,172 +31,104 @@ LEAGUE_LABELS = {
     "wnba": "WNBA",
 }
 
-TEAM_METRICS = {
-    "points_for": (
-        "team_score",
-    ),
-    "points_against": (
-        "opponent_team_score",
-    ),
-    "fg_pct": (
-        "field_goal_pct",
-    ),
-    "three_pct": (
-        "three_point_field_goal_pct",
-    ),
-    "ft_pct": (
-        "free_throw_pct",
-    ),
-    "rebounds": (
-        "total_rebounds",
-        "rebounds",
-    ),
-    "assists": (
-        "assists",
-    ),
-    "turnovers": (
-        "total_turnovers",
-        "turnovers",
-    ),
-}
-
 PLAYER_STAT_COLUMNS = {
-    "points": (
-        "points",
-    ),
-    "rebounds": (
-        "rebounds",
-    ),
-    "assists": (
-        "assists",
-    ),
-    "steals": (
-        "steals",
-    ),
-    "blocks": (
-        "blocks",
-    ),
-    "turnovers": (
-        "turnovers",
-    ),
-    "minutes": (
-        "minutes",
-    ),
+    "points": ("points",),
+    "rebounds": ("rebounds",),
+    "assists": ("assists",),
+    "steals": ("steals",),
+    "blocks": ("blocks",),
+    "turnovers": ("turnovers",),
+    "minutes": ("minutes",),
 }
 
+WINDOWED_MODEL_METRICS = (
+    "adj_off_eff",
+    "adj_def_eff",
+    "pace",
+    "efg_pct",
+    "tov_rate",
+    "orb_rate",
+    "ft_rate",
+    "recent_margin",
+    "recent_net_eff",
+)
 
-def clean(
-    value: Any,
-) -> str:
+
+class LeakageError(RuntimeError):
+    """Raised when a target game appears in a feature source slice."""
+
+
+def clean(value: Any) -> str:
     if value is None:
         return ""
-
-    return str(
-        value
-    ).strip()
+    return str(value).strip()
 
 
-def clean_id(
-    value: Any,
-) -> str:
-    text = clean(
-        value
-    )
-
+def clean_id(value: Any) -> str:
+    text = clean(value)
     if not text:
         return ""
 
     try:
-        number = float(
-            text
-        )
-
-        if (
-            math.isfinite(
-                number
-            )
-            and number.is_integer()
-        ):
-            return str(
-                int(
-                    number
-                )
-            )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
+        number = float(text)
+        if math.isfinite(number) and number.is_integer():
+            return str(int(number))
+    except (TypeError, ValueError):
         pass
 
     return text
 
 
-def to_float(
-    value: Any,
-) -> float | None:
+def to_float(value: Any) -> float | None:
     if value is None:
         return None
 
-    if isinstance(
-        value,
-        bool,
-    ):
-        return float(
-            value
-        )
+    if isinstance(value, bool):
+        return float(value)
 
-    text = clean(
-        value
-    )
-
+    text = clean(value)
     if not text:
         return None
 
     try:
-        number = float(
-            text
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
+        number = float(text)
+    except (TypeError, ValueError):
         return None
 
-    if not math.isfinite(
-        number
-    ):
+    if not math.isfinite(number):
         return None
 
     return number
 
 
-def log(
-    message: str,
-) -> None:
-    ERROR_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+def normalize_bool(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
 
-    with LOG_FILE.open(
-        "a",
-        encoding="utf-8",
-    ) as handle:
+    text = clean(value).lower()
+
+    if text in {"true", "1", "yes", "y"}:
+        return True
+
+    if text in {"false", "0", "no", "n"}:
+        return False
+
+    return None
+
+
+def log(message: str) -> None:
+    ERROR_DIR.mkdir(parents=True, exist_ok=True)
+
+    with LOG_FILE.open("a", encoding="utf-8") as handle:
         handle.write(
             f"{datetime.now(timezone.utc).isoformat()} | "
             f"{message}\n"
         )
 
 
-def read_yaml(
-    path: Path,
-) -> dict[str, Any]:
+def read_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        raise FileNotFoundError(path)
 
     payload = (
         yaml.safe_load(
@@ -206,13 +139,9 @@ def read_yaml(
         or {}
     )
 
-    if not isinstance(
-        payload,
-        dict,
-    ):
+    if not isinstance(payload, dict):
         raise ValueError(
-            "YAML root must be a mapping: "
-            f"{path}"
+            f"YAML root must be a mapping: {path}"
         )
 
     return payload
@@ -222,17 +151,11 @@ def required_mapping(
     parent: dict[str, Any],
     key: str,
 ) -> dict[str, Any]:
-    value = parent.get(
-        key
-    )
+    value = parent.get(key)
 
-    if not isinstance(
-        value,
-        dict,
-    ):
+    if not isinstance(value, dict):
         raise ValueError(
-            "sdv_model.yaml missing mapping: "
-            f"{key}"
+            f"sdv_model.yaml missing mapping: {key}"
         )
 
     return value
@@ -253,29 +176,19 @@ def configured_paths(
         "canonical_current_root",
     )
 
-    result: dict[
-        str,
-        Path,
-    ] = {}
+    result: dict[str, Path] = {}
 
     for key in required:
         value = clean(
-            section.get(
-                key
-            )
+            section.get(key)
         )
 
         if not value:
             raise ValueError(
-                "sdv_model.yaml paths."
-                f"{key} is blank"
+                f"sdv_model.yaml paths.{key} is blank"
             )
 
-        result[
-            key
-        ] = Path(
-            value
-        )
+        result[key] = Path(value)
 
     return result
 
@@ -283,24 +196,12 @@ def configured_paths(
 def validate_config(
     cfg: dict[str, Any],
 ) -> None:
-    if (
-        int(
-            cfg.get(
-                "schema_version",
-                0,
-            )
-        )
-        != 1
-    ):
+    if int(cfg.get("schema_version", 0)) != 1:
         raise ValueError(
             "sdv_model.yaml schema_version must be 1"
         )
 
-    if not clean(
-        cfg.get(
-            "feature_version"
-        )
-    ):
+    if not clean(cfg.get("feature_version")):
         raise ValueError(
             "sdv_model.yaml feature_version is blank"
         )
@@ -315,10 +216,7 @@ def validate_config(
     )
 
     if (
-        not isinstance(
-            team_windows,
-            list,
-        )
+        not isinstance(team_windows, list)
         or not team_windows
     ):
         raise ValueError(
@@ -327,9 +225,7 @@ def validate_config(
         )
 
     normalized = [
-        int(
-            value
-        )
+        int(value)
         for value
         in team_windows
     ]
@@ -340,84 +236,130 @@ def validate_config(
             for value
             in normalized
         )
-        or len(
-            set(
-                normalized
-            )
-        )
-        != len(
-            normalized
-        )
+        or len(set(normalized))
+        != len(normalized)
     ):
         raise ValueError(
-            "feature_windows.team_games "
-            "must contain unique positive integers"
+            "feature_windows.team_games must "
+            "contain unique positive integers"
         )
 
-    if (
-        int(
-            windows.get(
-                "player_team_games",
-                0,
-            )
-        )
-        <= 0
+    for key in (
+        "opponent_rating_games",
+        "player_team_games",
+        "player_top_n",
+        "venue_history_games",
     ):
-        raise ValueError(
-            "feature_windows.player_team_games "
-            "must be positive"
-        )
-
-    if (
-        int(
-            windows.get(
-                "player_top_n",
-                0,
+        if int(windows.get(key, 0)) <= 0:
+            raise ValueError(
+                f"feature_windows.{key} must be positive"
             )
-        )
-        <= 0
-    ):
-        raise ValueError(
-            "feature_windows.player_top_n "
-            "must be positive"
-        )
 
     shrinkage = required_mapping(
         cfg,
         "shrinkage",
     )
 
-    if (
-        float(
-            shrinkage.get(
-                "team_pseudo_games",
-                -1,
-            )
-        )
-        < 0
+    for key in (
+        "team_pseudo_games",
+        "opponent_pseudo_games",
+        "player_pseudo_games",
     ):
-        raise ValueError(
-            "shrinkage.team_pseudo_games "
-            "must be >= 0"
-        )
+        if float(shrinkage.get(key, -1)) < 0:
+            raise ValueError(
+                f"shrinkage.{key} must be >= 0"
+            )
+
+    possession = required_mapping(
+        cfg,
+        "possessions",
+    )
+
+    fallback = required_mapping(
+        possession,
+        "fallback_estimate",
+    )
+
+    validation = required_mapping(
+        possession,
+        "validation",
+    )
 
     if (
         float(
-            shrinkage.get(
-                "player_pseudo_games",
+            fallback.get(
+                "free_throw_coefficient",
                 -1,
             )
         )
         < 0
     ):
         raise ValueError(
-            "shrinkage.player_pseudo_games "
-            "must be >= 0"
+            "possessions.fallback_estimate."
+            "free_throw_coefficient must be >= 0"
         )
+
+    min_poss = float(
+        validation.get(
+            "min_team_possessions",
+            0,
+        )
+    )
+
+    max_poss = float(
+        validation.get(
+            "max_team_possessions",
+            0,
+        )
+    )
+
+    if (
+        min_poss <= 0
+        or max_poss <= min_poss
+    ):
+        raise ValueError(
+            "possessions.validation min/max "
+            "team possessions are invalid"
+        )
+
+    player_strength = required_mapping(
+        cfg,
+        "player_strength",
+    )
+
+    weights = player_strength.get(
+        "weights"
+    )
+
+    if (
+        not isinstance(weights, dict)
+        or not weights
+    ):
+        raise ValueError(
+            "player_strength.weights must "
+            "be a non-empty mapping"
+        )
+
+    for stat in weights:
+        if clean(stat) not in PLAYER_STAT_COLUMNS:
+            raise ValueError(
+                "Unsupported player_strength "
+                f"weight: {stat}"
+            )
 
     required_mapping(
         cfg,
-        "player_strength",
+        "formulas",
+    )
+
+    required_mapping(
+        cfg,
+        "point_in_time",
+    )
+
+    required_mapping(
+        cfg,
+        "venue_context",
     )
 
     required_mapping(
@@ -425,37 +367,25 @@ def validate_config(
         "model_inputs",
     )
 
-    configured_paths(
-        cfg
-    )
+    configured_paths(cfg)
 
 
 def parse_date(
     value: Any,
 ) -> date | None:
-    if isinstance(
-        value,
-        datetime,
-    ):
+    if isinstance(value, datetime):
         return value.date()
 
-    if isinstance(
-        value,
-        date,
-    ):
+    if isinstance(value, date):
         return value
 
-    text = clean(
-        value
-    )
+    text = clean(value)
 
     if not text:
         return None
 
     text = (
-        text[
-            :10
-        ]
+        text[:10]
         .replace(
             "_",
             "-",
@@ -463,10 +393,7 @@ def parse_date(
     )
 
     try:
-        return date.fromisoformat(
-            text
-        )
-
+        return date.fromisoformat(text)
     except ValueError:
         return None
 
@@ -474,16 +401,10 @@ def parse_date(
 def parse_datetime(
     value: Any,
 ) -> datetime | None:
-    if isinstance(
-        value,
-        datetime,
-    ):
+    if isinstance(value, datetime):
         parsed = value
-
     else:
-        text = clean(
-            value
-        )
+        text = clean(value)
 
         if not text:
             return None
@@ -495,7 +416,6 @@ def parse_datetime(
                     "+00:00",
                 )
             )
-
         except ValueError:
             return None
 
@@ -534,13 +454,10 @@ def canonical_datetime(
         "%H:%M:%S",
     ):
         try:
-            parsed_time = (
-                datetime.strptime(
-                    time_text,
-                    fmt,
-                )
-                .time()
-            )
+            parsed_time = datetime.strptime(
+                time_text,
+                fmt,
+            ).time()
 
             local = datetime.combine(
                 parsed_date,
@@ -576,37 +493,18 @@ def normalize_game_date(
 def normalize_neutral(
     value: Any,
 ) -> int | None:
-    if isinstance(
-        value,
-        bool,
-    ):
-        return (
-            1
-            if value
-            else 0
-        )
-
-    text = clean(
+    parsed = normalize_bool(
         value
-    ).lower()
+    )
 
-    if text in {
-        "true",
-        "1",
-        "yes",
-        "y",
-    }:
-        return 1
+    if parsed is None:
+        return None
 
-    if text in {
-        "false",
-        "0",
-        "no",
-        "n",
-    }:
-        return 0
-
-    return None
+    return (
+        1
+        if parsed
+        else 0
+    )
 
 
 def first_value(
@@ -615,18 +513,13 @@ def first_value(
 ) -> Any:
     for column in columns:
         if (
-            column
-            in row
+            column in row
             and clean(
-                row.get(
-                    column
-                )
+                row.get(column)
             )
             != ""
         ):
-            return row.get(
-                column
-            )
+            return row.get(column)
 
     return None
 
@@ -635,12 +528,8 @@ def row_game_id(
     row: dict[str, Any],
 ) -> str:
     return clean_id(
-        row.get(
-            "game_id"
-        )
-        or row.get(
-            "id"
-        )
+        row.get("game_id")
+        or row.get("id")
     )
 
 
@@ -648,21 +537,17 @@ def row_team_id(
     row: dict[str, Any],
 ) -> str:
     return clean_id(
-        row.get(
-            "team_id"
-        )
+        row.get("team_id")
     )
 
 
 def row_game_datetime(
     row: dict[str, Any],
 ) -> datetime | None:
-    value = row.get(
-        "game_date_time"
-    )
-
     parsed = parse_datetime(
-        value
+        row.get(
+            "game_date_time"
+        )
     )
 
     if parsed is not None:
@@ -673,16 +558,13 @@ def row_game_datetime(
         "start_date",
     ):
         text = clean(
-            row.get(
-                column
-            )
+            row.get(column)
         )
 
         if (
             not text
             or not (
-                "T"
-                in text
+                "T" in text
                 or re.search(
                     r"\d{1,2}:\d{2}",
                     text,
@@ -711,9 +593,7 @@ def row_game_date(
         "start_date",
     ):
         parsed = parse_date(
-            row.get(
-                column
-            )
+            row.get(column)
         )
 
         if parsed is not None:
@@ -750,7 +630,6 @@ def target_time(
                 "game_time"
             ),
         )
-
     else:
         target_dt = row_game_datetime(
             row
@@ -781,6 +660,12 @@ def source_is_prior(
     ):
         return False
 
+    if source_date < target_date:
+        return True
+
+    if source_date > target_date:
+        return False
+
     if (
         target_dt is not None
         and isinstance(
@@ -788,15 +673,9 @@ def source_is_prior(
             datetime,
         )
     ):
-        return (
-            source_dt
-            < target_dt
-        )
+        return source_dt < target_dt
 
-    return (
-        source_date
-        < target_date
-    )
+    return False
 
 
 def assert_target_absent(
@@ -806,24 +685,20 @@ def assert_target_absent(
     target_game_id: str,
     source_name: str,
 ) -> None:
-    leaked = [
-        row_game_id(
-            row
-        )
+    count = sum(
+        1
         for row
         in rows
-        if row_game_id(
-            row
-        )
+        if row_game_id(row)
         == target_game_id
-    ]
+    )
 
-    if leaked:
-        raise RuntimeError(
+    if count:
+        raise LeakageError(
             "LEAKAGE CHECK FAILED | "
             f"target_game_id={target_game_id} "
             f"source={source_name} "
-            f"rows={len(leaked)}"
+            f"rows={count}"
         )
 
 
@@ -842,9 +717,7 @@ def history_seasons(
         )
 
     seasons = sorted(
-        int(
-            path.name
-        )
+        int(path.name)
         for path
         in league_root.iterdir()
         if (
@@ -867,6 +740,8 @@ def read_history_table(
     league: str,
     seasons: list[int],
     table: str,
+    *,
+    required: bool = True,
 ) -> list[
     dict[str, Any]
 ]:
@@ -878,47 +753,83 @@ def read_history_table(
         path = (
             root
             / league
-            / str(
-                season
-            )
+            / str(season)
             / f"{table}.parquet"
         )
 
         if not path.exists():
-            raise FileNotFoundError(
-                path
-            )
+            if required:
+                raise FileNotFoundError(
+                    path
+                )
+
+            continue
 
         rows.extend(
             pl.read_parquet(
                 path
-            )
-            .to_dicts()
+            ).to_dicts()
         )
 
     return rows
 
 
-def prepare_source_row(
-    row: dict[str, Any],
-) -> dict[str, Any]:
-    prepared = dict(
-        row
-    )
+def build_game_context(
+    rows: list[
+        dict[str, Any]
+    ],
+) -> dict[
+    str,
+    dict[str, Any],
+]:
+    context: dict[
+        str,
+        dict[str, Any],
+    ] = {}
 
-    prepared[
-        "_dt"
-    ] = row_game_datetime(
-        prepared
-    )
+    for raw in rows:
+        game_id = row_game_id(
+            raw
+        )
 
-    prepared[
-        "_date"
-    ] = row_game_date(
-        prepared
-    )
+        if not game_id:
+            continue
 
-    return prepared
+        game_date = row_game_date(
+            raw
+        )
+
+        if game_date is None:
+            continue
+
+        context[
+            game_id
+        ] = {
+            **raw,
+            "game_id": game_id,
+            "_date": game_date,
+            "_dt": row_game_datetime(
+                raw
+            ),
+            "home_team_id": clean_id(
+                raw.get(
+                    "home_team_id"
+                )
+                or raw.get(
+                    "home_id"
+                )
+            ),
+            "away_team_id": clean_id(
+                raw.get(
+                    "away_team_id"
+                )
+                or raw.get(
+                    "away_id"
+                )
+            ),
+        }
+
+    return context
 
 
 def source_sort_key(
@@ -935,16 +846,13 @@ def source_sort_key(
         "_dt"
     )
 
-    fallback_date = (
+    return (
         source_date
         if isinstance(
             source_date,
             date,
         )
-        else date.min
-    )
-
-    fallback_dt = (
+        else date.min,
         source_dt
         if isinstance(
             source_dt,
@@ -952,241 +860,7 @@ def source_sort_key(
         )
         else datetime.min.replace(
             tzinfo=timezone.utc
-        )
-    )
-
-    return (
-        fallback_date,
-        fallback_dt,
-    )
-
-
-def build_team_index(
-    rows: list[
-        dict[str, Any]
-    ],
-) -> dict[
-    str,
-    list[
-        dict[str, Any]
-    ],
-]:
-    index: dict[
-        str,
-        list[
-            dict[str, Any]
-        ],
-    ] = defaultdict(
-        list
-    )
-
-    for raw in rows:
-        team_id = row_team_id(
-            raw
-        )
-
-        game_id = row_game_id(
-            raw
-        )
-
-        if (
-            not team_id
-            or not game_id
-        ):
-            continue
-
-        row = prepare_source_row(
-            raw
-        )
-
-        if row[
-            "_date"
-        ] is None:
-            continue
-
-        index[
-            team_id
-        ].append(
-            row
-        )
-
-    for team_rows in index.values():
-        team_rows.sort(
-            key=source_sort_key
-        )
-
-    return dict(
-        index
-    )
-
-
-def build_player_game_index(
-    rows: list[
-        dict[str, Any]
-    ],
-) -> dict[
-    str,
-    list[
-        dict[str, Any]
-    ],
-]:
-    grouped: dict[
-        tuple[
-            str,
-            str,
-        ],
-        dict[str, Any],
-    ] = {}
-
-    for raw in rows:
-        team_id = row_team_id(
-            raw
-        )
-
-        game_id = row_game_id(
-            raw
-        )
-
-        if (
-            not team_id
-            or not game_id
-        ):
-            continue
-
-        key = (
-            team_id,
-            game_id,
-        )
-
-        group = grouped.get(
-            key
-        )
-
-        if group is None:
-            prepared = prepare_source_row(
-                raw
-            )
-
-            if prepared[
-                "_date"
-            ] is None:
-                continue
-
-            group = {
-                "team_id": (
-                    team_id
-                ),
-                "game_id": (
-                    game_id
-                ),
-                "_dt": prepared[
-                    "_dt"
-                ],
-                "_date": prepared[
-                    "_date"
-                ],
-                "players": [],
-            }
-
-            grouped[
-                key
-            ] = group
-
-        group[
-            "players"
-        ].append(
-            raw
-        )
-
-    index: dict[
-        str,
-        list[
-            dict[str, Any]
-        ],
-    ] = defaultdict(
-        list
-    )
-
-    for group in grouped.values():
-        index[
-            group[
-                "team_id"
-            ]
-        ].append(
-            group
-        )
-
-    for games in index.values():
-        games.sort(
-            key=source_sort_key
-        )
-
-    return dict(
-        index
-    )
-
-
-def build_home_venue_index(
-    rows: list[
-        dict[str, Any]
-    ],
-) -> dict[
-    str,
-    list[
-        dict[str, Any]
-    ],
-]:
-    index: dict[
-        str,
-        list[
-            dict[str, Any]
-        ],
-    ] = defaultdict(
-        list
-    )
-
-    for raw in rows:
-        home_team_id = clean_id(
-            raw.get(
-                "home_team_id"
-            )
-            or raw.get(
-                "home_id"
-            )
-        )
-
-        game_id = row_game_id(
-            raw
-        )
-
-        if (
-            not home_team_id
-            or not game_id
-        ):
-            continue
-
-        row = prepare_source_row(
-            raw
-        )
-
-        if row[
-            "_date"
-        ] is None:
-            continue
-
-        index[
-            home_team_id
-        ].append(
-            row
-        )
-
-    for games in index.values():
-        games.sort(
-            key=source_sort_key
-        )
-
-    return dict(
-        index
+        ),
     )
 
 
@@ -1218,25 +892,21 @@ def mean(
         return None
 
     return (
-        sum(
-            values
-        )
-        / len(
-            values
-        )
+        sum(values)
+        / len(values)
     )
 
 
 def shrunk_mean(
-    window_values: list[float],
+    recent_values: list[float],
     baseline_values: list[float],
     pseudo_games: float,
 ) -> float | None:
-    window_mean = mean(
-        window_values
+    recent_mean = mean(
+        recent_values
     )
 
-    if window_mean is None:
+    if recent_mean is None:
         return None
 
     baseline = mean(
@@ -1247,18 +917,18 @@ def shrunk_mean(
         baseline is None
         or pseudo_games <= 0
     ):
-        return window_mean
+        return recent_mean
 
     n = float(
         len(
-            window_values
+            recent_values
         )
     )
 
     return (
         (
             n
-            * window_mean
+            * recent_mean
         )
         + (
             pseudo_games
@@ -1270,49 +940,1253 @@ def shrunk_mean(
     )
 
 
-def team_metric_value(
-    row: dict[str, Any],
-    metric: str,
+def shrink_to_value(
+    values: list[float],
+    baseline: float | None,
+    pseudo_games: float,
 ) -> float | None:
-    if metric == "margin":
-        points_for = to_float(
-            first_value(
-                row,
-                TEAM_METRICS[
-                    "points_for"
-                ],
-            )
+    value_mean = mean(
+        values
+    )
+
+    if value_mean is None:
+        return baseline
+
+    if (
+        baseline is None
+        or pseudo_games <= 0
+    ):
+        return value_mean
+
+    n = float(
+        len(values)
+    )
+
+    return (
+        (
+            n
+            * value_mean
+        )
+        + (
+            pseudo_games
+            * baseline
+        )
+    ) / (
+        n
+        + pseudo_games
+    )
+
+
+def safe_ratio(
+    numerator: float | None,
+    denominator: float | None,
+) -> float | None:
+    if (
+        numerator is None
+        or denominator is None
+        or denominator <= 0
+    ):
+        return None
+
+    return (
+        numerator
+        / denominator
+    )
+
+
+def possession_validation(
+    cfg: dict[str, Any],
+) -> tuple[
+    float,
+    float,
+]:
+    validation = required_mapping(
+        required_mapping(
+            cfg,
+            "possessions",
+        ),
+        "validation",
+    )
+
+    return (
+        float(
+            validation[
+                "min_team_possessions"
+            ]
+        ),
+        float(
+            validation[
+                "max_team_possessions"
+            ]
+        ),
+    )
+
+
+def valid_team_possessions(
+    value: float | None,
+    cfg: dict[str, Any],
+) -> bool:
+    if (
+        value is None
+        or not math.isfinite(value)
+    ):
+        return False
+
+    minimum, maximum = (
+        possession_validation(
+            cfg
+        )
+    )
+
+    return (
+        minimum
+        <= value
+        <= maximum
+    )
+
+
+def read_possession_counts(
+    root: Path,
+    league: str,
+    seasons: list[int],
+) -> dict[
+    str,
+    float,
+]:
+    result: dict[
+        str,
+        float,
+    ] = {}
+
+    for season in seasons:
+        path = (
+            root
+            / league
+            / str(season)
+            / "possessions.parquet"
         )
 
-        points_against = to_float(
-            first_value(
-                row,
-                TEAM_METRICS[
-                    "points_against"
+        if not path.exists():
+            continue
+
+        game_frame = pl.read_parquet(
+            path,
+            columns=[
+                "game_id"
+            ],
+        )
+
+        if game_frame.is_empty():
+            continue
+
+        has_count_flag = True
+
+        try:
+            flag_frame = pl.read_parquet(
+                path,
+                columns=[
+                    "count_as_possession"
                 ],
             )
+
+        except Exception:
+            has_count_flag = False
+            frame = game_frame
+
+        else:
+            frame = (
+                game_frame
+                .with_columns(
+                    flag_frame[
+                        "count_as_possession"
+                    ]
+                )
+            )
+
+        total_counts: dict[
+            str,
+            int,
+        ] = defaultdict(int)
+
+        true_counts: dict[
+            str,
+            int,
+        ] = defaultdict(int)
+
+        flag_seen: dict[
+            str,
+            bool,
+        ] = defaultdict(bool)
+
+        if has_count_flag:
+            for (
+                game_id_raw,
+                flag_raw,
+            ) in frame.iter_rows():
+                game_id = clean_id(
+                    game_id_raw
+                )
+
+                if not game_id:
+                    continue
+
+                total_counts[
+                    game_id
+                ] += 1
+
+                parsed_flag = normalize_bool(
+                    flag_raw
+                )
+
+                if parsed_flag is not None:
+                    flag_seen[
+                        game_id
+                    ] = True
+
+                    if parsed_flag:
+                        true_counts[
+                            game_id
+                        ] += 1
+
+        else:
+            for (
+                game_id_raw,
+            ) in frame.iter_rows():
+                game_id = clean_id(
+                    game_id_raw
+                )
+
+                if game_id:
+                    total_counts[
+                        game_id
+                    ] += 1
+
+        for (
+            game_id,
+            total,
+        ) in total_counts.items():
+            counted = (
+                true_counts[
+                    game_id
+                ]
+                if flag_seen[
+                    game_id
+                ]
+                else total
+            )
+
+            if counted > 0:
+                result[
+                    game_id
+                ] = (
+                    counted
+                    / 2.0
+                )
+
+    return result
+
+
+def simple_possession_estimate(
+    row: dict[str, Any],
+    free_throw_coefficient: float,
+) -> float | None:
+    fga = to_float(
+        row.get(
+            "field_goals_attempted"
+        )
+    )
+
+    orb = to_float(
+        row.get(
+            "offensive_rebounds"
+        )
+    )
+
+    turnovers = to_float(
+        first_value(
+            row,
+            (
+                "total_turnovers",
+                "turnovers",
+            ),
+        )
+    )
+
+    fta = to_float(
+        row.get(
+            "free_throws_attempted"
+        )
+    )
+
+    if None in (
+        fga,
+        orb,
+        turnovers,
+        fta,
+    ):
+        return None
+
+    value = (
+        fga
+        - orb
+        + turnovers
+        + (
+            free_throw_coefficient
+            * fta
+        )
+    )
+
+    if value <= 0:
+        return None
+
+    return value
+
+
+def game_possessions(
+    game_id: str,
+    team_row: dict[str, Any],
+    opponent_row: dict[str, Any],
+    sdv_counts: dict[
+        str,
+        float,
+    ],
+    cfg: dict[str, Any],
+) -> tuple[
+    float | None,
+    str,
+]:
+    possession_cfg = required_mapping(
+        cfg,
+        "possessions",
+    )
+
+    if bool(
+        possession_cfg.get(
+            "prefer_sdv",
+            True,
+        )
+    ):
+        sdv_value = sdv_counts.get(
+            game_id
+        )
+
+        if valid_team_possessions(
+            sdv_value,
+            cfg,
+        ):
+            return (
+                sdv_value,
+                "sdv_possessions",
+            )
+
+    fallback = required_mapping(
+        possession_cfg,
+        "fallback_estimate",
+    )
+
+    coefficient = float(
+        fallback[
+            "free_throw_coefficient"
+        ]
+    )
+
+    team_estimate = (
+        simple_possession_estimate(
+            team_row,
+            coefficient,
+        )
+    )
+
+    opponent_estimate = (
+        simple_possession_estimate(
+            opponent_row,
+            coefficient,
+        )
+    )
+
+    if (
+        team_estimate is None
+        or opponent_estimate is None
+    ):
+        return (
+            None,
+            "unavailable",
+        )
+
+    estimate = (
+        team_estimate
+        + opponent_estimate
+    ) / 2.0
+
+    if not valid_team_possessions(
+        estimate,
+        cfg,
+    ):
+        return (
+            None,
+            "unavailable",
+        )
+
+    return (
+        estimate,
+        "boxscore_estimate",
+    )
+
+
+def prepare_team_game_rows(
+    rows: list[
+        dict[str, Any]
+    ],
+    game_context: dict[
+        str,
+        dict[str, Any],
+    ],
+    sdv_possessions: dict[
+        str,
+        float,
+    ],
+    cfg: dict[str, Any],
+) -> tuple[
+    dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ],
+    list[
+        dict[str, Any]
+    ],
+]:
+    grouped: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ] = defaultdict(list)
+
+    for raw in rows:
+        game_id = row_game_id(
+            raw
+        )
+
+        team_id = row_team_id(
+            raw
         )
 
         if (
-            points_for is None
-            or points_against is None
+            game_id
+            and team_id
         ):
+            grouped[
+                game_id
+            ].append(
+                raw
+            )
+
+    by_team: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ] = defaultdict(list)
+
+    all_rows: list[
+        dict[str, Any]
+    ] = []
+
+    for (
+        game_id,
+        game_rows,
+    ) in grouped.items():
+        context = game_context.get(
+            game_id
+        )
+
+        if context is None:
+            continue
+
+        row_by_team = {
+            row_team_id(row): row
+            for row
+            in game_rows
+            if row_team_id(row)
+        }
+
+        home_id = clean_id(
+            context.get(
+                "home_team_id"
+            )
+        )
+
+        away_id = clean_id(
+            context.get(
+                "away_team_id"
+            )
+        )
+
+        for raw in game_rows:
+            team_id = row_team_id(
+                raw
+            )
+
+            if not team_id:
+                continue
+
+            if team_id == home_id:
+                opponent_id = away_id
+
+            elif team_id == away_id:
+                opponent_id = home_id
+
+            else:
+                opponent_id = clean_id(
+                    raw.get(
+                        "opponent_team_id"
+                    )
+                )
+
+            opponent_row = row_by_team.get(
+                opponent_id
+            )
+
+            if opponent_row is None:
+                candidates = [
+                    row
+                    for row
+                    in game_rows
+                    if row_team_id(row)
+                    != team_id
+                ]
+
+                opponent_row = (
+                    candidates[0]
+                    if len(candidates)
+                    == 1
+                    else None
+                )
+
+            if opponent_row is None:
+                continue
+
+            (
+                possessions,
+                possession_method,
+            ) = game_possessions(
+                game_id,
+                raw,
+                opponent_row,
+                sdv_possessions,
+                cfg,
+            )
+
+            points_for = to_float(
+                raw.get(
+                    "team_score"
+                )
+            )
+
+            points_against = to_float(
+                raw.get(
+                    "opponent_team_score"
+                )
+                if clean(
+                    raw.get(
+                        "opponent_team_score"
+                    )
+                )
+                != ""
+                else opponent_row.get(
+                    "team_score"
+                )
+            )
+
+            fgm = to_float(
+                raw.get(
+                    "field_goals_made"
+                )
+            )
+
+            fga = to_float(
+                raw.get(
+                    "field_goals_attempted"
+                )
+            )
+
+            three_made = to_float(
+                raw.get(
+                    "three_point_field_goals_made"
+                )
+            )
+
+            turnovers = to_float(
+                first_value(
+                    raw,
+                    (
+                        "total_turnovers",
+                        "turnovers",
+                    ),
+                )
+            )
+
+            orb = to_float(
+                raw.get(
+                    "offensive_rebounds"
+                )
+            )
+
+            opponent_drb = to_float(
+                opponent_row.get(
+                    "defensive_rebounds"
+                )
+            )
+
+            fta = to_float(
+                raw.get(
+                    "free_throws_attempted"
+                )
+            )
+
+            off_eff = (
+                100.0
+                * points_for
+                / possessions
+                if (
+                    points_for is not None
+                    and possessions is not None
+                    and possessions > 0
+                )
+                else None
+            )
+
+            def_eff = (
+                100.0
+                * points_against
+                / possessions
+                if (
+                    points_against is not None
+                    and possessions is not None
+                    and possessions > 0
+                )
+                else None
+            )
+
+            efg_pct = (
+                (
+                    fgm
+                    + (
+                        0.5
+                        * three_made
+                    )
+                )
+                / fga
+                if (
+                    fgm is not None
+                    and three_made is not None
+                    and fga is not None
+                    and fga > 0
+                )
+                else None
+            )
+
+            tov_rate = safe_ratio(
+                turnovers,
+                possessions,
+            )
+
+            orb_rate = (
+                orb
+                / (
+                    orb
+                    + opponent_drb
+                )
+                if (
+                    orb is not None
+                    and opponent_drb is not None
+                    and (
+                        orb
+                        + opponent_drb
+                    )
+                    > 0
+                )
+                else None
+            )
+
+            ft_rate = safe_ratio(
+                fta,
+                fga,
+            )
+
+            margin = (
+                points_for
+                - points_against
+                if (
+                    points_for is not None
+                    and points_against is not None
+                )
+                else None
+            )
+
+            net_eff = (
+                off_eff
+                - def_eff
+                if (
+                    off_eff is not None
+                    and def_eff is not None
+                )
+                else None
+            )
+
+            prepared = {
+                **raw,
+                "game_id": game_id,
+                "team_id": team_id,
+                "opponent_team_id": opponent_id,
+                "_date": context[
+                    "_date"
+                ],
+                "_dt": context[
+                    "_dt"
+                ],
+                "_possessions": possessions,
+                "_possession_method": (
+                    possession_method
+                ),
+                "_raw_off_eff": off_eff,
+                "_raw_def_eff": def_eff,
+                "_raw_pace": possessions,
+                "_raw_efg_pct": efg_pct,
+                "_raw_tov_rate": tov_rate,
+                "_raw_orb_rate": orb_rate,
+                "_raw_ft_rate": ft_rate,
+                "_raw_margin": margin,
+                "_raw_net_eff": net_eff,
+            }
+
+            by_team[
+                team_id
+            ].append(
+                prepared
+            )
+
+            all_rows.append(
+                prepared
+            )
+
+    for team_rows in by_team.values():
+        team_rows.sort(
+            key=source_sort_key
+        )
+
+    all_rows.sort(
+        key=source_sort_key
+    )
+
+    return (
+        dict(by_team),
+        all_rows,
+    )
+
+
+class LeagueEfficiencyIndex:
+    def __init__(
+        self,
+        rows: list[
+            dict[str, Any]
+        ],
+    ) -> None:
+        self.by_date: dict[
+            date,
+            list[
+                dict[str, Any]
+            ],
+        ] = defaultdict(list)
+
+        for row in rows:
+            row_date = row.get(
+                "_date"
+            )
+
+            if (
+                isinstance(
+                    row_date,
+                    date,
+                )
+                and row.get(
+                    "_raw_off_eff"
+                )
+                is not None
+            ):
+                self.by_date[
+                    row_date
+                ].append(
+                    row
+                )
+
+        self.dates = sorted(
+            self.by_date
+        )
+
+        self.cumulative_sum: list[
+            float
+        ] = []
+
+        self.cumulative_count: list[
+            int
+        ] = []
+
+        running_sum = 0.0
+        running_count = 0
+
+        for row_date in self.dates:
+            values = [
+                float(
+                    row[
+                        "_raw_off_eff"
+                    ]
+                )
+                for row
+                in self.by_date[
+                    row_date
+                ]
+                if row.get(
+                    "_raw_off_eff"
+                )
+                is not None
+            ]
+
+            running_sum += sum(
+                values
+            )
+
+            running_count += len(
+                values
+            )
+
+            self.cumulative_sum.append(
+                running_sum
+            )
+
+            self.cumulative_count.append(
+                running_count
+            )
+
+    def prior_mean(
+        self,
+        target_game_id: str,
+        target_dt: datetime | None,
+        target_date: date,
+    ) -> float | None:
+        position = (
+            bisect.bisect_left(
+                self.dates,
+                target_date,
+            )
+            - 1
+        )
+
+        total = (
+            self.cumulative_sum[
+                position
+            ]
+            if position >= 0
+            else 0.0
+        )
+
+        count = (
+            self.cumulative_count[
+                position
+            ]
+            if position >= 0
+            else 0
+        )
+
+        if target_dt is not None:
+            same_day = [
+                row
+                for row
+                in self.by_date.get(
+                    target_date,
+                    [],
+                )
+                if (
+                    isinstance(
+                        row.get(
+                            "_dt"
+                        ),
+                        datetime,
+                    )
+                    and row[
+                        "_dt"
+                    ]
+                    < target_dt
+                )
+            ]
+
+            assert_target_absent(
+                same_day,
+                target_game_id,
+                "league_efficiency_same_day",
+            )
+
+            values = [
+                float(
+                    row[
+                        "_raw_off_eff"
+                    ]
+                )
+                for row
+                in same_day
+                if row.get(
+                    "_raw_off_eff"
+                )
+                is not None
+            ]
+
+            total += sum(
+                values
+            )
+
+            count += len(
+                values
+            )
+
+        if not count:
             return None
 
         return (
-            points_for
-            - points_against
+            total
+            / count
         )
 
-    columns = TEAM_METRICS[
-        metric
+
+def prepare_player_index(
+    rows: list[
+        dict[str, Any]
+    ],
+    game_context: dict[
+        str,
+        dict[str, Any],
+    ],
+) -> dict[
+    str,
+    list[
+        dict[str, Any]
+    ],
+]:
+    grouped: dict[
+        tuple[
+            str,
+            str,
+        ],
+        dict[str, Any],
+    ] = {}
+
+    for raw in rows:
+        team_id = row_team_id(
+            raw
+        )
+
+        game_id = row_game_id(
+            raw
+        )
+
+        context = game_context.get(
+            game_id
+        )
+
+        if (
+            not team_id
+            or not game_id
+            or context is None
+        ):
+            continue
+
+        key = (
+            team_id,
+            game_id,
+        )
+
+        group = grouped.get(
+            key
+        )
+
+        if group is None:
+            group = {
+                "team_id": team_id,
+                "game_id": game_id,
+                "_date": context[
+                    "_date"
+                ],
+                "_dt": context[
+                    "_dt"
+                ],
+                "players": [],
+            }
+
+            grouped[
+                key
+            ] = group
+
+        group[
+            "players"
+        ].append(
+            raw
+        )
+
+    index: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ] = defaultdict(list)
+
+    for group in grouped.values():
+        index[
+            group[
+                "team_id"
+            ]
+        ].append(
+            group
+        )
+
+    for games in index.values():
+        games.sort(
+            key=source_sort_key
+        )
+
+    return dict(
+        index
+    )
+
+
+def build_home_venue_index(
+    game_context: dict[
+        str,
+        dict[str, Any],
+    ],
+) -> dict[
+    str,
+    list[
+        dict[str, Any]
+    ],
+]:
+    index: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ] = defaultdict(list)
+
+    for row in game_context.values():
+        home_team_id = clean_id(
+            row.get(
+                "home_team_id"
+            )
+        )
+
+        if home_team_id:
+            index[
+                home_team_id
+            ].append(
+                row
+            )
+
+    for games in index.values():
+        games.sort(
+            key=source_sort_key
+        )
+
+    return dict(
+        index
+    )
+
+
+def metric_values(
+    rows: list[
+        dict[str, Any]
+    ],
+    field: str,
+) -> list[float]:
+    return [
+        float(
+            row[
+                field
+            ]
+        )
+        for row
+        in rows
+        if row.get(
+            field
+        )
+        is not None
     ]
 
-    return to_float(
-        first_value(
-            row,
-            columns,
+
+def opponent_rating(
+    opponent_id: str,
+    field: str,
+    target_game_id: str,
+    exclude_game_id: str,
+    target_dt: datetime | None,
+    target_date: date,
+    team_index: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ],
+    opponent_rating_games: int,
+    league_baseline: float | None,
+    opponent_pseudo_games: float,
+) -> float | None:
+    eligible = prior_rows(
+        team_index.get(
+            opponent_id,
+            [],
+        ),
+        target_dt,
+        target_date,
+    )
+
+    assert_target_absent(
+        eligible,
+        target_game_id,
+        f"opponent_team_game:{opponent_id}",
+    )
+
+    eligible = [
+        row
+        for row
+        in eligible
+        if row_game_id(row)
+        != exclude_game_id
+    ]
+
+    recent = eligible[
+        -opponent_rating_games:
+    ]
+
+    values = metric_values(
+        recent,
+        field,
+    )
+
+    return shrink_to_value(
+        values,
+        league_baseline,
+        opponent_pseudo_games,
+    )
+
+
+def adjusted_efficiency_values(
+    rows: list[
+        dict[str, Any]
+    ],
+    target_game_id: str,
+    target_dt: datetime | None,
+    target_date: date,
+    team_index: dict[
+        str,
+        list[
+            dict[str, Any]
+        ],
+    ],
+    opponent_rating_games: int,
+    league_baseline: float | None,
+    opponent_pseudo_games: float,
+) -> tuple[
+    list[float],
+    list[float],
+]:
+    adjusted_offense: list[
+        float
+    ] = []
+
+    adjusted_defense: list[
+        float
+    ] = []
+
+    for row in rows:
+        opponent_id = clean_id(
+            row.get(
+                "opponent_team_id"
+            )
         )
+
+        raw_off = to_float(
+            row.get(
+                "_raw_off_eff"
+            )
+        )
+
+        raw_def = to_float(
+            row.get(
+                "_raw_def_eff"
+            )
+        )
+
+        if not opponent_id:
+            continue
+
+        source_game_id = row_game_id(
+            row
+        )
+
+        opponent_def = opponent_rating(
+            opponent_id,
+            "_raw_def_eff",
+            target_game_id,
+            source_game_id,
+            target_dt,
+            target_date,
+            team_index,
+            opponent_rating_games,
+            league_baseline,
+            opponent_pseudo_games,
+        )
+
+        opponent_off = opponent_rating(
+            opponent_id,
+            "_raw_off_eff",
+            target_game_id,
+            source_game_id,
+            target_dt,
+            target_date,
+            team_index,
+            opponent_rating_games,
+            league_baseline,
+            opponent_pseudo_games,
+        )
+
+        if (
+            raw_off is not None
+            and opponent_def is not None
+            and league_baseline is not None
+        ):
+            adjusted_offense.append(
+                raw_off
+                - (
+                    opponent_def
+                    - league_baseline
+                )
+            )
+
+        if (
+            raw_def is not None
+            and opponent_off is not None
+            and league_baseline is not None
+        ):
+            adjusted_defense.append(
+                raw_def
+                - (
+                    opponent_off
+                    - league_baseline
+                )
+            )
+
+    return (
+        adjusted_offense,
+        adjusted_defense,
     )
 
 
@@ -1321,18 +2195,21 @@ def team_features(
     target_game_id: str,
     target_dt: datetime | None,
     target_date: date,
-    index: dict[
+    team_index: dict[
         str,
         list[
             dict[str, Any]
         ],
     ],
+    league_efficiency_index: LeagueEfficiencyIndex,
     windows: list[int],
-    pseudo_games: float,
+    opponent_rating_games: int,
+    team_pseudo_games: float,
+    opponent_pseudo_games: float,
     side: str,
 ) -> dict[str, Any]:
     eligible = prior_rows(
-        index.get(
+        team_index.get(
             team_id,
             [],
         ),
@@ -1350,14 +2227,10 @@ def team_features(
         str,
         Any,
     ] = {
-        f"{side}_games_prior": (
-            len(
-                eligible
-            )
+        f"{side}_games_prior": len(
+            eligible
         ),
-        f"{side}_days_since_last_game": (
-            None
-        ),
+        f"{side}_rest_days": None,
     }
 
     if eligible:
@@ -1371,17 +2244,36 @@ def team_features(
             last_date,
             date,
         ):
-            features[
-                f"{side}_days_since_last_game"
-            ] = (
+            calendar_gap = (
                 target_date
                 - last_date
             ).days
 
-    metrics = [
-        *TEAM_METRICS.keys(),
-        "margin",
-    ]
+            features[
+                f"{side}_rest_days"
+            ] = max(
+                calendar_gap - 1,
+                0,
+            )
+
+    league_baseline = (
+        league_efficiency_index
+        .prior_mean(
+            target_game_id,
+            target_dt,
+            target_date,
+        )
+    )
+
+    raw_field_map = {
+        "pace": "_raw_pace",
+        "efg_pct": "_raw_efg_pct",
+        "tov_rate": "_raw_tov_rate",
+        "orb_rate": "_raw_orb_rate",
+        "ft_rate": "_raw_ft_rate",
+        "recent_margin": "_raw_margin",
+        "recent_net_eff": "_raw_net_eff",
+    }
 
     for window in windows:
         recent = eligible[
@@ -1394,44 +2286,78 @@ def team_features(
             recent
         )
 
-        for metric in metrics:
-            recent_values: list[
-                float
-            ] = []
+        (
+            adjusted_off,
+            adjusted_def,
+        ) = adjusted_efficiency_values(
+            recent,
+            target_game_id,
+            target_dt,
+            target_date,
+            team_index,
+            opponent_rating_games,
+            league_baseline,
+            opponent_pseudo_games,
+        )
 
-            for row in recent:
-                value = team_metric_value(
-                    row,
-                    metric,
-                )
+        features[
+            f"{side}_adj_off_eff_{window}"
+        ] = shrink_to_value(
+            adjusted_off,
+            league_baseline,
+            team_pseudo_games,
+        )
 
-                if value is not None:
-                    recent_values.append(
-                        value
-                    )
+        features[
+            f"{side}_adj_def_eff_{window}"
+        ] = shrink_to_value(
+            adjusted_def,
+            league_baseline,
+            team_pseudo_games,
+        )
 
-            baseline_values: list[
-                float
-            ] = []
+        for (
+            feature_name,
+            raw_field,
+        ) in raw_field_map.items():
+            recent_values = metric_values(
+                recent,
+                raw_field,
+            )
 
-            for row in eligible:
-                value = team_metric_value(
-                    row,
-                    metric,
-                )
-
-                if value is not None:
-                    baseline_values.append(
-                        value
-                    )
+            baseline_values = metric_values(
+                eligible,
+                raw_field,
+            )
 
             features[
-                f"{side}_{metric}_{window}"
+                f"{side}_{feature_name}_{window}"
             ] = shrunk_mean(
                 recent_values,
                 baseline_values,
-                pseudo_games,
+                team_pseudo_games,
             )
+
+        if recent:
+            features[
+                f"{side}_sdv_possession_share_{window}"
+            ] = (
+                sum(
+                    1
+                    for row
+                    in recent
+                    if row.get(
+                        "_possession_method"
+                    )
+                    == "sdv_possessions"
+                )
+                / len(recent)
+            )
+
+        else:
+            features[
+                f"{side}_sdv_possession_share_{window}"
+            ] = None
 
     return features
 
@@ -1452,15 +2378,9 @@ def player_contribution(
         if stat == "minutes":
             continue
 
-        columns = PLAYER_STAT_COLUMNS.get(
+        columns = PLAYER_STAT_COLUMNS[
             stat
-        )
-
-        if columns is None:
-            raise ValueError(
-                "Unsupported player_strength "
-                f"weight: {stat}"
-            )
+        ]
 
         value = (
             to_float(
@@ -1473,9 +2393,7 @@ def player_contribution(
         )
 
         total += (
-            float(
-                weight
-            )
+            float(weight)
             * value
         )
 
@@ -1537,14 +2455,12 @@ def player_features(
         f"player_game_rows:{side}",
     )
 
-    player_rows: dict[
+    by_player: dict[
         str,
         list[
             dict[str, Any]
         ],
-    ] = defaultdict(
-        list
-    )
+    ] = defaultdict(list)
 
     for row in recent_rows:
         player_id = clean_id(
@@ -1557,7 +2473,7 @@ def player_features(
         )
 
         if player_id:
-            player_rows[
+            by_player[
                 player_id
             ].append(
                 row
@@ -1572,7 +2488,7 @@ def player_features(
         in recent_rows
     ]
 
-    baseline = mean(
+    team_player_baseline = mean(
         all_contributions
     )
 
@@ -1583,7 +2499,7 @@ def player_features(
         ]
     ] = []
 
-    for rows in player_rows.values():
+    for rows in by_player.values():
         contributions = [
             player_contribution(
                 row,
@@ -1624,7 +2540,7 @@ def player_features(
         )
 
         if (
-            baseline is not None
+            team_player_baseline is not None
             and pseudo_games > 0
         ):
             strength = (
@@ -1634,7 +2550,7 @@ def player_features(
                 )
                 + (
                     pseudo_games
-                    * baseline
+                    * team_player_baseline
                 )
             ) / (
                 games
@@ -1642,25 +2558,17 @@ def player_features(
             )
 
         else:
-            strength = (
-                raw_strength
-            )
+            strength = raw_strength
 
         summaries.append(
             {
-                "strength": (
-                    strength
-                ),
+                "strength": strength,
                 "minutes": (
-                    mean(
-                        minutes
-                    )
+                    mean(minutes)
                     or 0.0
                 ),
-                "recent_minutes": (
-                    sum(
-                        minutes
-                    )
+                "recent_minutes": sum(
+                    minutes
                 ),
             }
         )
@@ -1682,15 +2590,11 @@ def player_features(
     ]
 
     return {
-        f"{side}_player_games_used": (
-            len(
-                recent_games
-            )
+        f"{side}_player_games_used": len(
+            recent_games
         ),
-        f"{side}_player_recent_count": (
-            len(
-                summaries
-            )
+        f"{side}_player_recent_count": len(
+            summaries
         ),
         f"{side}_player_strength": (
             sum(
@@ -1717,8 +2621,10 @@ def player_features(
     }
 
 
-def home_court_indicator(
+def team_court_indicator(
     target: dict[str, Any],
+    team_id: str,
+    direct_team_venue_id: Any,
     target_game_id: str,
     target_dt: datetime | None,
     target_date: date,
@@ -1728,6 +2634,7 @@ def home_court_indicator(
             dict[str, Any]
         ],
     ],
+    venue_history_games: int,
 ) -> int | None:
     neutral = normalize_neutral(
         target.get(
@@ -1750,37 +2657,21 @@ def home_court_indicator(
     if not venue_id:
         return None
 
-    direct_home_venue_id = clean_id(
-        target.get(
-            "home_venue_id"
-        )
+    direct_venue_id = clean_id(
+        direct_team_venue_id
     )
 
-    if direct_home_venue_id:
+    if direct_venue_id:
         return (
             1
-            if (
-                venue_id
-                == direct_home_venue_id
-            )
+            if venue_id
+            == direct_venue_id
             else 0
         )
 
-    home_team_id = clean_id(
-        target.get(
-            "home_team_id"
-        )
-        or target.get(
-            "home_id"
-        )
-    )
-
-    if not home_team_id:
-        return None
-
     eligible = prior_rows(
         home_venue_index.get(
-            home_team_id,
+            team_id,
             [],
         ),
         target_dt,
@@ -1790,10 +2681,14 @@ def home_court_indicator(
     assert_target_absent(
         eligible,
         target_game_id,
-        "games:home_venue",
+        f"games:venue_history:{team_id}",
     )
 
-    prior_home_venues = {
+    eligible = eligible[
+        -venue_history_games:
+    ]
+
+    known_home_venues = {
         clean_id(
             row.get(
                 "venue_id"
@@ -1816,13 +2711,13 @@ def home_court_indicator(
         )
     }
 
-    if not prior_home_venues:
+    if not known_home_venues:
         return None
 
     return (
         1
         if venue_id
-        in prior_home_venues
+        in known_home_venues
         else 0
     )
 
@@ -1844,6 +2739,103 @@ def venue_name(
         " ",
         text,
     ).strip()
+
+
+def difference(
+    home: Any,
+    away: Any,
+) -> float | None:
+    home_value = to_float(
+        home
+    )
+
+    away_value = to_float(
+        away
+    )
+
+    if (
+        home_value is None
+        or away_value is None
+    ):
+        return None
+
+    return (
+        home_value
+        - away_value
+    )
+
+
+def add_differentials(
+    result: dict[str, Any],
+    windows: list[int],
+) -> None:
+    result[
+        "diff_rest_days"
+    ] = difference(
+        result.get(
+            "home_rest_days"
+        ),
+        result.get(
+            "away_rest_days"
+        ),
+    )
+
+    result[
+        "diff_court_indicator"
+    ] = difference(
+        result.get(
+            "home_court_indicator"
+        ),
+        result.get(
+            "away_court_indicator"
+        ),
+    )
+
+    result[
+        "diff_player_strength"
+    ] = difference(
+        result.get(
+            "home_player_strength"
+        ),
+        result.get(
+            "away_player_strength"
+        ),
+    )
+
+    result[
+        "diff_player_minutes"
+    ] = difference(
+        result.get(
+            "home_player_minutes"
+        ),
+        result.get(
+            "away_player_minutes"
+        ),
+    )
+
+    for window in windows:
+        for metric in WINDOWED_MODEL_METRICS:
+            result[
+                f"diff_{metric}_{window}"
+            ] = difference(
+                result.get(
+                    f"home_{metric}_{window}"
+                ),
+                result.get(
+                    f"away_{metric}_{window}"
+                ),
+            )
+
+        result[
+            f"diff_sdv_possession_share_{window}"
+        ] = difference(
+            result.get(
+                f"home_sdv_possession_share_{window}"
+            ),
+            result.get(
+                f"away_sdv_possession_share_{window}"
+            ),
+        )
 
 
 def feature_row(
@@ -1871,10 +2863,14 @@ def feature_row(
             dict[str, Any]
         ],
     ],
+    league_efficiency_index: LeagueEfficiencyIndex,
     team_windows: list[int],
+    opponent_rating_games: int,
     player_game_window: int,
     player_top_n: int,
+    venue_history_games: int,
     team_pseudo_games: float,
+    opponent_pseudo_games: float,
     player_pseudo_games: float,
     player_weights: dict[
         str,
@@ -1932,61 +2928,74 @@ def feature_row(
         )
     )
 
-    indicator = home_court_indicator(
+    home_court = team_court_indicator(
         target,
+        home_team_id,
+        target.get(
+            "home_venue_id"
+        ),
         target_game_id,
         target_dt,
         target_date,
         home_venue_index,
+        venue_history_games,
+    )
+
+    away_court = team_court_indicator(
+        target,
+        away_team_id,
+        target.get(
+            "away_venue_id"
+        ),
+        target_game_id,
+        target_dt,
+        target_date,
+        home_venue_index,
+        venue_history_games,
     )
 
     if (
         is_neutral == 1
-        and indicator != 0
+        and (
+            home_court != 0
+            or away_court != 0
+        )
     ):
         raise RuntimeError(
             "HOME COURT ASSERTION FAILED | "
             f"target_game_id={target_game_id} "
             "neutral_site=1 "
-            "home_court_indicator="
-            f"{indicator}"
+            f"home_court_indicator={home_court} "
+            f"away_court_indicator={away_court}"
         )
 
     result: dict[
         str,
         Any,
     ] = {
-        "league": (
-            LEAGUE_LABELS[
-                league
-            ]
-        ),
-        "internal_season": (
-            int(
-                clean_id(
-                    target.get(
-                        "internal_season"
-                    )
+        "league": LEAGUE_LABELS[
+            league
+        ],
+        "internal_season": int(
+            clean_id(
+                target.get(
+                    "internal_season"
                 )
-                or 0
             )
+            or 0
         ),
-        "sdv_season": (
-            int(
-                clean_id(
-                    target.get(
-                        "sdv_season"
-                    )
-                    or target.get(
-                        "season"
-                    )
+        "sdv_season": int(
+            clean_id(
+                target.get(
+                    "sdv_season"
                 )
-                or 0
+                or target.get(
+                    "season"
+                )
             )
+            or 0
         ),
-        "game_id": (
-            target_game_id
-        ),
+        "game_id": target_game_id,
         "game_date": (
             target_date.strftime(
                 "%Y_%m_%d"
@@ -1997,36 +3006,21 @@ def feature_row(
             if target_dt
             else None
         ),
-        "home_team_id": (
-            home_team_id
-        ),
-        "away_team_id": (
-            away_team_id
-        ),
-        "is_neutral_site": (
-            is_neutral
-        ),
-        "home_court_indicator": (
-            indicator
-        ),
-        "venue_id": (
-            clean_id(
-                target.get(
-                    "venue_id"
-                )
+        "home_team_id": home_team_id,
+        "away_team_id": away_team_id,
+        "is_neutral_site": is_neutral,
+        "home_court_indicator": home_court,
+        "away_court_indicator": away_court,
+        "venue_id": clean_id(
+            target.get(
+                "venue_id"
             )
         ),
-        "venue_name": (
-            venue_name(
-                target
-            )
+        "venue_name": venue_name(
+            target
         ),
-        "feature_version": (
-            feature_version
-        ),
-        "feature_generated_at_utc": (
-            generated_at
-        ),
+        "feature_version": feature_version,
+        "feature_generated_at_utc": generated_at,
     }
 
     result.update(
@@ -2036,8 +3030,11 @@ def feature_row(
             target_dt,
             target_date,
             team_index,
+            league_efficiency_index,
             team_windows,
+            opponent_rating_games,
             team_pseudo_games,
+            opponent_pseudo_games,
             "home",
         )
     )
@@ -2049,8 +3046,11 @@ def feature_row(
             target_dt,
             target_date,
             team_index,
+            league_efficiency_index,
             team_windows,
+            opponent_rating_games,
             team_pseudo_games,
+            opponent_pseudo_games,
             "away",
         )
     )
@@ -2083,6 +3083,11 @@ def feature_row(
             player_weights,
             "away",
         )
+    )
+
+    add_differentials(
+        result,
+        team_windows,
     )
 
     return result
@@ -2104,9 +3109,7 @@ def validate_model_inputs(
         "model_inputs",
     )
 
-    configured: set[
-        str
-    ] = set()
+    configured: set[str] = set()
 
     for key in (
         "categorical",
@@ -2122,27 +3125,20 @@ def validate_model_inputs(
             list,
         ):
             raise ValueError(
-                "model_inputs."
-                f"{key} must be a list"
+                f"model_inputs.{key} must be a list"
             )
 
         configured.update(
-            clean(
-                value
-            )
+            clean(value)
             for value
             in values
-            if clean(
-                value
-            )
+            if clean(value)
         )
 
     missing = sorted(
         configured
         - set(
-            rows[
-                0
-            ]
+            rows[0]
         )
     )
 
@@ -2187,13 +3183,9 @@ def write_features(
         )
 
     if (
-        len(
-            game_ids
-        )
+        len(game_ids)
         != len(
-            set(
-                game_ids
-            )
+            set(game_ids)
         )
     ):
         raise RuntimeError(
@@ -2214,13 +3206,11 @@ def write_features(
         tmp.unlink()
 
     try:
-        frame = pl.DataFrame(
+        pl.DataFrame(
             rows,
             infer_schema_length=None,
             strict=False,
-        )
-
-        frame.write_parquet(
+        ).write_parquet(
             tmp,
             compression="zstd",
         )
@@ -2250,9 +3240,7 @@ def canonical_target_rows(
         encoding="utf-8-sig",
     ) as handle:
         rows = [
-            dict(
-                row
-            )
+            dict(row)
             for row
             in csv.DictReader(
                 handle
@@ -2305,9 +3293,101 @@ def historical_target_rows(
     )
 
 
+def generation_settings(
+    cfg: dict[str, Any],
+) -> tuple[
+    list[int],
+    int,
+    int,
+    int,
+    int,
+    float,
+    float,
+    float,
+    dict[
+        str,
+        float,
+    ],
+]:
+    windows_cfg = required_mapping(
+        cfg,
+        "feature_windows",
+    )
+
+    shrinkage = required_mapping(
+        cfg,
+        "shrinkage",
+    )
+
+    player_cfg = required_mapping(
+        cfg,
+        "player_strength",
+    )
+
+    weights_raw = player_cfg[
+        "weights"
+    ]
+
+    weights = {
+        clean(key): float(value)
+        for (
+            key,
+            value,
+        )
+        in weights_raw.items()
+    }
+
+    return (
+        sorted(
+            int(value)
+            for value
+            in windows_cfg[
+                "team_games"
+            ]
+        ),
+        int(
+            windows_cfg[
+                "opponent_rating_games"
+            ]
+        ),
+        int(
+            windows_cfg[
+                "player_team_games"
+            ]
+        ),
+        int(
+            windows_cfg[
+                "player_top_n"
+            ]
+        ),
+        int(
+            windows_cfg[
+                "venue_history_games"
+            ]
+        ),
+        float(
+            shrinkage[
+                "team_pseudo_games"
+            ]
+        ),
+        float(
+            shrinkage[
+                "opponent_pseudo_games"
+            ]
+        ),
+        float(
+            shrinkage[
+                "player_pseudo_games"
+            ]
+        ),
+        weights,
+    )
+
+
 def build_indexes(
     history_root: Path,
     league: str,
+    cfg: dict[str, Any],
 ) -> tuple[
     list[int],
     dict[
@@ -2328,6 +3408,7 @@ def build_indexes(
             dict[str, Any]
         ],
     ],
+    LeagueEfficiencyIndex,
 ]:
     seasons = history_seasons(
         history_root,
@@ -2355,108 +3436,51 @@ def build_indexes(
         "player_game",
     )
 
+    game_context = build_game_context(
+        games
+    )
+
+    sdv_possessions = (
+        read_possession_counts(
+            history_root,
+            league,
+            seasons,
+        )
+    )
+
+    (
+        team_index,
+        all_team_rows,
+    ) = prepare_team_game_rows(
+        team_game,
+        game_context,
+        sdv_possessions,
+        cfg,
+    )
+
+    player_index = prepare_player_index(
+        player_game,
+        game_context,
+    )
+
+    home_venue_index = (
+        build_home_venue_index(
+            game_context
+        )
+    )
+
+    league_efficiency_index = (
+        LeagueEfficiencyIndex(
+            all_team_rows
+        )
+    )
+
     return (
         seasons,
-        build_team_index(
-            team_game
-        ),
-        build_player_game_index(
-            player_game
-        ),
-        build_home_venue_index(
-            games
-        ),
-    )
-
-
-def generation_settings(
-    cfg: dict[str, Any],
-) -> tuple[
-    list[int],
-    int,
-    int,
-    float,
-    float,
-    dict[
-        str,
-        float,
-    ],
-]:
-    windows_cfg = required_mapping(
-        cfg,
-        "feature_windows",
-    )
-
-    shrinkage = required_mapping(
-        cfg,
-        "shrinkage",
-    )
-
-    player_cfg = required_mapping(
-        cfg,
-        "player_strength",
-    )
-
-    weights_raw = player_cfg.get(
-        "weights"
-    )
-
-    if (
-        not isinstance(
-            weights_raw,
-            dict,
-        )
-        or not weights_raw
-    ):
-        raise ValueError(
-            "player_strength.weights "
-            "must be a non-empty mapping"
-        )
-
-    weights = {
-        clean(
-            key
-        ): float(
-            value
-        )
-        for (
-            key,
-            value,
-        )
-        in weights_raw.items()
-    }
-
-    return (
-        sorted(
-            int(
-                value
-            )
-            for value
-            in windows_cfg[
-                "team_games"
-            ]
-        ),
-        int(
-            windows_cfg[
-                "player_team_games"
-            ]
-        ),
-        int(
-            windows_cfg[
-                "player_top_n"
-            ]
-        ),
-        float(
-            shrinkage[
-                "team_pseudo_games"
-            ]
-        ),
-        float(
-            shrinkage[
-                "player_pseudo_games"
-            ]
-        ),
-        weights,
+        team_index,
+        player_index,
+        home_venue_index,
+        league_efficiency_index,
     )
 
 
@@ -2486,15 +3510,19 @@ def generate_rows(
             dict[str, Any]
         ],
     ],
+    league_efficiency_index: LeagueEfficiencyIndex,
     generated_at: str,
 ) -> list[
     dict[str, Any]
 ]:
     (
         team_windows,
+        opponent_rating_games,
         player_game_window,
         player_top_n,
+        venue_history_games,
         team_pseudo_games,
+        opponent_pseudo_games,
         player_pseudo_games,
         player_weights,
     ) = generation_settings(
@@ -2512,39 +3540,35 @@ def generate_rows(
             target,
             canonical=canonical,
             league=league,
-            feature_version=(
-                feature_version
+            feature_version=feature_version,
+            generated_at=generated_at,
+            team_index=team_index,
+            player_index=player_index,
+            home_venue_index=home_venue_index,
+            league_efficiency_index=(
+                league_efficiency_index
             ),
-            generated_at=(
-                generated_at
-            ),
-            team_index=(
-                team_index
-            ),
-            player_index=(
-                player_index
-            ),
-            home_venue_index=(
-                home_venue_index
-            ),
-            team_windows=(
-                team_windows
+            team_windows=team_windows,
+            opponent_rating_games=(
+                opponent_rating_games
             ),
             player_game_window=(
                 player_game_window
             ),
-            player_top_n=(
-                player_top_n
+            player_top_n=player_top_n,
+            venue_history_games=(
+                venue_history_games
             ),
             team_pseudo_games=(
                 team_pseudo_games
             ),
+            opponent_pseudo_games=(
+                opponent_pseudo_games
+            ),
             player_pseudo_games=(
                 player_pseudo_games
             ),
-            player_weights=(
-                player_weights
-            ),
+            player_weights=player_weights,
         )
         for target
         in targets
@@ -2586,9 +3610,11 @@ def build_historical(
         team_index,
         player_index,
         home_venue_index,
+        league_efficiency_index,
     ) = build_indexes(
         history_root,
         league,
+        cfg,
     )
 
     selected = sorted(
@@ -2599,12 +3625,8 @@ def build_historical(
     )
 
     invalid = sorted(
-        set(
-            selected
-        )
-        - set(
-            available
-        )
+        set(selected)
+        - set(available)
     )
 
     if invalid:
@@ -2639,14 +3661,13 @@ def build_historical(
             canonical=False,
             league=league,
             cfg=cfg,
-            team_index=(
-                team_index
-            ),
-            player_index=(
-                player_index
-            ),
+            team_index=team_index,
+            player_index=player_index,
             home_venue_index=(
                 home_venue_index
+            ),
+            league_efficiency_index=(
+                league_efficiency_index
             ),
             generated_at=(
                 generated_at
@@ -2704,9 +3725,11 @@ def build_current(
         team_index,
         player_index,
         home_venue_index,
+        league_efficiency_index,
     ) = build_indexes(
         history_root,
         league,
+        cfg,
     )
 
     label = LEAGUE_LABELS[
@@ -2768,9 +3791,7 @@ def build_current(
         list[
             dict[str, Any]
         ],
-    ] = defaultdict(
-        list
-    )
+    ] = defaultdict(list)
 
     for row in targets:
         game_date = normalize_game_date(
@@ -2812,14 +3833,13 @@ def build_current(
             canonical=True,
             league=league,
             cfg=cfg,
-            team_index=(
-                team_index
-            ),
-            player_index=(
-                player_index
-            ),
+            team_index=team_index,
+            player_index=player_index,
             home_venue_index=(
                 home_venue_index
+            ),
+            league_efficiency_index=(
+                league_efficiency_index
             ),
             generated_at=(
                 generated_at
@@ -2863,7 +3883,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Build strict point-in-time "
-            "SDV basketball features."
+            "SDV Model V1 basketball features."
         )
     )
 
@@ -2922,7 +3942,7 @@ def main() -> int:
 
     LOG_FILE.write_text(
         (
-            "=== SDV FEATURE GENERATION "
+            "=== SDV MODEL V1 FEATURE GENERATION "
             f"{datetime.now(timezone.utc).isoformat()} "
             "===\n"
         ),
@@ -2966,9 +3986,7 @@ def main() -> int:
                 )
 
         else:
-            if len(
-                leagues
-            ) != 1:
+            if len(leagues) != 1:
                 raise ValueError(
                     "--mode current requires "
                     "exactly one --league"
@@ -2989,12 +4007,8 @@ def main() -> int:
             outputs.extend(
                 build_current(
                     cfg,
-                    leagues[
-                        0
-                    ],
-                    args.internal_season[
-                        0
-                    ],
+                    leagues[0],
+                    args.internal_season[0],
                     args.game_date,
                 )
             )
@@ -3007,12 +4021,34 @@ def main() -> int:
         )
 
         print(
-            "SDV feature generation "
+            "SDV Model V1 feature generation "
             "complete: SUCCESS. "
             f"files={len(outputs)}"
         )
 
         return 0
+
+    except LeakageError as exc:
+        log(
+            f"LEAKAGE FAILURE: {exc}"
+        )
+
+        log(
+            traceback
+            .format_exc()
+            .rstrip()
+        )
+
+        log(
+            "STATUS: FAILED"
+        )
+
+        print(
+            "SDV Model V1 feature generation "
+            f"FAILED: {exc}"
+        )
+
+        return 2
 
     except Exception as exc:
         log(
@@ -3030,7 +4066,7 @@ def main() -> int:
         )
 
         print(
-            "SDV feature generation "
+            "SDV Model V1 feature generation "
             f"FAILED: {exc}"
         )
 
