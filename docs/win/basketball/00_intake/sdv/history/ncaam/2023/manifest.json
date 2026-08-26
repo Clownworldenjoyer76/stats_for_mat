@@ -1,8 +1,24 @@
 {
   "compression": "zstd",
-  "generated_at_utc": "2026-08-26T14:20:41.850364+00:00",
+  "generated_at_utc": "2026-08-26T17:04:24.302263+00:00",
   "internal_season": 2023,
   "league": "NCAAM",
+  "ncaam_venue_context": {
+    "away_team_id_definition": "preserved from source away_id",
+    "fields": [
+      "neutral_site",
+      "venue_id",
+      "venue_full_name",
+      "venue_name",
+      "home_team_id",
+      "away_team_id"
+    ],
+    "home_team_id_definition": "preserved from source home_id",
+    "neutral_site_definition": "preserved from SDV schedule; not inferred from home_team",
+    "script": "docs/win/basketball/scripts/00_intake/sdv_ncaam_venue_context.py",
+    "status": "ready",
+    "venue_name_definition": "venue_full_name trimmed with internal whitespace collapsed"
+  },
   "schema_version": 1,
   "sdv_season": 2024,
   "sportsbook_snapshots": {
@@ -105,7 +121,8 @@
         "team_box",
         "player_box",
         "home_team_id",
-        "away_team_id"
+        "away_team_id",
+        "venue_name"
       ],
       "file": "docs\\win\\basketball\\00_intake\\sdv\\history\\ncaam\\2023\\games.parquet",
       "filename": "games.parquet",
