@@ -1,28 +1,4 @@
-=== SDV WNBA HISTORICAL STORAGE 2026-08-26T16:16:06.319538+00:00 ===
-2026-08-26T16:16:06.327689+00:00 | CONFIG VALID | sportsdataverse=0.0.75 league=wnba internal_seasons=[2024] mappings={2024: 2024}
-2026-08-26T16:16:06.330304+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=games loader=sportsdataverse.wnba.load_wnba_schedule
-2026-08-26T16:16:08.536111+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=games rows=264 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\games.parquet
-2026-08-26T16:16:08.536692+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=team_game loader=sportsdataverse.wnba.load_wnba_team_boxscore
-2026-08-26T16:16:08.892069+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=team_game rows=528 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\team_game.parquet
-2026-08-26T16:16:08.892618+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=player_game loader=sportsdataverse.wnba.load_wnba_player_boxscore
-2026-08-26T16:16:09.269154+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=player_game rows=5929 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\player_game.parquet
-2026-08-26T16:16:09.269760+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=rosters loader=sportsdataverse.wnba.load_wnba_rosters
-2026-08-26T16:16:09.583516+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=rosters rows=166 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\rosters.parquet
-2026-08-26T16:16:09.584246+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=pbp loader=sportsdataverse.wnba.load_wnba_pbp
-2026-08-26T16:16:10.274649+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=pbp rows=101501 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\pbp.parquet
-2026-08-26T16:16:10.275301+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=possessions loader=sportsdataverse.wnba.load_wnba_stats_possessions
-2026-08-26T16:16:10.275877+00:00 | RELEASE FALLBACK | league=wnba table=possessions asset_year=2024 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/wnba_stats_possessions/wnba_possessions_2024.parquet
-2026-08-26T16:16:11.306290+00:00 | WNBA STATS SCHEDULE LOADER FAILED | season=2024 error=season cannot be less than 2025 action=release_fallback
-2026-08-26T16:16:12.204358+00:00 | WNBA LEGACY GAME CROSSWALK | internal=2024 sdv=2024 schema=game_rows stats_rows=262 stats_games=262 mapped=262 unmatched=0 ambiguous=0 exact_duplicate_rows_ignored=0 source=sportsdataverse.wnba.load_wnba_stats_schedules [release fallback]
-2026-08-26T16:16:12.214985+00:00 | PRO GAME ID CROSSWALK | league=wnba internal=2024 sdv=2024 table=possessions source_games=262 canonical_games=264 kept_games=262 unmapped_source_games=0 outside_schedule_games=0 rows_before=41429 rows_after=41429 dropped_rows=0 crosswalk=sportsdataverse.wnba.load_wnba_stats_schedules [release fallback] -> deterministic game_date/unordered-team-pair match with canonical ESPN home-away orientation
-2026-08-26T16:16:12.222800+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=possessions rows=41429 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\possessions.parquet
-2026-08-26T16:16:12.223330+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=lineups loader=sportsdataverse.wnba.load_wnba_stats_game_lineups
-2026-08-26T16:16:12.223697+00:00 | RELEASE FALLBACK | league=wnba table=lineups asset_year=2024 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/wnba_stats_game_lineups/wnba_lineups_2024.parquet
-2026-08-26T16:16:13.229931+00:00 | WNBA STATS SCHEDULE LOADER FAILED | season=2024 error=season cannot be less than 2025 action=release_fallback
-2026-08-26T16:16:13.990718+00:00 | WNBA LEGACY GAME CROSSWALK | internal=2024 sdv=2024 schema=game_rows stats_rows=262 stats_games=262 mapped=262 unmatched=0 ambiguous=0 exact_duplicate_rows_ignored=0 source=sportsdataverse.wnba.load_wnba_stats_schedules [release fallback]
-2026-08-26T16:16:14.003193+00:00 | PRO GAME ID CROSSWALK | league=wnba internal=2024 sdv=2024 table=lineups source_games=220 canonical_games=264 kept_games=220 unmapped_source_games=0 outside_schedule_games=0 rows_before=88832 rows_after=88832 dropped_rows=0 crosswalk=sportsdataverse.wnba.load_wnba_stats_schedules [release fallback] -> deterministic game_date/unordered-team-pair match with canonical ESPN home-away orientation
-2026-08-26T16:16:14.012112+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=lineups rows=88832 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\lineups.parquet
-2026-08-26T16:16:14.012591+00:00 | LOAD START | league=wnba internal=2024 sdv=2024 loader_season=2024 table=shots loader=sportsdataverse.wnba.load_wnba_shots
-2026-08-26T16:16:14.497705+00:00 | LOAD COMPLETE | league=wnba internal=2024 table=shots rows=45480 status=ready file=docs\win\basketball\00_intake\sdv\history\wnba\2024\shots.parquet
-2026-08-26T16:16:14.499466+00:00 | MANIFEST | league=wnba internal=2024 path=docs\win\basketball\00_intake\sdv\history\wnba\2024\manifest.json
-2026-08-26T16:16:14.499829+00:00 | STATUS: SUCCESS | manifests=1
+=== SDV WNBA HISTORICAL STORAGE 2026-08-26T16:17:55.042217+00:00 ===
+2026-08-26T16:17:55.050663+00:00 | CONFIG VALID | sportsdataverse=0.0.75 league=wnba internal_seasons=[2025] mappings={2025: 2025}
+2026-08-26T16:17:55.349366+00:00 | MANIFEST | league=wnba internal=2025 path=docs\win\basketball\00_intake\sdv\history\wnba\2025\manifest.json
+2026-08-26T16:17:55.349761+00:00 | STATUS: SUCCESS | manifests=1
