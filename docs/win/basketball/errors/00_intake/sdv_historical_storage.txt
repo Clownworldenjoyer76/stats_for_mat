@@ -1,20 +1,10 @@
-=== SDV HISTORICAL STORAGE 2026-08-26T12:51:05.442502+00:00 ===
-2026-08-26T12:51:05.450810+00:00 | CONFIG VALID | sportsdataverse=0.0.75 jobs=[('nba', 2024)] mappings={'nba:2024': 2025}
-2026-08-26T12:51:05.453393+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2025 table=games loader=sportsdataverse.nba.load_nba_schedule
-2026-08-26T12:51:07.700984+00:00 | LOAD COMPLETE | league=nba internal=2024 table=games rows=1329 status=ready file=docs\win\basketball\00_intake\sdv\history\nba\2024\games.parquet
-2026-08-26T12:51:07.701630+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2025 table=team_game loader=sportsdataverse.nba.load_nba_team_boxscore
-2026-08-26T12:51:08.099261+00:00 | LOAD COMPLETE | league=nba internal=2024 table=team_game rows=2648 status=ready file=docs\win\basketball\00_intake\sdv\history\nba\2024\team_game.parquet
-2026-08-26T12:51:08.099855+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2025 table=player_game loader=sportsdataverse.nba.load_nba_player_boxscore
-2026-08-26T12:51:08.507418+00:00 | LOAD COMPLETE | league=nba internal=2024 table=player_game rows=35250 status=ready file=docs\win\basketball\00_intake\sdv\history\nba\2024\player_game.parquet
-2026-08-26T12:51:08.508090+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2025 table=rosters loader=sportsdataverse.nba.load_nba_rosters
-2026-08-26T12:51:08.917253+00:00 | LOAD COMPLETE | league=nba internal=2024 table=rosters rows=537 status=ready file=docs\win\basketball\00_intake\sdv\history\nba\2024\rosters.parquet
-2026-08-26T12:51:08.917840+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2025 table=pbp loader=sportsdataverse.nba.load_nba_pbp
-2026-08-26T12:51:10.232993+00:00 | LOAD COMPLETE | league=nba internal=2024 table=pbp rows=624997 status=ready file=docs\win\basketball\00_intake\sdv\history\nba\2024\pbp.parquet
-2026-08-26T12:51:10.234319+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2024 table=possessions loader=sportsdataverse.nba.load_nba_stats_possessions
-2026-08-26T12:51:10.234748+00:00 | RELEASE FALLBACK | league=nba table=possessions asset_year=2025 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/nba_stats_possessions/nba_possessions_2025.parquet
-2026-08-26T12:51:11.879458+00:00 | FATAL: NBA Stats schedule has conflicting duplicate rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
-2026-08-26T12:51:11.881645+00:00 | Traceback (most recent call last):
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 5212, in main
+=== SDV HISTORICAL STORAGE 2026-08-26T13:06:22.213929+00:00 ===
+2026-08-26T13:06:22.222236+00:00 | CONFIG VALID | sportsdataverse=0.0.75 jobs=[('nba', 2024)] mappings={'nba:2024': 2025}
+2026-08-26T13:06:22.484983+00:00 | LOAD START | league=nba internal=2024 sdv=2025 loader_season=2024 table=possessions loader=sportsdataverse.nba.load_nba_stats_possessions
+2026-08-26T13:06:24.180989+00:00 | RELEASE FALLBACK | league=nba table=possessions asset_year=2025 url=https://github.com/sportsdataverse/sportsdataverse-data/releases/download/nba_stats_possessions/nba_possessions_2025.parquet
+2026-08-26T13:06:25.853964+00:00 | FATAL: NBA Stats schedule has conflicting duplicate or home/away rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
+2026-08-26T13:06:25.856226+00:00 | Traceback (most recent call last):
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 5602, in main
     build_season(
     ~~~~~~~~~~~~^
         cfg,
@@ -24,7 +14,7 @@
         ^^^^^^^^^^^
     )
     ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 4967, in build_season
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 5357, in build_season
     ] = build_release_table(
         ~~~~~~~~~~~~~~~~~~~^
         cfg,
@@ -34,7 +24,7 @@
         ^^^^^^
     )
     ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3871, in build_release_table
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 4261, in build_release_table
     ) = canonicalize_pro_game_ids(
         ~~~~~~~~~~~~~~~~~~~~~~~~~^
         cfg,
@@ -44,7 +34,7 @@
         ^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3032, in canonicalize_pro_game_ids
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3422, in canonicalize_pro_game_ids
     ) = load_pro_schedule_crosswalk(
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         cfg,
@@ -54,7 +44,7 @@
         ^^^^^^^^^^^
     )
     ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 2653, in load_pro_schedule_crosswalk
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 3043, in load_pro_schedule_crosswalk
     build_nba_legacy_schedule_crosswalk(
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         cfg,
@@ -65,9 +55,9 @@
         ^^^^^^^^^^^
     )
     ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 1272, in build_nba_legacy_schedule_crosswalk
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_historical_storage.py", line 1528, in build_nba_legacy_schedule_crosswalk
     raise RuntimeError(
     ...<3 lines>...
     )
-RuntimeError: NBA Stats schedule has conflicting duplicate rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
-2026-08-26T12:51:11.882033+00:00 | STATUS: FAILED
+RuntimeError: NBA Stats schedule has conflicting duplicate or home/away rows for game_ids=['0022400147', '0022400621', '0022400633', '0022401229', '0022401230']
+2026-08-26T13:06:25.856586+00:00 | STATUS: FAILED
