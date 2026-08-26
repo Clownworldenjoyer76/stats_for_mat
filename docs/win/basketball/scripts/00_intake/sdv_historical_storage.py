@@ -881,12 +881,10 @@ def build_nba_legacy_schedule_crosswalk(
     """Map historical NBA Stats game IDs to canonical ESPN game IDs.
 
     SportsDataVerse 0.0.75 does not support load_nba_schedule_crosswalk
-    before season 2026. Historical NBA Stats schedules are one row per game
-    with explicit home_* and away_* columns. This matches those rows to the
-    canonical ESPN schedule already written for the same internal season.
-    Matches require the same game date and both home/away teams. Score is used
-    only to resolve multiple team-matched candidates; score alone never
-    establishes identity.
+    before season 2026. Historical NBA Stats schedule data can arrive as
+    either team rows (team_name/team_abbreviation/matchup) or game rows
+    (explicit home_*/away_* columns). Both schemas are normalized to one
+    game record before deterministic matching to canonical ESPN games.
     """
     P = pl()
 
@@ -897,7 +895,19 @@ def build_nba_legacy_schedule_crosswalk(
         sdv_season
     )
 
-    required = {
+    columns = set(
+        stats_schedule.columns
+    )
+
+    team_row_required = {
+        "game_id",
+        "game_date",
+        "team_name",
+        "team_abbreviation",
+        "matchup",
+    }
+
+    game_row_required = {
         "game_id",
         "game_date",
         "home_team_name",
@@ -906,47 +916,38 @@ def build_nba_legacy_schedule_crosswalk(
         "away_team_abbreviation",
     }
 
-    missing = sorted(
-        required
-        - set(
-            stats_schedule.columns
-        )
+    has_team_rows = (
+        team_row_required
+        <= columns
     )
 
-    if missing:
+    has_game_rows = (
+        game_row_required
+        <= columns
+    )
+
+    if not (
+        has_team_rows
+        or has_game_rows
+    ):
         raise RuntimeError(
-            "NBA Stats schedule "
-            f"missing columns={missing}; "
+            "NBA Stats schedule has unsupported schema; "
             f"columns={stats_schedule.columns}"
         )
-
-    selected_columns = [
-        "game_id",
-        "game_date",
-        "home_team_name",
-        "home_team_abbreviation",
-        "away_team_name",
-        "away_team_abbreviation",
-    ]
-
-    for optional_column in (
-        "home_pts",
-        "away_pts",
-    ):
-        if optional_column in stats_schedule.columns:
-            selected_columns.append(
-                optional_column
-            )
 
     stats_games: dict[
         str,
         dict[str, Any],
     ] = {}
 
+    bad_matchup_ids: set[str] = set()
     bad_date_ids: set[str] = set()
     conflicting_duplicate_ids: set[str] = set()
+    exact_duplicate_rows = 0
 
-    def maybe_float(value: Any) -> float | None:
+    def maybe_float(
+        value: Any,
+    ) -> float | None:
         if value is None:
             return None
 
@@ -963,7 +964,29 @@ def build_nba_legacy_schedule_crosswalk(
         ):
             return None
 
-    def normalized_identity(
+    def side_identity(
+        side: dict[str, Any] | None,
+    ) -> tuple[Any, ...] | None:
+        if side is None:
+            return None
+
+        return (
+            clean(
+                side.get(
+                    "team_name"
+                )
+            ).lower(),
+            clean(
+                side.get(
+                    "team_abbreviation"
+                )
+            ).lower(),
+            side.get(
+                "pts"
+            ),
+        )
+
+    def game_identity(
         game: dict[str, Any],
     ) -> tuple[Any, ...]:
         return (
@@ -972,123 +995,261 @@ def build_nba_legacy_schedule_crosswalk(
                     "game_date_key"
                 )
             ),
-            clean(
-                game["home"].get(
-                    "team_name"
+            side_identity(
+                game.get(
+                    "home"
                 )
-            ).lower(),
-            clean(
-                game["home"].get(
-                    "team_abbreviation"
-                )
-            ).lower(),
-            clean(
-                game["away"].get(
-                    "team_name"
-                )
-            ).lower(),
-            clean(
-                game["away"].get(
-                    "team_abbreviation"
-                )
-            ).lower(),
-            game["home"].get(
-                "pts"
             ),
-            game["away"].get(
-                "pts"
+            side_identity(
+                game.get(
+                    "away"
+                )
             ),
         )
 
-    for row in (
-        stats_schedule
-        .select(
-            selected_columns
-        )
-        .iter_rows(
-            named=True
-        )
-    ):
-        native_game_id = clean(
-            row.get(
-                "game_id"
+    if has_game_rows:
+        schema_used = "game_rows"
+
+        selected_columns = [
+            "game_id",
+            "game_date",
+            "home_team_name",
+            "home_team_abbreviation",
+            "away_team_name",
+            "away_team_abbreviation",
+        ]
+
+        for optional_column in (
+            "home_pts",
+            "away_pts",
+        ):
+            if optional_column in columns:
+                selected_columns.append(
+                    optional_column
+                )
+
+        for row in (
+            stats_schedule
+            .select(
+                selected_columns
             )
-        )
-
-        if not native_game_id:
-            continue
-
-        date_key = normalize_legacy_schedule_date(
-            row.get(
-                "game_date"
-            )
-        )
-
-        if not date_key:
-            bad_date_ids.add(
-                native_game_id
-            )
-            continue
-
-        game = {
-            "game_date_key": date_key,
-            "home": {
-                "team_name": clean(
-                    row.get(
-                        "home_team_name"
-                    )
-                ),
-                "team_abbreviation": clean(
-                    row.get(
-                        "home_team_abbreviation"
-                    )
-                ),
-                "pts": maybe_float(
-                    row.get(
-                        "home_pts"
-                    )
-                ),
-            },
-            "away": {
-                "team_name": clean(
-                    row.get(
-                        "away_team_name"
-                    )
-                ),
-                "team_abbreviation": clean(
-                    row.get(
-                        "away_team_abbreviation"
-                    )
-                ),
-                "pts": maybe_float(
-                    row.get(
-                        "away_pts"
-                    )
-                ),
-            },
-        }
-
-        existing = stats_games.get(
-            native_game_id
-        )
-
-        if existing is None:
-            stats_games[
-                native_game_id
-            ] = game
-            continue
-
-        if (
-            normalized_identity(
-                existing
-            )
-            != normalized_identity(
-                game
+            .iter_rows(
+                named=True
             )
         ):
-            conflicting_duplicate_ids.add(
+            native_game_id = clean(
+                row.get(
+                    "game_id"
+                )
+            )
+
+            if not native_game_id:
+                continue
+
+            date_key = normalize_legacy_schedule_date(
+                row.get(
+                    "game_date"
+                )
+            )
+
+            if not date_key:
+                bad_date_ids.add(
+                    native_game_id
+                )
+                continue
+
+            game = {
+                "game_date_key": date_key,
+                "home": {
+                    "team_name": clean(
+                        row.get(
+                            "home_team_name"
+                        )
+                    ),
+                    "team_abbreviation": clean(
+                        row.get(
+                            "home_team_abbreviation"
+                        )
+                    ),
+                    "pts": maybe_float(
+                        row.get(
+                            "home_pts"
+                        )
+                    ),
+                },
+                "away": {
+                    "team_name": clean(
+                        row.get(
+                            "away_team_name"
+                        )
+                    ),
+                    "team_abbreviation": clean(
+                        row.get(
+                            "away_team_abbreviation"
+                        )
+                    ),
+                    "pts": maybe_float(
+                        row.get(
+                            "away_pts"
+                        )
+                    ),
+                },
+            }
+
+            existing = stats_games.get(
                 native_game_id
             )
+
+            if existing is None:
+                stats_games[
+                    native_game_id
+                ] = game
+                continue
+
+            if (
+                game_identity(
+                    existing
+                )
+                == game_identity(
+                    game
+                )
+            ):
+                exact_duplicate_rows += 1
+            else:
+                conflicting_duplicate_ids.add(
+                    native_game_id
+                )
+
+    else:
+        schema_used = "team_rows"
+
+        selected_columns = [
+            "game_id",
+            "game_date",
+            "team_name",
+            "team_abbreviation",
+            "matchup",
+        ]
+
+        if "pts" in columns:
+            selected_columns.append(
+                "pts"
+            )
+
+        for row in (
+            stats_schedule
+            .select(
+                selected_columns
+            )
+            .iter_rows(
+                named=True
+            )
+        ):
+            native_game_id = clean(
+                row.get(
+                    "game_id"
+                )
+            )
+
+            if not native_game_id:
+                continue
+
+            date_key = normalize_legacy_schedule_date(
+                row.get(
+                    "game_date"
+                )
+            )
+
+            if not date_key:
+                bad_date_ids.add(
+                    native_game_id
+                )
+                continue
+
+            matchup = clean(
+                row.get(
+                    "matchup"
+                )
+            ).lower()
+
+            if "@" in matchup:
+                side = "away"
+            elif "vs" in matchup:
+                side = "home"
+            else:
+                bad_matchup_ids.add(
+                    native_game_id
+                )
+                continue
+
+            game = stats_games.setdefault(
+                native_game_id,
+                {
+                    "game_date_key": date_key,
+                    "home": None,
+                    "away": None,
+                },
+            )
+
+            if (
+                game[
+                    "game_date_key"
+                ]
+                != date_key
+            ):
+                conflicting_duplicate_ids.add(
+                    native_game_id
+                )
+                continue
+
+            side_row = {
+                "team_name": clean(
+                    row.get(
+                        "team_name"
+                    )
+                ),
+                "team_abbreviation": clean(
+                    row.get(
+                        "team_abbreviation"
+                    )
+                ),
+                "pts": maybe_float(
+                    row.get(
+                        "pts"
+                    )
+                ),
+            }
+
+            existing_side = game.get(
+                side
+            )
+
+            if existing_side is None:
+                game[
+                    side
+                ] = side_row
+                continue
+
+            if (
+                side_identity(
+                    existing_side
+                )
+                == side_identity(
+                    side_row
+                )
+            ):
+                exact_duplicate_rows += 1
+            else:
+                conflicting_duplicate_ids.add(
+                    native_game_id
+                )
+
+    if bad_matchup_ids:
+        raise RuntimeError(
+            "NBA Stats schedule has unrecognized "
+            "matchup format for game_ids="
+            f"{sorted(bad_matchup_ids)[:20]}"
+        )
 
     if bad_date_ids:
         raise RuntimeError(
@@ -1109,7 +1270,15 @@ def build_nba_legacy_schedule_crosswalk(
         for game_id, game
         in stats_games.items()
         if (
-            not (
+            game.get(
+                "home"
+            )
+            is None
+            or game.get(
+                "away"
+            )
+            is None
+            or not (
                 team_variants(
                     game["home"][
                         "team_name"
@@ -1148,6 +1317,16 @@ def build_nba_legacy_schedule_crosswalk(
             "NBA Stats schedule produced zero usable games "
             f"for SDV season={sdv_season}"
         )
+
+    log(
+        "NBA STATS SCHEDULE SCHEMA | "
+        f"internal={internal_season} "
+        f"sdv={sdv_season} "
+        f"schema={schema_used} "
+        f"rows={stats_schedule.height} "
+        f"games={len(stats_games)} "
+        f"exact_duplicate_rows_ignored={exact_duplicate_rows}"
+    )
 
     root = storage_root(
         cfg
