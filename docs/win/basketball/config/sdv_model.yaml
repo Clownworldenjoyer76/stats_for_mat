@@ -110,10 +110,12 @@ training:
   probability:
     moneyline:
       definition: P(actual_margin > 0)
+
     spread:
       home_line_convention: home spread is added to actual home margin; for example -3.5 means home must win by more than 3.5
       home_definition: P(actual_margin + home_spread_line > 0)
       away_definition: 1 - home_spread_prob
+
     total:
       over_definition: P(actual_total > total_line)
       under_definition: 1 - over_prob
@@ -123,6 +125,16 @@ training:
   production:
     write_models: false
     overwrite_dratings: false
+
+artifacts:
+  schema_version: 1
+  enabled: true
+  root: docs/win/basketball/models/sdv
+  persistence_mode: evaluation_candidate
+  overwrite_dratings: false
+  require_feature_version_match: true
+  require_model_version_match: true
+  sportsdataverse_config: docs/win/basketball/config/sdv_storage.yaml
 
 model_inputs:
   categorical:

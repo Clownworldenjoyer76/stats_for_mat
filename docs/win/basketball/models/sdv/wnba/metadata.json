@@ -1,0 +1,56 @@
+{
+  "artifact_files": [
+    "margin_model.json",
+    "total_model.json",
+    "feature_schema.json",
+    "metadata.json"
+  ],
+  "artifact_persistence_script": {
+    "path": "docs/win/basketball/scripts/testing/sdv_model_persist.py",
+    "sha256": "add118dc60845d6e2b6a97e3e60846be357b8e28fbb1a9fb5df5d72fa62f5123"
+  },
+  "artifact_type": "metadata",
+  "configuration_hashes": {
+    "model_config_yaml_sha256": "289c863cef5db6e14ad6dccd479ee8a7367614293a41146ae3aab6b907b49fd9",
+    "sdv_model_yaml_sha256": "75a54a9c96283021cecd76c58c2327c926474a183969620ab53a822d16fb15e2",
+    "sdv_storage_yaml_sha256": "eb9ad00d133f91ec7a836676106ee0b18ff139d206c3703bd03d9436768db085"
+  },
+  "creation_timestamp_utc": "2026-08-26T20:30:36.325570+00:00",
+  "feature_version": "sdv_model_v1_pit_v2",
+  "first_training_game_date": "2023-05-19",
+  "last_training_game_date": "2024-10-20",
+  "league": "WNBA",
+  "lockbox_read_during_fit": false,
+  "model_version": "sdv_model_v1",
+  "production_safety": {
+    "dratings_model_directory_touched": false,
+    "dratings_overwritten": false,
+    "sdv_evaluation_candidate_only": true
+  },
+  "reproducibility_id": "29fa8581763431df7d91a47525f1dbe62be9adf25b37fe5129683f2fda787beb",
+  "reserved_lockbox_internal_season": 2025,
+  "schema_version": 1,
+  "sportsdataverse_installed_version": "0.0.75",
+  "sportsdataverse_version": "0.0.75",
+  "target_definition": {
+    "margin": "actual_home_points - actual_away_points",
+    "total": "actual_home_points + actual_away_points"
+  },
+  "training_internal_seasons": [
+    2023,
+    2024
+  ],
+  "training_leagues": [
+    "WNBA"
+  ],
+  "training_row_count": 527,
+  "training_script": {
+    "path": "docs/win/basketball/scripts/testing/sdv_model_train.py",
+    "sha256": "43254353ae4372a4fa85319963482249a869679db1c2dcceaabc35f662ba2021"
+  },
+  "version_enforcement_contract": {
+    "predictor_must_refuse_on_mismatch": true,
+    "predictor_must_require_exact_feature_version_match": true,
+    "predictor_must_require_exact_model_version_match": true
+  }
+}

@@ -1,0 +1,35 @@
+=== BASKETBALL MODEL ENSEMBLE 2026-08-26T21:15:35.637823+00:00 ===
+2026-08-26T21:15:35.638626+00:00 | TRAIN START | league=NBA
+2026-08-26T21:15:35.683109+00:00 | FATAL: NO NON-LOCKBOX DRATINGS/SDV TRAINING MATCHES | league=NBA | sdv_oos_rows=1313 | dratings_history_rows=0 | sdv_example_ids=['401703370', '401703371', '401703372', '401703373', '401703374'] | dratings_example_ids=[]. Weights cannot be learned without matching canonical game_id history. The lockbox will not be used as fallback.
+2026-08-26T21:15:35.685273+00:00 | Traceback (most recent call last):
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\basketball_model_ensemble.py", line 3101, in main
+    train_selected(
+    ~~~~~~~~~~~~~~^
+        leagues
+        ^^^^^^^
+    )
+    ^
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\basketball_model_ensemble.py", line 2008, in train_selected
+    ] = train_league(
+        ~~~~~~~~~~~~^
+        league
+        ^^^^^^
+    )
+    ^
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\basketball_model_ensemble.py", line 1779, in train_league
+    build_training_rows(
+    ~~~~~~~~~~~~~~~~~~~^
+        league,
+        ^^^^^^^
+        sdv_rows,
+        ^^^^^^^^^
+        dratings_rows,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\basketball_model_ensemble.py", line 1086, in build_training_rows
+    raise RuntimeError(
+    ...<13 lines>...
+    )
+RuntimeError: NO NON-LOCKBOX DRATINGS/SDV TRAINING MATCHES | league=NBA | sdv_oos_rows=1313 | dratings_history_rows=0 | sdv_example_ids=['401703370', '401703371', '401703372', '401703373', '401703374'] | dratings_example_ids=[]. Weights cannot be learned without matching canonical game_id history. The lockbox will not be used as fallback.
+2026-08-26T21:15:35.686209+00:00 | STATUS: FAILED
