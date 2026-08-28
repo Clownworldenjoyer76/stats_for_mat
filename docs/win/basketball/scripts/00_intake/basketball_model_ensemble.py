@@ -1,46 +1,44 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/00_intake/basketball_model_ensemble.py
-"""Apply a fixed 50/50 DRatings + SDV basketball ensemble.
+"""Create fixed 50/50 DRatings + SDV basketball ensemble predictions.
 
-The original plan was to learn ensemble weights from historical DRatings + SDV
-predictions. Historical DRatings predictions are unavailable, so this version uses
-an explicit fixed 50/50 split for both expected margin and expected total.
+Behavior
+--------
+- DRatings prediction files remain untouched.
+- SDV prediction files remain untouched.
+- The script scans prediction folders for matching DRatings + SDV files.
+- Games are matched strictly by canonical game_id.
+- Only game_ids present in both component files are combined.
+- Unmatched files are skipped.
+- Unmatched games are skipped.
+- No game date is required on the command line.
+- Margin uses 50% DRatings + 50% SDV.
+- Total uses 50% DRatings + 50% SDV.
+- Moneyline probability uses 50% DRatings + 50% SDV.
+- Ensemble outputs are written under predictions_ensemble/{league}/.
+- --mode train writes the fixed 50/50 weights.json artifacts.
+- --mode train does not fit anything from historical results.
 
-Running with --mode train does NOT train on game results. It writes the required
-50/50 weights.json files for the selected leagues.
-
-Current inputs
---------------
+Inputs
+------
 DRatings:
     docs/win/basketball/00_intake/predictions/{league}/
-        {game_date}_{LEAGUE}_predictions.csv
+        *_predictions.csv
 
 SDV:
     docs/win/basketball/00_intake/predictions_sdv/{league}/
-        {game_date}_{LEAGUE}_predictions.csv
+        *_predictions.csv
 
-Canonical slate:
-    docs/win/basketball/daily_games/{league}/
-        {game_date}_{LEAGUE}.csv
-
-SDV production metadata:
+SDV metadata:
     docs/win/basketball/models/sdv/{league}/metadata.json
 
 Weights:
     docs/win/basketball/models/ensemble/{league}/weights.json
 
-Output:
+Outputs
+-------
     docs/win/basketball/00_intake/predictions_ensemble/{league}/
-        {game_date}_{LEAGUE}_predictions.csv
-
-Rules
------
-- DRatings and SDV are joined strictly by canonical game_id.
-- No team/date composite fallback is permitted.
-- Both margin and total use 50% DRatings + 50% SDV.
-- Moneyline probability uses 50% DRatings + 50% SDV.
-- Current inference requires exact daily-slate coverage from both components.
-- Existing DRatings-only and SDV-only files are never overwritten.
+        *_predictions.csv
 """
 
 from __future__ import annotations
@@ -58,21 +56,51 @@ from typing import Any
 
 BASE = Path("docs/win/basketball")
 
-DRATINGS_ROOT = BASE / "00_intake/predictions"
-SDV_PREDICTIONS_ROOT = BASE / "00_intake/predictions_sdv"
-DAILY_GAMES_ROOT = BASE / "daily_games"
-SDV_MODEL_ROOT = BASE / "models/sdv"
-ENSEMBLE_MODEL_ROOT = BASE / "models/ensemble"
-ENSEMBLE_OUTPUT_ROOT = BASE / "00_intake/predictions_ensemble"
-ERROR_DIR = BASE / "errors/00_intake"
-LOG_FILE = ERROR_DIR / "basketball_model_ensemble.txt"
+DRATINGS_ROOT = (
+    BASE
+    / "00_intake/predictions"
+)
+
+SDV_PREDICTIONS_ROOT = (
+    BASE
+    / "00_intake/predictions_sdv"
+)
+
+SDV_MODEL_ROOT = (
+    BASE
+    / "models/sdv"
+)
+
+ENSEMBLE_MODEL_ROOT = (
+    BASE
+    / "models/ensemble"
+)
+
+ENSEMBLE_OUTPUT_ROOT = (
+    BASE
+    / "00_intake/predictions_ensemble"
+)
+
+ERROR_DIR = (
+    BASE
+    / "errors/00_intake"
+)
+
+LOG_FILE = (
+    ERROR_DIR
+    / "basketball_model_ensemble.txt"
+)
 
 DRATINGS_SCRAPER_PATH = (
-    BASE / "scripts/00_intake/basketball_drat_scraper.py"
+    BASE
+    / "scripts/00_intake/"
+    "basketball_drat_scraper.py"
 )
 
 DRATINGS_TRANSFORM_PATH = (
-    BASE / "scripts/00_intake/transform_basketball.py"
+    BASE
+    / "scripts/00_intake/"
+    "transform_basketball.py"
 )
 
 LEAGUE_LABELS = {
@@ -81,8 +109,13 @@ LEAGUE_LABELS = {
     "wnba": "WNBA",
 }
 
-ENSEMBLE_VERSION = "dratings_sdv_ensemble_v1_50_50"
-DRATINGS_MODEL_VERSION = "dratings_external_unversioned"
+ENSEMBLE_VERSION = (
+    "dratings_sdv_ensemble_v1_50_50"
+)
+
+DRATINGS_MODEL_VERSION = (
+    "dratings_external_unversioned"
+)
 
 FIXED_DRATINGS_WEIGHT = 0.50
 FIXED_SDV_WEIGHT = 0.50
@@ -95,32 +128,40 @@ OUTPUT_FIELDS = [
     "game_time",
     "home_team",
     "away_team",
+
     "model_source",
     "model_version",
+    "feature_version",
     "ensemble_version",
+
     "dratings_model_version",
     "dratings_pipeline_version",
     "sdv_model_version",
     "sdv_feature_version",
+
     "margin_weight_dratings",
     "margin_weight_sdv",
     "total_weight_dratings",
     "total_weight_sdv",
+
     "home_prob",
     "away_prob",
     "raw_home_ml_prob",
     "raw_away_ml_prob",
+
     "home_projected_points",
     "away_projected_points",
     "total_projected_points",
     "expected_margin",
     "expected_total",
+
     "dratings_expected_margin",
     "sdv_expected_margin",
     "dratings_expected_total",
     "sdv_expected_total",
     "dratings_home_prob",
     "sdv_home_prob",
+
     "prediction_generated_at_utc",
 ]
 
@@ -236,21 +277,13 @@ def file_date(
     )
 
     if not normalized:
-        return ""
+        return clean(
+            value
+        )
 
     return normalized.replace(
         "-",
         "_",
-    )
-
-
-def team_key(
-    value: Any,
-) -> str:
-    return " ".join(
-        clean(value)
-        .casefold()
-        .split()
     )
 
 
@@ -309,6 +342,20 @@ def required_float(
         )
 
     return result
+
+
+def first_nonblank(
+    *values: Any,
+) -> str:
+    for value in values:
+        text = clean(
+            value
+        )
+
+        if text:
+            return text
+
+    return ""
 
 
 def read_json(
@@ -396,10 +443,7 @@ def write_csv_atomic(
     rows: list[dict[str, Any]],
 ) -> None:
     if not rows:
-        raise RuntimeError(
-            "Refusing to write zero-row "
-            f"ensemble file: {path}"
-        )
+        return
 
     path.parent.mkdir(
         parents=True,
@@ -440,9 +484,7 @@ def sha256_file(
     path: Path,
 ) -> str:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        return ""
 
     digest = hashlib.sha256()
 
@@ -487,15 +529,13 @@ def dratings_pipeline_metadata() -> dict[str, Any]:
         )
     )
 
-    pipeline_sha = digest.hexdigest()
-
     return {
         "model_version": (
             DRATINGS_MODEL_VERSION
         ),
         "pipeline_version": (
             "dratings_pipeline_"
-            f"{pipeline_sha[:16]}"
+            f"{digest.hexdigest()[:16]}"
         ),
         "scraper_path": str(
             DRATINGS_SCRAPER_PATH
@@ -557,21 +597,6 @@ def load_sdv_metadata(
             "missing feature_version"
         )
 
-    if (
-        clean(
-            payload.get(
-                "league"
-            )
-        ).upper()
-        != LEAGUE_LABELS[
-            league
-        ]
-    ):
-        raise RuntimeError(
-            f"{league}: SDV metadata league "
-            "does not match expected league"
-        )
-
     return {
         "path": path,
         "model_version": (
@@ -580,7 +605,6 @@ def load_sdv_metadata(
         "feature_version": (
             feature_version
         ),
-        "metadata": payload,
     }
 
 
@@ -622,14 +646,9 @@ def build_fixed_weights(
             utc_now()
         ),
         "weight_source": (
-            "manual_fixed_50_50"
+            "fixed_50_50"
         ),
-        "reason": (
-            "Historical DRatings predictions "
-            "required to learn reliable historical "
-            "ensemble weights are unavailable. "
-            "Production starts with equal weights."
-        ),
+
         "components": {
             "dratings": (
                 dratings_meta
@@ -652,47 +671,46 @@ def build_fixed_weights(
                 ),
             },
         },
+
         "training": {
             "performed": False,
             "training_rows": 0,
-            "historical_dratings_available": False,
             "lockbox_used": False,
-            "join_key": "game_id",
-            "join_policy": (
-                "strict_canonical_game_id_only"
-            ),
         },
+
         "margin": {
             "method": (
                 "fixed_equal_weight"
             ),
-            "sdv_weight": (
-                FIXED_SDV_WEIGHT
-            ),
             "dratings_weight": (
                 FIXED_DRATINGS_WEIGHT
             ),
+            "sdv_weight": (
+                FIXED_SDV_WEIGHT
+            ),
         },
+
         "total": {
             "method": (
                 "fixed_equal_weight"
             ),
-            "sdv_weight": (
-                FIXED_SDV_WEIGHT
-            ),
             "dratings_weight": (
                 FIXED_DRATINGS_WEIGHT
             ),
+            "sdv_weight": (
+                FIXED_SDV_WEIGHT
+            ),
         },
+
         "moneyline": {
             "method": (
                 "fixed_equal_weight"
             ),
-            "sdv_weight": (
-                FIXED_SDV_WEIGHT
-            ),
             "dratings_weight": (
                 FIXED_DRATINGS_WEIGHT
+            ),
+            "sdv_weight": (
+                FIXED_SDV_WEIGHT
             ),
         },
     }
@@ -701,37 +719,11 @@ def build_fixed_weights(
 def initialize_selected(
     leagues: list[str],
 ) -> None:
-    payloads: dict[
-        str,
-        dict[str, Any],
-    ] = {}
-
     for league in leagues:
-        label = LEAGUE_LABELS[
-            league
-        ]
-
-        log(
-            "WEIGHT INIT START | "
-            f"league={label}"
-        )
-
-        payloads[
-            league
-        ] = build_fixed_weights(
+        payload = build_fixed_weights(
             league
         )
 
-        log(
-            "WEIGHT INIT READY | "
-            f"league={label} | "
-            "dratings=0.50 | sdv=0.50"
-        )
-
-    for (
-        league,
-        payload,
-    ) in payloads.items():
         path = weights_path(
             league
         )
@@ -745,68 +737,10 @@ def initialize_selected(
             "WEIGHTS WRITTEN | "
             f"league="
             f"{LEAGUE_LABELS[league]} | "
+            "dratings=0.50 | "
+            "sdv=0.50 | "
             f"path={path}"
         )
-
-
-def validate_weight_pair(
-    league: str,
-    target: str,
-    section: dict[str, Any],
-) -> tuple[float, float]:
-    sdv_weight = required_float(
-        section.get(
-            "sdv_weight"
-        ),
-        f"{target}.sdv_weight",
-    )
-
-    dratings_weight = required_float(
-        section.get(
-            "dratings_weight"
-        ),
-        (
-            f"{target}."
-            "dratings_weight"
-        ),
-    )
-
-    if not (
-        0.0
-        <= sdv_weight
-        <= 1.0
-    ):
-        raise RuntimeError(
-            f"{league}: invalid "
-            f"{target} SDV weight"
-        )
-
-    if not (
-        0.0
-        <= dratings_weight
-        <= 1.0
-    ):
-        raise RuntimeError(
-            f"{league}: invalid "
-            f"{target} DRatings weight"
-        )
-
-    if abs(
-        (
-            sdv_weight
-            + dratings_weight
-        )
-        - 1.0
-    ) > 1e-12:
-        raise RuntimeError(
-            f"{league}: {target} "
-            "weights do not sum to 1"
-        )
-
-    return (
-        sdv_weight,
-        dratings_weight,
-    )
 
 
 def load_weights(
@@ -826,9 +760,8 @@ def load_weights(
         )
     ) != "fixed_50_50":
         raise RuntimeError(
-            f"{league}: expected fixed_50_50 "
-            "ensemble weights; "
-            "rerun --mode train"
+            f"{league}: weights.json "
+            "is not fixed_50_50"
         )
 
     if clean(
@@ -837,43 +770,8 @@ def load_weights(
         )
     ) != ENSEMBLE_VERSION:
         raise RuntimeError(
-            f"{league}: ensemble version "
-            "mismatch; rerun --mode train"
-        )
-
-    training = payload.get(
-        "training"
-    )
-
-    if not isinstance(
-        training,
-        dict,
-    ):
-        raise RuntimeError(
-            f"{league}: ensemble weight "
-            "metadata missing"
-        )
-
-    if bool(
-        training.get(
-            "performed",
-            True,
-        )
-    ):
-        raise RuntimeError(
-            f"{league}: expected fixed "
-            "weights, not trained weights"
-        )
-
-    if bool(
-        training.get(
-            "lockbox_used",
-            True,
-        )
-    ):
-        raise RuntimeError(
-            f"{league}: weight artifact "
-            "reports lockbox usage"
+            f"{league}: ensemble "
+            "version mismatch"
         )
 
     for target in (
@@ -890,128 +788,50 @@ def load_weights(
             dict,
         ):
             raise RuntimeError(
-                f"{league}: {target} "
-                "weight section missing"
+                f"{league}: missing "
+                f"{target} weights"
             )
 
-        (
-            sdv_weight,
-            dratings_weight,
-        ) = validate_weight_pair(
-            league,
-            target,
-            section,
+        dratings_weight = (
+            required_float(
+                section.get(
+                    "dratings_weight"
+                ),
+                (
+                    f"{target}."
+                    "dratings_weight"
+                ),
+            )
+        )
+
+        sdv_weight = (
+            required_float(
+                section.get(
+                    "sdv_weight"
+                ),
+                (
+                    f"{target}."
+                    "sdv_weight"
+                ),
+            )
         )
 
         if (
             abs(
-                sdv_weight
+                dratings_weight
                 - 0.50
             )
             > 1e-12
             or abs(
-                dratings_weight
+                sdv_weight
                 - 0.50
             )
             > 1e-12
         ):
             raise RuntimeError(
                 f"{league}: {target} "
-                "is not 50/50; "
-                "rerun --mode train"
+                "weights are not 50/50"
             )
-
-    components = payload.get(
-        "components"
-    )
-
-    if not isinstance(
-        components,
-        dict,
-    ):
-        raise RuntimeError(
-            f"{league}: component "
-            "metadata missing"
-        )
-
-    dratings_component = (
-        components.get(
-            "dratings"
-        )
-    )
-
-    if not isinstance(
-        dratings_component,
-        dict,
-    ):
-        raise RuntimeError(
-            f"{league}: DRatings component "
-            "metadata missing"
-        )
-
-    current_dratings_meta = (
-        dratings_pipeline_metadata()
-    )
-
-    if clean(
-        dratings_component.get(
-            "pipeline_version"
-        )
-    ) != clean(
-        current_dratings_meta.get(
-            "pipeline_version"
-        )
-    ):
-        raise RuntimeError(
-            f"{league}: DRatings pipeline "
-            "changed after weights were created; "
-            "rerun --mode train"
-        )
-
-    sdv_component = components.get(
-        "sdv"
-    )
-
-    if not isinstance(
-        sdv_component,
-        dict,
-    ):
-        raise RuntimeError(
-            f"{league}: SDV component "
-            "metadata missing"
-        )
-
-    current_sdv_meta = (
-        load_sdv_metadata(
-            league
-        )
-    )
-
-    if clean(
-        sdv_component.get(
-            "model_version"
-        )
-    ) != current_sdv_meta[
-        "model_version"
-    ]:
-        raise RuntimeError(
-            f"{league}: SDV model version "
-            "changed after weights were created; "
-            "rerun --mode train"
-        )
-
-    if clean(
-        sdv_component.get(
-            "feature_version"
-        )
-    ) != current_sdv_meta[
-        "feature_version"
-    ]:
-        raise RuntimeError(
-            f"{league}: SDV feature version "
-            "changed after weights were created; "
-            "rerun --mode train"
-        )
 
     return payload
 
@@ -1026,24 +846,36 @@ def unique_rows_by_id(
         dict[str, Any],
     ] = {}
 
-    for row in rows:
+    for (
+        row_number,
+        raw,
+    ) in enumerate(
+        rows,
+        start=2,
+    ):
         game_id = clean_id(
-            row.get(
+            raw.get(
                 "game_id"
             )
         )
 
         if not game_id:
-            raise RuntimeError(
-                f"{source}: blank "
-                "canonical game_id"
+            log(
+                "ROW SKIPPED WITHOUT GAME_ID | "
+                f"source={source} | "
+                f"row={row_number}"
             )
+            continue
 
         if game_id in result:
             raise RuntimeError(
                 f"{source}: duplicate "
                 f"game_id={game_id}"
             )
+
+        row = dict(
+            raw
+        )
 
         row[
             "game_id"
@@ -1054,147 +886,6 @@ def unique_rows_by_id(
         ] = row
 
     return result
-
-
-def current_paths(
-    league: str,
-    game_date: str,
-) -> tuple[
-    Path,
-    Path,
-    Path,
-    Path,
-]:
-    label = LEAGUE_LABELS[
-        league
-    ]
-
-    prediction_filename = (
-        f"{game_date}_"
-        f"{label}_predictions.csv"
-    )
-
-    daily_filename = (
-        f"{game_date}_"
-        f"{label}.csv"
-    )
-
-    dratings = (
-        DRATINGS_ROOT
-        / league
-        / prediction_filename
-    )
-
-    sdv = (
-        SDV_PREDICTIONS_ROOT
-        / league
-        / prediction_filename
-    )
-
-    daily = (
-        DAILY_GAMES_ROOT
-        / league
-        / daily_filename
-    )
-
-    output = (
-        ENSEMBLE_OUTPUT_ROOT
-        / league
-        / prediction_filename
-    )
-
-    return (
-        dratings,
-        sdv,
-        daily,
-        output,
-    )
-
-
-def assert_identity(
-    game_id: str,
-    daily: dict[str, Any],
-    dratings: dict[str, Any],
-    sdv: dict[str, Any],
-) -> None:
-    daily_date = normalize_date(
-        daily.get(
-            "game_date"
-        )
-    )
-
-    if not daily_date:
-        raise RuntimeError(
-            f"game_id={game_id}: "
-            "daily slate has invalid "
-            "game_date"
-        )
-
-    for (
-        source_name,
-        row,
-    ) in (
-        (
-            "DRatings",
-            dratings,
-        ),
-        (
-            "SDV",
-            sdv,
-        ),
-    ):
-        source_date = normalize_date(
-            row.get(
-                "game_date"
-            )
-        )
-
-        if (
-            source_date
-            and source_date
-            != daily_date
-        ):
-            raise RuntimeError(
-                f"game_id={game_id}: "
-                f"{source_name} game_date "
-                "does not match daily slate"
-            )
-
-        if (
-            team_key(
-                row.get(
-                    "home_team"
-                )
-            )
-            != team_key(
-                daily.get(
-                    "home_team"
-                )
-            )
-        ):
-            raise RuntimeError(
-                f"game_id={game_id}: "
-                f"{source_name} home team "
-                "does not match daily slate"
-            )
-
-        if (
-            team_key(
-                row.get(
-                    "away_team"
-                )
-            )
-            != team_key(
-                daily.get(
-                    "away_team"
-                )
-            )
-        ):
-            raise RuntimeError(
-                f"game_id={game_id}: "
-                f"{source_name} away team "
-                "does not match daily slate"
-            )
 
 
 def dratings_projection_values(
@@ -1256,13 +947,13 @@ def current_dratings_values(
 
     if margin is None:
         raise RuntimeError(
-            "Current DRatings row has "
+            "DRatings row has "
             "no projected margin"
         )
 
     if total is None:
         raise RuntimeError(
-            "Current DRatings row has "
+            "DRatings row has "
             "no projected total"
         )
 
@@ -1323,7 +1014,7 @@ def current_sdv_values(
             or away is None
         ):
             raise RuntimeError(
-                "Current SDV row has "
+                "SDV row has "
                 "no expected margin"
             )
 
@@ -1347,7 +1038,7 @@ def current_sdv_values(
 
     if total is None:
         raise RuntimeError(
-            "Current SDV row has "
+            "SDV row has "
             "no expected total"
         )
 
@@ -1366,7 +1057,7 @@ def current_sdv_values(
 
     if home_prob is None:
         raise RuntimeError(
-            "Current SDV row has "
+            "SDV row has "
             "no home probability"
         )
 
@@ -1393,221 +1084,29 @@ def current_sdv_values(
     }
 
 
-def validate_sdv_versions(
-    rows: dict[str, dict[str, Any]],
-    weights: dict[str, Any],
-) -> tuple[str, str]:
-    components = weights.get(
-        "components"
-    )
-
-    if not isinstance(
-        components,
-        dict,
-    ):
-        raise RuntimeError(
-            "Ensemble component "
-            "metadata missing"
-        )
-
-    sdv_component = components.get(
-        "sdv"
-    )
-
-    if not isinstance(
-        sdv_component,
-        dict,
-    ):
-        raise RuntimeError(
-            "Ensemble SDV component "
-            "metadata missing"
-        )
-
-    expected_model_version = clean(
-        sdv_component.get(
-            "model_version"
-        )
-    )
-
-    expected_feature_version = clean(
-        sdv_component.get(
-            "feature_version"
-        )
-    )
-
-    model_versions = {
-        clean(
-            row.get(
-                "model_version"
-            )
-        )
-        for row
-        in rows.values()
-    }
-
-    feature_versions = {
-        clean(
-            row.get(
-                "feature_version"
-            )
-        )
-        for row
-        in rows.values()
-    }
-
-    sources = {
-        clean(
-            row.get(
-                "model_source"
-            )
-        ).lower()
-        for row
-        in rows.values()
-    }
-
-    if sources != {
-        "sdv"
-    }:
-        raise RuntimeError(
-            "Current SDV prediction file "
-            "contains invalid model_source"
-        )
-
-    if model_versions != {
-        expected_model_version
-    }:
-        raise RuntimeError(
-            "SDV model version does not "
-            "match ensemble weights"
-        )
-
-    if feature_versions != {
-        expected_feature_version
-    }:
-        raise RuntimeError(
-            "SDV feature version does not "
-            "match ensemble weights"
-        )
-
-    return (
-        expected_model_version,
-        expected_feature_version,
-    )
-
-
-def predict_league_date(
+def combine_game(
+    *,
     league: str,
-    game_date: str,
-) -> Path:
+    game_id: str,
+    dratings: dict[str, Any],
+    sdv: dict[str, Any],
+    weights: dict[str, Any],
+    prediction_time: str,
+) -> dict[str, Any]:
     label = LEAGUE_LABELS[
         league
     ]
 
-    weights = load_weights(
-        league
-    )
-
-    (
-        dratings_path,
-        sdv_path,
-        daily_path,
-        output_path,
-    ) = current_paths(
-        league,
-        game_date,
-    )
-
-    dratings_rows = (
-        unique_rows_by_id(
-            read_csv_rows(
-                dratings_path
-            ),
-            source=(
-                f"DRatings "
-                f"{dratings_path}"
-            ),
+    dratings_values = (
+        current_dratings_values(
+            dratings
         )
     )
 
-    sdv_rows = (
-        unique_rows_by_id(
-            read_csv_rows(
-                sdv_path
-            ),
-            source=(
-                f"SDV "
-                f"{sdv_path}"
-            ),
+    sdv_values = (
+        current_sdv_values(
+            sdv
         )
-    )
-
-    daily_rows = (
-        unique_rows_by_id(
-            read_csv_rows(
-                daily_path
-            ),
-            source=(
-                f"daily_games "
-                f"{daily_path}"
-            ),
-        )
-    )
-
-    daily_ids = set(
-        daily_rows
-    )
-
-    dratings_ids = set(
-        dratings_rows
-    )
-
-    sdv_ids = set(
-        sdv_rows
-    )
-
-    if not daily_ids:
-        raise RuntimeError(
-            "CURRENT SLATE IS EMPTY | "
-            f"league={label} | "
-            f"date={game_date}"
-        )
-
-    if dratings_ids != daily_ids:
-        raise RuntimeError(
-            "CURRENT DRATINGS COVERAGE "
-            "FAILED | "
-            f"league={label} "
-            f"missing_from_dratings="
-            f"{sorted(daily_ids - dratings_ids)} "
-            f"extra_in_dratings="
-            f"{sorted(dratings_ids - daily_ids)}"
-        )
-
-    if sdv_ids != daily_ids:
-        raise RuntimeError(
-            "CURRENT SDV COVERAGE "
-            "FAILED | "
-            f"league={label} "
-            f"missing_from_sdv="
-            f"{sorted(daily_ids - sdv_ids)} "
-            f"extra_in_sdv="
-            f"{sorted(sdv_ids - daily_ids)}"
-        )
-
-    (
-        sdv_model_version,
-        sdv_feature_version,
-    ) = validate_sdv_versions(
-        sdv_rows,
-        weights,
-    )
-
-    margin_sdv_weight = float(
-        weights[
-            "margin"
-        ][
-            "sdv_weight"
-        ]
     )
 
     margin_dratings_weight = float(
@@ -1618,9 +1117,9 @@ def predict_league_date(
         ]
     )
 
-    total_sdv_weight = float(
+    margin_sdv_weight = float(
         weights[
-            "total"
+            "margin"
         ][
             "sdv_weight"
         ]
@@ -1634,9 +1133,9 @@ def predict_league_date(
         ]
     )
 
-    moneyline_sdv_weight = float(
+    total_sdv_weight = float(
         weights[
-            "moneyline"
+            "total"
         ][
             "sdv_weight"
         ]
@@ -1650,6 +1149,70 @@ def predict_league_date(
         ]
     )
 
+    moneyline_sdv_weight = float(
+        weights[
+            "moneyline"
+        ][
+            "sdv_weight"
+        ]
+    )
+
+    expected_margin = (
+        margin_dratings_weight
+        * dratings_values[
+            "expected_margin"
+        ]
+        + margin_sdv_weight
+        * sdv_values[
+            "expected_margin"
+        ]
+    )
+
+    expected_total = (
+        total_dratings_weight
+        * dratings_values[
+            "expected_total"
+        ]
+        + total_sdv_weight
+        * sdv_values[
+            "expected_total"
+        ]
+    )
+
+    home_prob = (
+        moneyline_dratings_weight
+        * dratings_values[
+            "home_prob"
+        ]
+        + moneyline_sdv_weight
+        * sdv_values[
+            "home_prob"
+        ]
+    )
+
+    home_prob = min(
+        max(
+            home_prob,
+            0.0,
+        ),
+        1.0,
+    )
+
+    away_prob = (
+        1.0
+        - home_prob
+    )
+
+    home_projected_points = (
+        expected_total
+        + expected_margin
+    ) / 2.0
+
+    away_projected_points = (
+        expected_total
+        - expected_margin
+    ) / 2.0
+
     dratings_component = (
         weights[
             "components"
@@ -1658,285 +1221,428 @@ def predict_league_date(
         ]
     )
 
+    sdv_component = (
+        weights[
+            "components"
+        ][
+            "sdv"
+        ]
+    )
+
+    sdv_model_version = (
+        first_nonblank(
+            sdv.get(
+                "model_version"
+            ),
+            sdv_component.get(
+                "model_version"
+            ),
+        )
+    )
+
+    sdv_feature_version = (
+        first_nonblank(
+            sdv.get(
+                "feature_version"
+            ),
+            sdv_component.get(
+                "feature_version"
+            ),
+        )
+    )
+
+    game_date_value = (
+        first_nonblank(
+            dratings.get(
+                "game_date"
+            ),
+            sdv.get(
+                "game_date"
+            ),
+        )
+    )
+
+    return {
+        "sport": (
+            first_nonblank(
+                dratings.get(
+                    "sport"
+                ),
+                sdv.get(
+                    "sport"
+                ),
+            )
+            or "Basketball"
+        ),
+
+        "league": (
+            first_nonblank(
+                dratings.get(
+                    "league"
+                ),
+                sdv.get(
+                    "league"
+                ),
+            )
+            or label
+        ),
+
+        "game_id": (
+            game_id
+        ),
+
+        "game_date": (
+            file_date(
+                game_date_value
+            )
+        ),
+
+        "game_time": (
+            first_nonblank(
+                dratings.get(
+                    "game_time"
+                ),
+                sdv.get(
+                    "game_time"
+                ),
+            )
+        ),
+
+        "home_team": (
+            first_nonblank(
+                dratings.get(
+                    "home_team"
+                ),
+                sdv.get(
+                    "home_team"
+                ),
+            )
+        ),
+
+        "away_team": (
+            first_nonblank(
+                dratings.get(
+                    "away_team"
+                ),
+                sdv.get(
+                    "away_team"
+                ),
+            )
+        ),
+
+        "model_source": (
+            "ensemble"
+        ),
+
+        "model_version": (
+            ENSEMBLE_VERSION
+        ),
+
+        "feature_version": (
+            sdv_feature_version
+        ),
+
+        "ensemble_version": (
+            ENSEMBLE_VERSION
+        ),
+
+        "dratings_model_version": (
+            dratings_component[
+                "model_version"
+            ]
+        ),
+
+        "dratings_pipeline_version": (
+            dratings_component[
+                "pipeline_version"
+            ]
+        ),
+
+        "sdv_model_version": (
+            sdv_model_version
+        ),
+
+        "sdv_feature_version": (
+            sdv_feature_version
+        ),
+
+        "margin_weight_dratings": (
+            margin_dratings_weight
+        ),
+
+        "margin_weight_sdv": (
+            margin_sdv_weight
+        ),
+
+        "total_weight_dratings": (
+            total_dratings_weight
+        ),
+
+        "total_weight_sdv": (
+            total_sdv_weight
+        ),
+
+        "home_prob": (
+            home_prob
+        ),
+
+        "away_prob": (
+            away_prob
+        ),
+
+        "raw_home_ml_prob": (
+            home_prob
+        ),
+
+        "raw_away_ml_prob": (
+            away_prob
+        ),
+
+        "home_projected_points": (
+            home_projected_points
+        ),
+
+        "away_projected_points": (
+            away_projected_points
+        ),
+
+        "total_projected_points": (
+            expected_total
+        ),
+
+        "expected_margin": (
+            expected_margin
+        ),
+
+        "expected_total": (
+            expected_total
+        ),
+
+        "dratings_expected_margin": (
+            dratings_values[
+                "expected_margin"
+            ]
+        ),
+
+        "sdv_expected_margin": (
+            sdv_values[
+                "expected_margin"
+            ]
+        ),
+
+        "dratings_expected_total": (
+            dratings_values[
+                "expected_total"
+            ]
+        ),
+
+        "sdv_expected_total": (
+            sdv_values[
+                "expected_total"
+            ]
+        ),
+
+        "dratings_home_prob": (
+            dratings_values[
+                "home_prob"
+            ]
+        ),
+
+        "sdv_home_prob": (
+            sdv_values[
+                "home_prob"
+            ]
+        ),
+
+        "prediction_generated_at_utc": (
+            prediction_time
+        ),
+    }
+
+
+def prediction_files(
+    folder: Path,
+    league: str,
+) -> dict[str, Path]:
+    label = LEAGUE_LABELS[
+        league
+    ]
+
+    if not folder.exists():
+        return {}
+
+    return {
+        path.name: path
+        for path
+        in sorted(
+            folder.glob(
+                f"*_{label}_predictions.csv"
+            )
+        )
+        if path.is_file()
+    }
+
+
+def process_prediction_file(
+    *,
+    league: str,
+    filename: str,
+    dratings_path: Path,
+    sdv_path: Path,
+    weights: dict[str, Any],
+) -> tuple[
+    int,
+    int,
+    int,
+]:
+    dratings_rows = (
+        unique_rows_by_id(
+            read_csv_rows(
+                dratings_path
+            ),
+            source=str(
+                dratings_path
+            ),
+        )
+    )
+
+    sdv_rows = (
+        unique_rows_by_id(
+            read_csv_rows(
+                sdv_path
+            ),
+            source=str(
+                sdv_path
+            ),
+        )
+    )
+
+    dratings_ids = set(
+        dratings_rows
+    )
+
+    sdv_ids = set(
+        sdv_rows
+    )
+
+    matched_ids = sorted(
+        dratings_ids
+        & sdv_ids
+    )
+
+    dratings_only = sorted(
+        dratings_ids
+        - sdv_ids
+    )
+
+    sdv_only = sorted(
+        sdv_ids
+        - dratings_ids
+    )
+
+    if dratings_only:
+        log(
+            "UNMATCHED DRATINGS GAME_IDS | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename} | "
+            f"count={len(dratings_only)} | "
+            f"game_ids={dratings_only}"
+        )
+
+    if sdv_only:
+        log(
+            "UNMATCHED SDV GAME_IDS | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename} | "
+            f"count={len(sdv_only)} | "
+            f"game_ids={sdv_only}"
+        )
+
+    if not matched_ids:
+        log(
+            "NO MATCHED GAME_IDS | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename} | "
+            "skipped"
+        )
+
+        return (
+            0,
+            len(
+                dratings_only
+            ),
+            len(
+                sdv_only
+            ),
+        )
+
     prediction_time = utc_now()
 
     output_rows: list[
         dict[str, Any]
     ] = []
 
-    for game_id in daily_rows:
-        daily = daily_rows[
-            game_id
-        ]
-
-        dratings = dratings_rows[
-            game_id
-        ]
-
-        sdv = sdv_rows[
-            game_id
-        ]
-
-        assert_identity(
-            game_id,
-            daily,
-            dratings,
-            sdv,
-        )
-
-        dratings_values = (
-            current_dratings_values(
-                dratings
-            )
-        )
-
-        sdv_values = (
-            current_sdv_values(
-                sdv
-            )
-        )
-
-        expected_margin = (
-            margin_sdv_weight
-            * sdv_values[
-                "expected_margin"
-            ]
-            + margin_dratings_weight
-            * dratings_values[
-                "expected_margin"
-            ]
-        )
-
-        expected_total = (
-            total_sdv_weight
-            * sdv_values[
-                "expected_total"
-            ]
-            + total_dratings_weight
-            * dratings_values[
-                "expected_total"
-            ]
-        )
-
-        home_projected_points = (
-            expected_total
-            + expected_margin
-        ) / 2.0
-
-        away_projected_points = (
-            expected_total
-            - expected_margin
-        ) / 2.0
-
-        home_prob = (
-            moneyline_sdv_weight
-            * sdv_values[
-                "home_prob"
-            ]
-            + moneyline_dratings_weight
-            * dratings_values[
-                "home_prob"
-            ]
-        )
-
-        home_prob = min(
-            max(
-                home_prob,
-                0.0,
-            ),
-            1.0,
-        )
-
-        away_prob = (
-            1.0
-            - home_prob
-        )
-
-        if abs(
-            (
-                home_prob
-                + away_prob
-            )
-            - 1.0
-        ) > 1e-12:
-            raise RuntimeError(
-                "Ensemble moneyline "
-                "complement check failed"
-            )
-
-        output_rows.append(
-            {
-                "sport": (
-                    clean(
-                        daily.get(
-                            "sport"
-                        )
-                    )
-                    or "Basketball"
-                ),
-                "league": (
-                    clean(
-                        daily.get(
-                            "league"
-                        )
-                    )
-                    or label
-                ),
-                "game_id": (
-                    game_id
-                ),
-                "game_date": (
-                    file_date(
-                        daily.get(
-                            "game_date"
-                        )
-                    )
-                ),
-                "game_time": (
-                    clean(
-                        daily.get(
-                            "game_time"
-                        )
-                    )
-                ),
-                "home_team": (
-                    clean(
-                        daily.get(
-                            "home_team"
-                        )
-                    )
-                ),
-                "away_team": (
-                    clean(
-                        daily.get(
-                            "away_team"
-                        )
-                    )
-                ),
-                "model_source": (
-                    "ensemble"
-                ),
-                "model_version": (
-                    ENSEMBLE_VERSION
-                ),
-                "ensemble_version": (
-                    ENSEMBLE_VERSION
-                ),
-                "dratings_model_version": (
-                    dratings_component[
-                        "model_version"
+    for game_id in matched_ids:
+        try:
+            row = combine_game(
+                league=league,
+                game_id=game_id,
+                dratings=(
+                    dratings_rows[
+                        game_id
                     ]
                 ),
-                "dratings_pipeline_version": (
-                    dratings_component[
-                        "pipeline_version"
+                sdv=(
+                    sdv_rows[
+                        game_id
                     ]
                 ),
-                "sdv_model_version": (
-                    sdv_model_version
-                ),
-                "sdv_feature_version": (
-                    sdv_feature_version
-                ),
-                "margin_weight_dratings": (
-                    margin_dratings_weight
-                ),
-                "margin_weight_sdv": (
-                    margin_sdv_weight
-                ),
-                "total_weight_dratings": (
-                    total_dratings_weight
-                ),
-                "total_weight_sdv": (
-                    total_sdv_weight
-                ),
-                "home_prob": (
-                    home_prob
-                ),
-                "away_prob": (
-                    away_prob
-                ),
-                "raw_home_ml_prob": (
-                    home_prob
-                ),
-                "raw_away_ml_prob": (
-                    away_prob
-                ),
-                "home_projected_points": (
-                    home_projected_points
-                ),
-                "away_projected_points": (
-                    away_projected_points
-                ),
-                "total_projected_points": (
-                    expected_total
-                ),
-                "expected_margin": (
-                    expected_margin
-                ),
-                "expected_total": (
-                    expected_total
-                ),
-                "dratings_expected_margin": (
-                    dratings_values[
-                        "expected_margin"
-                    ]
-                ),
-                "sdv_expected_margin": (
-                    sdv_values[
-                        "expected_margin"
-                    ]
-                ),
-                "dratings_expected_total": (
-                    dratings_values[
-                        "expected_total"
-                    ]
-                ),
-                "sdv_expected_total": (
-                    sdv_values[
-                        "expected_total"
-                    ]
-                ),
-                "dratings_home_prob": (
-                    dratings_values[
-                        "home_prob"
-                    ]
-                ),
-                "sdv_home_prob": (
-                    sdv_values[
-                        "home_prob"
-                    ]
-                ),
-                "prediction_generated_at_utc": (
+                weights=weights,
+                prediction_time=(
                     prediction_time
                 ),
-            }
+            )
+
+            output_rows.append(
+                row
+            )
+
+        except Exception as exc:
+            log(
+                "GAME SKIPPED | "
+                f"league="
+                f"{LEAGUE_LABELS[league]} | "
+                f"file={filename} | "
+                f"game_id={game_id} | "
+                f"error={exc}"
+            )
+
+    if not output_rows:
+        log(
+            "NO ENSEMBLE ROWS WRITTEN | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename}"
         )
 
-    if len(
-        output_rows
-    ) != len(
-        daily_rows
-    ):
-        raise RuntimeError(
-            "Ensemble output row count "
-            "does not equal daily slate"
+        return (
+            0,
+            len(
+                dratings_only
+            ),
+            len(
+                sdv_only
+            ),
         )
 
-    output_ids = {
-        row[
-            "game_id"
-        ]
-        for row
-        in output_rows
-    }
-
-    if output_ids != daily_ids:
-        raise RuntimeError(
-            "Ensemble output game_id "
-            "coverage does not exactly "
-            "match daily slate"
-        )
+    output_path = (
+        ENSEMBLE_OUTPUT_ROOT
+        / league
+        / filename
+    )
 
     write_csv_atomic(
         output_path,
@@ -1944,15 +1650,225 @@ def predict_league_date(
     )
 
     log(
-        "PREDICT SUCCESS | "
-        f"league={label} "
-        f"game_date={game_date} "
-        f"rows={len(output_rows)} "
-        "weights=50/50 "
+        "ENSEMBLE FILE WRITTEN | "
+        f"league="
+        f"{LEAGUE_LABELS[league]} | "
+        f"file={filename} | "
+        f"rows={len(output_rows)} | "
         f"path={output_path}"
     )
 
-    return output_path
+    return (
+        len(
+            output_rows
+        ),
+        len(
+            dratings_only
+        ),
+        len(
+            sdv_only
+        ),
+    )
+
+
+def predict_league(
+    league: str,
+) -> dict[str, int]:
+    weights = load_weights(
+        league
+    )
+
+    dratings_files = prediction_files(
+        DRATINGS_ROOT
+        / league,
+        league,
+    )
+
+    sdv_files = prediction_files(
+        SDV_PREDICTIONS_ROOT
+        / league,
+        league,
+    )
+
+    dratings_names = set(
+        dratings_files
+    )
+
+    sdv_names = set(
+        sdv_files
+    )
+
+    matching_files = sorted(
+        dratings_names
+        & sdv_names
+    )
+
+    dratings_only_files = sorted(
+        dratings_names
+        - sdv_names
+    )
+
+    sdv_only_files = sorted(
+        sdv_names
+        - dratings_names
+    )
+
+    for filename in dratings_only_files:
+        log(
+            "DRATINGS FILE WITHOUT SDV MATCH | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename} | "
+            "skipped"
+        )
+
+    for filename in sdv_only_files:
+        log(
+            "SDV FILE WITHOUT DRATINGS MATCH | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"file={filename} | "
+            "skipped"
+        )
+
+    files_written = 0
+    rows_written = 0
+
+    dratings_only_games = 0
+    sdv_only_games = 0
+
+    file_errors = 0
+
+    for filename in matching_files:
+        try:
+            (
+                written,
+                dratings_only,
+                sdv_only,
+            ) = process_prediction_file(
+                league=league,
+                filename=filename,
+                dratings_path=(
+                    dratings_files[
+                        filename
+                    ]
+                ),
+                sdv_path=(
+                    sdv_files[
+                        filename
+                    ]
+                ),
+                weights=weights,
+            )
+
+            if written:
+                files_written += 1
+
+            rows_written += (
+                written
+            )
+
+            dratings_only_games += (
+                dratings_only
+            )
+
+            sdv_only_games += (
+                sdv_only
+            )
+
+        except Exception as exc:
+            file_errors += 1
+
+            log(
+                "FILE SKIPPED AFTER ERROR | "
+                f"league="
+                f"{LEAGUE_LABELS[league]} | "
+                f"file={filename} | "
+                f"error={exc}"
+            )
+
+            log(
+                traceback
+                .format_exc()
+                .rstrip()
+            )
+
+    return {
+        "matching_files": len(
+            matching_files
+        ),
+
+        "files_written": (
+            files_written
+        ),
+
+        "rows_written": (
+            rows_written
+        ),
+
+        "dratings_only_files": len(
+            dratings_only_files
+        ),
+
+        "sdv_only_files": len(
+            sdv_only_files
+        ),
+
+        "dratings_only_games": (
+            dratings_only_games
+        ),
+
+        "sdv_only_games": (
+            sdv_only_games
+        ),
+
+        "file_errors": (
+            file_errors
+        ),
+    }
+
+
+def predict_selected(
+    leagues: list[str],
+) -> dict[
+    str,
+    dict[str, int],
+]:
+    results: dict[
+        str,
+        dict[str, int],
+    ] = {}
+
+    for league in leagues:
+        results[
+            league
+        ] = predict_league(
+            league
+        )
+
+        summary = results[
+            league
+        ]
+
+        log(
+            "LEAGUE SUMMARY | "
+            f"league="
+            f"{LEAGUE_LABELS[league]} | "
+            f"matching_files="
+            f"{summary['matching_files']} | "
+            f"files_written="
+            f"{summary['files_written']} | "
+            f"rows_written="
+            f"{summary['rows_written']} | "
+            f"dratings_only_files="
+            f"{summary['dratings_only_files']} | "
+            f"sdv_only_files="
+            f"{summary['sdv_only_files']} | "
+            f"file_errors="
+            f"{summary['file_errors']}"
+        )
+
+    return results
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1973,9 +1889,9 @@ def build_parser() -> argparse.ArgumentParser:
         ),
         help=(
             "train writes fixed 50/50 "
-            "weights.json files; predict "
-            "combines current DRatings "
-            "and SDV predictions"
+            "weights; predict scans all "
+            "matching DRatings and SDV "
+            "prediction files"
         ),
     )
 
@@ -1985,13 +1901,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(
             LEAGUE_LABELS
         ),
-    )
-
-    parser.add_argument(
-        "--game-date",
         help=(
-            "Prediction date in "
-            "YYYY_MM_DD or YYYY-MM-DD."
+            "League to process. "
+            "May be repeated. "
+            "If omitted, all leagues "
+            "are processed."
         ),
     )
 
@@ -2026,12 +1940,6 @@ def main() -> int:
         )
 
         if args.mode == "train":
-            if args.game_date:
-                raise ValueError(
-                    "--game-date is invalid "
-                    "with --mode train"
-                )
-
             initialize_selected(
                 leagues
             )
@@ -2039,8 +1947,7 @@ def main() -> int:
             log(
                 "STATUS: SUCCESS | "
                 "mode=train | "
-                f"leagues={len(leagues)} | "
-                "fixed_weights=50/50"
+                f"leagues={len(leagues)}"
             )
 
             print(
@@ -2051,44 +1958,66 @@ def main() -> int:
 
             return 0
 
-        if len(
+        results = predict_selected(
             leagues
-        ) != 1:
-            raise ValueError(
-                "--mode predict requires "
-                "exactly one --league"
-            )
-
-        game_date = file_date(
-            args.game_date
         )
 
-        if not game_date:
-            raise ValueError(
-                "--mode predict requires "
-                "valid --game-date"
-            )
+        total_matching_files = sum(
+            row[
+                "matching_files"
+            ]
+            for row
+            in results.values()
+        )
 
-        output = predict_league_date(
-            leagues[
-                0
-            ],
-            game_date,
+        total_files_written = sum(
+            row[
+                "files_written"
+            ]
+            for row
+            in results.values()
+        )
+
+        total_rows_written = sum(
+            row[
+                "rows_written"
+            ]
+            for row
+            in results.values()
+        )
+
+        total_file_errors = sum(
+            row[
+                "file_errors"
+            ]
+            for row
+            in results.values()
         )
 
         log(
             "STATUS: SUCCESS | "
             "mode=predict | "
-            f"path={output}"
+            f"matching_files="
+            f"{total_matching_files} | "
+            f"files_written="
+            f"{total_files_written} | "
+            f"rows_written="
+            f"{total_rows_written} | "
+            f"file_errors="
+            f"{total_file_errors}"
         )
 
         print(
             "Basketball ensemble prediction "
             "complete: SUCCESS. "
-            f"league="
-            f"{LEAGUE_LABELS[leagues[0]]} "
-            f"game_date={game_date} "
-            "weights=50/50"
+            f"matching_files="
+            f"{total_matching_files} "
+            f"files_written="
+            f"{total_files_written} "
+            f"rows_written="
+            f"{total_rows_written} "
+            f"file_errors="
+            f"{total_file_errors}"
         )
 
         return 0
