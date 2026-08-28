@@ -1,28 +1,965 @@
-=== SDV PRODUCTION PREDICTION 2026-08-28T12:15:53.090473+00:00 ===
-2026-08-28T12:15:53.103095+00:00 | FATAL: docs\win\basketball\daily_games\wnba\2026_08_28_WNBA.csv
-2026-08-28T12:15:53.104471+00:00 | Traceback (most recent call last):
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_predict.py", line 3224, in main
-    output_path = run_prediction(
-        cfg,
-        args.league,
-        game_date,
-    )
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_predict.py", line 2960, in run_prediction
-    ) = load_daily_slate(
-        ~~~~~~~~~~~~~~~~^
-        league,
-        ^^^^^^^
-        game_date,
-        ^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_predict.py", line 450, in load_daily_slate
-    rows = read_csv_rows(
-        path
-    )
-  File "C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\00_intake\sdv_predict.py", line 286, in read_csv_rows
-    raise FileNotFoundError(
-        path
-    )
-FileNotFoundError: docs\win\basketball\daily_games\wnba\2026_08_28_WNBA.csv
-2026-08-28T12:15:53.104816+00:00 | STATUS: FAILED
+=== SDV PRODUCTION PREDICTION 2026-08-28T17:01:10.902234+00:00 ===
+2026-08-28T17:01:10.921956+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_04_25 rows=5 path=docs\win\basketball\daily_games\wnba\2026_04_25_WNBA.csv
+2026-08-28T17:01:10.924674+00:00 | SEASON READY | league=WNBA game_date=2026_04_25 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:11.361790+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:13.202222+00:00 | DATE SDV READY | league=WNBA game_date=2026_04_25 rows=5
+2026-08-28T17:01:13.218278+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_04_25 targets=5 fallback_context_rows=0
+2026-08-28T17:01:13.358241+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_04_25 rows=5 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_04_25_WNBA_features.parquet
+2026-08-28T17:01:13.393408+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_04_25 rows=5
+2026-08-28T17:01:13.405849+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_04_25 rows=5 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_25_WNBA_predictions.csv
+2026-08-28T17:01:13.406540+00:00 | DATE SUCCESS | league=WNBA game_date=2026_04_25 rows=5 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_25_WNBA_predictions.csv
+2026-08-28T17:01:13.407162+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_04_26 rows=1 path=docs\win\basketball\daily_games\wnba\2026_04_26_WNBA.csv
+2026-08-28T17:01:13.409797+00:00 | SEASON READY | league=WNBA game_date=2026_04_26 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:13.828255+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:13.933844+00:00 | DATE SDV READY | league=WNBA game_date=2026_04_26 rows=1
+2026-08-28T17:01:13.950766+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_04_26 targets=1 fallback_context_rows=0
+2026-08-28T17:01:13.970821+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_04_26 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_04_26_WNBA_features.parquet
+2026-08-28T17:01:14.006684+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_04_26 rows=1
+2026-08-28T17:01:14.011696+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_04_26 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_26_WNBA_predictions.csv
+2026-08-28T17:01:14.012286+00:00 | DATE SUCCESS | league=WNBA game_date=2026_04_26 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_26_WNBA_predictions.csv
+2026-08-28T17:01:14.012914+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_04_27 rows=1 path=docs\win\basketball\daily_games\wnba\2026_04_27_WNBA.csv
+2026-08-28T17:01:14.015502+00:00 | SEASON READY | league=WNBA game_date=2026_04_27 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:14.429880+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:14.606083+00:00 | DATE SDV READY | league=WNBA game_date=2026_04_27 rows=1
+2026-08-28T17:01:14.621791+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_04_27 targets=1 fallback_context_rows=0
+2026-08-28T17:01:14.639216+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_04_27 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_04_27_WNBA_features.parquet
+2026-08-28T17:01:14.675044+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_04_27 rows=1
+2026-08-28T17:01:14.680453+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_04_27 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_27_WNBA_predictions.csv
+2026-08-28T17:01:14.681147+00:00 | DATE SUCCESS | league=WNBA game_date=2026_04_27 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_27_WNBA_predictions.csv
+2026-08-28T17:01:14.681806+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_04_29 rows=4 path=docs\win\basketball\daily_games\wnba\2026_04_29_WNBA.csv
+2026-08-28T17:01:14.684447+00:00 | SEASON READY | league=WNBA game_date=2026_04_29 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:15.102735+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:15.414042+00:00 | DATE SDV READY | league=WNBA game_date=2026_04_29 rows=4
+2026-08-28T17:01:15.429751+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_04_29 targets=4 fallback_context_rows=0
+2026-08-28T17:01:15.509441+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_04_29 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_04_29_WNBA_features.parquet
+2026-08-28T17:01:15.546330+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_04_29 rows=4
+2026-08-28T17:01:15.556307+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_04_29 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_29_WNBA_predictions.csv
+2026-08-28T17:01:15.557079+00:00 | DATE SUCCESS | league=WNBA game_date=2026_04_29 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_29_WNBA_predictions.csv
+2026-08-28T17:01:15.557704+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_04_30 rows=1 path=docs\win\basketball\daily_games\wnba\2026_04_30_WNBA.csv
+2026-08-28T17:01:15.560326+00:00 | SEASON READY | league=WNBA game_date=2026_04_30 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:15.996158+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:16.104307+00:00 | DATE SDV READY | league=WNBA game_date=2026_04_30 rows=1
+2026-08-28T17:01:16.119989+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_04_30 targets=1 fallback_context_rows=0
+2026-08-28T17:01:16.153420+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_04_30 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_04_30_WNBA_features.parquet
+2026-08-28T17:01:16.188429+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_04_30 rows=1
+2026-08-28T17:01:16.193381+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_04_30 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_30_WNBA_predictions.csv
+2026-08-28T17:01:16.193978+00:00 | DATE SUCCESS | league=WNBA game_date=2026_04_30 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_04_30_WNBA_predictions.csv
+2026-08-28T17:01:16.194584+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_01 rows=1 path=docs\win\basketball\daily_games\wnba\2026_05_01_WNBA.csv
+2026-08-28T17:01:16.197192+00:00 | SEASON READY | league=WNBA game_date=2026_05_01 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:16.681970+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:16.856669+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_01 rows=1
+2026-08-28T17:01:16.871464+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_01 targets=1 fallback_context_rows=0
+2026-08-28T17:01:16.888652+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_01 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_01_WNBA_features.parquet
+2026-08-28T17:01:16.924674+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_01 rows=1
+2026-08-28T17:01:16.929815+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_01 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_01_WNBA_predictions.csv
+2026-08-28T17:01:16.930438+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_01 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_01_WNBA_predictions.csv
+2026-08-28T17:01:16.931065+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_02 rows=1 path=docs\win\basketball\daily_games\wnba\2026_05_02_WNBA.csv
+2026-08-28T17:01:16.933782+00:00 | SEASON READY | league=WNBA game_date=2026_05_02 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:17.352823+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:17.531576+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_02 rows=1
+2026-08-28T17:01:17.546750+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_02 targets=1 fallback_context_rows=0
+2026-08-28T17:01:17.566036+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_02 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_02_WNBA_features.parquet
+2026-08-28T17:01:17.600559+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_02 rows=1
+2026-08-28T17:01:17.605717+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_02 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_02_WNBA_predictions.csv
+2026-08-28T17:01:17.606318+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_02 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_02_WNBA_predictions.csv
+2026-08-28T17:01:17.606962+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_03 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_03_WNBA.csv
+2026-08-28T17:01:17.609552+00:00 | SEASON READY | league=WNBA game_date=2026_05_03 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:18.021165+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:18.196683+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_03 rows=4
+2026-08-28T17:01:18.211857+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_03 targets=4 fallback_context_rows=0
+2026-08-28T17:01:18.317292+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_03 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_03_WNBA_features.parquet
+2026-08-28T17:01:18.352135+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_03 rows=4
+2026-08-28T17:01:18.361189+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_03 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_03_WNBA_predictions.csv
+2026-08-28T17:01:18.361818+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_03 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_03_WNBA_predictions.csv
+2026-08-28T17:01:18.362454+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_08 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_08_WNBA.csv
+2026-08-28T17:01:18.365058+00:00 | SEASON READY | league=WNBA game_date=2026_05_08 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:18.770630+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:18.987349+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_08 rows=3
+2026-08-28T17:01:19.002616+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_08 targets=3 fallback_context_rows=0
+2026-08-28T17:01:19.080684+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_08 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_08_WNBA_features.parquet
+2026-08-28T17:01:19.116412+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_08 rows=3
+2026-08-28T17:01:19.124232+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_08 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_08_WNBA_predictions.csv
+2026-08-28T17:01:19.124903+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_08 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_08_WNBA_predictions.csv
+2026-08-28T17:01:19.125578+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_09 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_09_WNBA.csv
+2026-08-28T17:01:19.128220+00:00 | SEASON READY | league=WNBA game_date=2026_05_09 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:19.570362+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:19.719237+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_09 rows=4
+2026-08-28T17:01:19.735701+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_09 targets=4 fallback_context_rows=0
+2026-08-28T17:01:19.842614+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_09 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_09_WNBA_features.parquet
+2026-08-28T17:01:19.876839+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_09 rows=4
+2026-08-28T17:01:19.885882+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_09 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_09_WNBA_predictions.csv
+2026-08-28T17:01:19.886548+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_09 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_09_WNBA_predictions.csv
+2026-08-28T17:01:19.887192+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_10 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_10_WNBA.csv
+2026-08-28T17:01:19.889794+00:00 | SEASON READY | league=WNBA game_date=2026_05_10 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:20.318574+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:20.502732+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_10 rows=4
+2026-08-28T17:01:20.518368+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_10 targets=4 fallback_context_rows=4
+2026-08-28T17:01:20.637783+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_10 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_10_WNBA_features.parquet
+2026-08-28T17:01:20.673142+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_10 rows=4
+2026-08-28T17:01:20.682165+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_10 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_10_WNBA_predictions.csv
+2026-08-28T17:01:20.682801+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_10 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_10_WNBA_predictions.csv
+2026-08-28T17:01:20.683430+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_12 rows=2 path=docs\win\basketball\daily_games\wnba\2026_05_12_WNBA.csv
+2026-08-28T17:01:20.686033+00:00 | SEASON READY | league=WNBA game_date=2026_05_12 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:21.098236+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:21.245193+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_12 rows=3
+2026-08-28T17:01:21.261521+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_12 targets=2 fallback_context_rows=2
+2026-08-28T17:01:21.308537+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_12 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_12_WNBA_features.parquet
+2026-08-28T17:01:21.342728+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_12 rows=2
+2026-08-28T17:01:21.349498+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_12 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_12_WNBA_predictions.csv
+2026-08-28T17:01:21.350127+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_12 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_12_WNBA_predictions.csv
+2026-08-28T17:01:21.350767+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_13 rows=1 path=docs\win\basketball\daily_games\wnba\2026_05_13_WNBA.csv
+2026-08-28T17:01:21.353389+00:00 | SEASON READY | league=WNBA game_date=2026_05_13 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:21.759861+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:21.913015+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_13 rows=4
+2026-08-28T17:01:21.928732+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_13 targets=1 fallback_context_rows=1
+2026-08-28T17:01:21.962511+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_13 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_13_WNBA_features.parquet
+2026-08-28T17:01:21.998362+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_13 rows=1
+2026-08-28T17:01:22.003343+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_13 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_13_WNBA_predictions.csv
+2026-08-28T17:01:22.003960+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_13 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_13_WNBA_predictions.csv
+2026-08-28T17:01:22.004579+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_14 rows=2 path=docs\win\basketball\daily_games\wnba\2026_05_14_WNBA.csv
+2026-08-28T17:01:22.007159+00:00 | SEASON READY | league=WNBA game_date=2026_05_14 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:22.442039+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:22.643658+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_14 rows=2
+2026-08-28T17:01:22.660297+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_14 targets=2 fallback_context_rows=2
+2026-08-28T17:01:22.721900+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_14 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_14_WNBA_features.parquet
+2026-08-28T17:01:22.772653+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_14 rows=2
+2026-08-28T17:01:22.780864+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_14 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_14_WNBA_predictions.csv
+2026-08-28T17:01:22.781715+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_14 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_14_WNBA_predictions.csv
+2026-08-28T17:01:22.782586+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_15 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_15_WNBA.csv
+2026-08-28T17:01:22.786277+00:00 | SEASON READY | league=WNBA game_date=2026_05_15 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:23.351537+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:23.538897+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_15 rows=4
+2026-08-28T17:01:23.556864+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_15 targets=4 fallback_context_rows=4
+2026-08-28T17:01:23.695420+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_15 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_15_WNBA_features.parquet
+2026-08-28T17:01:23.775509+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_15 rows=4
+2026-08-28T17:01:23.788728+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_15 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_15_WNBA_predictions.csv
+2026-08-28T17:01:23.789741+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_15 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_15_WNBA_predictions.csv
+2026-08-28T17:01:23.790622+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_17 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_17_WNBA.csv
+2026-08-28T17:01:23.794584+00:00 | SEASON READY | league=WNBA game_date=2026_05_17 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:24.223777+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:24.404279+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_17 rows=4
+2026-08-28T17:01:24.419416+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_17 targets=4 fallback_context_rows=4
+2026-08-28T17:01:24.529016+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_17 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_17_WNBA_features.parquet
+2026-08-28T17:01:24.565974+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_17 rows=4
+2026-08-28T17:01:24.575426+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_17 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_17_WNBA_predictions.csv
+2026-08-28T17:01:24.576059+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_17 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_17_WNBA_predictions.csv
+2026-08-28T17:01:24.576688+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_18 rows=2 path=docs\win\basketball\daily_games\wnba\2026_05_18_WNBA.csv
+2026-08-28T17:01:24.579319+00:00 | SEASON READY | league=WNBA game_date=2026_05_18 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:25.020664+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:25.159623+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_18 rows=2
+2026-08-28T17:01:25.175928+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_18 targets=2 fallback_context_rows=2
+2026-08-28T17:01:25.222174+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_18 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_18_WNBA_features.parquet
+2026-08-28T17:01:25.258120+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_18 rows=2
+2026-08-28T17:01:25.264579+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_18 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_18_WNBA_predictions.csv
+2026-08-28T17:01:25.265244+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_18 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_18_WNBA_predictions.csv
+2026-08-28T17:01:25.265853+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_19 rows=1 path=docs\win\basketball\daily_games\wnba\2026_05_19_WNBA.csv
+2026-08-28T17:01:25.268463+00:00 | SEASON READY | league=WNBA game_date=2026_05_19 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:25.679487+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:25.803170+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_19 rows=1
+2026-08-28T17:01:25.819909+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_19 targets=1 fallback_context_rows=1
+2026-08-28T17:01:25.839249+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_19 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_19_WNBA_features.parquet
+2026-08-28T17:01:25.874439+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_19 rows=1
+2026-08-28T17:01:25.879562+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_19 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_19_WNBA_predictions.csv
+2026-08-28T17:01:25.880153+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_19 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_19_WNBA_predictions.csv
+2026-08-28T17:01:25.880797+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_20 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_20_WNBA.csv
+2026-08-28T17:01:25.883465+00:00 | SEASON READY | league=WNBA game_date=2026_05_20 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:26.310407+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:26.458249+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_20 rows=3
+2026-08-28T17:01:26.475985+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_20 targets=3 fallback_context_rows=3
+2026-08-28T17:01:26.555342+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_20 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_20_WNBA_features.parquet
+2026-08-28T17:01:26.593799+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_20 rows=3
+2026-08-28T17:01:26.605189+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_20 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_20_WNBA_predictions.csv
+2026-08-28T17:01:26.606092+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_20 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_20_WNBA_predictions.csv
+2026-08-28T17:01:26.606990+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_21 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_21_WNBA.csv
+2026-08-28T17:01:26.610874+00:00 | SEASON READY | league=WNBA game_date=2026_05_21 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:27.043796+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:27.202311+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_21 rows=3
+2026-08-28T17:01:27.218395+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_21 targets=3 fallback_context_rows=3
+2026-08-28T17:01:27.294926+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_21 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_21_WNBA_features.parquet
+2026-08-28T17:01:27.329931+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_21 rows=3
+2026-08-28T17:01:27.337984+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_21 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_21_WNBA_predictions.csv
+2026-08-28T17:01:27.338665+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_21 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_21_WNBA_predictions.csv
+2026-08-28T17:01:27.339342+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_22 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_22_WNBA.csv
+2026-08-28T17:01:27.342001+00:00 | SEASON READY | league=WNBA game_date=2026_05_22 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:27.757494+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:27.902685+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_22 rows=3
+2026-08-28T17:01:27.918956+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_22 targets=3 fallback_context_rows=3
+2026-08-28T17:01:28.009564+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_22 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_22_WNBA_features.parquet
+2026-08-28T17:01:28.044730+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_22 rows=3
+2026-08-28T17:01:28.052614+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_22 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_22_WNBA_predictions.csv
+2026-08-28T17:01:28.053255+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_22 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_22_WNBA_predictions.csv
+2026-08-28T17:01:28.053914+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_23 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_23_WNBA.csv
+2026-08-28T17:01:28.056529+00:00 | SEASON READY | league=WNBA game_date=2026_05_23 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:28.485984+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:28.654044+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_23 rows=3
+2026-08-28T17:01:28.670166+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_23 targets=3 fallback_context_rows=3
+2026-08-28T17:01:28.731355+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_23 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_23_WNBA_features.parquet
+2026-08-28T17:01:28.766116+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_23 rows=3
+2026-08-28T17:01:28.773811+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_23 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_23_WNBA_predictions.csv
+2026-08-28T17:01:28.774417+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_23 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_23_WNBA_predictions.csv
+2026-08-28T17:01:28.775050+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_24 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_24_WNBA.csv
+2026-08-28T17:01:28.777648+00:00 | SEASON READY | league=WNBA game_date=2026_05_24 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:29.201221+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:29.426830+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_24 rows=3
+2026-08-28T17:01:29.442926+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_24 targets=3 fallback_context_rows=3
+2026-08-28T17:01:29.532222+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_24 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_24_WNBA_features.parquet
+2026-08-28T17:01:29.566809+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_24 rows=3
+2026-08-28T17:01:29.574646+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_24 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_24_WNBA_predictions.csv
+2026-08-28T17:01:29.575262+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_24 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_24_WNBA_predictions.csv
+2026-08-28T17:01:29.575874+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_25 rows=2 path=docs\win\basketball\daily_games\wnba\2026_05_25_WNBA.csv
+2026-08-28T17:01:29.578456+00:00 | SEASON READY | league=WNBA game_date=2026_05_25 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:29.996403+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:30.123720+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_25 rows=2
+2026-08-28T17:01:30.139823+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_25 targets=2 fallback_context_rows=2
+2026-08-28T17:01:30.187321+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_25 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_25_WNBA_features.parquet
+2026-08-28T17:01:30.221784+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_25 rows=2
+2026-08-28T17:01:30.228578+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_25 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_25_WNBA_predictions.csv
+2026-08-28T17:01:30.229242+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_25 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_25_WNBA_predictions.csv
+2026-08-28T17:01:30.229910+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_27 rows=5 path=docs\win\basketball\daily_games\wnba\2026_05_27_WNBA.csv
+2026-08-28T17:01:30.232508+00:00 | SEASON READY | league=WNBA game_date=2026_05_27 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:30.649700+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:30.885616+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_27 rows=5
+2026-08-28T17:01:30.901525+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_27 targets=5 fallback_context_rows=5
+2026-08-28T17:01:31.019781+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_27 rows=5 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_27_WNBA_features.parquet
+2026-08-28T17:01:31.054681+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_27 rows=5
+2026-08-28T17:01:31.064923+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_27 rows=5 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_27_WNBA_predictions.csv
+2026-08-28T17:01:31.065555+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_27 rows=5 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_27_WNBA_predictions.csv
+2026-08-28T17:01:31.066174+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_28 rows=2 path=docs\win\basketball\daily_games\wnba\2026_05_28_WNBA.csv
+2026-08-28T17:01:31.068765+00:00 | SEASON READY | league=WNBA game_date=2026_05_28 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:31.482340+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:32.225842+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_28 rows=2
+2026-08-28T17:01:32.242025+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_28 targets=2 fallback_context_rows=2
+2026-08-28T17:01:32.304281+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_28 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_28_WNBA_features.parquet
+2026-08-28T17:01:32.338849+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_28 rows=2
+2026-08-28T17:01:32.345358+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_28 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_28_WNBA_predictions.csv
+2026-08-28T17:01:32.345957+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_28 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_28_WNBA_predictions.csv
+2026-08-28T17:01:32.346607+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_29 rows=4 path=docs\win\basketball\daily_games\wnba\2026_05_29_WNBA.csv
+2026-08-28T17:01:32.349203+00:00 | SEASON READY | league=WNBA game_date=2026_05_29 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:32.773675+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:32.994191+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_29 rows=4
+2026-08-28T17:01:33.010738+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_29 targets=4 fallback_context_rows=4
+2026-08-28T17:01:33.118364+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_29 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_29_WNBA_features.parquet
+2026-08-28T17:01:33.153681+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_29 rows=4
+2026-08-28T17:01:33.163024+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_29 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_29_WNBA_predictions.csv
+2026-08-28T17:01:33.163731+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_29 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_29_WNBA_predictions.csv
+2026-08-28T17:01:33.164376+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_30 rows=3 path=docs\win\basketball\daily_games\wnba\2026_05_30_WNBA.csv
+2026-08-28T17:01:33.166976+00:00 | SEASON READY | league=WNBA game_date=2026_05_30 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:33.605673+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:33.779136+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_30 rows=3
+2026-08-28T17:01:33.795126+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_30 targets=3 fallback_context_rows=3
+2026-08-28T17:01:33.859420+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_30 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_30_WNBA_features.parquet
+2026-08-28T17:01:33.895964+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_30 rows=3
+2026-08-28T17:01:33.903661+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_30 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_30_WNBA_predictions.csv
+2026-08-28T17:01:33.904297+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_30 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_30_WNBA_predictions.csv
+2026-08-28T17:01:33.904906+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_05_31 rows=1 path=docs\win\basketball\daily_games\wnba\2026_05_31_WNBA.csv
+2026-08-28T17:01:33.907589+00:00 | SEASON READY | league=WNBA game_date=2026_05_31 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:34.331115+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:34.444953+00:00 | DATE SDV READY | league=WNBA game_date=2026_05_31 rows=1
+2026-08-28T17:01:34.460214+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_05_31 targets=1 fallback_context_rows=1
+2026-08-28T17:01:34.494001+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_05_31 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_05_31_WNBA_features.parquet
+2026-08-28T17:01:34.529466+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_05_31 rows=1
+2026-08-28T17:01:34.534558+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_05_31 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_31_WNBA_predictions.csv
+2026-08-28T17:01:34.535168+00:00 | DATE SUCCESS | league=WNBA game_date=2026_05_31 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_05_31_WNBA_predictions.csv
+2026-08-28T17:01:34.535796+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_01 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_01_WNBA.csv
+2026-08-28T17:01:34.538400+00:00 | SEASON READY | league=WNBA game_date=2026_06_01 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:34.960409+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:35.092715+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_01 rows=2
+2026-08-28T17:01:35.108063+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_01 targets=2 fallback_context_rows=2
+2026-08-28T17:01:35.168629+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_01 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_01_WNBA_features.parquet
+2026-08-28T17:01:35.204653+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_01 rows=2
+2026-08-28T17:01:35.211072+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_01 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_01_WNBA_predictions.csv
+2026-08-28T17:01:35.211696+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_01 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_01_WNBA_predictions.csv
+2026-08-28T17:01:35.212345+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_02 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_02_WNBA.csv
+2026-08-28T17:01:35.214933+00:00 | SEASON READY | league=WNBA game_date=2026_06_02 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:35.631504+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:35.781493+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_02 rows=4
+2026-08-28T17:01:35.797012+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_02 targets=4 fallback_context_rows=4
+2026-08-28T17:01:35.904699+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_02 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_02_WNBA_features.parquet
+2026-08-28T17:01:35.942555+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_02 rows=4
+2026-08-28T17:01:35.951750+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_02 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_02_WNBA_predictions.csv
+2026-08-28T17:01:35.952467+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_02 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_02_WNBA_predictions.csv
+2026-08-28T17:01:35.953104+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_03 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_03_WNBA.csv
+2026-08-28T17:01:35.955707+00:00 | SEASON READY | league=WNBA game_date=2026_06_03 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:36.375806+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:36.575252+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_03 rows=2
+2026-08-28T17:01:36.590548+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_03 targets=2 fallback_context_rows=2
+2026-08-28T17:01:36.639355+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_03 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_03_WNBA_features.parquet
+2026-08-28T17:01:36.675409+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_03 rows=2
+2026-08-28T17:01:36.682240+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_03 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_03_WNBA_predictions.csv
+2026-08-28T17:01:36.682864+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_03 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_03_WNBA_predictions.csv
+2026-08-28T17:01:36.683501+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_04 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_04_WNBA.csv
+2026-08-28T17:01:36.686145+00:00 | SEASON READY | league=WNBA game_date=2026_06_04 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:37.180534+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:37.585863+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_04 rows=2
+2026-08-28T17:01:37.603340+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_04 targets=2 fallback_context_rows=2
+2026-08-28T17:01:37.670963+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_04 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_04_WNBA_features.parquet
+2026-08-28T17:01:37.707113+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_04 rows=2
+2026-08-28T17:01:37.714745+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_04 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_04_WNBA_predictions.csv
+2026-08-28T17:01:37.715486+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_04 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_04_WNBA_predictions.csv
+2026-08-28T17:01:37.716149+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_05 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_05_WNBA.csv
+2026-08-28T17:01:37.718769+00:00 | SEASON READY | league=WNBA game_date=2026_06_05 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:38.152021+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:38.366878+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_05 rows=3
+2026-08-28T17:01:38.382595+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_05 targets=3 fallback_context_rows=3
+2026-08-28T17:01:38.459776+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_05 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_05_WNBA_features.parquet
+2026-08-28T17:01:38.494343+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_05 rows=3
+2026-08-28T17:01:38.502440+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_05 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_05_WNBA_predictions.csv
+2026-08-28T17:01:38.503065+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_05 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_05_WNBA_predictions.csv
+2026-08-28T17:01:38.503720+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_06 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_06_WNBA.csv
+2026-08-28T17:01:38.506309+00:00 | SEASON READY | league=WNBA game_date=2026_06_06 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:38.947180+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:39.112514+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_06 rows=4
+2026-08-28T17:01:39.130890+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_06 targets=4 fallback_context_rows=4
+2026-08-28T17:01:39.302631+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_06 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_06_WNBA_features.parquet
+2026-08-28T17:01:39.352757+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_06 rows=4
+2026-08-28T17:01:39.361634+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_06 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_06_WNBA_predictions.csv
+2026-08-28T17:01:39.362279+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_06 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_06_WNBA_predictions.csv
+2026-08-28T17:01:39.362935+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_07 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_07_WNBA.csv
+2026-08-28T17:01:39.365527+00:00 | SEASON READY | league=WNBA game_date=2026_06_07 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:39.814749+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:39.955977+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_07 rows=2
+2026-08-28T17:01:39.972090+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_07 targets=2 fallback_context_rows=2
+2026-08-28T17:01:40.005518+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_07 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_07_WNBA_features.parquet
+2026-08-28T17:01:40.040262+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_07 rows=2
+2026-08-28T17:01:40.046881+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_07 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_07_WNBA_predictions.csv
+2026-08-28T17:01:40.047490+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_07 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_07_WNBA_predictions.csv
+2026-08-28T17:01:40.048154+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_08 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_08_WNBA.csv
+2026-08-28T17:01:40.050753+00:00 | SEASON READY | league=WNBA game_date=2026_06_08 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:40.484060+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:40.616483+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_08 rows=3
+2026-08-28T17:01:40.631573+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_08 targets=3 fallback_context_rows=3
+2026-08-28T17:01:40.721847+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_08 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_08_WNBA_features.parquet
+2026-08-28T17:01:40.758816+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_08 rows=3
+2026-08-28T17:01:40.767012+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_08 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_08_WNBA_predictions.csv
+2026-08-28T17:01:40.767669+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_08 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_08_WNBA_predictions.csv
+2026-08-28T17:01:40.768315+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_09 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_09_WNBA.csv
+2026-08-28T17:01:40.770922+00:00 | SEASON READY | league=WNBA game_date=2026_06_09 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:41.210066+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:41.367183+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_09 rows=3
+2026-08-28T17:01:41.384919+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_09 targets=3 fallback_context_rows=3
+2026-08-28T17:01:41.475951+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_09 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_09_WNBA_features.parquet
+2026-08-28T17:01:41.510358+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_09 rows=3
+2026-08-28T17:01:41.518555+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_09 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_09_WNBA_predictions.csv
+2026-08-28T17:01:41.519174+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_09 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_09_WNBA_predictions.csv
+2026-08-28T17:01:41.519824+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_10 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_10_WNBA.csv
+2026-08-28T17:01:41.522417+00:00 | SEASON READY | league=WNBA game_date=2026_06_10 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:41.975565+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:42.092584+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_10 rows=2
+2026-08-28T17:01:42.107972+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_10 targets=2 fallback_context_rows=2
+2026-08-28T17:01:42.178057+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_10 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_10_WNBA_features.parquet
+2026-08-28T17:01:42.216377+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_10 rows=2
+2026-08-28T17:01:42.222868+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_10 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_10_WNBA_predictions.csv
+2026-08-28T17:01:42.223494+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_10 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_10_WNBA_predictions.csv
+2026-08-28T17:01:42.224148+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_11 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_11_WNBA.csv
+2026-08-28T17:01:42.226747+00:00 | SEASON READY | league=WNBA game_date=2026_06_11 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:42.673732+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:42.850144+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_11 rows=4
+2026-08-28T17:01:42.865549+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_11 targets=4 fallback_context_rows=4
+2026-08-28T17:01:42.971781+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_11 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_11_WNBA_features.parquet
+2026-08-28T17:01:43.007222+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_11 rows=4
+2026-08-28T17:01:43.020623+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_11 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_11_WNBA_predictions.csv
+2026-08-28T17:01:43.021515+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_11 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_11_WNBA_predictions.csv
+2026-08-28T17:01:43.022182+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_12 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_12_WNBA.csv
+2026-08-28T17:01:43.024832+00:00 | SEASON READY | league=WNBA game_date=2026_06_12 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:43.438049+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:43.575406+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_12 rows=2
+2026-08-28T17:01:43.591244+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_12 targets=2 fallback_context_rows=2
+2026-08-28T17:01:43.638830+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_12 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_12_WNBA_features.parquet
+2026-08-28T17:01:43.673598+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_12 rows=2
+2026-08-28T17:01:43.680252+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_12 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_12_WNBA_predictions.csv
+2026-08-28T17:01:43.680890+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_12 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_12_WNBA_predictions.csv
+2026-08-28T17:01:43.681558+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_13 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_13_WNBA.csv
+2026-08-28T17:01:43.684168+00:00 | SEASON READY | league=WNBA game_date=2026_06_13 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:44.204434+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:44.359727+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_13 rows=4
+2026-08-28T17:01:44.376327+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_13 targets=4 fallback_context_rows=4
+2026-08-28T17:01:44.482501+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_13 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_13_WNBA_features.parquet
+2026-08-28T17:01:44.517470+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_13 rows=4
+2026-08-28T17:01:44.526809+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_13 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_13_WNBA_predictions.csv
+2026-08-28T17:01:44.527502+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_13 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_13_WNBA_predictions.csv
+2026-08-28T17:01:44.528130+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_14 rows=2 path=docs\win\basketball\daily_games\wnba\2026_06_14_WNBA.csv
+2026-08-28T17:01:44.530768+00:00 | SEASON READY | league=WNBA game_date=2026_06_14 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:44.955877+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:45.080663+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_14 rows=2
+2026-08-28T17:01:45.098863+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_14 targets=2 fallback_context_rows=2
+2026-08-28T17:01:45.146122+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_14 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_14_WNBA_features.parquet
+2026-08-28T17:01:45.181226+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_14 rows=2
+2026-08-28T17:01:45.187744+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_14 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_14_WNBA_predictions.csv
+2026-08-28T17:01:45.188365+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_14 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_14_WNBA_predictions.csv
+2026-08-28T17:01:45.188999+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_15 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_15_WNBA.csv
+2026-08-28T17:01:45.191583+00:00 | SEASON READY | league=WNBA game_date=2026_06_15 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:45.611794+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:45.752065+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_15 rows=3
+2026-08-28T17:01:45.768498+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_15 targets=3 fallback_context_rows=3
+2026-08-28T17:01:45.843154+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_15 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_15_WNBA_features.parquet
+2026-08-28T17:01:45.879910+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_15 rows=3
+2026-08-28T17:01:45.888114+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_15 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_15_WNBA_predictions.csv
+2026-08-28T17:01:45.888777+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_15 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_15_WNBA_predictions.csv
+2026-08-28T17:01:45.889388+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_16 rows=1 path=docs\win\basketball\daily_games\wnba\2026_06_16_WNBA.csv
+2026-08-28T17:01:45.891977+00:00 | SEASON READY | league=WNBA game_date=2026_06_16 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:46.315232+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:46.422608+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_16 rows=1
+2026-08-28T17:01:46.439910+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_16 targets=1 fallback_context_rows=1
+2026-08-28T17:01:46.459429+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_16 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_16_WNBA_features.parquet
+2026-08-28T17:01:46.494733+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_16 rows=1
+2026-08-28T17:01:46.500111+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_16 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_16_WNBA_predictions.csv
+2026-08-28T17:01:46.500719+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_16 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_16_WNBA_predictions.csv
+2026-08-28T17:01:46.501391+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_17 rows=6 path=docs\win\basketball\daily_games\wnba\2026_06_17_WNBA.csv
+2026-08-28T17:01:46.503972+00:00 | SEASON READY | league=WNBA game_date=2026_06_17 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:46.916631+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:47.118661+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_17 rows=6
+2026-08-28T17:01:47.136462+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_17 targets=6 fallback_context_rows=6
+2026-08-28T17:01:47.301942+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_17 rows=6 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_17_WNBA_features.parquet
+2026-08-28T17:01:47.336838+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_17 rows=6
+2026-08-28T17:01:47.353109+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_17 rows=6 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_17_WNBA_predictions.csv
+2026-08-28T17:01:47.353784+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_17 rows=6 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_17_WNBA_predictions.csv
+2026-08-28T17:01:47.354390+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_18 rows=1 path=docs\win\basketball\daily_games\wnba\2026_06_18_WNBA.csv
+2026-08-28T17:01:47.356993+00:00 | SEASON READY | league=WNBA game_date=2026_06_18 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:47.780311+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:47.882451+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_18 rows=1
+2026-08-28T17:01:47.899596+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_18 targets=1 fallback_context_rows=1
+2026-08-28T17:01:47.934362+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_18 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_18_WNBA_features.parquet
+2026-08-28T17:01:47.970371+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_18 rows=1
+2026-08-28T17:01:47.975313+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_18 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_18_WNBA_predictions.csv
+2026-08-28T17:01:47.975919+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_18 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_18_WNBA_predictions.csv
+2026-08-28T17:01:47.976587+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_19 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_19_WNBA.csv
+2026-08-28T17:01:47.979207+00:00 | SEASON READY | league=WNBA game_date=2026_06_19 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:48.401197+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:48.694110+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_19 rows=3
+2026-08-28T17:01:48.710149+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_19 targets=3 fallback_context_rows=3
+2026-08-28T17:01:48.784682+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_19 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_19_WNBA_features.parquet
+2026-08-28T17:01:48.820082+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_19 rows=3
+2026-08-28T17:01:48.827930+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_19 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_19_WNBA_predictions.csv
+2026-08-28T17:01:48.828551+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_19 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_19_WNBA_predictions.csv
+2026-08-28T17:01:48.829219+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_20 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_20_WNBA.csv
+2026-08-28T17:01:48.831815+00:00 | SEASON READY | league=WNBA game_date=2026_06_20 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:49.247572+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:49.389210+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_20 rows=3
+2026-08-28T17:01:49.405110+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_20 targets=3 fallback_context_rows=3
+2026-08-28T17:01:49.497043+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_20 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_20_WNBA_features.parquet
+2026-08-28T17:01:49.532032+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_20 rows=3
+2026-08-28T17:01:49.539634+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_20 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_20_WNBA_predictions.csv
+2026-08-28T17:01:49.540246+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_20 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_20_WNBA_predictions.csv
+2026-08-28T17:01:49.540880+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_21 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_21_WNBA.csv
+2026-08-28T17:01:49.543460+00:00 | SEASON READY | league=WNBA game_date=2026_06_21 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:49.973674+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:50.108779+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_21 rows=3
+2026-08-28T17:01:50.124995+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_21 targets=3 fallback_context_rows=3
+2026-08-28T17:01:50.219956+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_21 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_21_WNBA_features.parquet
+2026-08-28T17:01:50.258927+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_21 rows=3
+2026-08-28T17:01:50.267078+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_21 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_21_WNBA_predictions.csv
+2026-08-28T17:01:50.267741+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_21 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_21_WNBA_predictions.csv
+2026-08-28T17:01:50.268403+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_22 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_22_WNBA.csv
+2026-08-28T17:01:50.271008+00:00 | SEASON READY | league=WNBA game_date=2026_06_22 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:50.784169+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:50.948471+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_22 rows=4
+2026-08-28T17:01:50.963748+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_22 targets=4 fallback_context_rows=4
+2026-08-28T17:01:51.071556+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_22 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_22_WNBA_features.parquet
+2026-08-28T17:01:51.107416+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_22 rows=4
+2026-08-28T17:01:51.116696+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_22 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_22_WNBA_predictions.csv
+2026-08-28T17:01:51.117333+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_22 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_22_WNBA_predictions.csv
+2026-08-28T17:01:51.117943+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_23 rows=1 path=docs\win\basketball\daily_games\wnba\2026_06_23_WNBA.csv
+2026-08-28T17:01:51.120558+00:00 | SEASON READY | league=WNBA game_date=2026_06_23 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:51.545319+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:51.651338+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_23 rows=1
+2026-08-28T17:01:51.667682+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_23 targets=1 fallback_context_rows=1
+2026-08-28T17:01:51.701054+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_23 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_23_WNBA_features.parquet
+2026-08-28T17:01:51.736939+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_23 rows=1
+2026-08-28T17:01:51.742484+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_23 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_23_WNBA_predictions.csv
+2026-08-28T17:01:51.743119+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_23 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_23_WNBA_predictions.csv
+2026-08-28T17:01:51.743780+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_24 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_24_WNBA.csv
+2026-08-28T17:01:51.746388+00:00 | SEASON READY | league=WNBA game_date=2026_06_24 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:52.171456+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:52.328885+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_24 rows=4
+2026-08-28T17:01:52.344181+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_24 targets=4 fallback_context_rows=4
+2026-08-28T17:01:52.449847+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_24 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_24_WNBA_features.parquet
+2026-08-28T17:01:52.486838+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_24 rows=4
+2026-08-28T17:01:52.496262+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_24 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_24_WNBA_predictions.csv
+2026-08-28T17:01:52.496911+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_24 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_24_WNBA_predictions.csv
+2026-08-28T17:01:52.497561+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_25 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_25_WNBA.csv
+2026-08-28T17:01:52.500165+00:00 | SEASON READY | league=WNBA game_date=2026_06_25 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:52.922444+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:53.059930+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_25 rows=3
+2026-08-28T17:01:53.075368+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_25 targets=3 fallback_context_rows=3
+2026-08-28T17:01:53.151594+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_25 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_25_WNBA_features.parquet
+2026-08-28T17:01:53.187751+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_25 rows=3
+2026-08-28T17:01:53.195746+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_25 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_25_WNBA_predictions.csv
+2026-08-28T17:01:53.196390+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_25 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_25_WNBA_predictions.csv
+2026-08-28T17:01:53.197035+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_26 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_26_WNBA.csv
+2026-08-28T17:01:53.199614+00:00 | SEASON READY | league=WNBA game_date=2026_06_26 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:53.623029+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:53.998219+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_26 rows=3
+2026-08-28T17:01:54.013580+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_26 targets=3 fallback_context_rows=3
+2026-08-28T17:01:54.092814+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_26 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_26_WNBA_features.parquet
+2026-08-28T17:01:54.128980+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_26 rows=3
+2026-08-28T17:01:54.136868+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_26 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_26_WNBA_predictions.csv
+2026-08-28T17:01:54.137500+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_26 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_26_WNBA_predictions.csv
+2026-08-28T17:01:54.138139+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_27 rows=3 path=docs\win\basketball\daily_games\wnba\2026_06_27_WNBA.csv
+2026-08-28T17:01:54.140746+00:00 | SEASON READY | league=WNBA game_date=2026_06_27 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:54.579013+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:54.721890+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_27 rows=3
+2026-08-28T17:01:54.737772+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_27 targets=3 fallback_context_rows=3
+2026-08-28T17:01:54.816805+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_27 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_27_WNBA_features.parquet
+2026-08-28T17:01:54.853282+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_27 rows=3
+2026-08-28T17:01:54.861398+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_27 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_27_WNBA_predictions.csv
+2026-08-28T17:01:54.862098+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_27 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_27_WNBA_predictions.csv
+2026-08-28T17:01:54.862773+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_06_28 rows=4 path=docs\win\basketball\daily_games\wnba\2026_06_28_WNBA.csv
+2026-08-28T17:01:54.865383+00:00 | SEASON READY | league=WNBA game_date=2026_06_28 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:55.290350+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:55.443447+00:00 | DATE SDV READY | league=WNBA game_date=2026_06_28 rows=4
+2026-08-28T17:01:55.459113+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_06_28 targets=4 fallback_context_rows=4
+2026-08-28T17:01:55.564281+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_06_28 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_06_28_WNBA_features.parquet
+2026-08-28T17:01:55.600846+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_06_28 rows=4
+2026-08-28T17:01:55.609948+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_06_28 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_28_WNBA_predictions.csv
+2026-08-28T17:01:55.610608+00:00 | DATE SUCCESS | league=WNBA game_date=2026_06_28 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_06_28_WNBA_predictions.csv
+2026-08-28T17:01:55.611290+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_02 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_02_WNBA.csv
+2026-08-28T17:01:55.613935+00:00 | SEASON READY | league=WNBA game_date=2026_07_02 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:56.035635+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:56.181847+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_02 rows=3
+2026-08-28T17:01:56.197046+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_02 targets=3 fallback_context_rows=3
+2026-08-28T17:01:56.287105+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_02 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_02_WNBA_features.parquet
+2026-08-28T17:01:56.324710+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_02 rows=3
+2026-08-28T17:01:56.332472+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_02 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_02_WNBA_predictions.csv
+2026-08-28T17:01:56.333130+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_02 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_02_WNBA_predictions.csv
+2026-08-28T17:01:56.333787+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_03 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_03_WNBA.csv
+2026-08-28T17:01:56.336463+00:00 | SEASON READY | league=WNBA game_date=2026_07_03 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:56.769525+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:56.914114+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_03 rows=2
+2026-08-28T17:01:56.929336+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_03 targets=2 fallback_context_rows=2
+2026-08-28T17:01:56.991231+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_03 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_03_WNBA_features.parquet
+2026-08-28T17:01:57.028030+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_03 rows=2
+2026-08-28T17:01:57.035116+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_03 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_03_WNBA_predictions.csv
+2026-08-28T17:01:57.035825+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_03 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_03_WNBA_predictions.csv
+2026-08-28T17:01:57.036683+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_04 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_04_WNBA.csv
+2026-08-28T17:01:57.039944+00:00 | SEASON READY | league=WNBA game_date=2026_07_04 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:57.537527+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:57.663200+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_04 rows=2
+2026-08-28T17:01:57.679244+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_04 targets=2 fallback_context_rows=2
+2026-08-28T17:01:57.727558+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_04 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_04_WNBA_features.parquet
+2026-08-28T17:01:57.763654+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_04 rows=2
+2026-08-28T17:01:57.769953+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_04 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_04_WNBA_predictions.csv
+2026-08-28T17:01:57.770563+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_04 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_04_WNBA_predictions.csv
+2026-08-28T17:01:57.771182+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_05 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_05_WNBA.csv
+2026-08-28T17:01:57.773782+00:00 | SEASON READY | league=WNBA game_date=2026_07_05 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:58.193999+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:58.332151+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_05 rows=2
+2026-08-28T17:01:58.347265+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_05 targets=2 fallback_context_rows=2
+2026-08-28T17:01:58.395190+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_05 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_05_WNBA_features.parquet
+2026-08-28T17:01:58.430986+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_05 rows=2
+2026-08-28T17:01:58.437353+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_05 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_05_WNBA_predictions.csv
+2026-08-28T17:01:58.437956+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_05 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_05_WNBA_predictions.csv
+2026-08-28T17:01:58.438599+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_06 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_06_WNBA.csv
+2026-08-28T17:01:58.441201+00:00 | SEASON READY | league=WNBA game_date=2026_07_06 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:58.862237+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:59.034499+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_06 rows=3
+2026-08-28T17:01:59.049683+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_06 targets=3 fallback_context_rows=3
+2026-08-28T17:01:59.139349+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_06 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_06_WNBA_features.parquet
+2026-08-28T17:01:59.175397+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_06 rows=3
+2026-08-28T17:01:59.183107+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_06 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_06_WNBA_predictions.csv
+2026-08-28T17:01:59.183743+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_06 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_06_WNBA_predictions.csv
+2026-08-28T17:01:59.184368+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_07 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_07_WNBA.csv
+2026-08-28T17:01:59.186992+00:00 | SEASON READY | league=WNBA game_date=2026_07_07 internal_season=2026 sdv_season=2026
+2026-08-28T17:01:59.605054+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:01:59.730198+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_07 rows=2
+2026-08-28T17:01:59.745866+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_07 targets=2 fallback_context_rows=2
+2026-08-28T17:01:59.808499+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_07 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_07_WNBA_features.parquet
+2026-08-28T17:01:59.844552+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_07 rows=2
+2026-08-28T17:01:59.851068+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_07 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_07_WNBA_predictions.csv
+2026-08-28T17:01:59.851737+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_07 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_07_WNBA_predictions.csv
+2026-08-28T17:01:59.852386+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_08 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_08_WNBA.csv
+2026-08-28T17:01:59.854996+00:00 | SEASON READY | league=WNBA game_date=2026_07_08 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:00.310408+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:00.469490+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_08 rows=3
+2026-08-28T17:02:00.485927+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_08 targets=3 fallback_context_rows=3
+2026-08-28T17:02:00.561708+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_08 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_08_WNBA_features.parquet
+2026-08-28T17:02:00.599651+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_08 rows=3
+2026-08-28T17:02:00.607179+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_08 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_08_WNBA_predictions.csv
+2026-08-28T17:02:00.607787+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_08 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_08_WNBA_predictions.csv
+2026-08-28T17:02:00.608420+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_09 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_09_WNBA.csv
+2026-08-28T17:02:00.611027+00:00 | SEASON READY | league=WNBA game_date=2026_07_09 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:01.045849+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:01.184063+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_09 rows=3
+2026-08-28T17:02:01.199832+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_09 targets=3 fallback_context_rows=3
+2026-08-28T17:02:01.279909+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_09 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_09_WNBA_features.parquet
+2026-08-28T17:02:01.316285+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_09 rows=3
+2026-08-28T17:02:01.323931+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_09 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_09_WNBA_predictions.csv
+2026-08-28T17:02:01.324544+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_09 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_09_WNBA_predictions.csv
+2026-08-28T17:02:01.325184+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_10 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_10_WNBA.csv
+2026-08-28T17:02:01.327778+00:00 | SEASON READY | league=WNBA game_date=2026_07_10 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:01.751915+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:01.895858+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_10 rows=3
+2026-08-28T17:02:01.911725+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_10 targets=3 fallback_context_rows=3
+2026-08-28T17:02:01.989819+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_10 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_10_WNBA_features.parquet
+2026-08-28T17:02:02.027763+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_10 rows=3
+2026-08-28T17:02:02.035952+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_10 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_10_WNBA_predictions.csv
+2026-08-28T17:02:02.036625+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_10 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_10_WNBA_predictions.csv
+2026-08-28T17:02:02.037298+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_11 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_11_WNBA.csv
+2026-08-28T17:02:02.039896+00:00 | SEASON READY | league=WNBA game_date=2026_07_11 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:02.458648+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:02.591897+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_11 rows=3
+2026-08-28T17:02:02.607684+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_11 targets=3 fallback_context_rows=3
+2026-08-28T17:02:02.687357+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_11 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_11_WNBA_features.parquet
+2026-08-28T17:02:02.725629+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_11 rows=3
+2026-08-28T17:02:02.733498+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_11 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_11_WNBA_predictions.csv
+2026-08-28T17:02:02.734141+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_11 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_11_WNBA_predictions.csv
+2026-08-28T17:02:02.734868+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_12 rows=4 path=docs\win\basketball\daily_games\wnba\2026_07_12_WNBA.csv
+2026-08-28T17:02:02.737548+00:00 | SEASON READY | league=WNBA game_date=2026_07_12 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:03.156323+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:03.330683+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_12 rows=4
+2026-08-28T17:02:03.346605+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_12 targets=4 fallback_context_rows=4
+2026-08-28T17:02:03.452755+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_12 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_12_WNBA_features.parquet
+2026-08-28T17:02:03.490879+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_12 rows=4
+2026-08-28T17:02:03.500039+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_12 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_12_WNBA_predictions.csv
+2026-08-28T17:02:03.500692+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_12 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_12_WNBA_predictions.csv
+2026-08-28T17:02:03.501323+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_13 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_13_WNBA.csv
+2026-08-28T17:02:03.503993+00:00 | SEASON READY | league=WNBA game_date=2026_07_13 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:04.000513+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:04.127346+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_13 rows=2
+2026-08-28T17:02:04.142771+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_13 targets=2 fallback_context_rows=2
+2026-08-28T17:02:04.204934+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_13 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_13_WNBA_features.parquet
+2026-08-28T17:02:04.242787+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_13 rows=2
+2026-08-28T17:02:04.249104+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_13 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_13_WNBA_predictions.csv
+2026-08-28T17:02:04.249715+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_13 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_13_WNBA_predictions.csv
+2026-08-28T17:02:04.250353+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_14 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_14_WNBA.csv
+2026-08-28T17:02:04.252952+00:00 | SEASON READY | league=WNBA game_date=2026_07_14 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:04.678412+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:04.790155+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_14 rows=2
+2026-08-28T17:02:04.807558+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_14 targets=2 fallback_context_rows=2
+2026-08-28T17:02:04.840517+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_14 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_14_WNBA_features.parquet
+2026-08-28T17:02:04.876653+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_14 rows=2
+2026-08-28T17:02:04.882963+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_14 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_14_WNBA_predictions.csv
+2026-08-28T17:02:04.883584+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_14 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_14_WNBA_predictions.csv
+2026-08-28T17:02:04.884217+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_15 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_15_WNBA.csv
+2026-08-28T17:02:04.886862+00:00 | SEASON READY | league=WNBA game_date=2026_07_15 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:05.304361+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:05.459283+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_15 rows=3
+2026-08-28T17:02:05.474792+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_15 targets=3 fallback_context_rows=3
+2026-08-28T17:02:05.565075+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_15 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_15_WNBA_features.parquet
+2026-08-28T17:02:05.601287+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_15 rows=3
+2026-08-28T17:02:05.609090+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_15 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_15_WNBA_predictions.csv
+2026-08-28T17:02:05.609726+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_15 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_15_WNBA_predictions.csv
+2026-08-28T17:02:05.610374+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_16 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_16_WNBA.csv
+2026-08-28T17:02:05.612960+00:00 | SEASON READY | league=WNBA game_date=2026_07_16 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:06.032513+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:06.153005+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_16 rows=2
+2026-08-28T17:02:06.169557+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_16 targets=2 fallback_context_rows=2
+2026-08-28T17:02:06.215565+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_16 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_16_WNBA_features.parquet
+2026-08-28T17:02:06.249677+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_16 rows=2
+2026-08-28T17:02:06.256415+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_16 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_16_WNBA_predictions.csv
+2026-08-28T17:02:06.257076+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_16 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_16_WNBA_predictions.csv
+2026-08-28T17:02:06.257740+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_17 rows=4 path=docs\win\basketball\daily_games\wnba\2026_07_17_WNBA.csv
+2026-08-28T17:02:06.260349+00:00 | SEASON READY | league=WNBA game_date=2026_07_17 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:06.685511+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:06.849731+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_17 rows=4
+2026-08-28T17:02:06.865613+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_17 targets=4 fallback_context_rows=4
+2026-08-28T17:02:06.973552+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_17 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_17_WNBA_features.parquet
+2026-08-28T17:02:07.009767+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_17 rows=4
+2026-08-28T17:02:07.019363+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_17 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_17_WNBA_predictions.csv
+2026-08-28T17:02:07.019999+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_17 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_17_WNBA_predictions.csv
+2026-08-28T17:02:07.020695+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_18 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_18_WNBA.csv
+2026-08-28T17:02:07.023305+00:00 | SEASON READY | league=WNBA game_date=2026_07_18 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:07.465601+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:07.610877+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_18 rows=3
+2026-08-28T17:02:07.626046+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_18 targets=3 fallback_context_rows=3
+2026-08-28T17:02:07.701617+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_18 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_18_WNBA_features.parquet
+2026-08-28T17:02:07.734795+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_18 rows=3
+2026-08-28T17:02:07.742576+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_18 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_18_WNBA_predictions.csv
+2026-08-28T17:02:07.743213+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_18 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_18_WNBA_predictions.csv
+2026-08-28T17:02:07.743849+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_19 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_19_WNBA.csv
+2026-08-28T17:02:07.746444+00:00 | SEASON READY | league=WNBA game_date=2026_07_19 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:08.166395+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:08.304666+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_19 rows=3
+2026-08-28T17:02:08.320845+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_19 targets=3 fallback_context_rows=3
+2026-08-28T17:02:08.413619+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_19 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_19_WNBA_features.parquet
+2026-08-28T17:02:08.450144+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_19 rows=3
+2026-08-28T17:02:08.458151+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_19 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_19_WNBA_predictions.csv
+2026-08-28T17:02:08.458815+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_19 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_19_WNBA_predictions.csv
+2026-08-28T17:02:08.459479+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_20 rows=4 path=docs\win\basketball\daily_games\wnba\2026_07_20_WNBA.csv
+2026-08-28T17:02:08.462079+00:00 | SEASON READY | league=WNBA game_date=2026_07_20 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:08.884091+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:09.057386+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_20 rows=4
+2026-08-28T17:02:09.072739+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_20 targets=4 fallback_context_rows=4
+2026-08-28T17:02:09.177152+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_20 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_20_WNBA_features.parquet
+2026-08-28T17:02:09.213962+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_20 rows=4
+2026-08-28T17:02:09.223073+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_20 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_20_WNBA_predictions.csv
+2026-08-28T17:02:09.223731+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_20 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_20_WNBA_predictions.csv
+2026-08-28T17:02:09.224510+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_22 rows=6 path=docs\win\basketball\daily_games\wnba\2026_07_22_WNBA.csv
+2026-08-28T17:02:09.227139+00:00 | SEASON READY | league=WNBA game_date=2026_07_22 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:09.657948+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:09.937119+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_22 rows=6
+2026-08-28T17:02:09.952251+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_22 targets=6 fallback_context_rows=6
+2026-08-28T17:02:10.116303+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_22 rows=6 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_22_WNBA_features.parquet
+2026-08-28T17:02:10.149265+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_22 rows=6
+2026-08-28T17:02:10.161053+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_22 rows=6 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_22_WNBA_predictions.csv
+2026-08-28T17:02:10.161757+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_22 rows=6 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_22_WNBA_predictions.csv
+2026-08-28T17:02:10.162432+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_28 rows=5 path=docs\win\basketball\daily_games\wnba\2026_07_28_WNBA.csv
+2026-08-28T17:02:10.165182+00:00 | SEASON READY | league=WNBA game_date=2026_07_28 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:10.588563+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:10.759823+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_28 rows=5
+2026-08-28T17:02:10.776075+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_28 targets=5 fallback_context_rows=5
+2026-08-28T17:02:10.895651+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_28 rows=5 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_28_WNBA_features.parquet
+2026-08-28T17:02:10.934333+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_28 rows=5
+2026-08-28T17:02:10.944776+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_28 rows=5 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_28_WNBA_predictions.csv
+2026-08-28T17:02:10.945437+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_28 rows=5 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_28_WNBA_predictions.csv
+2026-08-28T17:02:10.946058+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_29 rows=2 path=docs\win\basketball\daily_games\wnba\2026_07_29_WNBA.csv
+2026-08-28T17:02:10.948658+00:00 | SEASON READY | league=WNBA game_date=2026_07_29 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:11.379070+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:11.534097+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_29 rows=2
+2026-08-28T17:02:11.549378+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_29 targets=2 fallback_context_rows=2
+2026-08-28T17:02:11.612472+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_29 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_29_WNBA_features.parquet
+2026-08-28T17:02:11.650200+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_29 rows=2
+2026-08-28T17:02:11.656637+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_29 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_29_WNBA_predictions.csv
+2026-08-28T17:02:11.657279+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_29 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_29_WNBA_predictions.csv
+2026-08-28T17:02:11.657915+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_30 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_30_WNBA.csv
+2026-08-28T17:02:11.660877+00:00 | SEASON READY | league=WNBA game_date=2026_07_30 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:12.088858+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:12.233534+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_30 rows=3
+2026-08-28T17:02:12.249352+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_30 targets=3 fallback_context_rows=3
+2026-08-28T17:02:12.325006+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_30 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_30_WNBA_features.parquet
+2026-08-28T17:02:12.358024+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_30 rows=3
+2026-08-28T17:02:12.365933+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_30 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_30_WNBA_predictions.csv
+2026-08-28T17:02:12.366555+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_30 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_30_WNBA_predictions.csv
+2026-08-28T17:02:12.367197+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_07_31 rows=3 path=docs\win\basketball\daily_games\wnba\2026_07_31_WNBA.csv
+2026-08-28T17:02:12.369771+00:00 | SEASON READY | league=WNBA game_date=2026_07_31 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:12.785773+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:12.999675+00:00 | DATE SDV READY | league=WNBA game_date=2026_07_31 rows=3
+2026-08-28T17:02:13.014828+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_07_31 targets=3 fallback_context_rows=3
+2026-08-28T17:02:13.091002+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_07_31 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_07_31_WNBA_features.parquet
+2026-08-28T17:02:13.128006+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_07_31 rows=3
+2026-08-28T17:02:13.136142+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_07_31 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_31_WNBA_predictions.csv
+2026-08-28T17:02:13.136792+00:00 | DATE SUCCESS | league=WNBA game_date=2026_07_31 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_07_31_WNBA_predictions.csv
+2026-08-28T17:02:13.137414+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_01 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_01_WNBA.csv
+2026-08-28T17:02:13.140005+00:00 | SEASON READY | league=WNBA game_date=2026_08_01 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:13.568103+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:13.709975+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_01 rows=2
+2026-08-28T17:02:13.725660+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_01 targets=2 fallback_context_rows=2
+2026-08-28T17:02:13.789384+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_01 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_01_WNBA_features.parquet
+2026-08-28T17:02:13.825433+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_01 rows=2
+2026-08-28T17:02:13.832250+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_01 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_01_WNBA_predictions.csv
+2026-08-28T17:02:13.832909+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_01 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_01_WNBA_predictions.csv
+2026-08-28T17:02:13.833565+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_02 rows=4 path=docs\win\basketball\daily_games\wnba\2026_08_02_WNBA.csv
+2026-08-28T17:02:13.836159+00:00 | SEASON READY | league=WNBA game_date=2026_08_02 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:14.261544+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:14.409491+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_02 rows=4
+2026-08-28T17:02:14.425169+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_02 targets=4 fallback_context_rows=4
+2026-08-28T17:02:14.515325+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_02 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_02_WNBA_features.parquet
+2026-08-28T17:02:14.549929+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_02 rows=4
+2026-08-28T17:02:14.558668+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_02 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_02_WNBA_predictions.csv
+2026-08-28T17:02:14.559285+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_02 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_02_WNBA_predictions.csv
+2026-08-28T17:02:14.559927+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_03 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_03_WNBA.csv
+2026-08-28T17:02:14.562548+00:00 | SEASON READY | league=WNBA game_date=2026_08_03 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:14.981165+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:15.123855+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_03 rows=3
+2026-08-28T17:02:15.139426+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_03 targets=3 fallback_context_rows=3
+2026-08-28T17:02:15.232499+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_03 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_03_WNBA_features.parquet
+2026-08-28T17:02:15.270674+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_03 rows=3
+2026-08-28T17:02:15.278526+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_03 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_03_WNBA_predictions.csv
+2026-08-28T17:02:15.279140+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_03 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_03_WNBA_predictions.csv
+2026-08-28T17:02:15.279747+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_04 rows=1 path=docs\win\basketball\daily_games\wnba\2026_08_04_WNBA.csv
+2026-08-28T17:02:15.282382+00:00 | SEASON READY | league=WNBA game_date=2026_08_04 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:15.701437+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:15.804508+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_04 rows=1
+2026-08-28T17:02:15.819844+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_04 targets=1 fallback_context_rows=1
+2026-08-28T17:02:15.838300+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_04 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_04_WNBA_features.parquet
+2026-08-28T17:02:15.874710+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_04 rows=1
+2026-08-28T17:02:15.879605+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_04 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_04_WNBA_predictions.csv
+2026-08-28T17:02:15.880199+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_04 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_04_WNBA_predictions.csv
+2026-08-28T17:02:15.880870+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_05 rows=4 path=docs\win\basketball\daily_games\wnba\2026_08_05_WNBA.csv
+2026-08-28T17:02:15.883499+00:00 | SEASON READY | league=WNBA game_date=2026_08_05 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:16.298112+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:16.497516+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_05 rows=4
+2026-08-28T17:02:16.513149+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_05 targets=4 fallback_context_rows=4
+2026-08-28T17:02:16.631956+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_05 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_05_WNBA_features.parquet
+2026-08-28T17:02:16.664595+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_05 rows=4
+2026-08-28T17:02:16.673798+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_05 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_05_WNBA_predictions.csv
+2026-08-28T17:02:16.674420+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_05 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_05_WNBA_predictions.csv
+2026-08-28T17:02:16.675060+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_06 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_06_WNBA.csv
+2026-08-28T17:02:16.677671+00:00 | SEASON READY | league=WNBA game_date=2026_08_06 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:17.170851+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:17.332449+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_06 rows=3
+2026-08-28T17:02:17.347749+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_06 targets=3 fallback_context_rows=3
+2026-08-28T17:02:17.409564+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_06 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_06_WNBA_features.parquet
+2026-08-28T17:02:17.446414+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_06 rows=3
+2026-08-28T17:02:17.454206+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_06 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_06_WNBA_predictions.csv
+2026-08-28T17:02:17.454841+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_06 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_06_WNBA_predictions.csv
+2026-08-28T17:02:17.455482+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_07 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_07_WNBA.csv
+2026-08-28T17:02:17.458085+00:00 | SEASON READY | league=WNBA game_date=2026_08_07 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:17.881610+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:18.015771+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_07 rows=3
+2026-08-28T17:02:18.031040+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_07 targets=3 fallback_context_rows=3
+2026-08-28T17:02:18.122793+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_07 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_07_WNBA_features.parquet
+2026-08-28T17:02:18.158706+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_07 rows=3
+2026-08-28T17:02:18.166617+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_07 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_07_WNBA_predictions.csv
+2026-08-28T17:02:18.167278+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_07 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_07_WNBA_predictions.csv
+2026-08-28T17:02:18.168170+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_08 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_08_WNBA.csv
+2026-08-28T17:02:18.170777+00:00 | SEASON READY | league=WNBA game_date=2026_08_08 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:18.594094+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:18.730560+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_08 rows=3
+2026-08-28T17:02:18.746638+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_08 targets=3 fallback_context_rows=3
+2026-08-28T17:02:18.825308+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_08 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_08_WNBA_features.parquet
+2026-08-28T17:02:18.858701+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_08 rows=3
+2026-08-28T17:02:18.866433+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_08 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_08_WNBA_predictions.csv
+2026-08-28T17:02:18.867066+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_08 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_08_WNBA_predictions.csv
+2026-08-28T17:02:18.867745+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_09 rows=4 path=docs\win\basketball\daily_games\wnba\2026_08_09_WNBA.csv
+2026-08-28T17:02:18.870370+00:00 | SEASON READY | league=WNBA game_date=2026_08_09 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:19.286339+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:19.464805+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_09 rows=4
+2026-08-28T17:02:19.480547+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_09 targets=4 fallback_context_rows=4
+2026-08-28T17:02:19.614518+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_09 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_09_WNBA_features.parquet
+2026-08-28T17:02:19.656146+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_09 rows=4
+2026-08-28T17:02:19.666916+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_09 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_09_WNBA_predictions.csv
+2026-08-28T17:02:19.667881+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_09 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_09_WNBA_predictions.csv
+2026-08-28T17:02:19.668776+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_10 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_10_WNBA.csv
+2026-08-28T17:02:19.672191+00:00 | SEASON READY | league=WNBA game_date=2026_08_10 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:20.100067+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:20.293668+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_10 rows=2
+2026-08-28T17:02:20.309841+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_10 targets=2 fallback_context_rows=2
+2026-08-28T17:02:20.358315+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_10 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_10_WNBA_features.parquet
+2026-08-28T17:02:20.393663+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_10 rows=2
+2026-08-28T17:02:20.399933+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_10 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_10_WNBA_predictions.csv
+2026-08-28T17:02:20.400556+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_10 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_10_WNBA_predictions.csv
+2026-08-28T17:02:20.401616+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_11 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_11_WNBA.csv
+2026-08-28T17:02:20.404297+00:00 | SEASON READY | league=WNBA game_date=2026_08_11 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:20.830890+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:20.976636+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_11 rows=3
+2026-08-28T17:02:20.991566+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_11 targets=3 fallback_context_rows=0
+2026-08-28T17:02:21.084866+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_11 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_11_WNBA_features.parquet
+2026-08-28T17:02:21.117836+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_11 rows=3
+2026-08-28T17:02:21.125881+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_11 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_11_WNBA_predictions.csv
+2026-08-28T17:02:21.126512+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_11 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_11_WNBA_predictions.csv
+2026-08-28T17:02:21.127154+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_12 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_12_WNBA.csv
+2026-08-28T17:02:21.129751+00:00 | SEASON READY | league=WNBA game_date=2026_08_12 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:21.547891+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:21.688255+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_12 rows=3
+2026-08-28T17:02:21.703908+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_12 targets=3 fallback_context_rows=0
+2026-08-28T17:02:21.765039+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_12 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_12_WNBA_features.parquet
+2026-08-28T17:02:21.801727+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_12 rows=3
+2026-08-28T17:02:21.809354+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_12 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_12_WNBA_predictions.csv
+2026-08-28T17:02:21.809985+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_12 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_12_WNBA_predictions.csv
+2026-08-28T17:02:21.810660+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_13 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_13_WNBA.csv
+2026-08-28T17:02:21.813266+00:00 | SEASON READY | league=WNBA game_date=2026_08_13 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:22.234026+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:22.456313+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_13 rows=3
+2026-08-28T17:02:22.471914+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_13 targets=3 fallback_context_rows=0
+2026-08-28T17:02:22.563198+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_13 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_13_WNBA_features.parquet
+2026-08-28T17:02:22.601124+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_13 rows=3
+2026-08-28T17:02:22.608992+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_13 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_13_WNBA_predictions.csv
+2026-08-28T17:02:22.609619+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_13 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_13_WNBA_predictions.csv
+2026-08-28T17:02:22.610244+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_14 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_14_WNBA.csv
+2026-08-28T17:02:22.612848+00:00 | SEASON READY | league=WNBA game_date=2026_08_14 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:23.129074+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:23.255094+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_14 rows=2
+2026-08-28T17:02:23.270420+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_14 targets=2 fallback_context_rows=0
+2026-08-28T17:02:23.319194+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_14 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_14_WNBA_features.parquet
+2026-08-28T17:02:23.352852+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_14 rows=2
+2026-08-28T17:02:23.359152+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_14 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_14_WNBA_predictions.csv
+2026-08-28T17:02:23.359770+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_14 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_14_WNBA_predictions.csv
+2026-08-28T17:02:23.360416+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_15 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_15_WNBA.csv
+2026-08-28T17:02:23.362999+00:00 | SEASON READY | league=WNBA game_date=2026_08_15 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:23.785727+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:23.931801+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_15 rows=3
+2026-08-28T17:02:23.947466+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_15 targets=3 fallback_context_rows=0
+2026-08-28T17:02:24.037691+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_15 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_15_WNBA_features.parquet
+2026-08-28T17:02:24.074364+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_15 rows=3
+2026-08-28T17:02:24.082211+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_15 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_15_WNBA_predictions.csv
+2026-08-28T17:02:24.082835+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_15 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_15_WNBA_predictions.csv
+2026-08-28T17:02:24.083476+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_16 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_16_WNBA.csv
+2026-08-28T17:02:24.086059+00:00 | SEASON READY | league=WNBA game_date=2026_08_16 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:24.513197+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:24.664167+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_16 rows=3
+2026-08-28T17:02:24.679350+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_16 targets=3 fallback_context_rows=0
+2026-08-28T17:02:24.759717+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_16 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_16_WNBA_features.parquet
+2026-08-28T17:02:24.795798+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_16 rows=3
+2026-08-28T17:02:24.803288+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_16 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_16_WNBA_predictions.csv
+2026-08-28T17:02:24.803896+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_16 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_16_WNBA_predictions.csv
+2026-08-28T17:02:24.804507+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_17 rows=1 path=docs\win\basketball\daily_games\wnba\2026_08_17_WNBA.csv
+2026-08-28T17:02:24.807216+00:00 | SEASON READY | league=WNBA game_date=2026_08_17 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:25.226324+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:25.334770+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_17 rows=1
+2026-08-28T17:02:25.350031+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_17 targets=1 fallback_context_rows=0
+2026-08-28T17:02:25.382586+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_17 rows=1 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_17_WNBA_features.parquet
+2026-08-28T17:02:25.416543+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_17 rows=1
+2026-08-28T17:02:25.421789+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_17 rows=1 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_17_WNBA_predictions.csv
+2026-08-28T17:02:25.422392+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_17 rows=1 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_17_WNBA_predictions.csv
+2026-08-28T17:02:25.423064+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_18 rows=4 path=docs\win\basketball\daily_games\wnba\2026_08_18_WNBA.csv
+2026-08-28T17:02:25.425676+00:00 | SEASON READY | league=WNBA game_date=2026_08_18 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:25.838024+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:26.020638+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_18 rows=4
+2026-08-28T17:02:26.036395+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_18 targets=4 fallback_context_rows=0
+2026-08-28T17:02:26.144901+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_18 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_18_WNBA_features.parquet
+2026-08-28T17:02:26.183148+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_18 rows=4
+2026-08-28T17:02:26.192298+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_18 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_18_WNBA_predictions.csv
+2026-08-28T17:02:26.192946+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_18 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_18_WNBA_predictions.csv
+2026-08-28T17:02:26.193582+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_19 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_19_WNBA.csv
+2026-08-28T17:02:26.196186+00:00 | SEASON READY | league=WNBA game_date=2026_08_19 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:26.633677+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:26.791569+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_19 rows=2
+2026-08-28T17:02:26.807386+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_19 targets=2 fallback_context_rows=0
+2026-08-28T17:02:26.854725+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_19 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_19_WNBA_features.parquet
+2026-08-28T17:02:26.889778+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_19 rows=2
+2026-08-28T17:02:26.896366+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_19 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_19_WNBA_predictions.csv
+2026-08-28T17:02:26.896991+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_19 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_19_WNBA_predictions.csv
+2026-08-28T17:02:26.897628+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_20 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_20_WNBA.csv
+2026-08-28T17:02:26.900237+00:00 | SEASON READY | league=WNBA game_date=2026_08_20 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:27.344367+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:27.493433+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_20 rows=3
+2026-08-28T17:02:27.509910+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_20 targets=3 fallback_context_rows=0
+2026-08-28T17:02:27.602649+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_20 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_20_WNBA_features.parquet
+2026-08-28T17:02:27.640148+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_20 rows=3
+2026-08-28T17:02:27.647962+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_20 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_20_WNBA_predictions.csv
+2026-08-28T17:02:27.648610+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_20 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_20_WNBA_predictions.csv
+2026-08-28T17:02:27.649256+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_21 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_21_WNBA.csv
+2026-08-28T17:02:27.651866+00:00 | SEASON READY | league=WNBA game_date=2026_08_21 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:28.108590+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:28.245062+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_21 rows=3
+2026-08-28T17:02:28.260792+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_21 targets=3 fallback_context_rows=0
+2026-08-28T17:02:28.323301+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_21 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_21_WNBA_features.parquet
+2026-08-28T17:02:28.359589+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_21 rows=3
+2026-08-28T17:02:28.367122+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_21 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_21_WNBA_predictions.csv
+2026-08-28T17:02:28.367739+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_21 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_21_WNBA_predictions.csv
+2026-08-28T17:02:28.368406+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_22 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_22_WNBA.csv
+2026-08-28T17:02:28.370990+00:00 | SEASON READY | league=WNBA game_date=2026_08_22 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:28.782995+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:28.922693+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_22 rows=3
+2026-08-28T17:02:28.938710+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_22 targets=3 fallback_context_rows=0
+2026-08-28T17:02:29.037274+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_22 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_22_WNBA_features.parquet
+2026-08-28T17:02:29.071049+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_22 rows=3
+2026-08-28T17:02:29.078999+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_22 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_22_WNBA_predictions.csv
+2026-08-28T17:02:29.079648+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_22 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_22_WNBA_predictions.csv
+2026-08-28T17:02:29.080320+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_23 rows=4 path=docs\win\basketball\daily_games\wnba\2026_08_23_WNBA.csv
+2026-08-28T17:02:29.082946+00:00 | SEASON READY | league=WNBA game_date=2026_08_23 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:29.592986+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:29.749734+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_23 rows=4
+2026-08-28T17:02:29.764899+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_23 targets=4 fallback_context_rows=0
+2026-08-28T17:02:29.856350+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_23 rows=4 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_23_WNBA_features.parquet
+2026-08-28T17:02:29.893050+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_23 rows=4
+2026-08-28T17:02:29.901843+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_23 rows=4 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_23_WNBA_predictions.csv
+2026-08-28T17:02:29.902474+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_23 rows=4 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_23_WNBA_predictions.csv
+2026-08-28T17:02:29.903093+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_24 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_24_WNBA.csv
+2026-08-28T17:02:29.905854+00:00 | SEASON READY | league=WNBA game_date=2026_08_24 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:30.338044+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:30.461397+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_24 rows=2
+2026-08-28T17:02:30.477222+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_24 targets=2 fallback_context_rows=0
+2026-08-28T17:02:30.539097+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_24 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_24_WNBA_features.parquet
+2026-08-28T17:02:30.577743+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_24 rows=2
+2026-08-28T17:02:30.584220+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_24 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_24_WNBA_predictions.csv
+2026-08-28T17:02:30.584873+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_24 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_24_WNBA_predictions.csv
+2026-08-28T17:02:30.585549+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_25 rows=3 path=docs\win\basketball\daily_games\wnba\2026_08_25_WNBA.csv
+2026-08-28T17:02:30.588205+00:00 | SEASON READY | league=WNBA game_date=2026_08_25 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:31.015215+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:31.182319+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_25 rows=3
+2026-08-28T17:02:31.197495+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_25 targets=3 fallback_context_rows=0
+2026-08-28T17:02:31.275299+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_25 rows=3 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_25_WNBA_features.parquet
+2026-08-28T17:02:31.309264+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_25 rows=3
+2026-08-28T17:02:31.316746+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_25 rows=3 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_25_WNBA_predictions.csv
+2026-08-28T17:02:31.317362+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_25 rows=3 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_25_WNBA_predictions.csv
+2026-08-28T17:02:31.317993+00:00 | DAILY SLATE READY | league=WNBA game_date=2026_08_26 rows=2 path=docs\win\basketball\daily_games\wnba\2026_08_26_WNBA.csv
+2026-08-28T17:02:31.320617+00:00 | SEASON READY | league=WNBA game_date=2026_08_26 internal_season=2026 sdv_season=2026
+2026-08-28T17:02:31.741127+00:00 | CACHED CANONICAL LOADED | league=WNBA internal_season=2026 rows=25 path=docs\win\basketball\00_intake\sdv\canonical_games\wnba\2026_WNBA_games.csv
+2026-08-28T17:02:31.870008+00:00 | DATE SDV READY | league=WNBA game_date=2026_08_26 rows=2
+2026-08-28T17:02:31.909459+00:00 | FEATURE TARGETS READY | league=WNBA game_date=2026_08_26 targets=2 fallback_context_rows=0
+2026-08-28T17:02:31.978658+00:00 | CURRENT FEATURES READY | league=WNBA game_date=2026_08_26 rows=2 path=docs\win\basketball\00_intake\sdv\features\current\wnba\2026_08_26_WNBA_features.parquet
+2026-08-28T17:02:32.019607+00:00 | FEATURE COVERAGE PASS | league=WNBA game_date=2026_08_26 rows=2
+2026-08-28T17:02:32.026034+00:00 | PREDICTIONS READY | league=WNBA game_date=2026_08_26 rows=2 model_version=sdv_model_v1 feature_version=sdv_model_v1_pit_v2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_26_WNBA_predictions.csv
+2026-08-28T17:02:32.026667+00:00 | DATE SUCCESS | league=WNBA game_date=2026_08_26 rows=2 path=docs\win\basketball\00_intake\predictions_sdv\wnba\2026_08_26_WNBA_predictions.csv
+2026-08-28T17:02:32.027018+00:00 | STATUS: SUCCESS | league=WNBA dates_found=107 dates_written=107 rows_written=303 dates_skipped=0 date_errors=0

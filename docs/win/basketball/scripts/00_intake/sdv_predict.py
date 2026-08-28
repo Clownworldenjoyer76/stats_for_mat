@@ -2,7 +2,7 @@
 # docs/win/basketball/scripts/00_intake/sdv_predict.py
 """Production SDV Model V1 inference.
 
-Authoritative slate:
+Authoritative slates:
     docs/win/basketball/daily_games/{league}/{game_date}_{LEAGUE}.csv
 
 Feature implementation reused from:
@@ -15,13 +15,22 @@ Outputs:
     docs/win/basketball/00_intake/predictions_sdv/{league}/
         {game_date}_{LEAGUE}_predictions.csv
 
-Fail-closed guarantees:
+Default behavior:
+- scan every available daily-games file for the selected league;
+- create an SDV prediction file for every valid non-empty slate;
+- skip empty slates;
+- if one date fails, log that date and continue processing the others.
+
+Optional --game-date remains available only as a filter for an explicit
+single-date rerun. It is not required.
+
+Fail-closed guarantees for every date that is processed:
 - every daily slate row must have canonical game_id;
 - every daily slate game must receive one feature row;
 - every prediction must retain the daily canonical game_id;
 - feature/model versions must match exactly;
 - model/schema/coefficient ordering must match;
-- no slate game is silently dropped.
+- no game inside a processed slate is silently dropped.
 
 The daily_games file is authoritative for slate membership and identity.
 SportsDataVerse schedule information is used only to enrich the daily
@@ -50,36 +59,12 @@ from sdv_season_mapping import sdv_season_id
 
 
 BASE = Path("docs/win/basketball")
-
-CONFIG_PATH = (
-    BASE
-    / "config/sdv_model.yaml"
-)
-
-DAILY_GAMES_ROOT = (
-    BASE
-    / "daily_games"
-)
-
-DEFAULT_MODEL_ROOT = (
-    BASE
-    / "models/sdv"
-)
-
-PREDICTION_ROOT = (
-    BASE
-    / "00_intake/predictions_sdv"
-)
-
-ERROR_DIR = (
-    BASE
-    / "errors/00_intake"
-)
-
-LOG_FILE = (
-    ERROR_DIR
-    / "sdv_predict.txt"
-)
+CONFIG_PATH = BASE / "config/sdv_model.yaml"
+DAILY_GAMES_ROOT = BASE / "daily_games"
+DEFAULT_MODEL_ROOT = BASE / "models/sdv"
+PREDICTION_ROOT = BASE / "00_intake/predictions_sdv"
+ERROR_DIR = BASE / "errors/00_intake"
+LOG_FILE = ERROR_DIR / "sdv_predict.txt"
 
 LEAGUE_LABELS = {
     "nba": "NBA",
@@ -102,27 +87,22 @@ PREDICTION_FIELDS = [
     "game_time",
     "home_team",
     "away_team",
-
     "model_source",
     "model_version",
     "feature_version",
-
     "home_prob",
     "away_prob",
     "raw_home_ml_prob",
     "raw_away_ml_prob",
-
     "home_projected_points",
     "away_projected_points",
     "total_projected_points",
     "expected_margin",
     "expected_total",
-
     "margin_residual_mean",
     "margin_residual_std",
     "total_residual_mean",
     "total_residual_std",
-
     "feature_generated_at_utc",
     "prediction_generated_at_utc",
 ]
@@ -130,86 +110,40 @@ PREDICTION_FIELDS = [
 PROBABILITY_EPSILON = 1e-12
 
 
-def clean(
-    value: Any,
-) -> str:
-    if value is None:
-        return ""
-
-    return str(
-        value
-    ).strip()
+def clean(value: Any) -> str:
+    return "" if value is None else str(value).strip()
 
 
-def clean_id(
-    value: Any,
-) -> str:
-    text = clean(
-        value
-    )
-
+def clean_id(value: Any) -> str:
+    text = clean(value)
     if not text:
         return ""
 
     try:
-        number = float(
-            text
-        )
+        number = float(text)
 
-        if (
-            math.isfinite(
-                number
-            )
-            and number.is_integer()
-        ):
-            return str(
-                int(
-                    number
-                )
-            )
+        if math.isfinite(number) and number.is_integer():
+            return str(int(number))
 
-    except (
-        TypeError,
-        ValueError,
-    ):
+    except (TypeError, ValueError):
         pass
 
     return text
 
 
-def normalize_game_date(
-    value: Any,
-) -> str:
-    text = clean(
-        value
-    )
+def normalize_game_date(value: Any) -> str:
+    text = clean(value)
 
     if not text:
         return ""
 
-    normalized = (
-        text[:10]
-        .replace(
-            "-",
-            "_",
-        )
-        .replace(
-            "/",
-            "_",
-        )
-    )
+    normalized = text[:10].replace("-", "_").replace("/", "_")
 
-    if not re.fullmatch(
-        r"\d{4}_\d{2}_\d{2}",
-        normalized,
-    ):
+    if not re.fullmatch(r"\d{4}_\d{2}_\d{2}", normalized):
         return ""
 
     try:
-        datetime.strptime(
-            normalized,
-            "%Y_%m_%d",
-        )
+        datetime.strptime(normalized, "%Y_%m_%d")
 
     except ValueError:
         return ""
@@ -217,47 +151,24 @@ def normalize_game_date(
     return normalized
 
 
-def normalize_team_key(
-    value: Any,
-) -> str:
-    return " ".join(
-        clean(
-            value
-        ).casefold().split()
-    )
+def normalize_team_key(value: Any) -> str:
+    return " ".join(clean(value).casefold().split())
 
 
 def utc_now() -> str:
-    return datetime.now(
-        timezone.utc
-    ).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
-def log(
-    message: str,
-) -> None:
-    ERROR_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+def log(message: str) -> None:
+    ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
-    with LOG_FILE.open(
-        "a",
-        encoding="utf-8",
-    ) as handle:
-        handle.write(
-            f"{utc_now()} | "
-            f"{message}\n"
-        )
+    with LOG_FILE.open("a", encoding="utf-8") as handle:
+        handle.write(f"{utc_now()} | {message}\n")
 
 
-def read_json(
-    path: Path,
-) -> dict[str, Any]:
+def read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        raise FileNotFoundError(path)
 
     payload = json.loads(
         path.read_text(
@@ -265,27 +176,17 @@ def read_json(
         )
     )
 
-    if not isinstance(
-        payload,
-        dict,
-    ):
+    if not isinstance(payload, dict):
         raise ValueError(
-            "JSON root must be object: "
-            f"{path}"
+            f"JSON root must be object: {path}"
         )
 
     return payload
 
 
-def read_csv_rows(
-    path: Path,
-) -> list[
-    dict[str, Any]
-]:
+def read_csv_rows(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        raise FileNotFoundError(path)
 
     with path.open(
         newline="",
@@ -293,10 +194,7 @@ def read_csv_rows(
     ) as handle:
         return [
             dict(row)
-            for row
-            in csv.DictReader(
-                handle
-            )
+            for row in csv.DictReader(handle)
         ]
 
 
@@ -304,14 +202,9 @@ def required_mapping(
     parent: dict[str, Any],
     key: str,
 ) -> dict[str, Any]:
-    value = parent.get(
-        key
-    )
+    value = parent.get(key)
 
-    if not isinstance(
-        value,
-        dict,
-    ):
+    if not isinstance(value, dict):
         raise ValueError(
             f"Missing mapping: {key}"
         )
@@ -323,18 +216,11 @@ def to_float_required(
     value: Any,
     label: str,
 ) -> float:
-    if isinstance(
-        value,
-        bool,
-    ):
-        result = float(
-            value
-        )
+    if isinstance(value, bool):
+        result = float(value)
 
     else:
-        text = clean(
-            value
-        )
+        text = clean(value)
 
         if not text:
             raise RuntimeError(
@@ -342,22 +228,14 @@ def to_float_required(
             )
 
         try:
-            result = float(
-                text
-            )
+            result = float(text)
 
-        except (
-            TypeError,
-            ValueError,
-        ) as exc:
+        except (TypeError, ValueError) as exc:
             raise RuntimeError(
-                f"{label} is not numeric: "
-                f"{value!r}"
+                f"{label} is not numeric: {value!r}"
             ) from exc
 
-    if not math.isfinite(
-        result
-    ):
+    if not math.isfinite(result):
         raise RuntimeError(
             f"{label} is not finite"
         )
@@ -374,9 +252,7 @@ def configured_model_root(
     )
 
     root = clean(
-        artifact_cfg.get(
-            "root"
-        )
+        artifact_cfg.get("root")
     )
 
     if not root:
@@ -384,9 +260,7 @@ def configured_model_root(
             "artifacts.root is blank"
         )
 
-    result = Path(
-        root
-    )
+    result = Path(root)
 
     if (
         result.as_posix()
@@ -425,51 +299,78 @@ def configured_model_root(
     return result
 
 
+def discover_daily_game_dates(
+    league: str,
+) -> list[str]:
+    label = LEAGUE_LABELS[league]
+
+    folder = (
+        DAILY_GAMES_ROOT
+        / league
+    )
+
+    if not folder.exists():
+        return []
+
+    dates: list[str] = []
+
+    pattern = re.compile(
+        rf"^(\d{{4}}_\d{{2}}_\d{{2}})_"
+        rf"{re.escape(label)}\.csv$"
+    )
+
+    for path in sorted(
+        folder.glob(
+            f"*_{label}.csv"
+        )
+    ):
+        match = pattern.fullmatch(
+            path.name
+        )
+
+        if not match:
+            continue
+
+        game_date = normalize_game_date(
+            match.group(1)
+        )
+
+        if game_date:
+            dates.append(game_date)
+
+    return sorted(
+        set(dates)
+    )
+
+
 def load_daily_slate(
     league: str,
     game_date: str,
 ) -> tuple[
     Path,
-    list[
-        dict[str, Any]
-    ],
+    list[dict[str, Any]],
 ]:
-    label = LEAGUE_LABELS[
-        league
-    ]
+    label = LEAGUE_LABELS[league]
 
     path = (
         DAILY_GAMES_ROOT
         / league
-        / (
-            f"{game_date}_"
-            f"{label}.csv"
-        )
+        / f"{game_date}_{label}.csv"
     )
 
-    rows = read_csv_rows(
-        path
-    )
+    rows = read_csv_rows(path)
 
     if not rows:
-        raise RuntimeError(
-            "Daily canonical slate contains "
-            f"zero games: {path}"
-        )
+        return path, []
 
     seen_ids: set[str] = set()
 
-    for (
-        index,
-        row,
-    ) in enumerate(
+    for index, row in enumerate(
         rows,
         start=1,
     ):
         row_date = normalize_game_date(
-            row.get(
-                "game_date"
-            )
+            row.get("game_date")
         )
 
         if row_date != game_date:
@@ -481,9 +382,7 @@ def load_daily_slate(
             )
 
         game_id = clean_id(
-            row.get(
-                "game_id"
-            )
+            row.get("game_id")
         )
 
         if not game_id:
@@ -498,43 +397,26 @@ def load_daily_slate(
                 f"game_id={game_id}"
             )
 
-        seen_ids.add(
-            game_id
-        )
+        seen_ids.add(game_id)
 
         home_team = clean(
-            row.get(
-                "home_team"
-            )
+            row.get("home_team")
         )
 
         away_team = clean(
-            row.get(
-                "away_team"
-            )
+            row.get("away_team")
         )
 
-        if (
-            not home_team
-            or not away_team
-        ):
+        if not home_team or not away_team:
             raise RuntimeError(
                 f"{path}: game_id={game_id} "
                 "has blank home/away team"
             )
 
-        row[
-            "game_id"
-        ] = game_id
+        row["game_id"] = game_id
+        row["game_date"] = game_date
 
-        row[
-            "game_date"
-        ] = game_date
-
-    return (
-        path,
-        rows,
-    )
+    return path, rows
 
 
 def internal_season_from_game_date(
@@ -556,10 +438,7 @@ def internal_season_from_game_date(
         if parsed.month >= 10:
             return parsed.year
 
-        return (
-            parsed.year
-            - 1
-        )
+        return parsed.year - 1
 
     raise ValueError(
         f"Unsupported league={league}"
@@ -573,19 +452,13 @@ def canonical_season_path(
 ) -> Path:
     paths = (
         feature_generation
-        .configured_paths(
-            cfg
-        )
+        .configured_paths(cfg)
     )
 
-    label = LEAGUE_LABELS[
-        league
-    ]
+    label = LEAGUE_LABELS[league]
 
     return (
-        paths[
-            "canonical_current_root"
-        ]
+        paths["canonical_current_root"]
         / league
         / (
             f"{internal_season}_"
@@ -598,9 +471,7 @@ def load_cached_canonical_rows(
     cfg: dict[str, Any],
     league: str,
     internal_season: int,
-) -> list[
-    dict[str, Any]
-]:
+) -> list[dict[str, Any]]:
     path = canonical_season_path(
         cfg,
         league,
@@ -616,15 +487,12 @@ def load_cached_canonical_rows(
 
         return []
 
-    rows = read_csv_rows(
-        path
-    )
+    rows = read_csv_rows(path)
 
     log(
         "CACHED CANONICAL LOADED | "
         f"league={LEAGUE_LABELS[league]} "
-        f"internal_season="
-        f"{internal_season} "
+        f"internal_season={internal_season} "
         f"rows={len(rows)} "
         f"path={path}"
     )
@@ -637,18 +505,12 @@ def fetch_date_specific_sdv_rows(
     game_date: str,
     internal_season: int,
     mapped_sdv_season: int,
-) -> list[
-    dict[str, Any]
-]:
+) -> list[dict[str, Any]]:
     date_query = int(
-        game_date.replace(
-            "_",
-            "",
-        )
+        game_date.replace("_", "")
     )
 
     limit = 2000
-
     fetched_at = utc_now()
 
     try:
@@ -667,8 +529,7 @@ def fetch_date_specific_sdv_rows(
         ):
             log(
                 "DATE SDV EMPTY | "
-                f"league="
-                f"{LEAGUE_LABELS[league]} "
+                f"league={LEAGUE_LABELS[league]} "
                 f"game_date={game_date}"
             )
 
@@ -685,34 +546,24 @@ def fetch_date_specific_sdv_rows(
             .canonicalize_schedule(
                 frame,
                 league=league,
-                internal_season=(
-                    internal_season
-                ),
-                sdv_season=(
-                    mapped_sdv_season
-                ),
-                fetched_at_utc=(
-                    fetched_at
-                ),
+                internal_season=internal_season,
+                sdv_season=mapped_sdv_season,
+                fetched_at_utc=fetched_at,
             )
         )
 
         rows = [
             row
-            for row
-            in rows
+            for row in rows
             if normalize_game_date(
-                row.get(
-                    "game_date"
-                )
+                row.get("game_date")
             )
             == game_date
         ]
 
         log(
             "DATE SDV READY | "
-            f"league="
-            f"{LEAGUE_LABELS[league]} "
+            f"league={LEAGUE_LABELS[league]} "
             f"game_date={game_date} "
             f"rows={len(rows)}"
         )
@@ -722,8 +573,7 @@ def fetch_date_specific_sdv_rows(
     except Exception as exc:
         log(
             "DATE SDV WARNING | "
-            f"league="
-            f"{LEAGUE_LABELS[league]} "
+            f"league={LEAGUE_LABELS[league]} "
             f"game_date={game_date} "
             f"error={exc}"
         )
@@ -732,81 +582,48 @@ def fetch_date_specific_sdv_rows(
 
 
 def add_team_id_candidate(
-    mapping: dict[
-        str,
-        set[str],
-    ],
+    mapping: dict[str, set[str]],
     name: Any,
     team_id: Any,
 ) -> None:
-    key = normalize_team_key(
-        name
-    )
+    key = normalize_team_key(name)
+    identifier = clean_id(team_id)
 
-    identifier = clean_id(
-        team_id
-    )
-
-    if (
-        key
-        and identifier
-    ):
-        mapping[
-            key
-        ].add(
-            identifier
-        )
+    if key and identifier:
+        mapping[key].add(identifier)
 
 
 def add_canonical_team_ids(
-    mapping: dict[
-        str,
-        set[str],
-    ],
-    rows: list[
-        dict[str, Any]
-    ],
+    mapping: dict[str, set[str]],
+    rows: list[dict[str, Any]],
 ) -> None:
     for row in rows:
         add_team_id_candidate(
             mapping,
-            row.get(
-                "home_team"
-            ),
-            row.get(
-                "home_team_id"
-            ),
+            row.get("home_team"),
+            row.get("home_team_id"),
         )
 
         add_team_id_candidate(
             mapping,
-            row.get(
-                "away_team"
-            ),
-            row.get(
-                "away_team_id"
-            ),
+            row.get("away_team"),
+            row.get("away_team_id"),
         )
 
 
 def add_history_team_ids(
-    mapping: dict[
-        str,
-        set[str],
-    ],
+    mapping: dict[str, set[str]],
     cfg: dict[str, Any],
     league: str,
 ) -> None:
     paths = (
         feature_generation
-        .configured_paths(
-            cfg
-        )
+        .configured_paths(cfg)
     )
 
-    history_root = paths[
-        "history_input_root"
-    ]
+    history_root = (
+        paths["history_input_root"]
+    )
 
     seasons = (
         feature_generation
@@ -834,41 +651,31 @@ def add_history_team_ids(
         path = (
             history_root
             / league
-            / str(
-                season
-            )
+            / str(season)
             / "games.parquet"
         )
 
         if not path.exists():
             continue
 
-        frame = pl.read_parquet(
-            path
-        )
-
-        columns = set(
-            frame.columns
-        )
+        frame = pl.read_parquet(path)
+        columns = set(frame.columns)
 
         home_id_column = (
             "home_team_id"
-            if "home_team_id"
-            in columns
+            if "home_team_id" in columns
             else "home_id"
         )
 
         away_id_column = (
             "away_team_id"
-            if "away_team_id"
-            in columns
+            if "away_team_id" in columns
             else "away_id"
         )
 
         selected_columns = [
             column
-            for column
-            in (
+            for column in (
                 *home_name_columns,
                 *away_name_columns,
                 home_id_column,
@@ -895,9 +702,7 @@ def add_history_team_ids(
                 if column in row:
                     add_team_id_candidate(
                         mapping,
-                        row.get(
-                            column
-                        ),
+                        row.get(column),
                         home_id,
                     )
 
@@ -905,9 +710,7 @@ def add_history_team_ids(
                 if column in row:
                     add_team_id_candidate(
                         mapping,
-                        row.get(
-                            column
-                        ),
+                        row.get(column),
                         away_id,
                     )
 
@@ -915,16 +718,9 @@ def add_history_team_ids(
 def build_team_id_map(
     cfg: dict[str, Any],
     league: str,
-    cached_rows: list[
-        dict[str, Any]
-    ],
-    date_rows: list[
-        dict[str, Any]
-    ],
-) -> dict[
-    str,
-    str,
-]:
+    cached_rows: list[dict[str, Any]],
+    date_rows: list[dict[str, Any]],
+) -> dict[str, str]:
     candidates: dict[
         str,
         set[str],
@@ -947,46 +743,30 @@ def build_team_id_map(
     )
 
     ambiguous = {
-        name: sorted(
-            values
-        )
-        for (
-            name,
-            values,
-        ) in candidates.items()
+        name: sorted(values)
+        for name, values
+        in candidates.items()
         if len(values) > 1
     }
 
     if ambiguous:
         log(
             "TEAM ID AMBIGUITIES | "
-            f"league="
-            f"{LEAGUE_LABELS[league]} "
+            f"league={LEAGUE_LABELS[league]} "
             f"count={len(ambiguous)}"
         )
 
     return {
-        name: next(
-            iter(
-                values
-            )
-        )
-        for (
-            name,
-            values,
-        ) in candidates.items()
+        name: next(iter(values))
+        for name, values
+        in candidates.items()
         if len(values) == 1
     }
 
 
 def exact_context_by_game_id(
-    rows: list[
-        dict[str, Any]
-    ],
-) -> dict[
-    str,
-    dict[str, Any],
-]:
+    rows: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     result: dict[
         str,
         dict[str, Any],
@@ -994,12 +774,8 @@ def exact_context_by_game_id(
 
     for row in rows:
         game_id = clean_id(
-            row.get(
-                "game_id"
-            )
-            or row.get(
-                "id"
-            )
+            row.get("game_id")
+            or row.get("id")
         )
 
         if not game_id:
@@ -1007,13 +783,11 @@ def exact_context_by_game_id(
 
         if game_id in result:
             raise RuntimeError(
-                "Duplicate context game_id="
-                f"{game_id}"
+                "Duplicate context "
+                f"game_id={game_id}"
             )
 
-        result[
-            game_id
-        ] = row
+        result[game_id] = row
 
     return result
 
@@ -1023,45 +797,34 @@ def assert_team_identity(
     context_row: dict[str, Any],
 ) -> None:
     game_id = clean_id(
-        slate_row.get(
-            "game_id"
-        )
+        slate_row.get("game_id")
     )
 
     slate_home = normalize_team_key(
-        slate_row.get(
-            "home_team"
-        )
+        slate_row.get("home_team")
     )
 
     slate_away = normalize_team_key(
-        slate_row.get(
-            "away_team"
-        )
+        slate_row.get("away_team")
     )
 
     context_home = normalize_team_key(
-        context_row.get(
-            "home_team"
-        )
+        context_row.get("home_team")
     )
 
     context_away = normalize_team_key(
-        context_row.get(
-            "away_team"
-        )
+        context_row.get("away_team")
     )
 
     if (
         context_home
         and slate_home
-        and context_home
-        != slate_home
+        and context_home != slate_home
     ):
         raise RuntimeError(
             "Canonical home-team identity "
-            "mismatch for game_id="
-            f"{game_id}: "
+            "mismatch for "
+            f"game_id={game_id}: "
             f"daily={slate_row.get('home_team')} "
             f"sdv={context_row.get('home_team')}"
         )
@@ -1069,13 +832,12 @@ def assert_team_identity(
     if (
         context_away
         and slate_away
-        and context_away
-        != slate_away
+        and context_away != slate_away
     ):
         raise RuntimeError(
             "Canonical away-team identity "
-            "mismatch for game_id="
-            f"{game_id}: "
+            "mismatch for "
+            f"game_id={game_id}: "
             f"daily={slate_row.get('away_team')} "
             f"sdv={context_row.get('away_team')}"
         )
@@ -1087,12 +849,8 @@ def build_feature_targets(
     game_date: str,
     internal_season: int,
     mapped_sdv_season: int,
-    slate_rows: list[
-        dict[str, Any]
-    ],
-) -> list[
-    dict[str, Any]
-]:
+    slate_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     cached_rows = (
         load_cached_canonical_rows(
             cfg,
@@ -1119,63 +877,45 @@ def build_feature_targets(
         cached_rows,
         date_rows,
     ):
-        for (
-            game_id,
-            row,
-        ) in exact_context_by_game_id(
-            source_rows
-        ).items():
+        for game_id, row in (
+            exact_context_by_game_id(
+                source_rows
+            ).items()
+        ):
             if game_id in exact_rows:
-                old = exact_rows[
-                    game_id
-                ]
+                old = exact_rows[game_id]
 
                 old_identity = (
                     normalize_team_key(
-                        old.get(
-                            "home_team"
-                        )
+                        old.get("home_team")
                     ),
                     normalize_team_key(
-                        old.get(
-                            "away_team"
-                        )
+                        old.get("away_team")
                     ),
                 )
 
                 new_identity = (
                     normalize_team_key(
-                        row.get(
-                            "home_team"
-                        )
+                        row.get("home_team")
                     ),
                     normalize_team_key(
-                        row.get(
-                            "away_team"
-                        )
+                        row.get("away_team")
                     ),
                 )
 
-                if (
-                    old_identity
-                    != new_identity
-                ):
+                if old_identity != new_identity:
                     raise RuntimeError(
                         "Conflicting SDV contexts "
                         f"for game_id={game_id}"
                     )
 
-            exact_rows[
-                game_id
-            ] = row
+            exact_rows[game_id] = row
 
-    team_id_map = (
-        build_team_id_map(
-            cfg,
-            league,
-            cached_rows,
-            date_rows,
-        )
+    team_id_map = build_team_id_map(
+        cfg,
+        league,
+        cached_rows,
+        date_rows,
     )
 
     targets: list[
@@ -1186,9 +926,7 @@ def build_feature_targets(
 
     for slate_row in slate_rows:
         game_id = clean_id(
-            slate_row[
-                "game_id"
-            ]
+            slate_row["game_id"]
         )
 
         exact = exact_rows.get(
@@ -1201,113 +939,71 @@ def build_feature_targets(
                 exact,
             )
 
-            target = dict(
-                exact
-            )
+            target = dict(exact)
 
-            target[
-                "sport"
-            ] = (
+            target["sport"] = (
                 clean(
-                    slate_row.get(
-                        "sport"
-                    )
+                    slate_row.get("sport")
                 )
                 or "basketball"
             )
 
-            target[
-                "league"
-            ] = LEAGUE_LABELS[
-                league
-            ]
+            target["league"] = (
+                LEAGUE_LABELS[league]
+            )
 
-            target[
-                "game_id"
-            ] = game_id
+            target["game_id"] = game_id
+            target["game_date"] = game_date
 
-            target[
-                "game_date"
-            ] = game_date
-
-            target[
-                "game_time"
-            ] = (
+            target["game_time"] = (
                 clean(
-                    slate_row.get(
-                        "game_time"
-                    )
+                    slate_row.get("game_time")
                 )
                 or clean(
-                    exact.get(
-                        "game_time"
-                    )
+                    exact.get("game_time")
                 )
             )
 
-            target[
-                "home_team"
-            ] = clean(
-                slate_row.get(
-                    "home_team"
-                )
+            target["home_team"] = clean(
+                slate_row.get("home_team")
             )
 
-            target[
-                "away_team"
-            ] = clean(
-                slate_row.get(
-                    "away_team"
-                )
+            target["away_team"] = clean(
+                slate_row.get("away_team")
             )
 
-            target[
-                "internal_season"
-            ] = str(
+            target["internal_season"] = str(
                 internal_season
             )
 
-            target[
-                "sdv_season"
-            ] = str(
+            target["sdv_season"] = str(
                 mapped_sdv_season
             )
 
-            targets.append(
-                target
-            )
-
+            targets.append(target)
             continue
 
         home_team = clean(
-            slate_row.get(
-                "home_team"
-            )
+            slate_row.get("home_team")
         )
 
         away_team = clean(
-            slate_row.get(
-                "away_team"
-            )
-        )
-
-        home_key = normalize_team_key(
-            home_team
-        )
-
-        away_key = normalize_team_key(
-            away_team
+            slate_row.get("away_team")
         )
 
         home_team_id = (
             team_id_map.get(
-                home_key
+                normalize_team_key(
+                    home_team
+                )
             )
         )
 
         away_team_id = (
             team_id_map.get(
-                away_key
+                normalize_team_key(
+                    away_team
+                )
             )
         )
 
@@ -1333,16 +1029,12 @@ def build_feature_targets(
             {
                 "sport": (
                     clean(
-                        slate_row.get(
-                            "sport"
-                        )
+                        slate_row.get("sport")
                     )
                     or "basketball"
                 ),
                 "league": (
-                    LEAGUE_LABELS[
-                        league
-                    ]
+                    LEAGUE_LABELS[league]
                 ),
                 "internal_season": str(
                     internal_season
@@ -1365,20 +1057,12 @@ def build_feature_targets(
                 "away_team_id": (
                     away_team_id
                 ),
-
-                # Exact venue context is unknown
-                # when the season-level SDV
-                # schedule omitted this event.
-                # Missing model inputs are
-                # handled by the persisted
-                # training-time encoder.
                 "neutral_site": "",
                 "venue_id": "",
                 "venue_full_name": "",
                 "venue_name": "",
                 "home_venue_id": "",
                 "away_venue_id": "",
-
                 "status": "",
                 "source": (
                     "daily_games_sdv_"
@@ -1390,24 +1074,20 @@ def build_feature_targets(
             }
         )
 
-    if (
-        len(targets)
-        != len(
-            slate_rows
-        )
+    if len(targets) != len(
+        slate_rows
     ):
         raise RuntimeError(
-            "Feature target count does not "
-            "match daily slate"
+            "Feature target count does "
+            "not match daily slate"
         )
 
     log(
         "FEATURE TARGETS READY | "
-        f"league="
-        f"{LEAGUE_LABELS[league]} "
+        f"league={LEAGUE_LABELS[league]} "
         f"game_date={game_date} "
         f"targets={len(targets)} "
-        f"fallback_context_rows="
+        "fallback_context_rows="
         f"{fallback_count}"
     )
 
@@ -1420,20 +1100,16 @@ def generate_current_features(
     game_date: str,
     internal_season: int,
     mapped_sdv_season: int,
-    slate_rows: list[
-        dict[str, Any]
-    ],
+    slate_rows: list[dict[str, Any]],
 ) -> Path:
     paths = (
         feature_generation
-        .configured_paths(
-            cfg
-        )
+        .configured_paths(cfg)
     )
 
-    history_root = paths[
-        "history_input_root"
-    ]
+    history_root = (
+        paths["history_input_root"]
+    )
 
     (
         _,
@@ -1450,15 +1126,13 @@ def generate_current_features(
         )
     )
 
-    targets = (
-        build_feature_targets(
-            cfg,
-            league,
-            game_date,
-            internal_season,
-            mapped_sdv_season,
-            slate_rows,
-        )
+    targets = build_feature_targets(
+        cfg,
+        league,
+        game_date,
+        internal_season,
+        mapped_sdv_season,
+        slate_rows,
     )
 
     generated_at = utc_now()
@@ -1471,29 +1145,21 @@ def generate_current_features(
             league=league,
             cfg=cfg,
             team_index=team_index,
-            player_index=(
-                player_index
-            ),
+            player_index=player_index,
             home_venue_index=(
                 home_venue_index
             ),
             league_efficiency_index=(
                 league_efficiency_index
             ),
-            generated_at=(
-                generated_at
-            ),
+            generated_at=generated_at,
         )
     )
 
-    label = LEAGUE_LABELS[
-        league
-    ]
+    label = LEAGUE_LABELS[league]
 
     output = (
-        paths[
-            "current_output_root"
-        ]
+        paths["current_output_root"]
         / league
         / (
             f"{game_date}_"
@@ -1520,23 +1186,17 @@ def generate_current_features(
 
 def load_feature_rows(
     path: Path,
-) -> dict[
-    str,
-    dict[str, Any],
-]:
+) -> dict[str, dict[str, Any]]:
     if not path.exists():
-        raise FileNotFoundError(
-            path
-        )
+        raise FileNotFoundError(path)
 
-    frame = pl.read_parquet(
-        path
-    )
+    frame = pl.read_parquet(path)
 
     if frame.is_empty():
         raise RuntimeError(
             "Generated feature file "
-            f"contains zero rows: {path}"
+            "contains zero rows: "
+            f"{path}"
         )
 
     by_id: dict[
@@ -1546,9 +1206,7 @@ def load_feature_rows(
 
     for row in frame.to_dicts():
         game_id = clean_id(
-            row.get(
-                "game_id"
-            )
+            row.get("game_id")
         )
 
         if not game_id:
@@ -1563,34 +1221,22 @@ def load_feature_rows(
                 f"duplicate game_id={game_id}"
             )
 
-        row[
-            "game_id"
-        ] = game_id
-
-        by_id[
-            game_id
-        ] = row
+        row["game_id"] = game_id
+        by_id[game_id] = row
 
     return by_id
 
 
 def assert_complete_feature_coverage(
-    slate_rows: list[
-        dict[str, Any]
-    ],
+    slate_rows: list[dict[str, Any]],
     features_by_id: dict[
         str,
         dict[str, Any],
     ],
 ) -> None:
     slate_ids = {
-        clean_id(
-            row[
-                "game_id"
-            ]
-        )
-        for row
-        in slate_rows
+        clean_id(row["game_id"])
+        for row in slate_rows
     }
 
     feature_ids = set(
@@ -1598,13 +1244,11 @@ def assert_complete_feature_coverage(
     )
 
     missing = sorted(
-        slate_ids
-        - feature_ids
+        slate_ids - feature_ids
     )
 
     extra = sorted(
-        feature_ids
-        - slate_ids
+        feature_ids - slate_ids
     )
 
     if missing:
@@ -1627,22 +1271,16 @@ def load_artifacts(
     league: str,
 ) -> dict[str, Any]:
     root = (
-        configured_model_root(
-            cfg
-        )
+        configured_model_root(cfg)
         / league
     )
 
     missing = [
-        str(
-            root
-            / filename
-        )
+        str(root / filename)
         for filename
         in REQUIRED_ARTIFACT_FILES
         if not (
-            root
-            / filename
+            root / filename
         ).exists()
     ]
 
@@ -1655,20 +1293,16 @@ def load_artifacts(
     return {
         "root": root,
         "margin": read_json(
-            root
-            / "margin_model.json"
+            root / "margin_model.json"
         ),
         "total": read_json(
-            root
-            / "total_model.json"
+            root / "total_model.json"
         ),
         "schema": read_json(
-            root
-            / "feature_schema.json"
+            root / "feature_schema.json"
         ),
         "metadata": read_json(
-            root
-            / "metadata.json"
+            root / "metadata.json"
         ),
     }
 
@@ -1678,11 +1312,8 @@ def exact_single_version(
     label: str,
 ) -> str:
     normalized = {
-        clean(
-            value
-        )
-        for value
-        in values
+        clean(value)
+        for value in values
     }
 
     if (
@@ -1694,66 +1325,29 @@ def exact_single_version(
             f"{sorted(normalized)}"
         )
 
-    return next(
-        iter(
-            normalized
-        )
-    )
+    return next(iter(normalized))
 
 
 def validate_artifacts(
     cfg: dict[str, Any],
     league: str,
     artifacts: dict[str, Any],
-) -> tuple[
-    str,
-    str,
-]:
-    margin = artifacts[
-        "margin"
-    ]
+) -> tuple[str, str]:
+    margin = artifacts["margin"]
+    total = artifacts["total"]
+    schema = artifacts["schema"]
+    metadata = artifacts["metadata"]
 
-    total = artifacts[
-        "total"
-    ]
+    label = LEAGUE_LABELS[league]
 
-    schema = artifacts[
-        "schema"
-    ]
-
-    metadata = artifacts[
-        "metadata"
-    ]
-
-    label = LEAGUE_LABELS[
-        league
-    ]
-
-    for (
-        artifact_name,
-        artifact,
-    ) in (
-        (
-            "margin_model",
-            margin,
-        ),
-        (
-            "total_model",
-            total,
-        ),
-        (
-            "feature_schema",
-            schema,
-        ),
-        (
-            "metadata",
-            metadata,
-        ),
+    for artifact_name, artifact in (
+        ("margin_model", margin),
+        ("total_model", total),
+        ("feature_schema", schema),
+        ("metadata", metadata),
     ):
         artifact_league = clean(
-            artifact.get(
-                "league"
-            )
+            artifact.get("league")
         ).upper()
 
         if artifact_league != label:
@@ -1765,9 +1359,7 @@ def validate_artifacts(
             )
 
     configured_feature_version = clean(
-        cfg.get(
-            "feature_version"
-        )
+        cfg.get("feature_version")
     )
 
     training_cfg = required_mapping(
@@ -1776,9 +1368,7 @@ def validate_artifacts(
     )
 
     configured_model_version = clean(
-        training_cfg.get(
-            "model_version"
-        )
+        training_cfg.get("model_version")
     )
 
     feature_version = (
@@ -1847,10 +1437,7 @@ def validate_artifacts(
             "total_model encoder missing"
         )
 
-    if (
-        margin_encoder
-        != total_encoder
-    ):
+    if margin_encoder != total_encoder:
         raise RuntimeError(
             "Margin and total encoders "
             "do not match"
@@ -1928,18 +1515,9 @@ def validate_artifacts(
             "Raw feature order mismatch"
         )
 
-    for (
-        model_name,
-        model,
-    ) in (
-        (
-            "margin",
-            margin,
-        ),
-        (
-            "total",
-            total,
-        ),
+    for model_name, model in (
+        ("margin", margin),
+        ("total", total),
     ):
         coefficients = model.get(
             "coefficients"
@@ -1954,22 +1532,18 @@ def validate_artifacts(
                 "coefficients invalid"
             )
 
-        if len(
-            coefficients
-        ) != len(
+        if len(coefficients) != len(
             encoded_order
         ):
             raise RuntimeError(
-                f"{model_name}: coefficient "
-                "count does not match schema"
+                f"{model_name}: "
+                "coefficient count does "
+                "not match schema"
             )
 
         names: list[str] = []
 
-        for (
-            expected_position,
-            item,
-        ) in enumerate(
+        for expected_position, item in enumerate(
             coefficients
         ):
             if not isinstance(
@@ -1977,8 +1551,8 @@ def validate_artifacts(
                 dict,
             ):
                 raise RuntimeError(
-                    f"{model_name}: invalid "
-                    "coefficient entry"
+                    f"{model_name}: "
+                    "invalid coefficient entry"
                 )
 
             if int(
@@ -1988,24 +1562,18 @@ def validate_artifacts(
                 )
             ) != expected_position:
                 raise RuntimeError(
-                    f"{model_name}: coefficient "
-                    "position mismatch"
+                    f"{model_name}: "
+                    "coefficient position mismatch"
                 )
 
             feature = clean(
-                item.get(
-                    "feature"
-                )
+                item.get("feature")
             )
 
-            names.append(
-                feature
-            )
+            names.append(feature)
 
             to_float_required(
-                item.get(
-                    "value"
-                ),
+                item.get("value"),
                 (
                     f"{model_name} "
                     f"coefficient {feature}"
@@ -2014,8 +1582,9 @@ def validate_artifacts(
 
         if names != encoded_order:
             raise RuntimeError(
-                f"{model_name}: coefficient "
-                "order does not match schema"
+                f"{model_name}: "
+                "coefficient order does "
+                "not match schema"
             )
 
         residual = model.get(
@@ -2027,15 +1596,13 @@ def validate_artifacts(
             dict,
         ):
             raise RuntimeError(
-                f"{model_name}: residual "
-                "distribution missing"
+                f"{model_name}: "
+                "residual distribution missing"
             )
 
         residual_std = (
             to_float_required(
-                residual.get(
-                    "std"
-                ),
+                residual.get("std"),
                 (
                     f"{model_name} "
                     "residual std"
@@ -2045,14 +1612,12 @@ def validate_artifacts(
 
         if residual_std <= 0:
             raise RuntimeError(
-                f"{model_name}: residual "
-                "std must be positive"
+                f"{model_name}: "
+                "residual std must be positive"
             )
 
         to_float_required(
-            residual.get(
-                "mean"
-            ),
+            residual.get("mean"),
             (
                 f"{model_name} "
                 "residual mean"
@@ -2111,10 +1676,7 @@ def validate_feature_row_schema(
             "is invalid"
         )
 
-    for (
-        expected_position,
-        item,
-    ) in enumerate(
+    for expected_position, item in enumerate(
         raw_features
     ):
         if not isinstance(
@@ -2136,9 +1698,7 @@ def validate_feature_row_schema(
             )
 
         name = clean(
-            item.get(
-                "name"
-            )
+            item.get("name")
         )
 
         if not name:
@@ -2160,23 +1720,16 @@ def numeric_feature_value(
     name: str,
     fill_value: float,
 ) -> float:
-    value = row.get(
-        name
-    )
+    value = row.get(name)
 
     if (
         value is None
-        or clean(
-            value
-        )
-        == ""
+        or clean(value) == ""
     ):
         return fill_value
 
     try:
-        result = float(
-            value
-        )
+        result = float(value)
 
     except (
         TypeError,
@@ -2189,9 +1742,7 @@ def numeric_feature_value(
             f"value={value!r}"
         ) from exc
 
-    if not math.isfinite(
-        result
-    ):
+    if not math.isfinite(result):
         raise RuntimeError(
             "Feature is non-finite: "
             f"game_id={row.get('game_id')} "
@@ -2211,9 +1762,7 @@ def encode_feature_row(
         schema,
     )
 
-    encoder = model[
-        "encoder"
-    ]
+    encoder = model["encoder"]
 
     encoded_order = encoder.get(
         "encoded_feature_order"
@@ -2228,21 +1777,13 @@ def encode_feature_row(
         )
 
     feature_index = {
-        clean(
-            feature
-        ): position
-        for (
-            position,
-            feature,
-        ) in enumerate(
-            encoded_order
-        )
+        clean(feature): position
+        for position, feature
+        in enumerate(encoded_order)
     }
 
     vector = np.zeros(
-        len(
-            encoded_order
-        ),
+        len(encoded_order),
         dtype=float,
     )
 
@@ -2267,22 +1808,17 @@ def encode_feature_row(
 
     if (
         intercept_index < 0
-        or intercept_index
-        >= len(
-            vector
-        )
+        or intercept_index >= len(vector)
     ):
         raise RuntimeError(
             "Invalid intercept index"
         )
 
-    vector[
-        intercept_index
-    ] = to_float_required(
-        intercept.get(
-            "value"
-        ),
-        "intercept value",
+    vector[intercept_index] = (
+        to_float_required(
+            intercept.get("value"),
+            "intercept value",
+        )
     )
 
     numeric_scaling = encoder.get(
@@ -2299,71 +1835,52 @@ def encode_feature_row(
 
     for item in numeric_scaling:
         name = clean(
-            item.get(
-                "name"
-            )
+            item.get("name")
         )
 
         if name not in feature_index:
             raise RuntimeError(
-                "Numeric feature absent from "
-                f"encoded order: {name}"
+                "Numeric feature absent "
+                "from encoded order: "
+                f"{name}"
             )
 
-        fill_value = (
-            to_float_required(
-                item.get(
-                    "missing_fill_value"
-                ),
-                f"{name} fill value",
-            )
+        fill_value = to_float_required(
+            item.get(
+                "missing_fill_value"
+            ),
+            f"{name} fill value",
         )
 
-        mean_value = (
-            to_float_required(
-                item.get(
-                    "mean"
-                ),
-                f"{name} mean",
-            )
+        mean_value = to_float_required(
+            item.get("mean"),
+            f"{name} mean",
         )
 
-        std_value = (
-            to_float_required(
-                item.get(
-                    "std"
-                ),
-                f"{name} std",
-            )
+        std_value = to_float_required(
+            item.get("std"),
+            f"{name} std",
         )
 
         if std_value <= 0:
             raise RuntimeError(
-                f"{name}: std must "
-                "be positive"
+                f"{name}: std must be positive"
             )
 
-        raw_value = (
-            numeric_feature_value(
-                row,
-                name,
-                fill_value,
-            )
+        raw_value = numeric_feature_value(
+            row,
+            name,
+            fill_value,
         )
 
         vector[
-            feature_index[
-                name
-            ]
+            feature_index[name]
         ] = (
-            raw_value
-            - mean_value
+            raw_value - mean_value
         ) / std_value
 
-    categorical_encoding = (
-        encoder.get(
-            "categorical_encoding"
-        )
+    categorical_encoding = encoder.get(
+        "categorical_encoding"
     )
 
     if not isinstance(
@@ -2376,21 +1893,15 @@ def encode_feature_row(
 
     for item in categorical_encoding:
         name = clean(
-            item.get(
-                "name"
-            )
+            item.get("name")
         )
 
         missing_token = clean(
-            item.get(
-                "missing_token"
-            )
+            item.get("missing_token")
         )
 
         unknown_token = clean(
-            item.get(
-                "unknown_token"
-            )
+            item.get("unknown_token")
         )
 
         mapping = item.get(
@@ -2406,14 +1917,10 @@ def encode_feature_row(
                 "mapping missing"
             )
 
-        category = clean(
-            row.get(
-                name
-            )
+        category = (
+            clean(row.get(name))
+            or missing_token
         )
-
-        if not category:
-            category = missing_token
 
         if category not in mapping:
             category = unknown_token
@@ -2425,31 +1932,22 @@ def encode_feature_row(
             )
 
         encoded_index = int(
-            mapping[
-                category
-            ]
+            mapping[category]
         )
 
         if (
             encoded_index < 0
-            or encoded_index
-            >= len(
-                vector
-            )
+            or encoded_index >= len(vector)
         ):
             raise RuntimeError(
                 f"{name}: encoded index "
                 "out of bounds"
             )
 
-        vector[
-            encoded_index
-        ] = 1.0
+        vector[encoded_index] = 1.0
 
     if not np.all(
-        np.isfinite(
-            vector
-        )
+        np.isfinite(vector)
     ):
         raise RuntimeError(
             "Encoded feature vector "
@@ -2475,21 +1973,16 @@ def model_coefficients(
             "Model coefficients invalid"
         )
 
-    values = np.asarray(
+    return np.asarray(
         [
             to_float_required(
-                item.get(
-                    "value"
-                ),
+                item.get("value"),
                 "model coefficient",
             )
-            for item
-            in rows
+            for item in rows
         ],
         dtype=float,
     )
-
-    return values
 
 
 def predict_model(
@@ -2504,18 +1997,12 @@ def predict_model(
     )
 
     coefficients = (
-        model_coefficients(
-            model
-        )
+        model_coefficients(model)
     )
 
     if (
-        vector.shape[
-            0
-        ]
-        != coefficients.shape[
-            0
-        ]
+        vector.shape[0]
+        != coefficients.shape[0]
     ):
         raise RuntimeError(
             "Inference vector/coefficient "
@@ -2534,7 +2021,8 @@ def predict_model(
     ):
         raise RuntimeError(
             "Non-finite prediction "
-            f"game_id={feature_row.get('game_id')}"
+            f"game_id="
+            f"{feature_row.get('game_id')}"
         )
 
     return prediction
@@ -2542,10 +2030,7 @@ def predict_model(
 
 def residual_parameters(
     model: dict[str, Any],
-) -> tuple[
-    float,
-    float,
-]:
+) -> tuple[float, float]:
     residual = model.get(
         "residual_distribution"
     )
@@ -2558,22 +2043,14 @@ def residual_parameters(
             "Residual distribution missing"
         )
 
-    mean_value = (
-        to_float_required(
-            residual.get(
-                "mean"
-            ),
-            "residual mean",
-        )
+    mean_value = to_float_required(
+        residual.get("mean"),
+        "residual mean",
     )
 
-    std_value = (
-        to_float_required(
-            residual.get(
-                "std"
-            ),
-            "residual std",
-        )
+    std_value = to_float_required(
+        residual.get("std"),
+        "residual std",
     )
 
     if std_value <= 0:
@@ -2596,9 +2073,7 @@ def normal_cdf(
             1.0
             + math.erf(
                 value
-                / math.sqrt(
-                    2.0
-                )
+                / math.sqrt(2.0)
             )
         )
     )
@@ -2608,8 +2083,7 @@ def normal_cdf(
             probability,
             PROBABILITY_EPSILON,
         ),
-        1.0
-        - PROBABILITY_EPSILON,
+        1.0 - PROBABILITY_EPSILON,
     )
 
 
@@ -2617,25 +2091,19 @@ def moneyline_probabilities(
     expected_margin: float,
     residual_mean: float,
     residual_std: float,
-) -> tuple[
-    float,
-    float,
-]:
+) -> tuple[float, float]:
     adjusted_margin = (
         expected_margin
         + residual_mean
     )
 
-    home_probability = (
-        normal_cdf(
-            adjusted_margin
-            / residual_std
-        )
+    home_probability = normal_cdf(
+        adjusted_margin
+        / residual_std
     )
 
     away_probability = (
-        1.0
-        - home_probability
+        1.0 - home_probability
     )
 
     if abs(
@@ -2707,20 +2175,16 @@ def build_prediction_row(
         "schema"
     ]
 
-    expected_margin = (
-        predict_model(
-            feature_row,
-            margin_model,
-            schema,
-        )
+    expected_margin = predict_model(
+        feature_row,
+        margin_model,
+        schema,
     )
 
-    expected_total = (
-        predict_model(
-            feature_row,
-            total_model,
-            schema,
-        )
+    expected_total = predict_model(
+        feature_row,
+        total_model,
+        schema,
     )
 
     (
@@ -2759,45 +2223,28 @@ def build_prediction_row(
     return {
         "sport": (
             clean(
-                slate_row.get(
-                    "sport"
-                )
+                slate_row.get("sport")
             )
             or "Basketball"
         ),
-        "league": (
-            clean(
-                slate_row.get(
-                    "league"
-                )
-            )
+        "league": clean(
+            slate_row.get("league")
         ),
         "game_id": clean_id(
-            slate_row[
-                "game_id"
-            ]
+            slate_row["game_id"]
         ),
         "game_date": clean(
-            slate_row[
-                "game_date"
-            ]
+            slate_row["game_date"]
         ),
         "game_time": clean(
-            slate_row.get(
-                "game_time"
-            )
+            slate_row.get("game_time")
         ),
         "home_team": clean(
-            slate_row.get(
-                "home_team"
-            )
+            slate_row.get("home_team")
         ),
         "away_team": clean(
-            slate_row.get(
-                "away_team"
-            )
+            slate_row.get("away_team")
         ),
-
         "model_source": "sdv",
         "model_version": (
             model_version
@@ -2805,7 +2252,6 @@ def build_prediction_row(
         "feature_version": (
             feature_version
         ),
-
         "home_prob": (
             raw_home_ml_prob
         ),
@@ -2818,7 +2264,6 @@ def build_prediction_row(
         "raw_away_ml_prob": (
             raw_away_ml_prob
         ),
-
         "home_projected_points": (
             home_projected_points
         ),
@@ -2834,7 +2279,6 @@ def build_prediction_row(
         "expected_total": (
             expected_total
         ),
-
         "margin_residual_mean": (
             margin_residual_mean
         ),
@@ -2847,7 +2291,6 @@ def build_prediction_row(
         "total_residual_std": (
             total_residual_std
         ),
-
         "feature_generated_at_utc": clean(
             feature_row.get(
                 "feature_generated_at_utc"
@@ -2861,9 +2304,7 @@ def build_prediction_row(
 
 def write_predictions(
     path: Path,
-    rows: list[
-        dict[str, Any]
-    ],
+    rows: list[dict[str, Any]],
 ) -> None:
     if not rows:
         raise RuntimeError(
@@ -2873,31 +2314,22 @@ def write_predictions(
 
     game_ids = [
         clean_id(
-            row.get(
-                "game_id"
-            )
+            row.get("game_id")
         )
-        for row
-        in rows
+        for row in rows
     ]
 
     if any(
         not game_id
-        for game_id
-        in game_ids
+        for game_id in game_ids
     ):
         raise RuntimeError(
             "Prediction output contains "
             "blank game_id"
         )
 
-    if (
-        len(game_ids)
-        != len(
-            set(
-                game_ids
-            )
-        )
+    if len(game_ids) != len(
+        set(game_ids)
     ):
         raise RuntimeError(
             "Prediction output contains "
@@ -2924,21 +2356,14 @@ def write_predictions(
         ) as handle:
             writer = csv.DictWriter(
                 handle,
-                fieldnames=(
-                    PREDICTION_FIELDS
-                ),
+                fieldnames=PREDICTION_FIELDS,
                 extrasaction="ignore",
             )
 
             writer.writeheader()
+            writer.writerows(rows)
 
-            writer.writerows(
-                rows
-            )
-
-        tmp.replace(
-            path
-        )
+        tmp.replace(path)
 
     finally:
         if tmp.exists():
@@ -2949,10 +2374,8 @@ def run_prediction(
     cfg: dict[str, Any],
     league: str,
     game_date: str,
-) -> Path:
-    label = LEAGUE_LABELS[
-        league
-    ]
+) -> Path | None:
+    label = LEAGUE_LABELS[league]
 
     (
         daily_path,
@@ -2961,6 +2384,17 @@ def run_prediction(
         league,
         game_date,
     )
+
+    if not slate_rows:
+        log(
+            "NO GAMES | "
+            f"league={label} "
+            f"game_date={game_date} "
+            f"path={daily_path} | "
+            "skipped"
+        )
+
+        return None
 
     log(
         "DAILY SLATE READY | "
@@ -3047,9 +2481,7 @@ def run_prediction(
 
     for slate_row in slate_rows:
         game_id = clean_id(
-            slate_row[
-                "game_id"
-            ]
+            slate_row["game_id"]
         )
 
         feature_row = (
@@ -3067,15 +2499,9 @@ def run_prediction(
 
         predictions.append(
             build_prediction_row(
-                slate_row=(
-                    slate_row
-                ),
-                feature_row=(
-                    feature_row
-                ),
-                artifacts=(
-                    artifacts
-                ),
+                slate_row=slate_row,
+                feature_row=feature_row,
+                artifacts=artifacts,
                 model_version=(
                     model_version
                 ),
@@ -3090,28 +2516,19 @@ def run_prediction(
 
     slate_ids = {
         clean_id(
-            row[
-                "game_id"
-            ]
+            row["game_id"]
         )
-        for row
-        in slate_rows
+        for row in slate_rows
     }
 
     prediction_ids = {
         clean_id(
-            row[
-                "game_id"
-            ]
+            row["game_id"]
         )
-        for row
-        in predictions
+        for row in predictions
     }
 
-    if (
-        slate_ids
-        != prediction_ids
-    ):
+    if slate_ids != prediction_ids:
         raise RuntimeError(
             "Prediction coverage does not "
             "exactly match canonical slate"
@@ -3163,10 +2580,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--game-date",
-        required=True,
+        required=False,
         help=(
-            "Canonical slate date in "
-            "YYYY_MM_DD or YYYY-MM-DD."
+            "Optional single-date filter "
+            "in YYYY_MM_DD or YYYY-MM-DD. "
+            "If omitted, every available "
+            "daily-games date for the "
+            "selected league is processed."
         ),
     )
 
@@ -3200,16 +2620,6 @@ def main() -> int:
     )
 
     try:
-        game_date = normalize_game_date(
-            args.game_date
-        )
-
-        if not game_date:
-            raise ValueError(
-                "Invalid --game-date "
-                f"{args.game_date!r}"
-            )
-
         cfg = (
             feature_generation
             .read_yaml(
@@ -3221,31 +2631,123 @@ def main() -> int:
             cfg
         )
 
-        output_path = run_prediction(
-            cfg,
-            args.league,
-            game_date,
-        )
+        if args.game_date:
+            game_date = normalize_game_date(
+                args.game_date
+            )
 
-        rows = read_csv_rows(
-            output_path
-        )
+            if not game_date:
+                raise ValueError(
+                    "Invalid --game-date "
+                    f"{args.game_date!r}"
+                )
+
+            game_dates = [
+                game_date
+            ]
+
+        else:
+            game_dates = (
+                discover_daily_game_dates(
+                    args.league
+                )
+            )
+
+        label = LEAGUE_LABELS[
+            args.league
+        ]
+
+        if not game_dates:
+            log(
+                "STATUS: SUCCESS | "
+                f"league={label} "
+                "dates_found=0 "
+                "dates_written=0 "
+                "rows_written=0 "
+                "dates_skipped=0 "
+                "date_errors=0"
+            )
+
+            print(
+                "SDV production prediction "
+                "complete: SUCCESS. "
+                f"league={label} "
+                "dates_found=0 "
+                "dates_written=0 "
+                "rows_written=0 "
+                "dates_skipped=0 "
+                "date_errors=0"
+            )
+
+            return 0
+
+        dates_written = 0
+        rows_written = 0
+        dates_skipped = 0
+        date_errors = 0
+
+        for game_date in game_dates:
+            try:
+                output_path = run_prediction(
+                    cfg,
+                    args.league,
+                    game_date,
+                )
+
+                if output_path is None:
+                    dates_skipped += 1
+                    continue
+
+                rows = read_csv_rows(
+                    output_path
+                )
+
+                dates_written += 1
+                rows_written += len(rows)
+
+                log(
+                    "DATE SUCCESS | "
+                    f"league={label} "
+                    f"game_date={game_date} "
+                    f"rows={len(rows)} "
+                    f"path={output_path}"
+                )
+
+            except Exception as exc:
+                date_errors += 1
+
+                log(
+                    "DATE FAILED | "
+                    f"league={label} "
+                    f"game_date={game_date} "
+                    f"error={exc}"
+                )
+
+                log(
+                    traceback
+                    .format_exc()
+                    .rstrip()
+                )
 
         log(
             "STATUS: SUCCESS | "
-            f"league="
-            f"{LEAGUE_LABELS[args.league]} "
-            f"game_date={game_date} "
-            f"rows={len(rows)}"
+            f"league={label} "
+            f"dates_found={len(game_dates)} "
+            f"dates_written={dates_written} "
+            f"rows_written={rows_written} "
+            f"dates_skipped={dates_skipped} "
+            f"date_errors={date_errors}"
         )
 
         print(
             "SDV production prediction "
             "complete: SUCCESS. "
-            f"league="
-            f"{LEAGUE_LABELS[args.league]} "
-            f"game_date={game_date} "
-            f"rows={len(rows)}"
+            f"league={label} "
+            f"dates_found={len(game_dates)} "
+            f"dates_written={dates_written} "
+            f"rows_written={rows_written} "
+            f"dates_skipped={dates_skipped} "
+            f"date_errors={date_errors}"
         )
 
         return 0
