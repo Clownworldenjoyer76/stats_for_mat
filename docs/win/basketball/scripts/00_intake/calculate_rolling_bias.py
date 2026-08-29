@@ -98,10 +98,20 @@ HISTORICAL_DIR = (
     / "docs/win/basketball/00_intake/final_combined_files/combined"
 )
 
-RAW_PREDICTIONS_ROOT = (
-    REPO_ROOT
-    / "docs/win/basketball/00_intake/predictions"
-)
+PREDICTION_ROOTS = {
+    "dratings": (
+        REPO_ROOT
+        / "docs/win/basketball/00_intake/predictions"
+    ),
+    "sdv": (
+        REPO_ROOT
+        / "docs/win/basketball/00_intake/predictions_sdv"
+    ),
+    "ensemble": (
+        REPO_ROOT
+        / "docs/win/basketball/00_intake/predictions_ensemble"
+    ),
+}
 
 FINAL_SCORES_ROOT = (
     REPO_ROOT
@@ -970,8 +980,16 @@ def historical_files_for_league(
 def prediction_files_for_league(
     league: str,
 ) -> list[Path]:
+    cfg = load_model_config()
+
+    source = production_prediction_source(
+        cfg
+    )
+
     folder = (
-        RAW_PREDICTIONS_ROOT
+        PREDICTION_ROOTS[
+            source
+        ]
         / league.lower()
     )
 
@@ -1294,6 +1312,27 @@ def load_model_config() -> dict[str, Any]:
         )
 
     return cfg
+
+
+def production_prediction_source(
+    cfg: dict[str, Any],
+) -> str:
+    source = str(
+        cfg.get(
+            "production_prediction_source",
+            "",
+        )
+    ).strip().lower()
+
+    if source not in PREDICTION_ROOTS:
+        raise ValueError(
+            "model_config.yaml "
+            "production_prediction_source "
+            "must be one of: "
+            "dratings, sdv, ensemble"
+        )
+
+    return source
 
 
 def resolve_bias_rule(
@@ -4561,6 +4600,19 @@ def main() -> int:
 
     try:
         cfg = load_model_config()
+
+        prediction_source = (
+            production_prediction_source(
+                cfg
+            )
+        )
+
+        log(
+            "PRODUCTION PREDICTION SOURCE | "
+            f"source={prediction_source} | "
+            f"root="
+            f"{repo_relative(PREDICTION_ROOTS[prediction_source])}"
+        )
 
         config_leagues = (
             cfg.get(

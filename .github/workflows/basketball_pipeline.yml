@@ -104,6 +104,9 @@ jobs:
           for league in nba ncaam wnba; do
             mkdir -p "docs/win/basketball/00_intake/drat_raw/$league"
             mkdir -p "docs/win/basketball/00_intake/predictions/$league"
+            mkdir -p "docs/win/basketball/00_intake/predictions_sdv/$league"
+            mkdir -p "docs/win/basketball/00_intake/predictions_ensemble/$league"
+            mkdir -p "docs/win/basketball/00_intake/sdv/features/current/$league"
             mkdir -p "docs/win/basketball/00_intake/predictions/predictions_cleaned/$league"
             mkdir -p "docs/win/basketball/00_intake/sportsbook/$league"
             mkdir -p "docs/win/basketball/00_intake/sportsbook/sportsbook_cleaned/$league"
@@ -152,6 +155,17 @@ jobs:
 
       - name: Basketball Game ID
         run: python docs/win/basketball/scripts/00_intake/basketball_game_id.py
+
+      - name: SDV Predictions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for league in nba ncaam wnba; do
+            python docs/win/basketball/scripts/00_intake/sdv_predict.py --league "$league"
+          done
+
+      - name: DRatings + SDV Ensemble
+        run: python docs/win/basketball/scripts/00_intake/basketball_model_ensemble.py --mode predict
 
       - name: Sanitize historical basketball inputs
         run: python docs/win/basketball/scripts/00_intake/sanitize_historical_inputs.py

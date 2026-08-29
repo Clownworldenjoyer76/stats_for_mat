@@ -24,6 +24,7 @@ LEAGUES = ["nba", "wnba", "ncaam"]
 
 HEADERS = [
     "sport","league","game_id","game_date","game_time","home_team","away_team",
+    "model_source","model_version","feature_version","ensemble_version",
     "home_prob","away_prob","away_projected_points","home_projected_points","total_projected_points",
     "bias_applied","margin_bias","total_bias","total","home_dk_moneyline_american",
     "away_dk_moneyline_american","home_dk_moneyline_decimal","away_dk_moneyline_decimal",

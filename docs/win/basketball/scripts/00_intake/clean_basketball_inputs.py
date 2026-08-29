@@ -27,10 +27,16 @@ import yaml
 # PATHS
 # =========================
 
-PREDICTION_DIRS = {
-    "NBA": Path("docs/win/basketball/00_intake/predictions/nba"),
-    "NCAAM": Path("docs/win/basketball/00_intake/predictions/ncaam"),
-    "WNBA": Path("docs/win/basketball/00_intake/predictions/wnba"),
+PREDICTION_ROOTS = {
+    "dratings": Path(
+        "docs/win/basketball/00_intake/predictions"
+    ),
+    "sdv": Path(
+        "docs/win/basketball/00_intake/predictions_sdv"
+    ),
+    "ensemble": Path(
+        "docs/win/basketball/00_intake/predictions_ensemble"
+    ),
 }
 
 SPORTSBOOK_DIRS = {
@@ -249,6 +255,43 @@ def load_yaml(path: Path) -> dict:
     if not isinstance(data, dict):
         raise ValueError(f"Invalid YAML mapping: {path}")
     return data
+
+
+def production_prediction_source() -> str:
+    model_cfg = load_yaml(
+        CONFIG_PATH
+    )
+
+    source = str(
+        model_cfg.get(
+            "production_prediction_source",
+            "",
+        )
+    ).strip().lower()
+
+    if source not in PREDICTION_ROOTS:
+        raise ValueError(
+            "model_config.yaml "
+            "production_prediction_source "
+            "must be one of: "
+            "dratings, sdv, ensemble"
+        )
+
+    return source
+
+
+def prediction_dirs_for_source(
+    source: str,
+) -> dict[str, Path]:
+    root = PREDICTION_ROOTS[
+        source
+    ]
+
+    return {
+        "NBA": root / "nba",
+        "NCAAM": root / "ncaam",
+        "WNBA": root / "wnba",
+    }
 
 
 def resolve_bias_values() -> dict:
@@ -1115,6 +1158,21 @@ def main():
         log_league(league, "INFO | Spread outlier fix active: compare model home-away margin to -book_home_spread")
         log_league(league, "INFO | Outlier cleanup active: blanks only affected sportsbook market fields; prediction rows are retained")
 
+    production_source = (
+        production_prediction_source()
+    )
+
+    prediction_dirs = (
+        prediction_dirs_for_source(
+            production_source
+        )
+    )
+
+    log_master(
+        "INFO | Production prediction source: "
+        f"{production_source}"
+    )
+
     bias_values = resolve_bias_values()
     for league in ("NBA", "NCAAM", "WNBA"):
         log_league(
@@ -1125,7 +1183,7 @@ def main():
             f"total_value={bias_values[league]['total']['value']}"
         )
 
-    pred_files = load_all(PREDICTION_DIRS)
+    pred_files = load_all(prediction_dirs)
     book_files = load_all(SPORTSBOOK_DIRS)
 
     pred_loaded = sum(len(v) for v in pred_files.values())

@@ -44,6 +44,10 @@ PROVENANCE_FIELDS = [
     "bias_applied",
     "margin_bias",
     "total_bias",
+    "model_source",
+    "model_version",
+    "feature_version",
+    "ensemble_version",
 ]
 
 SPORTSBOOK_PROVENANCE_FIELDS = [
@@ -494,6 +498,22 @@ def build_base(
         ),
         "total_bias": p.get(
             "total_bias",
+            "",
+        ),
+        "model_source": p.get(
+            "model_source",
+            "",
+        ),
+        "model_version": p.get(
+            "model_version",
+            "",
+        ),
+        "feature_version": p.get(
+            "feature_version",
+            "",
+        ),
+        "ensemble_version": p.get(
+            "ensemble_version",
             "",
         ),
         "sportsbook_provider": b.get(
