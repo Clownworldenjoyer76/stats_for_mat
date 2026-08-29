@@ -1,27 +1,9 @@
-=== basketball_backtest RUN 2026-08-16T19:15:37.205503+00:00 ===
-2026-08-16T19:15:37.205596+00:00 | INFO  | run_id=20260816_191537Z
-2026-08-16T19:15:37.205656+00:00 | INFO  | backtest_dir=docs/win/basketball/backtest
-2026-08-16T19:15:37.205687+00:00 | INFO  | model_config=docs/win/basketball/config/model_config.yaml
-2026-08-16T19:15:37.205727+00:00 | INFO  | filter_config=docs/win/basketball/backtest/configs/markets_test.yaml
-2026-08-16T19:15:37.234103+00:00 | INFO  | [NBA] reading docs/win/basketball/backtest/input/2025_NBA.csv
-2026-08-16T19:15:37.749760+00:00 | INFO  | [NBA] 2025_NBA moneyline: rows=1268 selected=316
-2026-08-16T19:15:37.899703+00:00 | INFO  | [NBA] 2025_NBA spread: rows=1268 selected=757
-2026-08-16T19:15:38.036256+00:00 | INFO  | [NBA] 2025_NBA total: rows=1268 selected=569
-2026-08-16T19:15:38.279767+00:00 | INFO  | [NBA] 2025_NBA: historical_rows=1268 selected=1642 graded=1642
-2026-08-16T19:15:38.282016+00:00 | INFO  | [NCAAM] reading docs/win/basketball/backtest/input/2025_NCAAM.csv
-2026-08-16T19:15:39.861106+00:00 | INFO  | [NCAAM] 2025_NCAAM moneyline: rows=4032 selected=1533
-2026-08-16T19:15:40.334081+00:00 | INFO  | [NCAAM] 2025_NCAAM spread: rows=4032 selected=2378
-2026-08-16T19:15:40.782531+00:00 | INFO  | [NCAAM] 2025_NCAAM total: rows=4032 selected=2557
-2026-08-16T19:15:41.740753+00:00 | INFO  | [NCAAM] 2025_NCAAM: historical_rows=4032 selected=6468 graded=6468
-2026-08-16T19:15:41.748178+00:00 | INFO  | [WNBA] reading docs/win/basketball/backtest/input/2025_WNBA.csv
-2026-08-16T19:15:41.876763+00:00 | INFO  | [WNBA] 2025_WNBA moneyline: rows=262 selected=117
-2026-08-16T19:15:41.907540+00:00 | INFO  | [WNBA] 2025_WNBA spread: rows=262 selected=125
-2026-08-16T19:15:41.940195+00:00 | INFO  | [WNBA] 2025_WNBA total: rows=262 selected=191
-2026-08-16T19:15:42.009647+00:00 | INFO  | [WNBA] 2025_WNBA: historical_rows=262 selected=433 graded=433
-2026-08-16T19:15:48.484421+00:00 | INFO  | --- FINAL SUMMARY ---
-2026-08-16T19:15:48.484497+00:00 | INFO  | historical_rows=5562
-2026-08-16T19:15:48.484539+00:00 | INFO  | selected_bets=8543
-2026-08-16T19:15:48.484576+00:00 | INFO  | graded_bets=8543
-2026-08-16T19:15:48.484769+00:00 | INFO  | W/L/P/U=4480/3987/76/0 profit_units=+30.8456 roi_units=+0.3611%
-2026-08-16T19:15:48.484832+00:00 | INFO  | run_snapshot=docs/win/basketball/backtest/runs/20260816_191537Z
-2026-08-16T19:15:48.484876+00:00 | INFO  | STATUS: SUCCESS
+=== basketball_backtest RUN 2026-08-29T11:47:56.720067+00:00 ===
+2026-08-29T11:47:56.720582+00:00 | INFO  | run_id=20260829_114756Z
+2026-08-29T11:47:56.721245+00:00 | INFO  | backtest_dir=docs\win\basketball\backtest
+2026-08-29T11:47:56.723262+00:00 | INFO  | model_config=docs\win\basketball\config\model_config.yaml
+2026-08-29T11:47:56.724246+00:00 | INFO  | filter_config=docs\win\basketball\backtest\configs\markets_test.yaml
+2026-08-29T11:47:56.725007+00:00 | INFO  | production_markets_config=docs\win\basketball\config\markets.yaml
+2026-08-29T11:47:56.794543+00:00 | INFO  | model_source=ensemble
+2026-08-29T11:47:56.796942+00:00 | INFO  | [NBA] reading docs\win\basketball\backtest\input\2025_NBA.csv | internal_season=2025
+2026-08-29T11:47:56.923747+00:00 | WARN  | [NBA] 2025_NBA: skipping 100 early rows because production rolling/regime-aware bias does not yet have its full lookback
