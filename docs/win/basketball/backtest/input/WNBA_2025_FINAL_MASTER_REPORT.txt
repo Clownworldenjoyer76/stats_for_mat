@@ -1,0 +1,321 @@
+==============================================================================================================
+WNBA FINAL MASTER BASKETBALL PIPELINE TEST
+==============================================================================================================
+Input: docs\win\basketball\backtest\input\2025_WNBA.csv
+Production market-selection config: C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml
+Full rows: 262
+Full date range: 2025-05-16 through 2025-10-10
+Development rows: 222
+Untouched lockbox rows: 40
+Chronological development OOS folds: 5
+Stress scenarios: 10,000
+
+CORRECTED VALIDATION DESIGN:
+- Development/OOS data selects BIAS, STD, calibration, EDGE mode, and EDGE value(s).
+- One complete candidate is frozen for each market BEFORE the lockbox is touched.
+- The lockbox evaluates each complete frozen candidate exactly once against the complete current pipeline.
+- No component is accepted/rejected/swapped after seeing lockbox results.
+- A market change passes only if lockbox log loss, Brier, total profit, and ROI are all no worse than current.
+
+EDGE uses the real pipeline formula: probability * decimal_odds - 1.
+Side selection is read from docs/win/basketball/config/markets.yaml.
+all_qualifying keeps every side clearing the frozen EDGE policy.
+pick_one keeps one qualifying side using that market's configured pick_preference.
+Stored predictions with bias_applied=1 are first reversed back to pre-bias model values.
+
+PRODUCTION MARKET-SELECTION POLICY:
+                                                                       markets_file    market selection_mode pick_preference_metric pick_preference_direction
+C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml moneyline all_qualifying             model_prob                       max
+C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml    spread all_qualifying             model_prob                       max
+C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml     total all_qualifying             model_prob                       max
+
+==============================================================================================================
+1. DEVELOPMENT-FROZEN COMPLETE MARKET CANDIDATES
+==============================================================================================================
+   market selection_mode pick_preference_metric pick_preference_direction bias_strategy std_mode cal_HOME   cal_AWAY edge_mode  shared_edge  HOME_edge  AWAY_edge  joint_dev_oos_bets  joint_dev_oos_profit  joint_dev_oos_roi  positive_fold_rate cal_OVER  cal_UNDER  OVER_edge  UNDER_edge
+moneyline all_qualifying             model_prob                       max            NA       NA      raw        raw    shared      0.00000        NaN        NaN                 106              45.72780            0.43139             1.00000      NaN        NaN        NaN         NaN
+   spread all_qualifying             model_prob                       max    rolling_50       q4      raw complement    shared      0.00500        NaN        NaN                 110              19.00390            0.17276             0.80000      NaN        NaN        NaN         NaN
+    total all_qualifying             model_prob                       max          none       q3      NaN        NaN    shared      0.08000        NaN        NaN                  54               3.53190            0.06541             0.60000    platt complement        NaN         NaN
+
+==============================================================================================================
+2. UNTOUCHED LOCKBOX: FROZEN CANDIDATE VS CURRENT PIPELINE
+==============================================================================================================
+   market                          system selection_mode pick_preference_metric pick_preference_direction edge_mode    edge  edge_side1  edge_side2  lockbox_games  prob_log_loss  prob_brier     bets  profit_units      roi
+moneyline                frozen_candidate all_qualifying             model_prob                       max    shared 0.00000         NaN         NaN             40        0.61040     0.21052 29.00000      -1.60950 -0.05550
+moneyline                current_pipeline all_qualifying             model_prob                       max    shared 0.00000         NaN         NaN             40        0.61040     0.21052 29.00000      -1.60950 -0.05550
+moneyline frozen_base_without_calibration all_qualifying             model_prob                       max    shared     NaN         NaN         NaN             40        0.61040     0.21052      NaN           NaN      NaN
+   spread                frozen_candidate all_qualifying             model_prob                       max    shared 0.00500         NaN         NaN             40        0.72924     0.26752 20.00000      -6.59300 -0.32965
+   spread                current_pipeline all_qualifying             model_prob                       max    shared 0.05000         NaN         NaN             40        0.71381     0.25988 15.00000      -1.63630 -0.10909
+   spread frozen_base_without_calibration all_qualifying             model_prob                       max    shared     NaN         NaN         NaN             40        0.72924     0.26752      NaN           NaN      NaN
+    total                frozen_candidate all_qualifying             model_prob                       max    shared 0.08000         NaN         NaN             40        0.68989     0.24841  3.00000       2.76240  0.92080
+    total                current_pipeline all_qualifying             model_prob                       max    shared 0.03000         NaN         NaN             40        0.68259     0.24492 36.00000      -1.34120 -0.03726
+    total frozen_base_without_calibration all_qualifying             model_prob                       max    shared     NaN         NaN         NaN             40        0.68416     0.24600      NaN           NaN      NaN
+
+==============================================================================================================
+3. WHOLE-MARKET LOCKBOX PASS / FAIL
+==============================================================================================================
+   market  candidate_bets  current_bets  candidate_profit_units  current_profit_units  candidate_roi  current_roi  candidate_prob_log_loss  current_prob_log_loss  candidate_prob_brier  current_prob_brier  probability_log_loss_pass  probability_brier_pass  profit_pass  roi_pass  market_validated
+moneyline              29            29                -1.60950              -1.60950       -0.05550     -0.05550                  0.61040                0.61040               0.21052             0.21052                       True                    True         True      True              True
+   spread              20            15                -6.59300              -1.63630       -0.32965     -0.10909                  0.72924                0.71381               0.26752             0.25988                      False                   False        False     False             False
+    total               3            36                 2.76240              -1.34120        0.92080     -0.03726                  0.68989                0.68259               0.24841             0.24492                      False                   False         True      True             False
+
+==============================================================================================================
+4. BIAS: NONE VS FIXED VS ROLLING
+==============================================================================================================
+
+SPREAD BIAS OOS SUMMARY
+market         strategy  oos_games  oos_rmse  oos_mae  oos_mean_error  median_fold_rmse  positive_error_folds  folds
+spread             none        142  13.12309 10.38099         1.31479          13.31628                     3      5
+spread            fixed        142  13.12686 10.39446        -0.03289          13.11993                     3      5
+spread       rolling_50        142  13.16836 10.38054         0.13048          13.34227                     3      5
+spread      rolling_100        142  13.20452 10.42796        -0.12082          13.25321                     3      5
+spread current_pipeline        122  13.22053 10.52780        -0.45519          13.35122                     3      5
+
+SPREAD BIAS STRESS
+   strategy  selection_frequency  bootstrap_rmse_median  bootstrap_rmse_2_5  bootstrap_rmse_97_5
+       none              0.49620               13.06607            11.83848             14.55831
+      fixed              0.42840               13.05339            11.84896             14.63579
+ rolling_50              0.07040               13.09527            11.86508             14.70327
+rolling_100              0.00500               13.13716            11.96103             14.67588
+
+TOTAL BIAS OOS SUMMARY
+market         strategy  oos_games  oos_rmse  oos_mae  oos_mean_error  median_fold_rmse  positive_error_folds  folds
+ total            fixed        142  17.07652 13.68177         0.21540          15.31897                     2      5
+ total             none        142  17.08208 13.65845         1.20352          15.37812                     3      5
+ total      rolling_100        142  17.11348 13.69106         0.20710          15.31897                     2      5
+ total       rolling_50        142  17.15256 13.73828         0.57969          15.63417                     2      5
+ total current_pipeline        122  17.33756 14.08568        -0.88934          15.42802                     2      5
+
+TOTAL BIAS STRESS
+   strategy  selection_frequency  bootstrap_rmse_median  bootstrap_rmse_2_5  bootstrap_rmse_97_5
+      fixed              0.45290               16.98745            15.20472             19.13530
+       none              0.42410               16.98421            15.14153             19.22350
+ rolling_50              0.09430               17.06182            15.18929             19.25959
+rolling_100              0.02870               17.02142            15.20984             19.21038
+
+==============================================================================================================
+5. STD: ONE FIXED VALUE VS RANGE-SPECIFIC VALUES
+==============================================================================================================
+
+SPREAD STD OOS SUMMARY
+market bias_strategy std_mode  oos_games  mean_residual_nll  mean_probability_log_loss  oos_residual_rmse  median_sigma_used  folds_winning_residual_nll  folds
+spread          none       q4        142            3.06860                    0.67226           13.12309           13.21866                           3      5
+spread          none       q2        142            3.07401                    0.67271           13.12309           13.37828                           0      5
+spread          none       q3        142            3.07418                    0.67240           13.12309           13.34792                           1      5
+spread          none    fixed        142            3.07635                    0.67251           13.12309           13.34826                           1      5
+
+SPREAD STD STRESS
+std_mode  selection_frequency  bootstrap_mean_nll_median  bootstrap_mean_nll_2_5  bootstrap_mean_nll_97_5
+      q4              0.78010                    3.06495                 2.97926                  3.18104
+      q2              0.13780                    3.07029                 2.98452                  3.18460
+      q3              0.05610                    3.07075                 2.98736                  3.18219
+   fixed              0.02600                    3.07258                 2.98635                  3.18728
+
+TOTAL STD OOS SUMMARY
+market bias_strategy std_mode  oos_games  mean_residual_nll  mean_probability_log_loss  oos_residual_rmse  median_sigma_used  folds_winning_residual_nll  folds
+ total         fixed       q4        142            3.33943                    0.71519           17.07652           15.87025                           2      5
+ total         fixed       q3        142            3.34250                    0.71572           17.07652           15.87025                           1      5
+ total         fixed    fixed        142            3.34552                    0.71648           17.07652           15.87025                           1      5
+ total         fixed       q2        142            3.34680                    0.71641           17.07652           15.83412                           1      5
+
+TOTAL STD STRESS
+std_mode  selection_frequency  bootstrap_mean_nll_median  bootstrap_mean_nll_2_5  bootstrap_mean_nll_97_5
+      q4              0.59200                    3.33263                 3.22654                  3.47841
+      q3              0.27380                    3.33542                 3.22304                  3.49256
+   fixed              0.11750                    3.33760                 3.22315                  3.50212
+      q2              0.01670                    3.33871                 3.22339                  3.50520
+
+==============================================================================================================
+6. CALIBRATION METHODS (DEVELOPMENT OOS ONLY)
+==============================================================================================================
+
+MONEYLINE
+   market side calibration_role derived_side         method  oos_games  oos_log_loss  oos_brier  log_loss_change_vs_raw  brier_change_vs_raw  fold_win_rate_log_loss  fold_win_rate_brier
+moneyline HOME      independent                         raw        142       0.62281    0.21786                 0.00000              0.00000                 0.00000              0.00000
+moneyline HOME      independent              intercept_only        142       0.62702    0.21983                 0.00421              0.00197                 0.60000              0.60000
+moneyline HOME      independent                 temperature        142       0.62565    0.21856                 0.00284              0.00070                 0.40000              0.40000
+moneyline HOME      independent                       platt        142       0.62985    0.22069                 0.00704              0.00283                 0.40000              0.40000
+moneyline HOME      independent                        beta        142       0.62967    0.22144                 0.00686              0.00358                 0.40000              0.40000
+moneyline HOME      independent                    isotonic        142       0.67453    0.22563                 0.05172              0.00777                 0.40000              0.20000
+moneyline AWAY      independent                         raw        142       0.62281    0.21786                 0.00000              0.00000                 0.00000              0.00000
+moneyline AWAY      independent              intercept_only        142       0.62702    0.21983                 0.00421              0.00197                 0.60000              0.60000
+moneyline AWAY      independent                 temperature        142       0.62565    0.21856                 0.00284              0.00070                 0.40000              0.40000
+moneyline AWAY      independent                       platt        142       0.62985    0.22069                 0.00704              0.00283                 0.40000              0.40000
+moneyline AWAY      independent                        beta        142       0.62967    0.22144                 0.00686              0.00358                 0.40000              0.40000
+moneyline AWAY      independent                    isotonic        142       0.67453    0.22563                 0.05172              0.00777                 0.40000              0.20000
+
+SPREAD
+market side calibration_role derived_side         method  oos_games  oos_log_loss  oos_brier  log_loss_change_vs_raw  brier_change_vs_raw  fold_win_rate_log_loss  fold_win_rate_brier
+spread HOME        canonical         AWAY            raw        141       0.67412    0.24089                 0.00000              0.00000                 0.00000              0.00000
+spread HOME        canonical         AWAY intercept_only        141       0.67224    0.23993                -0.00189             -0.00096                 0.60000              0.60000
+spread HOME        canonical         AWAY    temperature        141       0.67603    0.24181                 0.00191              0.00092                 0.40000              0.40000
+spread HOME        canonical         AWAY          platt        141       0.67180    0.23982                -0.00232             -0.00107                 0.60000              0.60000
+spread HOME        canonical         AWAY           beta        141       0.67232    0.24033                -0.00181             -0.00056                 0.60000              0.60000
+spread HOME        canonical         AWAY       isotonic        141       0.65280    0.23426                -0.02132             -0.00662                 0.80000              0.80000
+
+TOTAL
+market side calibration_role derived_side         method  oos_games  oos_log_loss  oos_brier  log_loss_change_vs_raw  brier_change_vs_raw  fold_win_rate_log_loss  fold_win_rate_brier
+ total OVER        canonical        UNDER            raw        142       0.71321    0.25990                 0.00000              0.00000                 0.00000              0.00000
+ total OVER        canonical        UNDER intercept_only        142       0.71625    0.26123                 0.00304              0.00134                 0.20000              0.20000
+ total OVER        canonical        UNDER    temperature        142       0.69774    0.25235                -0.01546             -0.00755                 1.00000              0.80000
+ total OVER        canonical        UNDER          platt        142       0.70127    0.25402                -0.01193             -0.00588                 1.00000              1.00000
+ total OVER        canonical        UNDER           beta        142       0.71842    0.26214                 0.00521              0.00224                 0.40000              0.40000
+ total OVER        canonical        UNDER       isotonic        142       0.76714    0.26445                 0.05394              0.00455                 0.20000              0.20000
+
+==============================================================================================================
+7. JOINT CONFIGURATION STRESS TESTS
+==============================================================================================================
+
+MONEYLINE TOP CONFIGURATIONS
+ rank_before_stress    market selection_mode pick_preference_metric pick_preference_direction bias_strategy std_mode calibration_side1 calibration_side2    edge  selection_frequency_as_best_profit  positive_roi_probability  bootstrap_profit_median  bootstrap_profit_2_5  bootstrap_profit_97_5  bootstrap_roi_median  bootstrap_roi_2_5  bootstrap_roi_97_5
+                  1 moneyline all_qualifying             model_prob                       max            NA       NA               raw               raw 0.00000                             1.00000                   0.99980                 45.72780              15.61460               71.33020               0.43369            0.15308             0.63124
+
+SPREAD TOP CONFIGURATIONS
+ rank_before_stress market selection_mode pick_preference_metric pick_preference_direction bias_strategy std_mode calibration_side1 calibration_side2    edge  selection_frequency_as_best_profit  positive_roi_probability  bootstrap_profit_median  bootstrap_profit_2_5  bootstrap_profit_97_5  bootstrap_roi_median  bootstrap_roi_2_5  bootstrap_roi_97_5
+                  1 spread all_qualifying             model_prob                       max    rolling_50       q4               raw        complement 0.00500                             0.39780                   0.99950                 19.23760               6.72730               27.99150               0.17365            0.06172             0.27886
+                  2 spread all_qualifying             model_prob                       max    rolling_50    fixed               raw        complement 0.00500                             0.00000                   0.99290                 18.23760               3.72730               27.99150               0.16258            0.03328             0.27886
+                  3 spread all_qualifying             model_prob                       max    rolling_50       q2               raw        complement 0.00000                             0.00000                   0.99740                 16.91300               4.45460               27.99150               0.14836            0.03807             0.27164
+                  4 spread all_qualifying             model_prob                       max   rolling_100    fixed              beta        complement 0.00000                             0.13830                   1.00000                 16.77880               7.74740               25.81020               0.14464            0.06299             0.24225
+                  5 spread all_qualifying             model_prob                       max         fixed    fixed              beta        complement 0.00000                             0.00000                   1.00000                 16.77880               7.74740               25.81020               0.14464            0.06299             0.24225
+                  6 spread all_qualifying             model_prob                       max    rolling_50    fixed              beta        complement 0.00000                             0.00000                   1.00000                 16.77880               7.74740               25.81020               0.14464            0.06299             0.24225
+                  7 spread all_qualifying             model_prob                       max    rolling_50       q2              beta        complement 0.00000                             0.00000                   1.00000                 16.77880               7.74740               25.81020               0.14464            0.06299             0.24225
+                  8 spread all_qualifying             model_prob                       max         fixed       q2              beta        complement 0.00000                             0.00000                   1.00000                 16.77880               7.74740               25.81020               0.14464            0.06299             0.24225
+                  9 spread all_qualifying             model_prob                       max   rolling_100       q4              beta        complement 0.02000                             0.11110                   1.00000                 16.59690               5.65640               27.53740               0.16765            0.05323             0.30217
+                 10 spread all_qualifying             model_prob                       max    rolling_50       q4              beta        complement 0.02000                             0.00000                   1.00000                 16.59690               5.65640               27.53740               0.16765            0.05323             0.30217
+                 11 spread all_qualifying             model_prob                       max         fixed       q4              beta        complement 0.02000                             0.00000                   1.00000                 16.59690               5.65640               27.53740               0.16765            0.05323             0.30217
+                 12 spread all_qualifying             model_prob                       max   rolling_100       q2             platt        complement 0.00500                             0.07500                   0.99980                 16.32420               4.47080               28.17760               0.15547            0.03992             0.28753
+                 13 spread all_qualifying             model_prob                       max          none       q4       temperature        complement 0.03000                             0.02170                   0.99620                 16.32410               4.37980               28.26840               0.19433            0.04709             0.37691
+                 14 spread all_qualifying             model_prob                       max    rolling_50       q2             platt        complement 0.00000                             0.00000                   0.99980                 16.23330               4.47080               27.99580               0.15171            0.03992             0.27821
+                 15 spread all_qualifying             model_prob                       max         fixed       q2             platt        complement 0.00000                             0.00000                   0.99980                 16.23330               4.47080               27.99580               0.15171            0.03992             0.27821
+                 16 spread all_qualifying             model_prob                       max   rolling_100       q2              beta        complement 0.00500                             0.07840                   0.99990                 15.96060               6.11100               25.81020               0.14124            0.05223             0.24885
+                 17 spread all_qualifying             model_prob                       max   rolling_100       q4          isotonic        complement 0.02000                             0.17770                   0.96640                 15.96040              -0.94440               30.67960               0.22801           -0.01138             0.50246
+                 18 spread all_qualifying             model_prob                       max          none       q4          isotonic        complement 0.00000                             0.00000                   0.98240                 15.36740               0.87390               27.44590               0.18079            0.00802             0.45215
+                 19 spread all_qualifying             model_prob                       max   rolling_100       q4             platt        complement 0.00500                             0.00000                   0.99980                 15.32420               4.47080               26.30800               0.14457            0.03992             0.26845
+                 20 spread all_qualifying             model_prob                       max         fixed       q4             platt        complement 0.00500                             0.00000                   0.99980                 15.32420               4.47080               26.30800               0.14457            0.03992             0.26845
+
+TOTAL TOP CONFIGURATIONS
+ rank_before_stress market selection_mode pick_preference_metric pick_preference_direction bias_strategy std_mode calibration_side1 calibration_side2    edge  selection_frequency_as_best_profit  positive_roi_probability  bootstrap_profit_median  bootstrap_profit_2_5  bootstrap_profit_97_5  bootstrap_roi_median  bootstrap_roi_2_5  bootstrap_roi_97_5
+                  1  total all_qualifying             model_prob                       max          none       q3             platt        complement 0.08000                             0.21060                   0.69020                  3.50610              -8.18570               16.82380               0.06541           -0.12414             0.30266
+                  2  total all_qualifying             model_prob                       max          none    fixed       temperature        complement 0.02500                             0.08730                   0.70970                  3.32840              -8.11090               14.08870               0.05201           -0.15621             0.23096
+                  3  total all_qualifying             model_prob                       max         fixed    fixed             platt        complement 0.11500                             0.00000                   0.72550                  3.26410              -5.21160               12.11190               0.09440           -0.18711             0.40749
+                  4  total all_qualifying             model_prob                       max          none    fixed             platt        complement 0.11500                             0.00000                   0.72550                  3.26410              -5.21160               12.11190               0.09440           -0.18711             0.40749
+                  5  total all_qualifying             model_prob                       max          none       q4       temperature        complement 0.02000                             0.14030                   0.62420                  2.67830             -10.50600               16.35280               0.03583           -0.15568             0.22485
+                  6  total all_qualifying             model_prob                       max    rolling_50       q4             platt        complement 0.07500                             0.12280                   0.60380                  2.54940             -11.91300               18.68100               0.04635           -0.18804             0.32918
+                  7  total all_qualifying             model_prob                       max   rolling_100       q4             platt        complement 0.07500                             0.00000                   0.60380                  2.54940             -11.91300               18.68100               0.04635           -0.18804             0.32918
+                  8  total all_qualifying             model_prob                       max    rolling_50    fixed             platt        complement 0.08000                             0.00000                   0.59840                  2.50730              -9.18570               15.82380               0.04557           -0.14893             0.30266
+                  9  total all_qualifying             model_prob                       max   rolling_100    fixed             platt        complement 0.12000                             0.04400                   0.71730                  2.49840              -5.78120               10.17880               0.07807           -0.20995             0.31209
+                 10  total all_qualifying             model_prob                       max          none       q4             platt        complement 0.08000                             0.00000                   0.59840                  2.30570             -11.16960               16.56720               0.04349           -0.17957             0.32751
+                 11  total all_qualifying             model_prob                       max         fixed       q4             platt        complement 0.07500                             0.07380                   0.57030                  1.56050             -11.95350               19.42440               0.04113           -0.19280             0.32004
+                 12  total all_qualifying             model_prob                       max   rolling_100       q4       temperature        complement 0.09500                             0.05000                   0.64860                  0.75920              -3.65560                5.17400               0.02372           -0.23183             0.12312
+                 13  total all_qualifying             model_prob                       max         fixed       q4       temperature        complement 0.09500                             0.03290                   0.64920                  0.75920              -2.96810                4.71880               0.02372           -0.17696             0.09376
+                 14  total all_qualifying             model_prob                       max         fixed    fixed       temperature        complement 0.09500                             0.00000                   0.64920                  0.75920              -2.96810                4.71880               0.02372           -0.17696             0.09376
+                 15  total all_qualifying             model_prob                       max          none    fixed               raw        complement 0.21500                             0.21340                   0.69340                  0.72730              -2.70650                3.40160               0.02563           -0.10339             0.17732
+                 16  total all_qualifying             model_prob                       max   rolling_100    fixed       temperature        complement 0.09000                             0.02490                   0.55240                  0.45450              -4.47750                5.41410               0.01269           -0.27984             0.09668
+
+==============================================================================================================
+8. SHARED VS SIDE-SPECIFIC EDGE (DEVELOPMENT SELECTION ONLY)
+==============================================================================================================
+The frozen_edge_mode column is selected without using lockbox results.
+market selection_mode pick_preference_metric pick_preference_direction       calibration_architecture side1 side2  shared_edge  dev_shared_bets  dev_shared_profit  dev_shared_roi  split_edge_side1  split_edge_side2  dev_split_bets  dev_split_profit  dev_split_roi  dev_split_positive_fold_rate  dev_split_profit_relative_improvement  minimum_bets_required  dev_supports_split frozen_edge_mode  frozen_shared_edge  frozen_edge_side1  frozen_edge_side2
+spread all_qualifying             model_prob                       max canonical_side_plus_complement  HOME  AWAY      0.00500              110           19.00390         0.17276           0.01000           0.00000             110          17.09480        0.15541                       0.80000                               -0.10046                     30               False           shared             0.00500                NaN                NaN
+ total all_qualifying             model_prob                       max canonical_side_plus_complement  OVER UNDER      0.08000               54            3.53190         0.06541           0.00000           0.08000              96           5.41470        0.05640                       0.40000                                0.53308                     30               False           shared             0.08000                NaN                NaN
+
+==============================================================================================================
+9. FINAL ACTIONABLE RECOMMENDATIONS
+==============================================================================================================
+FINAL_ACTIONS follows the whole-market decision. A failed market keeps the complete current pipeline.
+A passed market keeps the complete frozen candidate; no post-lockbox component swapping is allowed.
+
+   market           setting      current_value development_selected             production_refit final_recommendation                             status  requires_pipeline_code_change                                                                                                                                                       evidence
+moneyline           ML_EDGE            0.00000              0.00000                      0.00000              0.00000  NO_CHANGE_WITHIN_VALIDATED_MARKET                          False  WHOLE FROZEN MARKET: bets 29 vs 29; profit -1.6095 vs -1.6095; ROI -0.05550 vs -0.05550; logloss 0.61040 vs 0.61040; Brier 0.21052 vs 0.21052; validated=True
+moneyline  HOME_CALIBRATION                raw                  raw                          raw                  raw  NO_CHANGE_WITHIN_VALIDATED_MARKET                          False  WHOLE FROZEN MARKET: bets 29 vs 29; profit -1.6095 vs -1.6095; ROI -0.05550 vs -0.05550; logloss 0.61040 vs 0.61040; Brier 0.21052 vs 0.21052; validated=True
+moneyline  AWAY_CALIBRATION                raw                  raw                          raw                  raw  NO_CHANGE_WITHIN_VALIDATED_MARKET                          False  WHOLE FROZEN MARKET: bets 29 vs 29; profit -1.6095 vs -1.6095; ROI -0.05550 vs -0.05550; logloss 0.61040 vs 0.61040; Brier 0.21052 vs 0.21052; validated=True
+   spread       MARGIN_BIAS           -5.19000           rolling_50                     -3.06600             -5.19000 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False WHOLE FROZEN MARKET: bets 20 vs 15; profit -6.5930 vs -1.6363; ROI -0.32965 vs -0.10909; logloss 0.72924 vs 0.71381; Brier 0.26752 vs 0.25988; validated=False
+   spread        SPREAD_STD           13.04240                   q4 q4: see FINAL_STD_RANGES.csv             13.04240 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False WHOLE FROZEN MARKET: bets 20 vs 15; profit -6.5930 vs -1.6363; ROI -0.32965 vs -0.10909; logloss 0.72924 vs 0.71381; Brier 0.26752 vs 0.25988; validated=False
+   spread  HOME_CALIBRATION                raw                  raw                          raw                  raw     KEEP_RAW_MARKET_LOCKBOX_FAILED                          False WHOLE FROZEN MARKET: bets 20 vs 15; profit -6.5930 vs -1.6363; ROI -0.32965 vs -0.10909; logloss 0.72924 vs 0.71381; Brier 0.26752 vs 0.25988; validated=False
+   spread  AWAY_CALIBRATION derived_complement           complement  p_derived = 1 - p_canonical   derived_complement KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False WHOLE FROZEN MARKET: bets 20 vs 15; profit -6.5930 vs -1.6363; ROI -0.32965 vs -0.10909; logloss 0.72924 vs 0.71381; Brier 0.26752 vs 0.25988; validated=False
+   spread       SPREAD_EDGE            0.05000              0.00500                      0.00500              0.05000 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False WHOLE FROZEN MARKET: bets 20 vs 15; profit -6.5930 vs -1.6363; ROI -0.32965 vs -0.10909; logloss 0.72924 vs 0.71381; Brier 0.26752 vs 0.25988; validated=False
+    total        TOTAL_BIAS           -4.71400                 none                      0.00000             -4.71400 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False    WHOLE FROZEN MARKET: bets 3 vs 36; profit 2.7624 vs -1.3412; ROI 0.92080 vs -0.03726; logloss 0.68989 vs 0.68259; Brier 0.24841 vs 0.24492; validated=False
+    total         TOTAL_STD           16.66750                   q3 q3: see FINAL_STD_RANGES.csv             16.66750 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False    WHOLE FROZEN MARKET: bets 3 vs 36; profit 2.7624 vs -1.3412; ROI 0.92080 vs -0.03726; logloss 0.68989 vs 0.68259; Brier 0.24841 vs 0.24492; validated=False
+    total  OVER_CALIBRATION                raw                platt                        platt                  raw     KEEP_RAW_MARKET_LOCKBOX_FAILED                          False    WHOLE FROZEN MARKET: bets 3 vs 36; profit 2.7624 vs -1.3412; ROI 0.92080 vs -0.03726; logloss 0.68989 vs 0.68259; Brier 0.24841 vs 0.24492; validated=False
+    total UNDER_CALIBRATION derived_complement           complement  p_derived = 1 - p_canonical   derived_complement KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False    WHOLE FROZEN MARKET: bets 3 vs 36; profit 2.7624 vs -1.3412; ROI 0.92080 vs -0.03726; logloss 0.68989 vs 0.68259; Brier 0.24841 vs 0.24492; validated=False
+    total        TOTAL_EDGE            0.03000              0.08000                      0.08000              0.03000 KEEP_CURRENT_MARKET_LOCKBOX_FAILED                          False    WHOLE FROZEN MARKET: bets 3 vs 36; profit 2.7624 vs -1.3412; ROI 0.92080 vs -0.03726; logloss 0.68989 vs 0.68259; Brier 0.24841 vs 0.24492; validated=False
+
+PRODUCTION REFIT CANDIDATES / METHODS
+Full-history refits are shown for audit. Use FINAL_ACTIONS.csv for actual implementation decisions.
+   market component side       mode  production_value                                                                                                                                                   notes  lockbox_candidate_bets  lockbox_current_bets  lockbox_candidate_profit_units  lockbox_current_profit_units  lockbox_candidate_roi  lockbox_current_roi  lockbox_candidate_prob_log_loss  lockbox_current_prob_log_loss  lockbox_candidate_prob_brier  lockbox_current_prob_brier  lockbox_market_validated
+moneyline      EDGE          shared           0.00000                                                                                               Frozen on development OOS data; never retuned on lockbox.                      29                    29                        -1.60950                      -1.60950               -0.05550             -0.05550                          0.61040                        0.61040                       0.21052                     0.21052                      True
+   spread      BIAS      rolling_50          -3.06600 Full-history refit of the frozen development-selected bias method. If rolling mode is validated, recompute the trailing estimate as new results arrive.                      20                    15                        -6.59300                      -1.63630               -0.32965             -0.10909                          0.72924                        0.71381                       0.26752                     0.25988                     False
+   spread  STD_MODE              q4               NaN                                                                                                     Adaptive STD uses the bins in FINAL_STD_RANGES.csv.                      20                    15                        -6.59300                      -1.63630               -0.32965             -0.10909                          0.72924                        0.71381                       0.26752                     0.25988                     False
+   spread      EDGE          shared           0.00500                                                                                               Frozen on development OOS data; never retuned on lockbox.                      20                    15                        -6.59300                      -1.63630               -0.32965             -0.10909                          0.72924                        0.71381                       0.26752                     0.25988                     False
+    total      BIAS            none           0.00000 Full-history refit of the frozen development-selected bias method. If rolling mode is validated, recompute the trailing estimate as new results arrive.                       3                    36                         2.76240                      -1.34120                0.92080             -0.03726                          0.68989                        0.68259                       0.24841                     0.24492                     False
+    total  STD_MODE              q3               NaN                                                                                                     Adaptive STD uses the bins in FINAL_STD_RANGES.csv.                       3                    36                         2.76240                      -1.34120                0.92080             -0.03726                          0.68989                        0.68259                       0.24841                     0.24492                     False
+    total      EDGE          shared           0.08000                                                                                               Frozen on development OOS data; never retuned on lockbox.                       3                    36                         2.76240                      -1.34120                0.92080             -0.03726                          0.68989                        0.68259                       0.24841                     0.24492                     False
+
+STD RANGE TABLE
+market std_mode  bin  feature_low_exclusive  feature_high_inclusive    sigma  training_games
+spread       q4    0                   -inf                 4.00000 12.51969              78
+spread       q4    1                4.00000                 6.50000 14.91376              63
+spread       q4    2                6.50000                 9.50000 12.62821              61
+spread       q4    3                9.50000                     inf 12.43858              60
+ total       q3    0                   -inf               159.00000 16.74358              95
+ total       q3    1              159.00000               164.50000 14.85591              85
+ total       q3    2              164.50000                     inf 17.46822              82
+
+CALIBRATION FORMULAS
+   market  side   calibration_role     method                                                  formula  intercept   slope  coef_log_p  coef_log_1mp  isotonic_points
+moneyline  HOME        independent        raw                                            NO ADJUSTMENT        NaN     NaN         NaN           NaN                0
+moneyline  AWAY        independent        raw                                            NO ADJUSTMENT        NaN     NaN         NaN           NaN                0
+   spread  HOME          canonical        raw                                            NO ADJUSTMENT        NaN     NaN         NaN           NaN                0
+   spread  AWAY derived_complement complement                              p_derived = 1 - p_canonical        NaN     NaN         NaN           NaN                0
+    total  OVER          canonical      platt p_adj = logistic(0.04254915 + 0.33871045 * logit(p_raw))    0.04255 0.33871         NaN           NaN                0
+    total UNDER derived_complement complement                              p_derived = 1 - p_canonical        NaN     NaN         NaN           NaN                0
+
+==============================================================================================================
+10. OUTPUT FILES
+==============================================================================================================
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_00_MARKET_SELECTION_POLICY.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_spread_bias_strategy_oos.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_spread_bias_strategy_stress.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_spread_bias_oos_detail.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_total_bias_strategy_oos.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_total_bias_strategy_stress.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_01_total_bias_oos_detail.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_spread_std_mode_oos.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_spread_std_mode_stress.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_spread_std_oos_detail.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_total_std_mode_oos.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_total_std_mode_stress.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_02_total_std_oos_detail.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_moneyline_base_fold_parameters.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_moneyline_std_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_moneyline_calibration_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_rankings_moneyline.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_stress_moneyline.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_spread_base_fold_parameters.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_spread_std_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_spread_calibration_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_rankings_spread.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_stress_spread.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_total_base_fold_parameters.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_total_std_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_total_calibration_joint_acceptance.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_rankings_total.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_04_joint_stress_total.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_03_calibration_oos_moneyline.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_03_calibration_oos_spread.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_03_calibration_oos_total.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_06_spread_split_edge_scan.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_06_total_split_edge_scan.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_06_shared_vs_split_edges.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_07_spread_segment_analysis.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_07_total_segment_analysis.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_05_lockbox_detail_moneyline.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_05_lockbox_detail_spread.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_05_lockbox_detail_total.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_05_lockbox_validation.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_05_lockbox_market_decision.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_PRODUCTION_REFIT_CANDIDATES.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_FINAL_STD_RANGES.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_FINAL_CALIBRATION_FORMULAS.csv
+docs\win\basketball\backtest\input\WNBA_2025_FINAL_MASTER_FINAL_ACTIONS.csv

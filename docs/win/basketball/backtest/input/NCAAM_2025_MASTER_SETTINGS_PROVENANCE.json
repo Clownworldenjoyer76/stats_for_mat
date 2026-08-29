@@ -1,0 +1,148 @@
+{
+  "model_config": "docs\\win\\basketball\\config\\model_config.yaml",
+  "model_config_sha256": "a89ce39e79d73667a3358d73f7fae6b944c66d6c3bd4efffd0ccd224ccb37a58",
+  "model_source": "ensemble",
+  "rolling_bias_state": "docs\\win\\basketball\\config\\rolling_bias_state.yaml",
+  "rolling_bias_state_sha256": "6dcbfa0b0477b6bfb5d7ebe6a069f70da69fa19f383853c3429592b15004afa2",
+  "settings": {
+    "NBA": {
+      "CALIBRATION": {
+        "moneyline": {
+          "away": {
+            "method": "none"
+          },
+          "home": {
+            "method": "none"
+          }
+        },
+        "spread": {
+          "canonical_side": "home",
+          "config": {
+            "method": "none"
+          }
+        },
+        "total": {
+          "canonical_side": "over",
+          "config": {
+            "method": "none"
+          }
+        }
+      },
+      "MARGIN_BIAS": -2.449,
+      "MARGIN_BIAS_RULE": {
+        "method": "rolling",
+        "value": null,
+        "window_games": 100
+      },
+      "ML_EDGE": 0.02,
+      "MODEL_SOURCE": "ensemble",
+      "SPREAD_EDGE": 0.015,
+      "SPREAD_STD": 14.4581,
+      "TOTAL_BIAS": -2.498,
+      "TOTAL_BIAS_RULE": {
+        "method": "rolling",
+        "value": null,
+        "window_games": 50
+      },
+      "TOTAL_EDGE": 0.0,
+      "TOTAL_STD": 18.7672
+    },
+    "NCAAM": {
+      "CALIBRATION": {
+        "moneyline": {
+          "away": {
+            "method": "none"
+          },
+          "home": {
+            "method": "none"
+          }
+        },
+        "spread": {
+          "canonical_side": "home",
+          "config": {
+            "coef_log_1mp": 0.36284251,
+            "coef_log_p": 0.59540409,
+            "intercept": 0.59787618,
+            "method": "beta"
+          }
+        },
+        "total": {
+          "canonical_side": "over",
+          "config": {
+            "method": "none"
+          }
+        }
+      },
+      "MARGIN_BIAS": -0.063,
+      "MARGIN_BIAS_RULE": {
+        "method": "rolling",
+        "value": null,
+        "window_games": 500
+      },
+      "ML_EDGE": 0.015,
+      "MODEL_SOURCE": "ensemble",
+      "SPREAD_EDGE": 0.015,
+      "SPREAD_STD": 11.3946,
+      "TOTAL_BIAS": 1.2,
+      "TOTAL_BIAS_RULE": {
+        "method": "fixed",
+        "value": 1.2,
+        "window_games": null
+      },
+      "TOTAL_EDGE": 0.03,
+      "TOTAL_STD": 17.7495
+    },
+    "WNBA": {
+      "CALIBRATION": {
+        "moneyline": {
+          "away": {
+            "method": "none"
+          },
+          "home": {
+            "method": "none"
+          }
+        },
+        "spread": {
+          "canonical_side": "home",
+          "config": {
+            "method": "none"
+          }
+        },
+        "total": {
+          "canonical_side": "over",
+          "config": {
+            "method": "none"
+          }
+        }
+      },
+      "MARGIN_BIAS": -5.19,
+      "MARGIN_BIAS_RULE": {
+        "method": "rolling",
+        "value": null,
+        "window_games": 100
+      },
+      "ML_EDGE": 0.0,
+      "MODEL_SOURCE": "ensemble",
+      "SPREAD_EDGE": 0.05,
+      "SPREAD_STD": 13.0424,
+      "TOTAL_BIAS": -4.714,
+      "TOTAL_BIAS_RULE": {
+        "method": "regime_aware",
+        "sign_conflict_shrink": 0.35,
+        "value": null,
+        "weights": [
+          0.5,
+          0.3,
+          0.2
+        ],
+        "windows_games": [
+          25,
+          50,
+          100
+        ]
+      },
+      "TOTAL_EDGE": 0.03,
+      "TOTAL_STD": 16.6675
+    }
+  }
+}

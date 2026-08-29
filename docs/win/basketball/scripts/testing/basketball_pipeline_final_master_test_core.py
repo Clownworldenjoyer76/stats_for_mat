@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 from __future__ import annotations
-
-"""
+'''
 FINAL BASKETBALL PIPELINE VALIDATION / OPTIMIZATION TEST
 ========================================================
 
@@ -16,8 +14,7 @@ Supports:
 - production complementary spread/total calibration
 - production selection_mode and pick_preference
 - exact production-vs-backtest parity checks
-"""
-
+'''
 import argparse
 import importlib.util
 import json
@@ -37,8 +34,7 @@ try:
     import yaml
 except Exception as exc:
     raise SystemExit(
-        'This script requires PyYAML. '
-        'Install with: pip install pyyaml'
+        'This script requires PyYAML. Install with: pip install pyyaml'
     ) from exc
 
 try:
@@ -46,18 +42,14 @@ try:
     from scipy.stats import norm
 except Exception as exc:
     raise SystemExit(
-        'This script requires scipy. '
-        'Install with: pip install scipy'
+        'This script requires scipy. Install with: pip install scipy'
     ) from exc
 
 try:
-    from sklearn.isotonic import (
-        IsotonicRegression,
-    )
+    from sklearn.isotonic import IsotonicRegression
 except Exception as exc:
     raise SystemExit(
-        'This script requires scikit-learn. '
-        'Install with: pip install scikit-learn'
+        'This script requires scikit-learn. Install with: pip install scikit-learn'
     ) from exc
 
 
@@ -65,7 +57,6 @@ warnings.filterwarnings(
     'ignore',
     category=RuntimeWarning,
 )
-
 warnings.filterwarnings(
     'ignore',
     category=FutureWarning,
@@ -151,56 +142,46 @@ CURRENT_SETTINGS = {
 
 
 def _complete_direct_settings() -> None:
-    for (
-        league,
-        cfg,
-    ) in CURRENT_SETTINGS.items():
+    for league, cfg in CURRENT_SETTINGS.items():
         cfg.setdefault(
             'MODEL_SOURCE',
             DEFAULT_MODEL_SOURCE,
         )
-
         cfg.setdefault(
             'MARGIN_BIAS_RULE',
             {
                 'method': 'fixed',
-                'value': cfg[
-                    'MARGIN_BIAS'
-                ],
+                'value': cfg['MARGIN_BIAS'],
             },
         )
-
         cfg.setdefault(
             'TOTAL_BIAS_RULE',
             {
                 'method': 'fixed',
-                'value': cfg[
-                    'TOTAL_BIAS'
-                ],
+                'value': cfg['TOTAL_BIAS'],
             },
         )
-
         cfg.setdefault(
             'CALIBRATION',
             {
                 'moneyline': {
                     'home': {
-                        'method': 'none'
+                        'method': 'none',
                     },
                     'away': {
-                        'method': 'none'
+                        'method': 'none',
                     },
                 },
                 'spread': {
                     'canonical_side': 'home',
                     'config': {
-                        'method': 'none'
+                        'method': 'none',
                     },
                 },
                 'total': {
                     'canonical_side': 'over',
                     'config': {
-                        'method': 'none'
+                        'method': 'none',
                     },
                 },
             },
@@ -211,19 +192,12 @@ _complete_direct_settings()
 
 
 RANDOM_SEED = 20260813
-
 LOCKBOX_FRACTION = 0.15
-
 TARGET_OUTER_FOLDS = 10
-
 MIN_OUTER_TEST_GAMES = 25
-
 MIN_TRAIN_FRACTION = 0.35
-
 STRESS_REPS = 10_000
-
 SEASON_BLOCK_DAYS = 14
-
 TOP_CONFIGS_TO_STRESS = 20
 
 ROLLING_WINDOWS = [
@@ -241,9 +215,7 @@ STD_MODES = [
 ]
 
 STD_SHRINKAGE_GAMES = 50.0
-
 MIN_STD = 2.0
-
 MAX_STD = 50.0
 
 CALIBRATION_METHODS = [
@@ -276,13 +248,9 @@ SPLIT_EDGE_GRID = np.round(
 )
 
 MIN_CALIBRATION_FOLD_WIN_RATE = 0.60
-
 MIN_ADAPTIVE_STD_REL_NLL_IMPROVEMENT = 0.001
-
 MIN_SPLIT_EDGE_DEV_PROFIT_IMPROVEMENT = 0.05
-
 MIN_STRESS_POSITIVE_ROI_PROBABILITY = 0.60
-
 EPS = 1e-10
 
 
@@ -359,8 +327,7 @@ def logit(
     return np.log(
         p
         / (
-            1.0
-            - p
+            1.0 - p
         )
     )
 
@@ -373,19 +340,14 @@ def brier_score(
         p,
         dtype=float,
     )
-
     y = np.asarray(
         y,
         dtype=float,
     )
 
     mask = (
-        np.isfinite(
-            p
-        )
-        & np.isfinite(
-            y
-        )
+        np.isfinite(p)
+        & np.isfinite(y)
     )
 
     if not mask.any():
@@ -394,12 +356,8 @@ def brier_score(
     return float(
         np.mean(
             (
-                p[
-                    mask
-                ]
-                - y[
-                    mask
-                ]
+                p[mask]
+                - y[mask]
             )
             ** 2
         )
@@ -414,53 +372,36 @@ def binary_log_loss(
         p,
         dtype=float,
     )
-
     y = np.asarray(
         y,
         dtype=float,
     )
 
     mask = (
-        np.isfinite(
-            p
-        )
-        & np.isfinite(
-            y
-        )
+        np.isfinite(p)
+        & np.isfinite(y)
     )
 
     if not mask.any():
         return np.nan
 
     q = np.clip(
-        p[
-            mask
-        ],
+        p[mask],
         EPS,
         1.0 - EPS,
     )
 
-    yy = y[
-        mask
-    ]
+    yy = y[mask]
 
     return float(
         -np.mean(
-            (
-                yy
-                * np.log(
-                    q
-                )
-            )
+            yy
+            * np.log(q)
             + (
-                (
-                    1.0
-                    - yy
-                )
-                * np.log(
-                    1.0
-                    - q
-                )
+                1.0 - yy
+            )
+            * np.log(
+                1.0 - q
             )
         )
     )
@@ -475,17 +416,14 @@ def rmse(
     )
 
     x = x[
-        np.isfinite(
-            x
-        )
+        np.isfinite(x)
     ]
 
     return (
         float(
             np.sqrt(
                 np.mean(
-                    x
-                    * x
+                    x * x
                 )
             )
         )
@@ -503,17 +441,13 @@ def mae(
     )
 
     x = x[
-        np.isfinite(
-            x
-        )
+        np.isfinite(x)
     ]
 
     return (
         float(
             np.mean(
-                np.abs(
-                    x
-                )
+                np.abs(x)
             )
         )
         if len(x)
@@ -531,9 +465,7 @@ def percentile(
     )
 
     x = x[
-        np.isfinite(
-            x
-        )
+        np.isfinite(x)
     ]
 
     return (
@@ -559,7 +491,6 @@ def devig_pair(
         decimal_a,
         dtype=float,
     )
-
     b = np.asarray(
         decimal_b,
         dtype=float,
@@ -577,10 +508,7 @@ def devig_pair(
         np.nan,
     )
 
-    s = (
-        pa
-        + pb
-    )
+    s = pa + pb
 
     return (
         pa / s,
@@ -609,9 +537,7 @@ def unit_profit_from_result(
     )
 
     valid = (
-        np.isfinite(
-            o
-        )
+        np.isfinite(o)
         & (
             o > 1.0
         )
@@ -670,13 +596,10 @@ def normal_residual_nll(
     )
 
     return (
-        np.log(
-            s
-        )
+        np.log(s)
         + 0.5
         * (
-            e
-            / s
+            e / s
         )
         ** 2
     )
@@ -725,9 +648,7 @@ def format_float(
         )
 
     except Exception:
-        return str(
-            v
-        )
+        return str(v)
 
 
 def make_prefix(
@@ -740,29 +661,94 @@ def make_prefix(
     )
 
 
-def infer_season_label(
-    df: pd.DataFrame,
-    fallback: str,
-) -> str:
-    years = (
-        pd.to_datetime(
-            df[
-                '_date'
-            ],
-            errors='coerce',
-        )
-        .dt.year
-        .dropna()
-        .astype(int)
+def season_from_input_filename(
+    input_file: Path,
+    league: str,
+) -> int | None:
+    stem = input_file.stem.strip()
+    suffix = '_' + league.upper()
+
+    if not stem.upper().endswith(
+        suffix
+    ):
+        return None
+
+    season_text = stem[
+        :-len(suffix)
+    ]
+
+    if (
+        len(season_text) != 4
+        or not season_text.isdigit()
+    ):
+        return None
+
+    return int(
+        season_text
     )
 
-    if years.empty:
-        return fallback
 
-    return str(
-        int(
-            years.min()
+def resolve_internal_season(
+    input_file: Path,
+    league: str,
+    requested: str | int | None,
+) -> int:
+    filename_season = (
+        season_from_input_filename(
+            input_file,
+            league,
         )
+    )
+
+    if (
+        requested is not None
+        and str(
+            requested
+        ).strip()
+    ):
+        season_text = str(
+            requested
+        ).strip()
+
+        if (
+            len(season_text) != 4
+            or not season_text.isdigit()
+        ):
+            raise ValueError(
+                '--season must be a '
+                'four-digit internal '
+                'basketball season'
+            )
+
+        internal_season = int(
+            season_text
+        )
+
+        if (
+            filename_season
+            is not None
+            and filename_season
+            != internal_season
+        ):
+            raise ValueError(
+                f'--season={internal_season} '
+                'does not match input-file '
+                'internal season='
+                f'{filename_season} from '
+                f'{input_file.name}'
+            )
+
+        return internal_season
+
+    if filename_season is not None:
+        return filename_season
+
+    raise ValueError(
+        'Internal basketball season '
+        'could not be resolved. '
+        'Supply --season YYYY or use '
+        'an input filename like '
+        f'2025_{league.upper()}.csv'
     )
 
 
@@ -793,11 +779,9 @@ def resolve_markets_file(
             / markets_file
         )
 
-        script_path = (
-            Path(
-                __file__
-            ).resolve()
-        )
+        script_path = Path(
+            __file__
+        ).resolve()
 
         for parent in [
             script_path.parent,
@@ -815,9 +799,7 @@ def resolve_markets_file(
                     / 'markets.yaml'
                 )
 
-    seen: set[
-        str
-    ] = set()
+    seen: set[str] = set()
 
     for candidate in candidates:
         key = str(
@@ -870,9 +852,7 @@ def load_market_selection_policies(
         or {}
     )
 
-    league_key = (
-        league.lower()
-    )
+    league_key = league.lower()
 
     league_cfg = (
         (
@@ -924,10 +904,8 @@ def load_market_selection_policies(
         'spread',
         'total',
     ]:
-        market_cfg = (
-            league_cfg.get(
-                market
-            )
+        market_cfg = league_cfg.get(
+            market
         )
 
         if not isinstance(
@@ -1156,11 +1134,8 @@ def normalize_production_bias_rule(
 
         if (
             not windows
-            or len(
-                windows
-            ) != len(
-                weights
-            )
+            or len(windows)
+            != len(weights)
         ):
             raise ValueError(
                 'regime_aware requires '
@@ -1182,13 +1157,13 @@ def normalize_production_bias_rule(
                 v < 0
                 for v in weights
             )
-            or sum(
-                weights
-            ) <= 0
+            or sum(weights)
+            <= 0
         ):
             raise ValueError(
                 'regime_aware weights '
-                'must be >= 0 and sum to > 0'
+                'must be >= 0 and sum '
+                'to > 0'
             )
 
         total = sum(
@@ -1196,8 +1171,7 @@ def normalize_production_bias_rule(
         )
 
         weights = [
-            v
-            / total
+            v / total
             for v in weights
         ]
 
@@ -1397,10 +1371,7 @@ def production_bias_values_for_targets(
         float
     ] = []
 
-    for (
-        _,
-        row,
-    ) in target.iterrows():
+    for _, row in target.iterrows():
         value = (
             production_bias_from_errors(
                 errors,
@@ -1501,8 +1472,7 @@ def apply_production_calibration_scalar(
                 ]
             )
             * math.log(
-                1.0
-                - p
+                1.0 - p
             )
         )
 
@@ -1616,8 +1586,7 @@ def apply_production_complementary_calibration(
     )
 
     opposite = (
-        1.0
-        - calibrated
+        1.0 - calibrated
     )
 
     if canonical == first_side:
@@ -1645,6 +1614,7 @@ def reverse_bias_row_to_raw(
         str,
         Any,
     ],
+    internal_season: int,
 ) -> tuple[
     float,
     float,
@@ -1750,35 +1720,14 @@ def reverse_bias_row_to_raw(
             total_bias
         )
     ):
-        dt = pd.to_datetime(
-            str(
-                row.get(
-                    'game_date',
-                    '',
-                )
-            ).replace(
-                '_',
-                '-',
-            ),
-            errors='coerce',
-        )
-
-        season = (
-            int(
-                dt.year
-            )
-            if pd.notna(
-                dt
-            )
-            else None
-        )
-
         legacy = (
             LEGACY_HISTORICAL_BIAS
             .get(
                 (
                     league,
-                    season,
+                    int(
+                        internal_season
+                    ),
                 )
             )
         )
@@ -1786,11 +1735,15 @@ def reverse_bias_row_to_raw(
         if legacy is None:
             raise ValueError(
                 f"game_id={row.get('game_id')} "
-                'has bias_applied=1 but '
+                'in internal season '
+                f'{internal_season} has '
+                'bias_applied=1 but '
                 'no per-game '
                 'margin_bias/total_bias '
                 'and no exact legacy '
-                'fallback'
+                'fallback for '
+                f'{league} season '
+                f'{internal_season}'
             )
 
         margin_bias = float(
@@ -1870,6 +1823,7 @@ def load_data(
         Any,
     ],
     model_source: str,
+    internal_season: int,
 ) -> pd.DataFrame:
     if not input_file.exists():
         raise FileNotFoundError(
@@ -1989,6 +1943,50 @@ def load_data(
             ]
         )
 
+    complete_cols = [
+        'home_projected_points',
+        'away_projected_points',
+        'total_projected_points',
+        'home_score',
+        'away_score',
+    ]
+
+    complete_mask = np.ones(
+        len(df),
+        dtype=bool,
+    )
+
+    for c in complete_cols:
+        complete_mask &= np.isfinite(
+            df[
+                c
+            ].to_numpy(
+                float
+            )
+        )
+
+    incomplete_rows = int(
+        (
+            ~complete_mask
+        ).sum()
+    )
+
+    if incomplete_rows:
+        progress(
+            'Skipping '
+            f'{incomplete_rows} '
+            'incomplete historical rows '
+            'with missing projection or '
+            'final-score values'
+        )
+
+        df = (
+            df.loc[
+                complete_mask
+            ]
+            .copy()
+        )
+
     df[
         '_date'
     ] = pd.to_datetime(
@@ -2084,6 +2082,7 @@ def load_data(
             row,
             league,
             settings,
+            internal_season,
         )
         for (
             _,
@@ -2441,8 +2440,7 @@ def make_outer_folds(
     )
 
     remaining = (
-        n
-        - min_train
+        n - min_train
     )
 
     folds_target = min(
@@ -3031,8 +3029,7 @@ def stress_bias_strategies(
             wi,
             si
         ] = np.nansum(
-            e
-            * e
+            e * e
         )
 
         cnt[
@@ -3285,8 +3282,7 @@ def fit_std_model(
     )
 
     if valid.sum() < max(
-        q
-        * 30,
+        q * 30,
         80,
     ):
         return StdModel(
@@ -3357,8 +3353,7 @@ def fit_std_model(
         m = (
             valid
             & (
-                bin_id
-                == b
+                bin_id == b
             )
         )
 
@@ -3374,7 +3369,6 @@ def fit_std_model(
             sigmas.append(
                 global_sigma
             )
-
             continue
 
         bin_var = float(
@@ -3705,8 +3699,7 @@ def apply_base_model(
     return {
         'side1_prob': p1,
         'side2_prob': (
-            1.0
-            - p1
+            1.0 - p1
         ),
         'mean': mean,
         'sigma': sigma,
@@ -6132,8 +6125,7 @@ def edge_scan(
             )
 
             roi = (
-                p
-                / n
+                p / n
             )
 
             fold_frame = pd.DataFrame({
@@ -6526,24 +6518,20 @@ def calibration_acceptance_for_cache(
                 ):
                     folds += 1
                     wins_ll += int(
-                        mll
-                        < rll
+                        mll < rll
                     )
                     wins_br += int(
-                        mbr
-                        < rbr
+                        mbr < rbr
                     )
 
             win_ll_rate = (
-                wins_ll
-                / folds
+                wins_ll / folds
                 if folds
                 else np.nan
             )
 
             win_br_rate = (
-                wins_br
-                / folds
+                wins_br / folds
                 if folds
                 else np.nan
             )
@@ -6739,24 +6727,20 @@ def calibration_acceptance_for_cache(
                 ):
                     folds += 1
                     wins_ll += int(
-                        mll
-                        < rll
+                        mll < rll
                     )
                     wins_br += int(
-                        mbr
-                        < rbr
+                        mbr < rbr
                     )
 
             win_ll_rate = (
-                wins_ll
-                / folds
+                wins_ll / folds
                 if folds
                 else np.nan
             )
 
             win_br_rate = (
-                wins_br
-                / folds
+                wins_br / folds
                 if folds
                 else np.nan
             )
@@ -8502,12 +8486,10 @@ def calibration_method_summary(
                 ):
                     folds += 1
                     fold_wins_ll += int(
-                        ll
-                        < ll_raw
+                        ll < ll_raw
                     )
                     fold_wins_br += int(
-                        br
-                        < br_raw
+                        br < br_raw
                     )
 
             rows.append({
@@ -8900,6 +8882,20 @@ def run_production_parity_test(
             )
             / 'juice'
         )
+
+        for market_dir in [
+            'moneyline',
+            'spread',
+            'total',
+        ]:
+            (
+                prod_juice.OUTPUT_DIR
+                / league.lower()
+                / market_dir
+            ).mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
         for market in [
             'moneyline',
@@ -9577,8 +9573,7 @@ def apply_selected_config(
         False,
     ):
         if not np.allclose(
-            p1
-            + p2,
+            p1 + p2,
             1.0,
             atol=1e-12,
             equal_nan=True,
@@ -10434,8 +10429,7 @@ def split_edge_scan(
                 )
 
                 roi = (
-                    profit
-                    / n
+                    profit / n
                 )
 
                 fold_frame = pd.DataFrame({
@@ -10690,8 +10684,7 @@ def build_frozen_candidates(
             ]
 
         if not np.allclose(
-            p1
-            + p2,
+            p1 + p2,
             1.0,
             atol=1e-12,
             equal_nan=True,
@@ -11858,8 +11851,7 @@ def build_final_recommendations(
         )
 
         changed = (
-            method
-            != 'raw'
+            method != 'raw'
         )
 
         rows.append({
@@ -12812,16 +12804,14 @@ def write_report(
         '9. FINAL ACTIONABLE RECOMMENDATIONS',
         line,
         (
-            'FINAL_ACTIONS follows the '
-            'whole-market decision. A failed '
-            'market keeps the complete '
-            'current pipeline.'
+            'FINAL_ACTIONS follows the whole-'
+            'market decision. A failed market '
+            'keeps the complete current pipeline.'
         ),
         (
-            'A passed market keeps the '
-            'complete frozen candidate; no '
-            'post-lockbox component swapping '
-            'is allowed.'
+            'A passed market keeps the complete '
+            'frozen candidate; no post-lockbox '
+            'component swapping is allowed.'
         ),
         '',
         dataframe_text(
@@ -12898,7 +12888,13 @@ def main() -> None:
 
     parser.add_argument(
         '--season',
-        default=SEASON_LABEL,
+        default=None,
+        help=(
+            'Internal basketball season '
+            'start year. If omitted, it is '
+            'read from an input filename '
+            'like 2025_NBA.csv.'
+        ),
     )
 
     parser.add_argument(
@@ -12979,9 +12975,23 @@ def main() -> None:
 
     t0 = now_seconds()
 
+    internal_season = (
+        resolve_internal_season(
+            input_file,
+            league,
+            args.season,
+        )
+    )
+
+    season = str(
+        internal_season
+    )
+
     progress(
         f'Loading {league} data: '
-        f'{input_file}'
+        f'{input_file} | '
+        f'internal_season='
+        f'{internal_season}'
     )
 
     full_df = load_data(
@@ -12989,14 +12999,7 @@ def main() -> None:
         league,
         settings,
         model_source,
-    )
-
-    season = (
-        args.season
-        or infer_season_label(
-            full_df,
-            SEASON_LABEL,
-        )
+        internal_season,
     )
 
     output_dir = (
@@ -13255,7 +13258,8 @@ def main() -> None:
         )
 
     progress(
-        '[2/9] STD: fixed vs sportsbook-range-specific...'
+        '[2/9] STD: fixed vs '
+        'sportsbook-range-specific...'
     )
 
     std_details: dict[
@@ -13516,7 +13520,8 @@ def main() -> None:
 
     progress(
         '[4/9] Calibration: '
-        'development OOS comparison by side...'
+        'development OOS comparison '
+        'by side...'
     )
 
     cal_summaries: dict[
@@ -13695,7 +13700,8 @@ def main() -> None:
 
     progress(
         '[6/9] One-time untouched '
-        'lockbox validation of frozen candidates...'
+        'lockbox validation of frozen '
+        'candidates...'
     )
 
     lock_rows = []
@@ -13799,7 +13805,8 @@ def main() -> None:
 
     progress(
         '[7/9] Full-history refit of '
-        'frozen methods and final decisions...'
+        'frozen methods and final '
+        'decisions...'
     )
 
     (
