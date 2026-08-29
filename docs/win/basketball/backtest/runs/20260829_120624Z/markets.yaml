@@ -1,0 +1,490 @@
+# docs/win/basketball/markets.yaml
+
+# DEVELOPMENT / ANALYSIS CONFIGURATION
+#
+# Purpose:
+#   Keep market-level filtering as permissive as possible while the underlying
+#   basketball model, calibration, SDV features, and probability generation
+#   are being developed and validated.
+#
+# selection_mode:
+#   pick_one       = if both sides pass, keep only one
+#   all_qualifying = keep every side that passes
+#
+# During model development, all_qualifying is preferred so the analysis retains
+# both sides whenever both pass the upstream requirements.
+#
+# pick_preference:
+#   Only matters when selection_mode = pick_one.
+#
+#   metric options:
+#     ev
+#     kelly
+#     model_prob
+#     edge_vs_market
+#
+#   direction options:
+#     max
+#     min
+
+pick_preference: { metric: model_prob, direction: max }
+
+stake_sizing:
+  kelly_fraction: 0.25
+  kelly_cap: 0.05
+
+# NOTE:
+# This setting can still eliminate one market when both moneyline and spread
+# qualify on the same game. The currently supported options are:
+#   ev
+#   kelly
+#   edge_vs_market
+#
+# Leave as kelly until/unless the selector is changed to support disabling
+# this cross-market tiebreak entirely.
+ml_vs_spread_tiebreak: kelly
+
+
+markets:
+
+#########################################################################################################################################################
+#########################################################################################################################################################
+######################################              NBA                                   ###############################################################
+#########################################################################################################################################################
+#########################################################################################################################################################
+
+  nba:
+
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  NBA SPREAD  #######################################################################################################################################
+
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  NBA TOTAL  ########################################################################################################################################
+
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      over:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      under:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+#########################################################################################################################################################
+#########################################################################################################################################################
+######################################              NCAAM                                 ###############################################################
+#########################################################################################################################################################
+#########################################################################################################################################################
+
+  ncaam:
+
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  NCAAM SPREAD  #####################################################################################################################################
+
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  NCAAM TOTAL  ######################################################################################################################################
+
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      over:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      under:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+#########################################################################################################################################################
+#########################################################################################################################################################
+######################################              WNBA                                  ###############################################################
+#########################################################################################################################################################
+#########################################################################################################################################################
+
+  wnba:
+
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  WNBA SPREAD  ######################################################################################################################################
+
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      home:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      away:
+        enabled: true
+        line_bands:           [[-100.0, 100.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+###  WNBA TOTAL  #######################################################################################################################################
+
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference: { metric: model_prob, direction: max }
+
+      over:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+      under:
+        enabled: true
+        line_bands:           [[0.0, 500.0]]
+        odds_bands:           [[-100000, 100000]]
+        ev_bands:             [[-1.00, 100.00]]
+        kelly_bands:          [[0.00, 1.00]]
+        model_prob_bands:     [[0.00, 1.00]]
+        edge_vs_market_bands: [[-100.0, 100.0]]
+        months:               []
+        exclude_days_of_week: []
+
+
+#########################################################################################################################################################
+#########################################################################################################################################################
+#########################################################################################################################################################
+#########################################################################################################################################################
+
+# docs/win/basketball/markets.yaml explanation
+#
+# Per-league × per-market × per-side filter configuration.
+#
+# DEVELOPMENT PURPOSE:
+#   These settings are intentionally wide-open. The goal is to prevent
+#   markets.yaml from imposing narrow historical bucket optimizations while
+#   the underlying model is still being developed.
+#
+#   The research/backtest data should retain as much of the available market
+#   population as possible so performance can later be analyzed by:
+#     - model probability
+#     - EV
+#     - Kelly
+#     - edge vs market
+#     - odds
+#     - spread/total line
+#     - side
+#     - league
+#     - date/time buckets
+#
+# Filter structure (each side):
+#
+#   odds_bands
+#     American-odds ranges that are allowed.
+#     Wide-open development range:
+#       [-100000, 100000]
+#
+#   line_bands
+#     Spread/total ranges that are allowed.
+#     Spread development range:
+#       [-100, 100]
+#     Total development range:
+#       [0, 500]
+#
+#   ev_bands
+#     Model expected-value ranges in decimal form.
+#     Example:
+#       0.02 = +2% EV
+#
+#     Development range:
+#       [-1.00, 100.00]
+#
+#     This intentionally does NOT use markets.yaml to require positive EV.
+#     Any upstream model-level qualification rules still apply separately.
+#
+#   kelly_bands
+#     Raw Kelly fraction.
+#
+#     Development range:
+#       [0.00, 1.00]
+#
+#   model_prob_bands
+#     Model probability in decimal form.
+#
+#     Development range:
+#       [0.00, 1.00]
+#
+#   edge_vs_market_bands
+#     Model probability edge versus devigged market probability,
+#     expressed in percentage points.
+#
+#     Development range:
+#       [-100.0, 100.0]
+#
+#
+# Date filters per side:
+#
+#   months
+#     List of month integers 1-12 to include.
+#     [] = no month restriction.
+#
+#   exclude_days_of_week
+#     List of weekdays to skip:
+#       Monday    = 0
+#       Tuesday   = 1
+#       Wednesday = 2
+#       Thursday  = 3
+#       Friday    = 4
+#       Saturday  = 5
+#       Sunday    = 6
+#
+#     [] = no weekday restriction.
+#
+#
+# Per-market:
+#
+#   selection_mode
+#
+#     pick_one
+#       If both sides qualify, retain only one according to pick_preference.
+#
+#     all_qualifying
+#       Retain every side that passes.
+#
+#     Development configuration uses:
+#       all_qualifying
+#
+#     This prevents side-selection logic from prematurely removing observations
+#     that are useful for model evaluation.
+#
+#
+#   pick_preference.metric
+#
+#     Supported:
+#       ev
+#       kelly
+#       model_prob
+#       edge_vs_market
+#
+#   pick_preference.direction
+#
+#     Supported:
+#       max
+#       min
+#
+#   pick_preference remains configured even though it does not control
+#   all_qualifying mode. This preserves a valid value if a market is later
+#   switched back to pick_one.
+#
+#
+# Top-level stake sizing:
+#
+#   stake_sizing.kelly_fraction
+#     Multiplier applied to raw Kelly.
+#
+#     Current:
+#       0.25 = quarter Kelly
+#
+#   stake_sizing.kelly_cap
+#     Maximum stake as a fraction of bankroll.
+#
+#     Current:
+#       0.05 = 5%
+#
+#
+# ml_vs_spread_tiebreak:
+#
+#   When both moneyline and spread qualify on the same game, the current
+#   selector can keep only one of those markets.
+#
+#   Supported tiebreak metrics:
+#     ev
+#     kelly
+#     edge_vs_market
+#
+#   Current:
+#     kelly
+#
+#   This is NOT being treated as a model-development filter here because the
+#   existing configuration interface does not document a disabled/none option.
+#   If complete preservation of simultaneous moneyline + spread candidates is
+#   desired, that behavior should be changed in the selector itself rather than
+#   inventing an unsupported markets.yaml value.

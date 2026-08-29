@@ -115,76 +115,41 @@ def timestamp_id() -> str:
 
 def sanitize_run_name(value: str) -> str:
     cleaned = "".join(
-        (
-            ch
-            if ch.isalnum() or ch in "-_."
-            else "_"
-            for ch in value.strip()
-        )
+        ch if ch.isalnum() or ch in "-_." else "_"
+        for ch in value.strip()
     ).strip("._")
 
     if not cleaned:
-        raise ValueError(
-            "run name becomes empty after sanitization"
-        )
+        raise ValueError("run name becomes empty after sanitization")
 
     return cleaned
 
 
-def ensure_mapping(
-    value: Any,
-    label: str,
-) -> dict:
-    if not isinstance(
-        value,
-        dict,
-    ):
-        raise ValueError(
-            f"{label} must be a mapping"
-        )
+def ensure_mapping(value: Any, label: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be a mapping")
 
     return value
 
 
-def require_number(
-    value: Any,
-    label: str,
-) -> float:
-    if isinstance(
-        value,
-        bool,
-    ):
-        raise ValueError(
-            f"{label} must be numeric"
-        )
+def require_number(value: Any, label: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be numeric")
 
     try:
-        number = float(
-            value
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ) as exc:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
         raise ValueError(
-            f"{label} must be numeric; "
-            f"got {value!r}"
+            f"{label} must be numeric; got {value!r}"
         ) from exc
 
-    if not math.isfinite(
-        number
-    ):
-        raise ValueError(
-            f"{label} must be finite"
-        )
+    if not math.isfinite(number):
+        raise ValueError(f"{label} must be finite")
 
     return number
 
 
-def fv(
-    value: Any,
-) -> float | None:
+def fv(value: Any) -> float | None:
     try:
         if (
             value is None
@@ -193,39 +158,31 @@ def fv(
         ):
             return None
 
-        return float(
-            value
-        )
+        number = float(value)
+
+        if not math.isfinite(number):
+            return None
+
+        return number
 
     except Exception:
         return None
 
 
-def sha256_file(
-    path: Path,
-) -> str:
+def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
 
-    with open(
-        path,
-        "rb",
-    ) as f:
+    with open(path, "rb") as f:
         for chunk in iter(
-            lambda: f.read(
-                1024 * 1024
-            ),
+            lambda: f.read(1024 * 1024),
             b"",
         ):
-            h.update(
-                chunk
-            )
+            h.update(chunk)
 
     return h.hexdigest()
 
 
-def read_yaml(
-    path: Path,
-) -> dict:
+def read_yaml(path: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(
             f"Missing YAML file: {path}"
@@ -236,18 +193,11 @@ def read_yaml(
         "r",
         encoding="utf-8",
     ) as f:
-        data = (
-            yaml.safe_load(f)
-            or {}
-        )
+        data = yaml.safe_load(f) or {}
 
-    if not isinstance(
-        data,
-        dict,
-    ):
+    if not isinstance(data, dict):
         raise ValueError(
-            f"YAML root must be a mapping: "
-            f"{path}"
+            f"YAML root must be a mapping: {path}"
         )
 
     return data
@@ -263,8 +213,7 @@ def atomic_write_csv(
     )
 
     tmp = path.with_suffix(
-        path.suffix
-        + ".tmp"
+        path.suffix + ".tmp"
     )
 
     df.to_csv(
@@ -272,9 +221,7 @@ def atomic_write_csv(
         index=False,
     )
 
-    tmp.replace(
-        path
-    )
+    tmp.replace(path)
 
 
 def clear_directory_contents(
@@ -287,10 +234,7 @@ def clear_directory_contents(
 
     for child in path.iterdir():
         if child.is_dir():
-            shutil.rmtree(
-                child
-            )
-
+            shutil.rmtree(child)
         else:
             child.unlink(
                 missing_ok=True
@@ -310,10 +254,7 @@ def copy_tree_contents(
     )
 
     for child in src.iterdir():
-        target = (
-            dst
-            / child.name
-        )
+        target = dst / child.name
 
         if child.is_dir():
             shutil.copytree(
@@ -321,7 +262,6 @@ def copy_tree_contents(
                 target,
                 dirs_exist_ok=True,
             )
-
         else:
             shutil.copy2(
                 child,
@@ -330,11 +270,7 @@ def copy_tree_contents(
 
 
 class RunLogger:
-
-    def __init__(
-        self,
-        path: Path,
-    ):
+    def __init__(self, path: Path):
         self.path = path
 
         path.parent.mkdir(
@@ -371,10 +307,7 @@ class RunLogger:
             "a",
             encoding="utf-8",
         ) as f:
-            f.write(
-                line
-                + "\n"
-            )
+            f.write(line + "\n")
 
 
 def resolve_model_source(
@@ -385,7 +318,6 @@ def resolve_model_source(
         source = str(
             requested
         ).strip().lower()
-
     else:
         source = str(
             model_cfg.get(
@@ -414,18 +346,13 @@ def apply_model_source(
     if "model_source" in out.columns:
         seen = {
             str(v).strip().lower()
-            for v
-            in out[
+            for v in out[
                 "model_source"
             ].dropna().tolist()
             if str(v).strip()
         }
 
-        if (
-            seen
-            and seen
-            != {model_source}
-        ):
+        if seen and seen != {model_source}:
             raise ValueError(
                 f"{path.name} model_source "
                 f"values {sorted(seen)} "
@@ -433,9 +360,7 @@ def apply_model_source(
                 f"model_source={model_source}"
             )
 
-    out[
-        "model_source"
-    ] = model_source
+    out["model_source"] = model_source
 
     return out
 
@@ -444,22 +369,8 @@ def season_from_input_filename(
     path: Path,
     league: str,
 ) -> int:
-    """
-    Historical basketball season identity comes from the input file name.
-
-    Examples:
-      2025_NBA.csv   -> season 2025
-      2025_NCAAM.csv -> season 2025
-      2025_WNBA.csv  -> season 2025
-
-    Never infer NBA/NCAAM season identity from game_date calendar year.
-    """
-
     stem = path.stem.strip()
-    expected_suffix = (
-        "_"
-        + league.upper()
-    )
+    expected_suffix = "_" + league.upper()
 
     if not stem.upper().endswith(
         expected_suffix
@@ -471,15 +382,11 @@ def season_from_input_filename(
         )
 
     season_text = stem[
-        : -len(
-            expected_suffix
-        )
+        : -len(expected_suffix)
     ]
 
     if (
-        len(
-            season_text
-        ) != 4
+        len(season_text) != 4
         or not season_text.isdigit()
     ):
         raise ValueError(
@@ -488,9 +395,7 @@ def season_from_input_filename(
             "season in its filename"
         )
 
-    return int(
-        season_text
-    )
+    return int(season_text)
 
 
 def normalize_production_bias_rule(
@@ -500,35 +405,20 @@ def normalize_production_bias_rule(
 ) -> dict:
     league_cfg = ensure_mapping(
         ensure_mapping(
-            model_cfg.get(
-                "leagues"
-            ),
+            model_cfg.get("leagues"),
             "model_config.leagues",
-        ).get(
-            league
-        ),
-        (
-            "model_config.leagues."
-            f"{league}"
-        ),
+        ).get(league),
+        f"model_config.leagues.{league}",
     )
 
     bias_cfg = ensure_mapping(
-        league_cfg.get(
-            "bias"
-        )
-        or {},
+        league_cfg.get("bias") or {},
         f"{league}.bias",
     )
 
     rule = ensure_mapping(
-        bias_cfg.get(
-            component
-        ),
-        (
-            f"{league}.bias."
-            f"{component}"
-        ),
+        bias_cfg.get(component),
+        f"{league}.bias.{component}",
     )
 
     method = str(
@@ -555,28 +445,18 @@ def normalize_production_bias_rule(
     }
 
     if method == "fixed":
-        normalized[
-            "value"
-        ] = require_number(
-            rule.get(
-                "value"
-            ),
-            (
-                f"{league}.bias."
-                f"{component}.value"
-            ),
+        normalized["value"] = require_number(
+            rule.get("value"),
+            f"{league}.bias.{component}.value",
         )
 
     elif method == "rolling":
         window = int(
             require_number(
-                rule.get(
-                    "window_games"
-                ),
+                rule.get("window_games"),
                 (
                     f"{league}.bias."
-                    f"{component}."
-                    "window_games"
+                    f"{component}.window_games"
                 ),
             )
         )
@@ -584,8 +464,8 @@ def normalize_production_bias_rule(
         if window <= 0:
             raise ValueError(
                 f"{league}.bias."
-                f"{component}."
-                "window_games must be > 0"
+                f"{component}.window_games "
+                "must be > 0"
             )
 
         normalized[
@@ -679,13 +559,10 @@ def normalize_production_bias_rule(
                 "sum to > 0"
             )
 
-        total_weight = sum(
-            weights
-        )
+        total_weight = sum(weights)
 
         weights = [
-            w
-            / total_weight
+            w / total_weight
             for w in weights
         ]
 
@@ -700,11 +577,7 @@ def normalize_production_bias_rule(
             ),
         )
 
-        if not (
-            0
-            <= shrink
-            <= 1
-        ):
+        if not 0 <= shrink <= 1:
             raise ValueError(
                 f"{league}.bias."
                 f"{component}."
@@ -715,9 +588,7 @@ def normalize_production_bias_rule(
         normalized.update({
             "windows_games": windows,
             "weights": weights,
-            "sign_conflict_shrink": (
-                shrink
-            ),
+            "sign_conflict_shrink": shrink,
         })
 
     return normalized
@@ -727,41 +598,29 @@ def production_bias_from_errors(
     errors: list[float],
     rule: dict,
 ) -> float | None:
-    method = rule[
-        "method"
-    ]
+    method = rule["method"]
 
     if method == "none":
         return 0.0
 
     if method == "fixed":
         return round(
-            float(
-                rule[
-                    "value"
-                ]
-            ),
+            float(rule["value"]),
             3,
         )
 
     if method == "rolling":
         window = int(
-            rule[
-                "window_games"
-            ]
+            rule["window_games"]
         )
 
-        if len(
-            errors
-        ) < window:
+        if len(errors) < window:
             return None
 
         return round(
             float(
                 sum(
-                    errors[
-                        -window:
-                    ]
+                    errors[-window:]
                 )
                 / window
             ),
@@ -771,50 +630,31 @@ def production_bias_from_errors(
     if method == "regime_aware":
         windows = [
             int(v)
-            for v
-            in rule[
+            for v in rule[
                 "windows_games"
             ]
         ]
 
-        if len(
-            errors
-        ) < max(
-            windows
-        ):
+        if len(errors) < max(windows):
             return None
 
         means = {
             window: float(
                 sum(
-                    errors[
-                        -window:
-                    ]
+                    errors[-window:]
                 )
                 / window
             )
-            for window
-            in windows
+            for window in windows
         }
 
         weighted = sum(
-            float(
-                weight
-            )
-            * means[
-                int(
-                    window
-                )
-            ]
-            for (
-                window,
-                weight,
-            )
+            float(weight)
+            * means[int(window)]
+            for window, weight
             in zip(
                 windows,
-                rule[
-                    "weights"
-                ],
+                rule["weights"],
             )
         )
 
@@ -841,9 +681,7 @@ def production_bias_from_errors(
             )
 
         return round(
-            float(
-                weighted
-            ),
+            float(weighted),
             3,
         )
 
@@ -891,16 +729,12 @@ def reverse_stored_bias_to_raw(
         )
 
     bias_flag = fv(
-        row.get(
-            "bias_applied"
-        )
+        row.get("bias_applied")
     )
 
     if (
         bias_flag is None
-        or float(
-            bias_flag
-        ) == 0.0
+        or float(bias_flag) == 0.0
     ):
         return (
             home,
@@ -908,39 +742,29 @@ def reverse_stored_bias_to_raw(
             total,
         )
 
-    if float(
-        bias_flag
-    ) != 1.0:
+    if float(bias_flag) != 1.0:
         raise ValueError(
             f"game_id={row.get('game_id')} "
-            "has invalid "
-            "bias_applied="
+            "has invalid bias_applied="
             f"{row.get('bias_applied')!r}"
         )
 
     margin_bias = fv(
-        row.get(
-            "margin_bias"
-        )
+        row.get("margin_bias")
     )
 
     total_bias = fv(
-        row.get(
-            "total_bias"
-        )
+        row.get("total_bias")
     )
 
     if (
         margin_bias is None
         or total_bias is None
     ):
-        legacy = (
-            LEGACY_HISTORICAL_BIAS
-            .get(
-                (
-                    league,
-                    internal_season,
-                )
+        legacy = LEGACY_HISTORICAL_BIAS.get(
+            (
+                league,
+                internal_season,
             )
         )
 
@@ -958,31 +782,23 @@ def reverse_stored_bias_to_raw(
             )
 
         margin_bias = float(
-            legacy[
-                "margin"
-            ]
+            legacy["margin"]
         )
 
         total_bias = float(
-            legacy[
-                "total"
-            ]
+            legacy["total"]
         )
 
     raw_home = (
         home
-        + margin_bias
-        / 2.0
-        + total_bias
-        / 2.0
+        + margin_bias / 2.0
+        + total_bias / 2.0
     )
 
     raw_away = (
         away
-        - margin_bias
-        / 2.0
-        + total_bias
-        / 2.0
+        - margin_bias / 2.0
+        + total_bias / 2.0
     )
 
     raw_total = (
@@ -1012,13 +828,10 @@ def apply_point_in_time_production_bias(
 ) -> pd.DataFrame:
     out = df.copy()
 
-    out[
-        "_sort_date"
-    ] = pd.to_datetime(
+    out["_sort_date"] = pd.to_datetime(
         out[
             "game_date"
-        ].astype(str)
-        .str.replace(
+        ].astype(str).str.replace(
             "_",
             "-",
             regex=False,
@@ -1026,26 +839,21 @@ def apply_point_in_time_production_bias(
         errors="coerce",
     )
 
-    if out[
-        "_sort_date"
-    ].isna().any():
+    if out["_sort_date"].isna().any():
         raise ValueError(
             "Historical input contains "
             "invalid game_date values"
         )
 
     out = (
-        out
-        .sort_values(
+        out.sort_values(
             [
                 "_sort_date",
                 "game_id",
             ],
             kind="stable",
         )
-        .reset_index(
-            drop=True
-        )
+        .reset_index(drop=True)
     )
 
     margin_rule = (
@@ -1070,22 +878,17 @@ def apply_point_in_time_production_bias(
             "total_errors": [],
         }
 
-    margin_errors = (
-        history_state
-        .setdefault(
-            "margin_errors",
-            [],
-        )
+    margin_errors = history_state.setdefault(
+        "margin_errors",
+        [],
     )
 
-    total_errors = (
-        history_state
-        .setdefault(
-            "total_errors",
-            [],
-        )
+    total_errors = history_state.setdefault(
+        "total_errors",
+        [],
     )
 
+    input_valid = []
     ready = []
     applied_margin = []
     applied_total = []
@@ -1094,6 +897,56 @@ def apply_point_in_time_production_bias(
     adjusted_total = []
 
     for _, row in out.iterrows():
+        stored_home = fv(
+            row.get(
+                "home_projected_points"
+            )
+        )
+
+        stored_away = fv(
+            row.get(
+                "away_projected_points"
+            )
+        )
+
+        stored_total = fv(
+            row.get(
+                "total_projected_points"
+            )
+        )
+
+        home_score = fv(
+            row.get(
+                "home_score"
+            )
+        )
+
+        away_score = fv(
+            row.get(
+                "away_score"
+            )
+        )
+
+        complete = (
+            stored_home is not None
+            and stored_away is not None
+            and stored_total is not None
+            and home_score is not None
+            and away_score is not None
+        )
+
+        if not complete:
+            input_valid.append(False)
+            ready.append(False)
+            applied_margin.append(None)
+            applied_total.append(None)
+            adjusted_home.append(float("nan"))
+            adjusted_away.append(float("nan"))
+            adjusted_total.append(float("nan"))
+            continue
+
+        input_valid.append(True)
+
         (
             raw_home,
             raw_away,
@@ -1123,14 +976,10 @@ def apply_point_in_time_production_bias(
             and total_bias is not None
         )
 
-        ready.append(
-            is_ready
-        )
-
+        ready.append(is_ready)
         applied_margin.append(
             margin_bias
         )
-
         applied_total.append(
             total_bias
         )
@@ -1138,76 +987,47 @@ def apply_point_in_time_production_bias(
         if is_ready:
             adjusted_home.append(
                 raw_home
-                - margin_bias
-                / 2.0
-                - total_bias
-                / 2.0
+                - margin_bias / 2.0
+                - total_bias / 2.0
             )
 
             adjusted_away.append(
                 raw_away
-                + margin_bias
-                / 2.0
-                - total_bias
-                / 2.0
+                + margin_bias / 2.0
+                - total_bias / 2.0
             )
 
             adjusted_total.append(
                 raw_total
                 - total_bias
             )
-
         else:
             adjusted_home.append(
-                float(
-                    "nan"
-                )
+                float("nan")
             )
-
             adjusted_away.append(
-                float(
-                    "nan"
-                )
+                float("nan")
             )
-
             adjusted_total.append(
-                float(
-                    "nan"
-                )
+                float("nan")
             )
 
-        home_score = fv(
-            row.get(
-                "home_score"
+        margin_errors.append(
+            raw_home
+            - raw_away
+            - (
+                home_score
+                - away_score
             )
         )
 
-        away_score = fv(
-            row.get(
-                "away_score"
+        total_errors.append(
+            raw_total
+            - (
+                home_score
+                + away_score
             )
         )
-
-        if (
-            home_score is not None
-            and away_score is not None
-        ):
-            margin_errors.append(
-                raw_home
-                - raw_away
-                - (
-                    home_score
-                    - away_score
-                )
-            )
-
-            total_errors.append(
-                raw_total
-                - (
-                    home_score
-                    + away_score
-                )
-            )
 
     out[
         "home_projected_points"
@@ -1221,23 +1041,17 @@ def apply_point_in_time_production_bias(
         "total_projected_points"
     ] = adjusted_total
 
-    out[
-        "margin_bias"
-    ] = applied_margin
+    out["margin_bias"] = applied_margin
+    out["total_bias"] = applied_total
 
-    out[
-        "total_bias"
-    ] = applied_total
-
-    out[
-        "bias_applied"
-    ] = [
-        1
-        if value
-        else 0
-        for value
-        in ready
+    out["bias_applied"] = [
+        1 if value else 0
+        for value in ready
     ]
+
+    out[
+        "_production_input_valid"
+    ] = input_valid
 
     out[
         "_production_bias_ready"
@@ -1247,22 +1061,18 @@ def apply_point_in_time_production_bias(
         "internal_season"
     ] = internal_season
 
-    out = out.drop(
+    return out.drop(
         columns=[
             "_sort_date"
         ]
     )
-
-    return out
 
 
 def apply_production_selection_policy(
     test_cfg: dict,
     production_cfg: dict,
 ) -> dict:
-    out = copy.deepcopy(
-        test_cfg
-    )
+    out = copy.deepcopy(test_cfg)
 
     out.setdefault(
         "markets",
@@ -1270,27 +1080,19 @@ def apply_production_selection_policy(
     )
 
     prod_markets = ensure_mapping(
-        production_cfg.get(
-            "markets"
-        ),
+        production_cfg.get("markets"),
         "markets.yaml markets",
     )
 
     for league in LEAGUES:
-        out[
-            "markets"
-        ].setdefault(
+        out["markets"].setdefault(
             league,
             {},
         )
 
-        prod_league = (
-            ensure_mapping(
-                prod_markets.get(
-                    league
-                ),
-                f"markets.{league}",
-            )
+        prod_league = ensure_mapping(
+            prod_markets.get(league),
+            f"markets.{league}",
         )
 
         for market in MARKETS:
@@ -1303,16 +1105,12 @@ def apply_production_selection_policy(
                 {},
             )
 
-            prod_market = (
-                ensure_mapping(
-                    prod_league.get(
-                        market
-                    ),
-                    (
-                        f"markets.{league}."
-                        f"{market}"
-                    ),
-                )
+            prod_market = ensure_mapping(
+                prod_league.get(market),
+                (
+                    f"markets.{league}."
+                    f"{market}"
+                ),
             )
 
             out[
@@ -1359,12 +1157,9 @@ def load_module_from_path(
             f"module: {path}"
         )
 
-    spec = (
-        importlib.util
-        .spec_from_file_location(
-            name,
-            path,
-        )
+    spec = importlib.util.spec_from_file_location(
+        name,
+        path,
     )
 
     if (
@@ -1377,15 +1172,12 @@ def load_module_from_path(
         )
 
     module = (
-        importlib.util
-        .module_from_spec(
+        importlib.util.module_from_spec(
             spec
         )
     )
 
-    spec.loader.exec_module(
-        module
-    )
+    spec.loader.exec_module(module)
 
     return module
 
@@ -1403,31 +1195,21 @@ def calibration_cfg(
                 )
                 or {}
             )
-            .get(
-                market
-            )
+            .get(market)
             or {}
         )
-        .get(
-            side
-        )
+        .get(side)
         or {
             "method": "none"
         }
     )
 
-    if isinstance(
-        cfg,
-        str,
-    ):
+    if isinstance(cfg, str):
         cfg = {
             "method": cfg
         }
 
-    if not isinstance(
-        cfg,
-        dict,
-    ):
+    if not isinstance(cfg, dict):
         raise ValueError(
             f"calibration.{market}."
             f"{side} must be a mapping"
@@ -1449,9 +1231,7 @@ def complementary_calibration_cfg(
             )
             or {}
         )
-        .get(
-            market
-        )
+        .get(market)
         or {}
     )
 
@@ -1491,18 +1271,12 @@ def complementary_calibration_cfg(
         }
     )
 
-    if isinstance(
-        cfg,
-        str,
-    ):
+    if isinstance(cfg, str):
         cfg = {
             "method": cfg
         }
 
-    if not isinstance(
-        cfg,
-        dict,
-    ):
+    if not isinstance(cfg, dict):
         raise ValueError(
             f"calibration.{market}."
             f"{canonical_side} "
@@ -1554,9 +1328,7 @@ def complementary_calibration_cfg(
                 )
 
     return {
-        "canonical_side": (
-            canonical_side
-        ),
+        "canonical_side": canonical_side,
         "config": cfg,
     }
 
@@ -1565,9 +1337,7 @@ def build_league_settings(
     model_cfg: dict,
 ) -> dict:
     leagues_cfg = ensure_mapping(
-        model_cfg.get(
-            "leagues"
-        ),
+        model_cfg.get("leagues"),
         "model_config.leagues",
     )
 
@@ -1575,9 +1345,7 @@ def build_league_settings(
 
     for league in LEAGUES:
         league_cfg = ensure_mapping(
-            leagues_cfg.get(
-                league
-            ),
+            leagues_cfg.get(league),
             (
                 "model_config.leagues."
                 f"{league}"
@@ -1597,34 +1365,22 @@ def build_league_settings(
             )
 
         edge_cfg = ensure_mapping(
-            league_cfg.get(
-                "edge"
-            )
-            or {},
+            league_cfg.get("edge") or {},
             f"{league}.edge",
         )
 
         std_cfg = ensure_mapping(
-            league_cfg.get(
-                "std"
-            )
-            or {},
+            league_cfg.get("std") or {},
             f"{league}.std",
         )
 
         spread_std_cfg = ensure_mapping(
-            std_cfg.get(
-                "spread"
-            )
-            or {},
+            std_cfg.get("spread") or {},
             f"{league}.std.spread",
         )
 
         total_std_cfg = ensure_mapping(
-            std_cfg.get(
-                "total"
-            )
-            or {},
+            std_cfg.get("total") or {},
             f"{league}.std.total",
         )
 
@@ -1652,9 +1408,7 @@ def build_league_settings(
                 "must be fixed"
             )
 
-        settings[
-            league
-        ] = {
+        settings[league] = {
             "ML_EDGE": require_number(
                 edge_cfg.get(
                     "moneyline"
@@ -1746,10 +1500,7 @@ def apply_calibration(
         return ""
 
     try:
-        p = float(
-            p
-        )
-
+        p = float(p)
     except (
         TypeError,
         ValueError,
@@ -1784,24 +1535,16 @@ def apply_calibration(
 
         z = (
             require_number(
-                cfg.get(
-                    "intercept"
-                ),
+                cfg.get("intercept"),
                 "beta.intercept",
             )
             + require_number(
-                cfg.get(
-                    "coef_log_p"
-                ),
+                cfg.get("coef_log_p"),
                 "beta.coef_log_p",
             )
-            * math.log(
-                p
-            )
+            * math.log(p)
             + require_number(
-                cfg.get(
-                    "coef_log_1mp"
-                ),
+                cfg.get("coef_log_1mp"),
                 "beta.coef_log_1mp",
             )
             * math.log(
@@ -1810,28 +1553,15 @@ def apply_calibration(
         )
 
         if z >= 0:
-            ez = math.exp(
-                -z
+            ez = math.exp(-z)
+            return 1.0 / (
+                1.0 + ez
             )
 
-            return (
-                1.0
-                / (
-                    1.0
-                    + ez
-                )
-            )
+        ez = math.exp(z)
 
-        ez = math.exp(
-            z
-        )
-
-        return (
-            ez
-            / (
-                1.0
-                + ez
-            )
+        return ez / (
+            1.0 + ez
         )
 
     raise ValueError(
@@ -1858,42 +1588,30 @@ def apply_complementary_calibration(
 
     raw_canonical = (
         raw_first
-        if canonical_side
-        == first_side
+        if canonical_side == first_side
         else raw_second
     )
 
-    calibrated = (
-        apply_calibration(
-            raw_canonical,
-            calibration[
-                "config"
-            ],
-        )
+    calibrated = apply_calibration(
+        raw_canonical,
+        calibration["config"],
     )
 
     if (
         calibrated == ""
-        or pd.isna(
-            calibrated
-        )
+        or pd.isna(calibrated)
     ):
         return (
             "",
             "",
         )
 
-    p_canonical = (
-        clamp_probability(
-            float(
-                calibrated
-            )
-        )
+    p_canonical = clamp_probability(
+        float(calibrated)
     )
 
     p_opposite = (
-        1.0
-        - p_canonical
+        1.0 - p_canonical
     )
 
     if canonical_side == first_side:
@@ -1921,20 +1639,13 @@ def american_to_decimal(
 ) -> float | str:
     if (
         odds is None
-        or pd.isna(
-            odds
-        )
-        or str(
-            odds
-        ).strip() == ""
+        or pd.isna(odds)
+        or str(odds).strip() == ""
     ):
         return ""
 
     try:
-        a = float(
-            odds
-        )
-
+        a = float(odds)
     except (
         TypeError,
         ValueError,
@@ -1945,27 +1656,24 @@ def american_to_decimal(
         return ""
 
     return (
-        1.0
-        + a
-        / 100.0
+        1.0 + a / 100.0
         if a > 0
         else 1.0
-        + 100.0
-        / abs(a)
+        + 100.0 / abs(a)
     )
 
 
 def american_to_decimal_or_none(
     odds: Any,
 ) -> float | None:
-    v = american_to_decimal(
+    value = american_to_decimal(
         odds
     )
 
     return (
         None
-        if v == ""
-        else float(v)
+        if value == ""
+        else float(value)
     )
 
 
@@ -1975,9 +1683,7 @@ def to_american(
     if (
         decimal_value is None
         or decimal_value == ""
-        or pd.isna(
-            decimal_value
-        )
+        or pd.isna(decimal_value)
     ):
         return ""
 
@@ -1985,7 +1691,6 @@ def to_american(
         dec = float(
             decimal_value
         )
-
     except (
         TypeError,
         ValueError,
@@ -2020,9 +1725,7 @@ def safe_implied_prob(
     if (
         decimal_value is None
         or decimal_value == ""
-        or pd.isna(
-            decimal_value
-        )
+        or pd.isna(decimal_value)
     ):
         return ""
 
@@ -2030,7 +1733,6 @@ def safe_implied_prob(
         d = float(
             decimal_value
         )
-
     except (
         TypeError,
         ValueError,
@@ -2054,12 +1756,8 @@ def devig_pair(
     if (
         p_a == ""
         or p_b == ""
-        or pd.isna(
-            p_a
-        )
-        or pd.isna(
-            p_b
-        )
+        or pd.isna(p_a)
+        or pd.isna(p_b)
     ):
         return (
             "",
@@ -2067,15 +1765,8 @@ def devig_pair(
         )
 
     try:
-        a, b = (
-            float(
-                p_a
-            ),
-            float(
-                p_b
-            ),
-        )
-
+        a = float(p_a)
+        b = float(p_b)
     except (
         TypeError,
         ValueError,
@@ -2085,21 +1776,17 @@ def devig_pair(
             "",
         )
 
-    s = (
-        a
-        + b
-    )
+    total = a + b
+
+    if total <= 0:
+        return (
+            "",
+            "",
+        )
 
     return (
-        (
-            "",
-            "",
-        )
-        if s <= 0
-        else (
-            a / s,
-            b / s,
-        )
+        a / total,
+        b / total,
     )
 
 
@@ -2110,9 +1797,7 @@ def validate_historical_input(
 ) -> None:
     missing = sorted(
         REQUIRED_INPUT_COLUMNS
-        - set(
-            df.columns
-        )
+        - set(df.columns)
     )
 
     if missing:
@@ -2128,9 +1813,7 @@ def validate_historical_input(
         )
 
     blank_ids = (
-        df[
-            "game_id"
-        ].isna()
+        df["game_id"].isna()
         | (
             df[
                 "game_id"
@@ -2149,22 +1832,17 @@ def validate_historical_input(
 
     if "league" in df.columns:
         seen = {
-            str(
-                x
-            ).strip().lower()
+            str(x).strip().lower()
             for x
             in df[
                 "league"
             ].dropna().unique()
-            if str(
-                x
-            ).strip()
+            if str(x).strip()
         }
 
         if (
             seen
-            and seen
-            != {
+            and seen != {
                 expected_league
             }
         ):
@@ -2184,8 +1862,7 @@ def split_features_and_scores(
 ]:
     score_cols = [
         c
-        for c
-        in RESULT_COLUMNS
+        for c in RESULT_COLUMNS
         if c in df.columns
     ]
 
@@ -2205,13 +1882,10 @@ def split_features_and_scores(
         )
     )
 
-    features = (
-        df.drop(
-            columns=score_cols,
-            errors="ignore",
-        )
-        .copy()
-    )
+    features = df.drop(
+        columns=score_cols,
+        errors="ignore",
+    ).copy()
 
     return (
         features,
@@ -2225,9 +1899,7 @@ def process_moneyline_juice(
 ) -> pd.DataFrame:
     out = df.copy()
 
-    edge = settings[
-        "ML_EDGE"
-    ]
+    edge = settings["ML_EDGE"]
 
     cal = settings[
         "CALIBRATION"
@@ -2235,33 +1907,25 @@ def process_moneyline_juice(
         "moneyline"
     ]
 
-    out[
-        "away_decimal"
-    ] = out[
+    out["away_decimal"] = out[
         "away_dk_moneyline_american"
     ].apply(
         american_to_decimal
     )
 
-    out[
-        "home_decimal"
-    ] = out[
+    out["home_decimal"] = out[
         "home_dk_moneyline_american"
     ].apply(
         american_to_decimal
     )
 
-    out[
-        "away_implied_prob"
-    ] = out[
+    out["away_implied_prob"] = out[
         "away_decimal"
     ].apply(
         safe_implied_prob
     )
 
-    out[
-        "home_implied_prob"
-    ] = out[
+    out["home_implied_prob"] = out[
         "home_decimal"
     ].apply(
         safe_implied_prob
@@ -2269,68 +1933,53 @@ def process_moneyline_juice(
 
     pairs = out.apply(
         lambda r: devig_pair(
-            r[
-                "away_implied_prob"
-            ],
-            r[
-                "home_implied_prob"
-            ],
+            r["away_implied_prob"],
+            r["home_implied_prob"],
         ),
         axis=1,
     )
 
-    out[
-        "away_market_prob"
-    ] = pairs.apply(
-        lambda x: x[0]
-    )
-
-    out[
-        "home_market_prob"
-    ] = pairs.apply(
-        lambda x: x[1]
-    )
-
-    out[
-        "home_model_prob"
-    ] = pd.to_numeric(
-        out[
-            "home_prob"
-        ],
-        errors="coerce",
-    ).apply(
-        lambda p: apply_calibration(
-            p,
-            cal[
-                "home"
-            ],
+    out["away_market_prob"] = (
+        pairs.apply(
+            lambda x: x[0]
         )
     )
 
-    out[
-        "away_model_prob"
-    ] = pd.to_numeric(
-        out[
-            "away_prob"
-        ],
-        errors="coerce",
-    ).apply(
-        lambda p: apply_calibration(
-            p,
-            cal[
-                "away"
-            ],
+    out["home_market_prob"] = (
+        pairs.apply(
+            lambda x: x[1]
         )
     )
 
-    out[
-        "away_fair"
-    ] = out[
+    out["home_model_prob"] = (
+        pd.to_numeric(
+            out["home_prob"],
+            errors="coerce",
+        ).apply(
+            lambda p: apply_calibration(
+                p,
+                cal["home"],
+            )
+        )
+    )
+
+    out["away_model_prob"] = (
+        pd.to_numeric(
+            out["away_prob"],
+            errors="coerce",
+        ).apply(
+            lambda p: apply_calibration(
+                p,
+                cal["away"],
+            )
+        )
+    )
+
+    out["away_fair"] = out[
         "away_model_prob"
     ].apply(
         lambda x: (
-            1.0
-            / float(x)
+            1.0 / float(x)
             if (
                 x != ""
                 and pd.notna(x)
@@ -2340,14 +1989,11 @@ def process_moneyline_juice(
         )
     )
 
-    out[
-        "home_fair"
-    ] = out[
+    out["home_fair"] = out[
         "home_model_prob"
     ].apply(
         lambda x: (
-            1.0
-            / float(x)
+            1.0 / float(x)
             if (
                 x != ""
                 and pd.notna(x)
@@ -2359,15 +2005,9 @@ def process_moneyline_juice(
 
     out[
         "away_acceptable_decimal_moneyline"
-    ] = out[
-        "away_fair"
-    ].apply(
+    ] = out["away_fair"].apply(
         lambda x: (
-            float(x)
-            * (
-                1.0
-                + edge
-            )
+            float(x) * (1.0 + edge)
             if x != ""
             else ""
         )
@@ -2375,15 +2015,9 @@ def process_moneyline_juice(
 
     out[
         "home_acceptable_decimal_moneyline"
-    ] = out[
-        "home_fair"
-    ].apply(
+    ] = out["home_fair"].apply(
         lambda x: (
-            float(x)
-            * (
-                1.0
-                + edge
-            )
+            float(x) * (1.0 + edge)
             if x != ""
             else ""
         )
@@ -2393,17 +2027,13 @@ def process_moneyline_juice(
         "away_acceptable_american_moneyline"
     ] = out[
         "away_acceptable_decimal_moneyline"
-    ].apply(
-        to_american
-    )
+    ].apply(to_american)
 
     out[
         "home_acceptable_american_moneyline"
     ] = out[
         "home_acceptable_decimal_moneyline"
-    ].apply(
-        to_american
-    )
+    ].apply(to_american)
 
     return out
 
@@ -2414,14 +2044,8 @@ def process_total_juice(
 ) -> pd.DataFrame:
     out = df.copy()
 
-    edge, std = (
-        settings[
-            "TOTAL_EDGE"
-        ],
-        settings[
-            "TOTAL_STD"
-        ],
-    )
+    edge = settings["TOTAL_EDGE"]
+    std = settings["TOTAL_STD"]
 
     cal = settings[
         "CALIBRATION"
@@ -2441,90 +2065,65 @@ def process_total_juice(
         ]
     }
 
-    for (
-        _,
-        row,
-    ) in out.iterrows():
-        line, mean = (
-            fv(
-                row.get(
-                    "total"
-                )
-            ),
-            fv(
-                row.get(
-                    "total_projected_points"
-                )
-            ),
+    for _, row in out.iterrows():
+        line = fv(
+            row.get("total")
+        )
+
+        mean = fv(
+            row.get(
+                "total_projected_points"
+            )
         )
 
         if (
             line is None
             or mean is None
         ):
-            for k in vals:
-                vals[
-                    k
-                ].append(
-                    ""
-                )
+            for key in vals:
+                vals[key].append("")
 
             continue
 
-        raw_under = (
-            clamp_probability(
-                norm.cdf(
-                    (
-                        line
-                        - mean
-                    )
-                    / std
+        raw_under = clamp_probability(
+            norm.cdf(
+                (
+                    line
+                    - mean
                 )
+                / std
             )
         )
 
         raw_over = (
-            1.0
-            - raw_under
+            1.0 - raw_under
         )
 
         (
             p_over,
             p_under,
-        ) = (
-            apply_complementary_calibration(
-                raw_over,
-                raw_under,
-                cal,
-                "over",
-                "under",
-            )
+        ) = apply_complementary_calibration(
+            raw_over,
+            raw_under,
+            cal,
+            "over",
+            "under",
         )
 
         if (
             p_over == ""
             or p_under == ""
         ):
-            for k in vals:
-                vals[
-                    k
-                ].append(
-                    ""
-                )
+            for key in vals:
+                vals[key].append("")
 
             continue
 
-        p_over = float(
-            p_over
-        )
-
-        p_under = float(
-            p_under
-        )
+        p_over = float(p_over)
+        p_under = float(p_under)
 
         if not math.isclose(
-            p_over
-            + p_under,
+            p_over + p_under,
             1.0,
             abs_tol=1e-12,
         ):
@@ -2535,76 +2134,58 @@ def process_total_juice(
                 f"under={p_under}"
             )
 
-        fo, fu = (
-            1.0
-            / p_over,
-            1.0
-            / p_under,
+        fair_over = (
+            1.0 / p_over
+        )
+
+        fair_under = (
+            1.0 / p_under
         )
 
         vals[
             "over_model_prob"
-        ].append(
-            p_over
-        )
+        ].append(p_over)
 
         vals[
             "under_model_prob"
-        ].append(
-            p_under
-        )
+        ].append(p_under)
 
         vals[
             "fair_over"
-        ].append(
-            fo
-        )
+        ].append(fair_over)
 
         vals[
             "fair_under"
-        ].append(
-            fu
-        )
+        ].append(fair_under)
 
         vals[
             "acceptable_over"
         ].append(
-            fo
+            fair_over
             * (
-                1.0
-                + edge
+                1.0 + edge
             )
         )
 
         vals[
             "acceptable_under"
         ].append(
-            fu
+            fair_under
             * (
-                1.0
-                + edge
+                1.0 + edge
             )
         )
 
-    for (
-        k,
-        v,
-    ) in vals.items():
-        out[
-            k
-        ] = v
+    for key, value in vals.items():
+        out[key] = value
 
-    out[
-        "over_implied_prob"
-    ] = out[
+    out["over_implied_prob"] = out[
         "dk_total_over_decimal"
     ].apply(
         safe_implied_prob
     )
 
-    out[
-        "under_implied_prob"
-    ] = out[
+    out["under_implied_prob"] = out[
         "dk_total_under_decimal"
     ].apply(
         safe_implied_prob
@@ -2612,26 +2193,22 @@ def process_total_juice(
 
     pairs = out.apply(
         lambda r: devig_pair(
-            r[
-                "over_implied_prob"
-            ],
-            r[
-                "under_implied_prob"
-            ],
+            r["over_implied_prob"],
+            r["under_implied_prob"],
         ),
         axis=1,
     )
 
-    out[
-        "over_market_prob"
-    ] = pairs.apply(
-        lambda x: x[0]
+    out["over_market_prob"] = (
+        pairs.apply(
+            lambda x: x[0]
+        )
     )
 
-    out[
-        "under_market_prob"
-    ] = pairs.apply(
-        lambda x: x[1]
+    out["under_market_prob"] = (
+        pairs.apply(
+            lambda x: x[1]
+        )
     )
 
     return out
@@ -2643,14 +2220,8 @@ def process_spread_juice(
 ) -> pd.DataFrame:
     out = df.copy()
 
-    edge, std = (
-        settings[
-            "SPREAD_EDGE"
-        ],
-        settings[
-            "SPREAD_STD"
-        ],
-    )
+    edge = settings["SPREAD_EDGE"]
+    std = settings["SPREAD_STD"]
 
     cal = settings[
         "CALIBRATION"
@@ -2670,26 +2241,23 @@ def process_spread_juice(
         ]
     }
 
-    for (
-        _,
-        row,
-    ) in out.iterrows():
-        hp, ap, line = (
-            fv(
-                row.get(
-                    "home_projected_points"
-                )
-            ),
-            fv(
-                row.get(
-                    "away_projected_points"
-                )
-            ),
-            fv(
-                row.get(
-                    "home_spread"
-                )
-            ),
+    for _, row in out.iterrows():
+        hp = fv(
+            row.get(
+                "home_projected_points"
+            )
+        )
+
+        ap = fv(
+            row.get(
+                "away_projected_points"
+            )
+        )
+
+        line = fv(
+            row.get(
+                "home_spread"
+            )
         )
 
         if (
@@ -2697,12 +2265,8 @@ def process_spread_juice(
             or ap is None
             or line is None
         ):
-            for k in vals:
-                vals[
-                    k
-                ].append(
-                    ""
-                )
+            for key in vals:
+                vals[key].append("")
 
             continue
 
@@ -2711,55 +2275,41 @@ def process_spread_juice(
             - norm.cdf(
                 -line,
                 loc=(
-                    hp
-                    - ap
+                    hp - ap
                 ),
                 scale=std,
             )
         )
 
         raw_away = (
-            1.0
-            - raw_home
+            1.0 - raw_home
         )
 
         (
             p_home,
             p_away,
-        ) = (
-            apply_complementary_calibration(
-                raw_home,
-                raw_away,
-                cal,
-                "home",
-                "away",
-            )
+        ) = apply_complementary_calibration(
+            raw_home,
+            raw_away,
+            cal,
+            "home",
+            "away",
         )
 
         if (
             p_home == ""
             or p_away == ""
         ):
-            for k in vals:
-                vals[
-                    k
-                ].append(
-                    ""
-                )
+            for key in vals:
+                vals[key].append("")
 
             continue
 
-        p_home = float(
-            p_home
-        )
-
-        p_away = float(
-            p_away
-        )
+        p_home = float(p_home)
+        p_away = float(p_away)
 
         if not math.isclose(
-            p_home
-            + p_away,
+            p_home + p_away,
             1.0,
             abs_tol=1e-12,
         ):
@@ -2770,80 +2320,62 @@ def process_spread_juice(
                 f"away={p_away}"
             )
 
-        fh, fa = (
-            1.0
-            / p_home,
-            1.0
-            / p_away,
+        fair_home = (
+            1.0 / p_home
+        )
+
+        fair_away = (
+            1.0 / p_away
         )
 
         vals[
             "home_spread_model_prob"
-        ].append(
-            p_home
-        )
+        ].append(p_home)
 
         vals[
             "away_spread_model_prob"
-        ].append(
-            p_away
-        )
+        ].append(p_away)
 
         vals[
             "fair_home_spread_decimal"
-        ].append(
-            fh
-        )
+        ].append(fair_home)
 
         vals[
             "fair_away_spread_decimal"
-        ].append(
-            fa
-        )
+        ].append(fair_away)
 
         vals[
             "home_acceptable_spread_decimal"
         ].append(
-            fh
+            fair_home
             * (
-                1.0
-                + edge
+                1.0 + edge
             )
         )
 
         vals[
             "away_acceptable_spread_decimal"
         ].append(
-            fa
+            fair_away
             * (
-                1.0
-                + edge
+                1.0 + edge
             )
         )
 
-    for (
-        k,
-        v,
-    ) in vals.items():
-        out[
-            k
-        ] = v
+    for key, value in vals.items():
+        out[key] = value
 
     out[
         "home_acceptable_spread_american"
     ] = out[
         "home_acceptable_spread_decimal"
-    ].apply(
-        to_american
-    )
+    ].apply(to_american)
 
     out[
         "away_acceptable_spread_american"
     ] = out[
         "away_acceptable_spread_decimal"
-    ].apply(
-        to_american
-    )
+    ].apply(to_american)
 
     out[
         "home_spread_implied_prob"
@@ -2892,26 +2424,18 @@ def compute_ev(
     model_prob: Any,
     book_decimal: Any,
 ) -> float | None:
-    p, d = (
-        fv(
-            model_prob
-        ),
-        fv(
-            book_decimal
-        ),
-    )
+    p = fv(model_prob)
+    d = fv(book_decimal)
+
+    if (
+        p is None
+        or d is None
+    ):
+        return None
 
     return (
-        None
-        if (
-            p is None
-            or d is None
-        )
-        else (
-            p
-            * d
-            - 1.0
-        )
+        p * d
+        - 1.0
     )
 
 
@@ -2919,14 +2443,8 @@ def compute_kelly(
     model_prob: Any,
     book_decimal: Any,
 ) -> float | None:
-    p, d = (
-        fv(
-            model_prob
-        ),
-        fv(
-            book_decimal
-        ),
-    )
+    p = fv(model_prob)
+    d = fv(book_decimal)
 
     if (
         p is None
@@ -2935,31 +2453,23 @@ def compute_kelly(
     ):
         return None
 
-    b = (
-        d
-        - 1.0
-    )
+    b = d - 1.0
 
     k = (
         (
-            b
-            * p
+            b * p
         )
         - (
-            1.0
-            - p
+            1.0 - p
         )
     ) / b
 
-    return (
-        None
-        if not math.isfinite(
-            k
-        )
-        else max(
-            k,
-            0.0,
-        )
+    if not math.isfinite(k):
+        return None
+
+    return max(
+        k,
+        0.0,
     )
 
 
@@ -2975,16 +2485,13 @@ def process_moneyline_ev(
         out[
             f"{side}_ml_ev"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_ev(
-                    r.get(
-                        f"{s}_model_prob"
-                    ),
-                    r.get(
-                        f"{s}_dk_moneyline_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_ev(
+                r.get(
+                    f"{s}_model_prob"
+                ),
+                r.get(
+                    f"{s}_dk_moneyline_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3009,16 +2516,13 @@ def process_moneyline_ev(
         out[
             f"{side}_ml_kelly"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_kelly(
-                    r.get(
-                        f"{s}_model_prob"
-                    ),
-                    r.get(
-                        f"{s}_dk_moneyline_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_kelly(
+                r.get(
+                    f"{s}_model_prob"
+                ),
+                r.get(
+                    f"{s}_dk_moneyline_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3056,16 +2560,13 @@ def process_spread_ev(
         out[
             f"{side}_spread_ev"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_ev(
-                    r.get(
-                        f"{s}_spread_model_prob"
-                    ),
-                    r.get(
-                        f"{s}_dk_spread_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_ev(
+                r.get(
+                    f"{s}_spread_model_prob"
+                ),
+                r.get(
+                    f"{s}_dk_spread_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3090,16 +2591,13 @@ def process_spread_ev(
         out[
             f"{side}_spread_kelly"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_kelly(
-                    r.get(
-                        f"{s}_spread_model_prob"
-                    ),
-                    r.get(
-                        f"{s}_dk_spread_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_kelly(
+                r.get(
+                    f"{s}_spread_model_prob"
+                ),
+                r.get(
+                    f"{s}_dk_spread_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3137,16 +2635,13 @@ def process_total_ev(
         out[
             f"{side}_ev"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_ev(
-                    r.get(
-                        f"{s}_model_prob"
-                    ),
-                    r.get(
-                        f"dk_total_{s}_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_ev(
+                r.get(
+                    f"{s}_model_prob"
+                ),
+                r.get(
+                    f"dk_total_{s}_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3171,16 +2666,13 @@ def process_total_ev(
         out[
             f"{side}_kelly"
         ] = out.apply(
-            (
-                lambda r, s=side:
-                compute_kelly(
-                    r.get(
-                        f"{s}_model_prob"
-                    ),
-                    r.get(
-                        f"dk_total_{s}_decimal"
-                    ),
-                )
+            lambda r, s=side: compute_kelly(
+                r.get(
+                    f"{s}_model_prob"
+                ),
+                r.get(
+                    f"dk_total_{s}_decimal"
+                ),
             ),
             axis=1,
         )
@@ -3221,13 +2713,8 @@ def in_any_band(
             float(lo)
             <= value
             <= float(hi)
-            for (
-                lo,
-                hi,
-            )
-            in bands
+            for lo, hi in bands
         )
-
     except Exception:
         return False
 
@@ -3241,9 +2728,7 @@ def parse_game_date(
     ):
         return None
 
-    text = str(
-        value
-    ).strip()
+    text = str(value).strip()
 
     for fmt in (
         "%Y_%m_%d",
@@ -3255,7 +2740,6 @@ def parse_game_date(
                 text,
                 fmt,
             )
-
         except ValueError:
             pass
 
@@ -3282,8 +2766,7 @@ def date_ok(
 
     if (
         months
-        and dt.month
-        not in months
+        and dt.month not in months
     ):
         DEBUG_COUNTS[
             "fail_month"
@@ -3314,9 +2797,7 @@ def passes_filters(
         "odds_bands"
         in side_cfg
         and not in_any_band(
-            values.get(
-                "odds"
-            ),
+            values.get("odds"),
             side_cfg[
                 "odds_bands"
             ],
@@ -3325,20 +2806,15 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_odds"
         ] += 1
-
         return False
 
     if (
         "line_bands"
         in side_cfg
-        and values.get(
-            "line"
-        )
+        and values.get("line")
         is not None
         and not in_any_band(
-            values.get(
-                "line"
-            ),
+            values.get("line"),
             side_cfg[
                 "line_bands"
             ],
@@ -3347,16 +2823,13 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_line"
         ] += 1
-
         return False
 
     if (
         "ev_bands"
         in side_cfg
         and not in_any_band(
-            values.get(
-                "ev"
-            ),
+            values.get("ev"),
             side_cfg[
                 "ev_bands"
             ],
@@ -3365,16 +2838,13 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_ev"
         ] += 1
-
         return False
 
     if (
         "kelly_bands"
         in side_cfg
         and not in_any_band(
-            values.get(
-                "kelly"
-            ),
+            values.get("kelly"),
             side_cfg[
                 "kelly_bands"
             ],
@@ -3383,7 +2853,6 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_kelly"
         ] += 1
-
         return False
 
     if (
@@ -3401,7 +2870,6 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_model_prob"
         ] += 1
-
         return False
 
     if (
@@ -3419,7 +2887,6 @@ def passes_filters(
         DEBUG_COUNTS[
             "fail_edge_vs_market"
         ] += 1
-
         return False
 
     return date_ok(
@@ -3501,38 +2968,29 @@ def pick_one(
         "max",
     )
 
-    def key(
-        c,
-    ):
-        v = c.get(
+    def key(candidate):
+        value = candidate.get(
             metric
         )
 
-        if v is None:
+        if value is None:
             return (
-                float(
-                    "-inf"
-                )
+                float("-inf")
                 if direction == "max"
-                else float(
-                    "inf"
-                )
+                else float("inf")
             )
 
-        return float(
-            v
+        return float(value)
+
+    if direction == "max":
+        return max(
+            qualifying,
+            key=key,
         )
 
-    return (
-        max(
-            qualifying,
-            key=key,
-        )
-        if direction == "max"
-        else min(
-            qualifying,
-            key=key,
-        )
+    return min(
+        qualifying,
+        key=key,
     )
 
 
@@ -3548,8 +3006,7 @@ def stake_pct(
         return None
 
     return min(
-        kelly
-        * fraction,
+        kelly * fraction,
         cap,
     )
 
@@ -3560,16 +3017,13 @@ def market_config(
     market: str,
 ) -> dict:
     try:
-        cfg = (
-            filter_cfg[
-                "markets"
-            ][
-                league
-            ][
-                market
-            ]
-        )
-
+        cfg = filter_cfg[
+            "markets"
+        ][
+            league
+        ][
+            market
+        ]
     except KeyError as exc:
         raise KeyError(
             "No test config for "
@@ -3600,9 +3054,7 @@ def build_moneyline_sides(
         "away",
     ):
         scfg = ensure_mapping(
-            cfg.get(
-                side
-            ),
+            cfg.get(side),
             (
                 f"markets.{league}."
                 f"moneyline.{side}"
@@ -3639,15 +3091,12 @@ def build_moneyline_sides(
             )
         )
 
-        mp = (
-            mp
-            if mp is not None
-            else fv(
+        if mp is None:
+            mp = fv(
                 row.get(
                     f"{side}_prob"
                 )
             )
-        )
 
         evm = fv(
             row.get(
@@ -3664,7 +3113,6 @@ def build_moneyline_sides(
             DEBUG_COUNTS[
                 "rejected_ml"
             ] += 1
-
             continue
 
         vals = {
@@ -3689,7 +3137,6 @@ def build_moneyline_sides(
                 "model_prob": mp,
                 "edge_vs_market": evm,
             })
-
         else:
             DEBUG_COUNTS[
                 "rejected_ml"
@@ -3712,9 +3159,7 @@ def build_spread_sides(
         "away",
     ):
         scfg = ensure_mapping(
-            cfg.get(
-                side
-            ),
+            cfg.get(side),
             (
                 f"markets.{league}."
                 f"spread.{side}"
@@ -3772,7 +3217,6 @@ def build_spread_sides(
             DEBUG_COUNTS[
                 "rejected_spread"
             ] += 1
-
             continue
 
         vals = {
@@ -3798,7 +3242,6 @@ def build_spread_sides(
                 "model_prob": mp,
                 "edge_vs_market": evm,
             })
-
         else:
             DEBUG_COUNTS[
                 "rejected_spread"
@@ -3817,9 +3260,7 @@ def build_total_sides(
     sides = []
 
     line = fv(
-        row.get(
-            "total"
-        )
+        row.get("total")
     )
 
     for side in (
@@ -3827,9 +3268,7 @@ def build_total_sides(
         "under",
     ):
         scfg = ensure_mapping(
-            cfg.get(
-                side
-            ),
+            cfg.get(side),
             (
                 f"markets.{league}."
                 f"total.{side}"
@@ -3881,7 +3320,6 @@ def build_total_sides(
             DEBUG_COUNTS[
                 "rejected_total"
             ] += 1
-
             continue
 
         vals = {
@@ -3907,7 +3345,6 @@ def build_total_sides(
                 "model_prob": mp,
                 "edge_vs_market": evm,
             })
-
         else:
             DEBUG_COUNTS[
                 "rejected_total"
@@ -3968,16 +3405,14 @@ def select_bets_for_market(
             "game_date"
         )
 
-        sides = (
-            SIDE_BUILDERS[
-                market
-            ](
-                row,
-                league,
-                game_date,
-                cfg,
-                settings,
-            )
+        sides = SIDE_BUILDERS[
+            market
+        ](
+            row,
+            league,
+            game_date,
+            cfg,
+            settings,
         )
 
         if not sides:
@@ -3985,7 +3420,6 @@ def select_bets_for_market(
 
         if mode == "all_qualifying":
             picks = sides
-
         else:
             chosen = pick_one(
                 sides,
@@ -3993,9 +3427,7 @@ def select_bets_for_market(
             )
 
             picks = (
-                [
-                    chosen
-                ]
+                [chosen]
                 if chosen
                 else []
             )
@@ -4005,24 +3437,16 @@ def select_bets_for_market(
                 "selected"
             ] += 1
 
-            r = row.to_dict()
+            result = row.to_dict()
 
-            r.update({
-                "bet_side": sel[
-                    "side"
-                ],
-                "bet_line": sel[
-                    "line"
-                ],
+            result.update({
+                "bet_side": sel["side"],
+                "bet_line": sel["line"],
                 "bet_odds_american": sel[
                     "odds"
                 ],
-                "bet_ev": sel[
-                    "ev"
-                ],
-                "bet_kelly": sel[
-                    "kelly"
-                ],
+                "bet_ev": sel["ev"],
+                "bet_kelly": sel["kelly"],
                 "bet_model_prob": sel[
                     "model_prob"
                 ],
@@ -4030,9 +3454,7 @@ def select_bets_for_market(
                     "edge_vs_market"
                 ],
                 "bet_stake_pct": stake_pct(
-                    sel[
-                        "kelly"
-                    ],
+                    sel["kelly"],
                     kelly_fraction,
                     kelly_cap,
                 ),
@@ -4042,18 +3464,12 @@ def select_bets_for_market(
                 "game_date": game_date,
             })
 
-            out_rows.append(
-                r
-            )
+            out_rows.append(result)
 
-    return pd.DataFrame(
-        out_rows
-    )
+    return pd.DataFrame(out_rows)
 
 
-def determine_outcome(
-    row,
-) -> str:
+def determine_outcome(row) -> str:
     market = str(
         row.get(
             "market_type",
@@ -4069,15 +3485,11 @@ def determine_outcome(
     ).lower()
 
     home = fv(
-        row.get(
-            "home_score"
-        )
+        row.get("home_score")
     )
 
     away = fv(
-        row.get(
-            "away_score"
-        )
+        row.get("away_score")
     )
 
     if (
@@ -4090,10 +3502,7 @@ def determine_outcome(
         if home == away:
             return "Push"
 
-        home_won = (
-            home
-            > away
-        )
+        home_won = home > away
 
         return (
             "Win"
@@ -4110,9 +3519,7 @@ def determine_outcome(
 
     if market == "spread":
         line = fv(
-            row.get(
-                "bet_line"
-            )
+            row.get("bet_line")
         )
 
         if line is None:
@@ -4124,20 +3531,16 @@ def determine_outcome(
                 + line
                 - away
             )
-
         elif side == "away":
             diff = (
                 away
                 + line
                 - home
             )
-
         else:
             return "Unknown"
 
-        if abs(
-            diff
-        ) < 1e-9:
+        if abs(diff) < 1e-9:
             return "Push"
 
         return (
@@ -4148,22 +3551,18 @@ def determine_outcome(
 
     if market == "total":
         line = fv(
-            row.get(
-                "bet_line"
-            )
+            row.get("bet_line")
         )
 
         if line is None:
             return "Unknown"
 
         actual_total = (
-            home
-            + away
+            home + away
         )
 
         if abs(
-            actual_total
-            - line
+            actual_total - line
         ) < 1e-9:
             return "Push"
 
@@ -4183,9 +3582,7 @@ def determine_outcome(
     return "Unknown"
 
 
-def compute_profits(
-    row,
-):
+def compute_profits(row):
     result = str(
         row.get(
             "bet_result",
@@ -4229,13 +3626,11 @@ def compute_profits(
 
     if result == "Win":
         return (
-            decimal
-            - 1.0,
+            decimal - 1.0,
             (
                 stake
                 * (
-                    decimal
-                    - 1.0
+                    decimal - 1.0
                 )
                 if stake is not None
                 else None
@@ -4270,38 +3665,34 @@ def grade_selections(
     )
 
     for col in RESULT_COLUMNS:
-        sc = (
+        score_col = (
             f"{col}_score"
         )
 
-        if sc in merged.columns:
-            merged[
-                col
-            ] = (
+        if score_col in merged.columns:
+            merged[col] = (
                 merged[
-                    sc
+                    score_col
                 ].combine_first(
-                    merged[
-                        col
-                    ]
+                    merged[col]
                 )
                 if col in merged.columns
                 else merged[
-                    sc
+                    score_col
                 ]
             )
 
             merged = merged.drop(
                 columns=[
-                    sc
+                    score_col
                 ]
             )
 
-    merged[
-        "bet_result"
-    ] = merged.apply(
-        determine_outcome,
-        axis=1,
+    merged["bet_result"] = (
+        merged.apply(
+            determine_outcome,
+            axis=1,
+        )
     )
 
     profits = merged.apply(
@@ -4334,14 +3725,13 @@ def grade_selections(
         if c in merged.columns
     ]
 
-    return (
-        merged.drop_duplicates(
+    if keys:
+        return merged.drop_duplicates(
             subset=keys,
             keep="last",
         )
-        if keys
-        else merged
-    )
+
+    return merged
 
 
 def summarize_group(
@@ -4390,10 +3780,7 @@ def summarize_group(
         ]
     )
 
-    for (
-        keys,
-        group,
-    ) in grouped:
+    for keys, group in grouped:
         if (
             group_cols
             and not isinstance(
@@ -4401,45 +3788,34 @@ def summarize_group(
                 tuple,
             )
         ):
-            keys = (
-                keys,
-            )
-
+            keys = (keys,)
         elif not group_cols:
             keys = ()
 
         wins = int(
             (
-                group[
-                    "bet_result"
-                ]
+                group["bet_result"]
                 == "Win"
             ).sum()
         )
 
         losses = int(
             (
-                group[
-                    "bet_result"
-                ]
+                group["bet_result"]
                 == "Loss"
             ).sum()
         )
 
         pushes = int(
             (
-                group[
-                    "bet_result"
-                ]
+                group["bet_result"]
                 == "Push"
             ).sum()
         )
 
         unknown = int(
             (
-                group[
-                    "bet_result"
-                ]
+                group["bet_result"]
                 == "Unknown"
             ).sum()
         )
@@ -4452,8 +3828,7 @@ def summarize_group(
         )
 
         decisions = (
-            wins
-            + losses
+            wins + losses
         )
 
         graded_stakes = (
@@ -4462,7 +3837,7 @@ def summarize_group(
             + pushes
         )
 
-        pu = float(
+        profit_units = float(
             pd.to_numeric(
                 group[
                     "profit_unit"
@@ -4473,7 +3848,7 @@ def summarize_group(
             )
         )
 
-        pk = float(
+        profit_kelly = float(
             pd.to_numeric(
                 group[
                     "profit_kelly"
@@ -4484,68 +3859,58 @@ def summarize_group(
             )
         )
 
-        ks = float(
+        kelly_staked = float(
             pd.to_numeric(
                 group[
                     "bet_stake_pct"
                 ],
                 errors="coerce",
             )
-            .fillna(
-                0.0
-            )
+            .fillna(0.0)
             .sum()
         )
 
-        rec = {
+        record = {
             c: v
-            for (
-                c,
-                v,
-            )
+            for c, v
             in zip(
                 group_cols,
                 keys,
             )
         }
 
-        rec.update({
+        record.update({
             "bets": bets,
             "wins": wins,
             "losses": losses,
             "pushes": pushes,
             "unknown": unknown,
             "win_rate": (
-                wins
-                / decisions
+                wins / decisions
                 if decisions
                 else None
             ),
-            "profit_units": pu,
+            "profit_units": profit_units,
             "roi_units": (
-                pu
+                profit_units
                 / graded_stakes
                 if graded_stakes
                 else None
             ),
-            "profit_kelly": pk,
-            "kelly_staked": ks,
+            "profit_kelly": profit_kelly,
+            "kelly_staked": kelly_staked,
             "roi_kelly": (
-                pk
-                / ks
-                if ks > 0
+                profit_kelly
+                / kelly_staked
+                if kelly_staked > 0
                 else None
             ),
             "avg_ev": pd.to_numeric(
-                group[
-                    "bet_ev"
-                ],
+                group["bet_ev"],
                 errors="coerce",
             ).mean(),
             "avg_kelly": pd.to_numeric(
-                group[
-                    "bet_kelly"
-                ],
+                group["bet_kelly"],
                 errors="coerce",
             ).mean(),
             "avg_model_prob": pd.to_numeric(
@@ -4554,23 +3919,25 @@ def summarize_group(
                 ],
                 errors="coerce",
             ).mean(),
-            "avg_edge_vs_market": pd.to_numeric(
-                group[
-                    "bet_edge_vs_market"
-                ],
-                errors="coerce",
-            ).mean(),
-            "avg_odds_american": pd.to_numeric(
-                group[
-                    "bet_odds_american"
-                ],
-                errors="coerce",
-            ).mean(),
+            "avg_edge_vs_market": (
+                pd.to_numeric(
+                    group[
+                        "bet_edge_vs_market"
+                    ],
+                    errors="coerce",
+                ).mean()
+            ),
+            "avg_odds_american": (
+                pd.to_numeric(
+                    group[
+                        "bet_odds_american"
+                    ],
+                    errors="coerce",
+                ).mean()
+            ),
         })
 
-        records.append(
-            rec
-        )
+        records.append(record)
 
     return pd.DataFrame(
         records,
@@ -4627,34 +3994,34 @@ def build_reports(
 
     names = {
         "overall": "overall.csv",
-        "by_source": "performance_by_source.csv",
-        "by_league": "performance_by_league.csv",
-        "by_market": "performance_by_market.csv",
-        "by_market_side": "performance_by_market_side.csv",
+        "by_source": (
+            "performance_by_source.csv"
+        ),
+        "by_league": (
+            "performance_by_league.csv"
+        ),
+        "by_market": (
+            "performance_by_market.csv"
+        ),
+        "by_market_side": (
+            "performance_by_market_side.csv"
+        ),
     }
 
-    for (
-        name,
-        report,
-    ) in reports.items():
+    for name, report in reports.items():
         atomic_write_csv(
             report,
             reports_dir
-            / names[
-                name
-            ],
+            / names[name],
         )
 
     atomic_write_csv(
         pd.DataFrame([
             {
-                "reason": k,
-                "count": v,
+                "reason": key,
+                "count": value,
             }
-            for (
-                k,
-                v,
-            )
+            for key, value
             in sorted(
                 DEBUG_COUNTS.items()
             )
@@ -4679,9 +4046,7 @@ def collect_config_warnings(
     }
 
     markets = (
-        filter_cfg.get(
-            "markets"
-        )
+        filter_cfg.get("markets")
         or {}
     )
 
@@ -4689,14 +4054,10 @@ def collect_config_warnings(
         for market in MARKETS:
             mcfg = (
                 (
-                    markets.get(
-                        league
-                    )
+                    markets.get(league)
                     or {}
                 )
-                .get(
-                    market
-                )
+                .get(market)
                 or {}
             )
 
@@ -4788,30 +4149,13 @@ def write_manifest(
         },
         "input_files": [
             {
-                "path": str(
-                    p
-                ),
-                "sha256": sha256_file(
-                    p
-                ),
+                "path": str(p),
+                "sha256": sha256_file(p),
                 "size_bytes": (
                     p.stat().st_size
                 ),
-                "internal_season": (
-                    season_from_input_filename(
-                        p,
-                        p.stem.split(
-                            "_",
-                            1,
-                        )[-1].lower(),
-                    )
-                    if "_"
-                    in p.stem
-                    else None
-                ),
             }
-            for p
-            in input_files
+            for p in input_files
         ],
         "model_settings": settings,
         "config_warnings": (
@@ -4868,45 +4212,31 @@ def append_run_index(
     }
 
     if not overall.empty:
-        first = overall.iloc[
-            0
-        ]
+        first = overall.iloc[0]
 
-        for key in list(
-            row
-        ):
+        for key in list(row):
             if (
                 key
                 not in {
                     "run_id",
                     "generated_at_utc",
                 }
-                and key
-                in first.index
+                and key in first.index
             ):
-                row[
-                    key
-                ] = first[
-                    key
-                ]
+                row[key] = first[key]
 
-    new = pd.DataFrame([
-        row
-    ])
+    new = pd.DataFrame([row])
 
-    combined = (
-        pd.concat(
+    if index_path.exists():
+        combined = pd.concat(
             [
-                pd.read_csv(
-                    index_path
-                ),
+                pd.read_csv(index_path),
                 new,
             ],
             ignore_index=True,
         )
-        if index_path.exists()
-        else new
-    )
+    else:
+        combined = new
 
     atomic_write_csv(
         combined.drop_duplicates(
@@ -4934,15 +4264,11 @@ def run_production_parity_test(
         .head(
             max(
                 1,
-                int(
-                    parity_rows
-                ),
+                int(parity_rows),
             )
         )
         .copy()
-        .reset_index(
-            drop=True
-        )
+        .reset_index(drop=True)
     )
 
     if sample.empty:
@@ -4951,43 +4277,34 @@ def run_production_parity_test(
             "no rows available"
         )
 
-    prod_juice = (
-        load_module_from_path(
-            (
-                "parity_build_juice_"
-                f"{league}"
-            ),
-            PRODUCTION_BUILD_JUICE,
-        )
+    prod_juice = load_module_from_path(
+        (
+            "parity_build_juice_"
+            f"{league}"
+        ),
+        PRODUCTION_BUILD_JUICE,
     )
 
-    prod_ev = (
-        load_module_from_path(
-            (
-                "parity_ev_kelly_"
-                f"{league}"
-            ),
-            PRODUCTION_EV_KELLY,
-        )
+    prod_ev = load_module_from_path(
+        (
+            "parity_ev_kelly_"
+            f"{league}"
+        ),
+        PRODUCTION_EV_KELLY,
     )
 
-    prod_select = (
-        load_module_from_path(
-            (
-                "parity_select_"
-                f"{league}"
-            ),
-            PRODUCTION_SELECT,
-        )
+    prod_select = load_module_from_path(
+        (
+            "parity_select_"
+            f"{league}"
+        ),
+        PRODUCTION_SELECT,
     )
 
-    league_upper = (
-        league.upper()
-    )
+    league_upper = league.upper()
 
     prod_settings = (
-        prod_juice
-        .LEAGUE_SETTINGS[
+        prod_juice.LEAGUE_SETTINGS[
             league_upper
         ]
     )
@@ -5003,14 +4320,10 @@ def run_production_parity_test(
             float(
                 settings[
                     league
-                ][
-                    key
-                ]
+                ][key]
             ),
             float(
-                prod_settings[
-                    key
-                ]
+                prod_settings[key]
             ),
             abs_tol=1e-12,
         ):
@@ -5028,9 +4341,7 @@ def run_production_parity_test(
             process_moneyline_ev(
                 process_moneyline_juice(
                     sample,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5038,9 +4349,7 @@ def run_production_parity_test(
             process_spread_ev(
                 process_spread_juice(
                     sample,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5048,9 +4357,7 @@ def run_production_parity_test(
             process_total_ev(
                 process_total_juice(
                     sample,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5060,26 +4367,31 @@ def run_production_parity_test(
         prefix="basketball_parity_",
     ) as tmp:
         prod_juice.OUTPUT_DIR = (
-            Path(
-                tmp
-            )
+            Path(tmp)
             / "juice"
         )
+
+        for market_dir in MARKETS:
+            (
+                prod_juice.OUTPUT_DIR
+                / league
+                / market_dir
+            ).mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
         for market in MARKETS:
             if market == "moneyline":
                 (
                     out_path,
                     _,
-                ) = (
-                    prod_juice
-                    .process_moneyline(
-                        sample.copy(),
-                        "2000_01_01",
-                        league_upper,
-                        prod_settings,
-                        league,
-                    )
+                ) = prod_juice.process_moneyline(
+                    sample.copy(),
+                    "2000_01_01",
+                    league_upper,
+                    prod_settings,
+                    league,
                 )
 
                 juice_df = pd.read_csv(
@@ -5104,15 +4416,12 @@ def run_production_parity_test(
                 (
                     out_path,
                     _,
-                ) = (
-                    prod_juice
-                    .process_spread(
-                        sample.copy(),
-                        "2000_01_01",
-                        league_upper,
-                        prod_settings,
-                        league,
-                    )
+                ) = prod_juice.process_spread(
+                    sample.copy(),
+                    "2000_01_01",
+                    league_upper,
+                    prod_settings,
+                    league,
                 )
 
                 juice_df = pd.read_csv(
@@ -5137,15 +4446,12 @@ def run_production_parity_test(
                 (
                     out_path,
                     _,
-                ) = (
-                    prod_juice
-                    .process_totals(
-                        sample.copy(),
-                        "2000_01_01",
-                        league_upper,
-                        prod_settings,
-                        league,
-                    )
+                ) = prod_juice.process_totals(
+                    sample.copy(),
+                    "2000_01_01",
+                    league_upper,
+                    prod_settings,
+                    league,
                 )
 
                 juice_df = pd.read_csv(
@@ -5166,28 +4472,18 @@ def run_production_parity_test(
                     "under_model_prob",
                 ]
 
-            back = back_frames[
-                market
-            ]
+            back = back_frames[market]
 
             for col in prob_cols:
                 a = pd.to_numeric(
-                    back[
-                        col
-                    ],
+                    back[col],
                     errors="coerce",
-                ).to_numpy(
-                    float
-                )
+                ).to_numpy(float)
 
                 b = pd.to_numeric(
-                    prod_frame[
-                        col
-                    ],
+                    prod_frame[col],
                     errors="coerce",
-                ).to_numpy(
-                    float
-                )
+                ).to_numpy(float)
 
                 if not np.allclose(
                     a,
@@ -5221,8 +4517,7 @@ def run_production_parity_test(
             )
 
             prod_cfg = (
-                prod_select
-                .market_cfg(
+                prod_select.market_cfg(
                     league,
                     market,
                 )
@@ -5265,17 +4560,15 @@ def run_production_parity_test(
                     )
                 )
 
-                picks = (
-                    sides
-                    if mode
-                    == "all_qualifying"
-                    else [
+                if mode == "all_qualifying":
+                    picks = sides
+                else:
+                    picks = [
                         prod_select.pick(
                             sides,
                             preference,
                         )
                     ]
-                )
 
                 for sel in picks:
                     if sel is None:
@@ -5327,18 +4620,21 @@ def run_production_parity_test(
                     in frame.iterrows()
                 }
 
-            if (
-                keys(
-                    back_selected
-                )
-                != keys(
-                    prod_selected
-                )
-            ):
+            back_keys = keys(
+                back_selected
+            )
+
+            prod_keys = keys(
+                prod_selected
+            )
+
+            if back_keys != prod_keys:
                 raise AssertionError(
                     "PARITY FAILED "
                     f"{league}.{market}."
-                    "selection"
+                    "selection | "
+                    f"backtest={sorted(back_keys)} | "
+                    f"production={sorted(prod_keys)}"
                 )
 
     logger.log(
@@ -5411,19 +4707,43 @@ def process_historical_file(
         )
     )
 
-    unavailable = int(
+    incomplete = int(
         (
             ~raw[
-                "_production_bias_ready"
+                "_production_input_valid"
             ]
         ).sum()
     )
 
-    if unavailable:
+    if incomplete:
         logger.log(
             f"[{league.upper()}] "
             f"{source_file}: "
-            f"skipping {unavailable} "
+            f"skipping {incomplete} "
+            "incomplete historical rows "
+            "with missing projection or "
+            "final-score values",
+            "WARN",
+        )
+
+    warmup = int(
+        (
+            raw[
+                "_production_input_valid"
+            ]
+            & (
+                ~raw[
+                    "_production_bias_ready"
+                ]
+            )
+        ).sum()
+    )
+
+    if warmup:
+        logger.log(
+            f"[{league.upper()}] "
+            f"{source_file}: "
+            f"skipping {warmup} "
             "early rows because production "
             "rolling/regime-aware bias "
             "does not yet have its full "
@@ -5434,20 +4754,29 @@ def process_historical_file(
     raw = (
         raw[
             raw[
+                "_production_input_valid"
+            ]
+            & raw[
                 "_production_bias_ready"
             ]
         ]
         .copy()
-        .reset_index(
-            drop=True
-        )
+        .reset_index(drop=True)
     )
 
     if raw.empty:
         raise ValueError(
-            f"{path.name} has no rows "
+            f"{path.name} has no usable rows "
             "with production bias ready"
         )
+
+    raw = raw.drop(
+        columns=[
+            "_production_input_valid",
+            "_production_bias_ready",
+        ],
+        errors="ignore",
+    )
 
     raw[
         "source_file"
@@ -5482,9 +4811,7 @@ def process_historical_file(
             process_moneyline_ev(
                 process_moneyline_juice(
                     feature_df,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5492,9 +4819,7 @@ def process_historical_file(
             process_spread_ev(
                 process_spread_juice(
                     feature_df,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5502,9 +4827,7 @@ def process_historical_file(
             process_total_ev(
                 process_total_juice(
                     feature_df,
-                    settings[
-                        league
-                    ],
+                    settings[league],
                 )
             )
         ),
@@ -5512,10 +4835,9 @@ def process_historical_file(
 
     selected_parts = []
 
-    for (
-        market,
-        market_df,
-    ) in frames.items():
+    for market, market_df in (
+        frames.items()
+    ):
         atomic_write_csv(
             market_df,
             (
@@ -5554,14 +4876,13 @@ def process_historical_file(
             f"selected={len(selected)}"
         )
 
-    selections = (
-        pd.concat(
+    if selected_parts:
+        selections = pd.concat(
             selected_parts,
             ignore_index=True,
         )
-        if selected_parts
-        else pd.DataFrame()
-    )
+    else:
+        selections = pd.DataFrame()
 
     atomic_write_csv(
         selections,
@@ -5577,7 +4898,6 @@ def process_historical_file(
 
     if selections.empty:
         graded = pd.DataFrame()
-
     else:
         score_cols = [
             c
@@ -5587,9 +4907,7 @@ def process_historical_file(
 
         graded = grade_selections(
             selections,
-            scores[
-                score_cols
-            ],
+            scores[score_cols],
         )
 
     atomic_write_csv(
@@ -5622,7 +4940,7 @@ def process_historical_file(
 
 
 def parse_args():
-    p = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=(
             "Replay combined historical "
             "basketball files through "
@@ -5631,45 +4949,45 @@ def parse_args():
         )
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--backtest-dir",
         default=str(
             DEFAULT_BACKTEST_DIR
         ),
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--model-config",
         default=str(
             DEFAULT_MODEL_CONFIG
         ),
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--markets-config",
         default=str(
             DEFAULT_MARKETS_CONFIG
         ),
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--model-source",
         choices=MODEL_SOURCES,
         default=None,
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--parity-rows",
         type=int,
         default=25,
     )
 
-    p.add_argument(
+    parser.add_argument(
         "--run-name",
         default=None,
     )
 
-    return p.parse_args()
+    return parser.parse_args()
 
 
 def main():
@@ -5812,8 +5130,10 @@ def main():
         filter_config_path
     )
 
-    production_markets_cfg = read_yaml(
-        production_markets_path
+    production_markets_cfg = (
+        read_yaml(
+            production_markets_path
+        )
     )
 
     model_source = resolve_model_source(
@@ -5872,37 +5192,35 @@ def main():
         )
     )
 
-    for w in config_warnings:
+    for warning in config_warnings:
         logger.log(
-            w,
+            warning,
             "WARN",
         )
 
     input_files = []
 
     for league in LEAGUES:
-        fs = sorted(
+        files = sorted(
             input_dir.glob(
                 f"*_{league.upper()}.csv"
             )
         )
 
-        if not fs:
+        if not files:
             raise FileNotFoundError(
                 "No historical input files "
                 f"found for {league.upper()} "
                 f"in {input_dir}"
             )
 
-        for path in fs:
+        for path in files:
             season_from_input_filename(
                 path,
                 league,
             )
 
-        input_files.extend(
-            fs
-        )
+        input_files.extend(files)
 
     all_selections = []
     all_graded = []
@@ -5931,7 +5249,7 @@ def main():
             (
                 selections,
                 graded,
-                n,
+                row_count,
             ) = process_historical_file(
                 path,
                 league,
@@ -5950,7 +5268,7 @@ def main():
                 logger,
             )
 
-            total_rows += n
+            total_rows += row_count
 
             if not selections.empty:
                 all_selections.append(
@@ -5962,23 +5280,25 @@ def main():
                     graded
                 )
 
-    combined_selected = (
-        pd.concat(
+    if all_selections:
+        combined_selected = pd.concat(
             all_selections,
             ignore_index=True,
         )
-        if all_selections
-        else pd.DataFrame()
-    )
+    else:
+        combined_selected = (
+            pd.DataFrame()
+        )
 
-    combined_graded = (
-        pd.concat(
+    if all_graded:
+        combined_graded = pd.concat(
             all_graded,
             ignore_index=True,
         )
-        if all_graded
-        else pd.DataFrame()
-    )
+    else:
+        combined_graded = (
+            pd.DataFrame()
+        )
 
     atomic_write_csv(
         combined_selected,
@@ -6009,12 +5329,8 @@ def main():
         settings,
         config_warnings,
         total_rows,
-        len(
-            combined_selected
-        ),
-        len(
-            combined_graded
-        ),
+        len(combined_selected),
+        len(combined_graded),
     )
 
     logger.log(
@@ -6042,12 +5358,10 @@ def main():
             "overall"
         ].iloc[0]
 
-        roi = row[
-            "roi_units"
-        ]
+        roi = row["roi_units"]
 
-        logger.log(
-            (
+        if pd.notna(roi):
+            logger.log(
                 "W/L/P/U="
                 f"{int(row['wins'])}/"
                 f"{int(row['losses'])}/"
@@ -6058,10 +5372,8 @@ def main():
                 "roi_units="
                 f"{float(roi):+.4%}"
             )
-            if pd.notna(
-                roi
-            )
-            else (
+        else:
+            logger.log(
                 "W/L/P/U="
                 f"{int(row['wins'])}/"
                 f"{int(row['losses'])}/"
@@ -6071,7 +5383,6 @@ def main():
                 f"{float(row['profit_units']):+.4f} "
                 "roi_units=N/A"
             )
-        )
 
     logger.log(
         f"run_snapshot={run_dir}"
@@ -6126,9 +5437,7 @@ def main():
         runs_dir
         / "index.csv",
         run_id,
-        reports[
-            "overall"
-        ],
+        reports["overall"],
     )
 
     print(
@@ -6139,7 +5448,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-
     except Exception as exc:
         print(
             f"STATUS: FAILED | {exc}",
@@ -6148,6 +5456,4 @@ if __name__ == "__main__":
 
         traceback.print_exc()
 
-        sys.exit(
-            1
-        )
+        sys.exit(1)
