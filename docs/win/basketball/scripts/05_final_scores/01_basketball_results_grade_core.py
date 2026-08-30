@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# docs/win/basketball/scripts/05_final_scores/01_basketball_results_grade.py
+# docs/win/basketball/scripts/05_final_scores/01_basketball_results_grade_core.py
 #
 # Grades selected bets against final scores and maintains an immutable live-pick
 # snapshot for the current New York game date.
@@ -49,6 +49,15 @@ import pandas as pd
 # =========================
 
 LEAGUES = ["nba", "ncaam", "wnba"]
+
+MODEL_METADATA_COLUMNS = [
+    "model_source",
+    "model_version",
+    "feature_version",
+    "ensemble_version",
+    "bet_model_prob",
+]
+
 LOCK_TIMEZONE = ZoneInfo("America/New_York")
 
 BASE               = Path("docs/win/basketball")
@@ -160,6 +169,29 @@ def lock_current_picks(summary: dict) -> None:
 # =========================
 # HELPERS
 # =========================
+
+
+def ensure_model_metadata(df: pd.DataFrame, league: str, label: str) -> pd.DataFrame:
+    """Guarantee model provenance/probability columns survive grading.
+
+    Historical rows created before these fields existed are left blank; values are
+    never inferred or backfilled. Current rows retain the exact values supplied by
+    stage 04.
+    """
+    out = df.copy()
+    missing = []
+    for column in MODEL_METADATA_COLUMNS:
+        if column not in out.columns:
+            out[column] = pd.NA
+            missing.append(column)
+    if missing:
+        _log(
+            f"[{league}] {label} missing model metadata columns; "
+            f"preserving as blank: {', '.join(missing)}",
+            "WARN",
+        )
+    return out
+
 
 def american_to_decimal(odds):
     try:
@@ -276,6 +308,7 @@ def load_picks_for_league(league: str, *, locked: bool = False) -> pd.DataFrame:
         return pd.DataFrame()
 
     out = pd.concat(dfs, ignore_index=True)
+    out = ensure_model_metadata(out, league, label)
     _log(f"[{league}] loaded {len(out)} {label} rows from {len(files)} files")
     return out
 
@@ -381,7 +414,12 @@ def grade_league(league: str, summary: dict, *, locked: bool = False) -> None:
     profits.columns = ["profit_unit", "profit_kelly"]
     matched = pd.concat([matched, profits], axis=1)
 
-    key_cols = [c for c in ["game_id", "market_type", "bet_side"] if c in matched.columns]
+    # Keep distinct model/version rows distinct if multiple model cohorts ever
+    # grade the same game/market/side.
+    key_cols = [c for c in [
+        "game_id", "market_type", "bet_side",
+        "model_source", "model_version", "feature_version", "ensemble_version",
+    ] if c in matched.columns]
     if key_cols:
         before = len(matched)
         matched = matched.drop_duplicates(subset=key_cols, keep="last")

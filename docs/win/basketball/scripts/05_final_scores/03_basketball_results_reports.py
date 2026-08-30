@@ -39,6 +39,7 @@ LOG_FILE   = ERROR_DIR / "03_basketball_results_reports.txt"
 
 # Where work files live
 WORK_FILES = {lg: BASE / f"work_{lg}.csv" for lg in LEAGUES}
+QUALITY_FILES = {lg: BASE / f"quality_metrics_{lg}.csv" for lg in LEAGUES}
 
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -444,6 +445,7 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
 
     log_cols = [
         "game_date", "league", "market_type", "side_group",
+        "model_source", "model_version", "feature_version", "ensemble_version",
         "home_team", "away_team",
         "bet_side", "bet_line", "bet_odds_american",
         "bet_ev", "bet_edge_vs_market", "bet_kelly", "bet_model_prob",
@@ -452,6 +454,12 @@ def write_overview(work_df: pd.DataFrame, league: str, overview_dir: Path) -> No
         "model_prob_bucket", "spread_bucket", "total_bucket",
         "dow_bucket", "month_bucket",
         "bet_result", "profit_unit", "profit_kelly",
+        "probability_outcome", "brier_component", "log_loss_component",
+        "actual_margin", "projected_margin", "margin_error",
+        "actual_total", "projected_total", "total_error",
+        "closing_observed_at_utc", "scheduled_tipoff_utc", "minutes_before_tipoff",
+        "closing_line", "closing_market_prob", "entry_market_prob",
+        "clv", "clv_units", "model_vs_market_prob_pp", "model_vs_market_line",
     ]
     existing = [c for c in log_cols if c in work_df.columns]
     write_csv(work_df[existing], overview_dir / f"{league}_bet_log.csv")
@@ -532,6 +540,48 @@ def build_summary_grand_total(work_df: pd.DataFrame, league: str) -> pd.DataFram
     }])
 
 
+
+# =========================
+# MODEL QUALITY REPORTS
+# =========================
+
+def write_quality_reports(league: str) -> None:
+    source = QUALITY_FILES[league]
+    quality_dir = REPORT_DIR / league / "quality"
+    quality_dir.mkdir(parents=True, exist_ok=True)
+
+    if not source.exists():
+        log_input(source, 0, exists=False)
+        warn(f"[{league}] quality metrics missing: {source}")
+        return
+
+    try:
+        quality = pd.read_csv(source)
+    except Exception as exc:
+        log_input(source, 0, exists=True)
+        warn(f"[{league}] unable to read quality metrics {source}: {exc}")
+        return
+
+    log_input(source, len(quality), exists=True)
+    write_csv(quality, quality_dir / f"{league}_model_quality_all.csv")
+
+    scope_files = {
+        "league": f"{league}_model_quality_league.csv",
+        "market": f"{league}_model_quality_by_market.csv",
+        "model_source": f"{league}_model_quality_by_model_source.csv",
+        "model_version": f"{league}_model_quality_by_model_version.csv",
+        "market_model_version": f"{league}_model_quality_by_market_model_version.csv",
+    }
+
+    for scope, filename in scope_files.items():
+        if "scope" not in quality.columns:
+            warn(f"[{league}] quality metrics missing scope column")
+            break
+        subset = quality[quality["scope"].astype(str) == scope].copy()
+        write_csv(subset, quality_dir / filename)
+
+
+
 # =========================
 # RUN
 # =========================
@@ -545,8 +595,12 @@ def run_one(league: str) -> None:
 
     work = pd.read_csv(work_path)
     log_input(work_path, len(work), exists=True)
+
+    # Publish model-quality outputs even when the betting work file is empty.
+    write_quality_reports(league)
+
     if work.empty:
-        warn(f"[{league}] empty work file; skipping")
+        warn(f"[{league}] empty work file; skipping betting reports")
         return
 
     if "market_type" in work.columns:

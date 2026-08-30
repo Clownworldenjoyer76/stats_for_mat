@@ -252,6 +252,81 @@ const STD_COLUMNS_WITH_SIDE = [
   ...STD_COLUMNS,
 ];
 
+
+const QUALITY_COLUMNS = [
+  { key: 'scope', label: 'Scope' },
+  { key: 'market_type', label: 'Market' },
+  { key: 'model_source', label: 'Model source' },
+  { key: 'model_version', label: 'Model version' },
+  { key: 'rows', label: 'Rows', fmt: 'int' },
+  { key: 'probability_n', label: 'Prob N', fmt: 'int' },
+  { key: 'brier_score', label: 'Brier', fmt: 'num', decimals: 4 },
+  { key: 'log_loss', label: 'Log loss', fmt: 'num', decimals: 4 },
+  { key: 'calibration_error', label: 'Calibration err', fmt: 'num', decimals: 4 },
+  { key: 'margin_n', label: 'Margin N', fmt: 'int' },
+  { key: 'margin_mae', label: 'Margin MAE', fmt: 'num', decimals: 3 },
+  { key: 'margin_rmse', label: 'Margin RMSE', fmt: 'num', decimals: 3 },
+  { key: 'total_n', label: 'Total N', fmt: 'int' },
+  { key: 'total_mae', label: 'Total MAE', fmt: 'num', decimals: 3 },
+  { key: 'total_rmse', label: 'Total RMSE', fmt: 'num', decimals: 3 },
+  { key: 'clv_n', label: 'CLV N', fmt: 'int' },
+  { key: 'avg_clv', label: 'Avg CLV', fmt: 'num', decimals: 3, color: true },
+  { key: 'clv_units', label: 'CLV units' },
+  { key: 'prob_disagreement_n', label: 'Prob dis N', fmt: 'int' },
+  { key: 'avg_model_vs_market_prob_pp', label: 'Model-market p (pp)', fmt: 'num', decimals: 3, color: true },
+  { key: 'mean_abs_model_vs_market_prob_pp', label: 'Abs p gap (pp)', fmt: 'num', decimals: 3 },
+  { key: 'line_disagreement_n', label: 'Line dis N', fmt: 'int' },
+  { key: 'avg_model_vs_market_line', label: 'Model-market line', fmt: 'num', decimals: 3, color: true },
+  { key: 'mean_abs_model_vs_market_line', label: 'Abs line gap', fmt: 'num', decimals: 3 },
+];
+
+function buildQualityArea(section, qualityRows) {
+  const area = section.querySelector('.quality-area');
+  const rows = qualityRows || [];
+  if (!rows.length) {
+    area.innerHTML = '<div class="muted">No model-quality rows available.</div>';
+    return;
+  }
+
+  const values = (key) => [...new Set(rows.map(r => r[key]).filter(v => v !== null && v !== undefined && String(v) !== ''))].sort();
+  const markets = values('market_type');
+  const sources = values('model_source');
+  const versions = values('model_version');
+  const scopes = values('scope');
+
+  const optionHtml = (items) => '<option value="ALL">All</option>' +
+    items.map(v => '<option value="' + String(v).replace(/"/g, '&quot;') + '">' + v + '</option>').join('');
+
+  area.innerHTML =
+    '<div class="controls">' +
+      '<label>Scope: <select class="quality-scope">' + optionHtml(scopes) + '</select></label>' +
+      '<label>Market: <select class="quality-market">' + optionHtml(markets) + '</select></label>' +
+      '<label>Source: <select class="quality-source">' + optionHtml(sources) + '</select></label>' +
+      '<label>Version: <select class="quality-version">' + optionHtml(versions) + '</select></label>' +
+    '</div>' +
+    '<div class="quality-table"></div>';
+
+  const scopeSel = area.querySelector('.quality-scope');
+  const marketSel = area.querySelector('.quality-market');
+  const sourceSel = area.querySelector('.quality-source');
+  const versionSel = area.querySelector('.quality-version');
+  const table = area.querySelector('.quality-table');
+
+  const refresh = () => {
+    const filtered = rows.filter(r =>
+      (scopeSel.value === 'ALL' || String(r.scope) === scopeSel.value) &&
+      (marketSel.value === 'ALL' || String(r.market_type) === marketSel.value) &&
+      (sourceSel.value === 'ALL' || String(r.model_source) === sourceSel.value) &&
+      (versionSel.value === 'ALL' || String(r.model_version) === versionSel.value)
+    );
+    renderTable(filtered, QUALITY_COLUMNS, table);
+  };
+
+  [scopeSel, marketSel, sourceSel, versionSel].forEach(el => el.onchange = refresh);
+  refresh();
+}
+
+
 function selectLeague(lg) {
   document.querySelectorAll('.league-btn').forEach(b => b.classList.toggle('active', b.dataset.league === lg));
   document.querySelectorAll('.league-section').forEach(s => s.classList.toggle('active', s.dataset.league === lg));
@@ -296,6 +371,7 @@ function buildLeagueSection(lg, data) {
     { key: 'Win_Pct', label: 'Win %', fmt: 'pct' },
   ];
   renderTable(data.by_market_summary, byMarketCols, section.querySelector('.by-market-summary'));
+  buildQualityArea(section, data.quality || []);
 
   ['moneyline', 'spread', 'total'].forEach(mt => {
     const wrap = section.querySelector('.panel-' + mt);
@@ -397,6 +473,11 @@ def collect_league_data(league: str) -> dict:
         "league": league.upper(),
         "grand_total": first_row_dict(safe_read(BASE / f"{league}_summary_grand_total.csv", required=True)),
         "by_market_summary": df_to_records(safe_read(BASE / f"{league}_summary_overall.csv", required=True)),
+        "quality": df_to_records(
+            safe_read(
+                REPORT_DIR / league / "quality" / f"{league}_model_quality_all.csv"
+            )
+        ),
         "overview": {
             "by_market":     df_to_records(safe_read(REPORT_DIR / league / "overview" / f"{league}_summary_by_market.csv")),
             "by_side_group": df_to_records(safe_read(REPORT_DIR / league / "overview" / f"{league}_summary_by_side_group.csv")),
@@ -440,6 +521,9 @@ def league_section_html(league: str) -> str:
 
   <h2>By Market</h2>
   <div class="by-market-summary"></div>
+
+  <h2>Model Quality</h2>
+  <div class="quality-area"></div>
 
   <h2>Per Market Drilldown</h2>
   <div class="market-area">

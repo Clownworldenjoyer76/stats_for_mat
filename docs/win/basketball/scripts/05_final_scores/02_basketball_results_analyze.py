@@ -36,6 +36,7 @@ from datetime import datetime, UTC
 from pathlib import Path
 import traceback
 
+import numpy as np
 import pandas as pd
 
 # =========================
@@ -49,6 +50,24 @@ INPUT_DIR  = BASE / "05_final_scores/results"
 OUTPUT_DIR = BASE / "05_final_scores"
 ERROR_DIR  = BASE / "errors/05_final_scores"
 LOG_FILE   = ERROR_DIR / "02_basketball_results_analyze.txt"
+CLOSING_DIR = BASE / "05_final_scores/closing_lines"
+
+MIN_PROB_SAMPLE = 10
+MIN_GAME_ERROR_SAMPLE = 5
+MIN_CLV_SAMPLE = 5
+MIN_DISAGREEMENT_SAMPLE = 5
+
+QUALITY_COLUMNS = [
+    "scope", "league", "market_type", "model_source", "model_version",
+    "rows", "probability_n", "brier_score", "log_loss", "calibration_error",
+    "margin_n", "margin_mae", "margin_rmse",
+    "total_n", "total_mae", "total_rmse",
+    "clv_n", "avg_clv", "clv_units",
+    "prob_disagreement_n", "avg_model_vs_market_prob_pp",
+    "mean_abs_model_vs_market_prob_pp",
+    "line_disagreement_n", "avg_model_vs_market_line",
+    "mean_abs_model_vs_market_line",
+]
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
@@ -334,6 +353,515 @@ def month_bucket(value):
     return MONTH_NAMES[dt.month - 1]
 
 
+
+# =========================
+# MODEL QUALITY / CLOSING LINES
+# =========================
+
+MODEL_METADATA_COLUMNS = [
+    "model_source", "model_version", "feature_version",
+    "ensemble_version", "bet_model_prob",
+]
+
+CLOSING_VALUE_COLUMNS = [
+    "sportsbook_provider", "snapshot_file", "closing_observed_at_utc",
+    "scheduled_tipoff_utc", "minutes_before_tipoff",
+    "closing_home_spread", "closing_away_spread", "closing_total",
+    "closing_home_ml_american", "closing_away_ml_american",
+    "closing_home_spread_american", "closing_away_spread_american",
+    "closing_over_american", "closing_under_american",
+    "closing_home_ml_decimal", "closing_away_ml_decimal",
+    "closing_home_spread_decimal", "closing_away_spread_decimal",
+    "closing_over_decimal", "closing_under_decimal",
+    "closing_home_market_prob", "closing_away_market_prob",
+    "closing_home_spread_market_prob", "closing_away_spread_market_prob",
+    "closing_over_market_prob", "closing_under_market_prob",
+]
+
+
+def normalize_game_id(value) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    text = str(value).strip()
+    if text.endswith(".0") and text[:-2].isdigit():
+        return text[:-2]
+    return text
+
+
+def load_closing_lines(league: str) -> pd.DataFrame:
+    folder = CLOSING_DIR / league
+    files = sorted(folder.glob("*_closing_lines.csv")) if folder.exists() else []
+    if not files:
+        warn(f"[{league.upper()}] no closing-line files in {folder}; CLV will be unavailable")
+        return pd.DataFrame()
+
+    frames = []
+    for path in files:
+        try:
+            frame = pd.read_csv(path)
+            if not frame.empty:
+                frames.append(frame)
+        except Exception as exc:
+            warn(f"[{league.upper()}] unable to read closing-line file {path}: {exc}")
+
+    if not frames:
+        return pd.DataFrame()
+
+    closing = pd.concat(frames, ignore_index=True)
+    if "game_id" not in closing.columns or "market_type" not in closing.columns:
+        warn(f"[{league.upper()}] closing-line data missing game_id/market_type")
+        return pd.DataFrame()
+
+    closing["_join_game_id"] = closing["game_id"].apply(normalize_game_id)
+    closing["market_type"] = closing["market_type"].astype(str).str.strip().str.lower()
+    closing = closing.drop_duplicates(["_join_game_id", "market_type"], keep="last")
+    return closing
+
+
+def attach_closing_lines(work: pd.DataFrame, league: str) -> pd.DataFrame:
+    out = work.copy()
+    for col in CLOSING_VALUE_COLUMNS:
+        if col not in out.columns:
+            out[col] = pd.NA
+
+    closing = load_closing_lines(league)
+    if closing.empty or "game_id" not in out.columns or "market_type" not in out.columns:
+        return out
+
+    out["_join_game_id"] = out["game_id"].apply(normalize_game_id)
+    wanted = ["_join_game_id", "market_type"] + [
+        c for c in CLOSING_VALUE_COLUMNS if c in closing.columns
+    ]
+    right = closing[wanted].copy()
+
+    # Remove placeholder columns before merge so the closing data can populate them.
+    out = out.drop(columns=[c for c in CLOSING_VALUE_COLUMNS if c in out.columns], errors="ignore")
+    out = out.merge(
+        right,
+        on=["_join_game_id", "market_type"],
+        how="left",
+        validate="many_to_one",
+    )
+    out = out.drop(columns=["_join_game_id"], errors="ignore")
+
+    for col in CLOSING_VALUE_COLUMNS:
+        if col not in out.columns:
+            out[col] = pd.NA
+    return out
+
+
+def numeric(value):
+    try:
+        if value is None or pd.isna(value):
+            return np.nan
+        return float(value)
+    except (TypeError, ValueError):
+        return np.nan
+
+
+def selected_entry_market_prob(row):
+    market = str(row.get("market_type", "")).strip().lower()
+    side = str(row.get("bet_side", "")).strip().lower()
+    direct = None
+    if market == "moneyline" and side in {"home", "away"}:
+        direct = row.get(f"{side}_market_prob")
+    elif market == "spread" and side in {"home", "away"}:
+        direct = row.get(f"{side}_spread_market_prob")
+    elif market == "total" and side in {"over", "under"}:
+        direct = row.get(f"{side}_market_prob")
+
+    value = numeric(direct)
+    if not np.isnan(value):
+        return value
+
+    model_prob = numeric(row.get("bet_model_prob"))
+    edge_pp = numeric(row.get("bet_edge_vs_market"))
+    if not np.isnan(model_prob) and not np.isnan(edge_pp):
+        return model_prob - edge_pp / 100.0
+    return np.nan
+
+
+def selected_closing_market_prob(row):
+    market = str(row.get("market_type", "")).strip().lower()
+    side = str(row.get("bet_side", "")).strip().lower()
+    column = None
+    if market == "moneyline":
+        column = {
+            "home": "closing_home_market_prob",
+            "away": "closing_away_market_prob",
+        }.get(side)
+    elif market == "spread":
+        column = {
+            "home": "closing_home_spread_market_prob",
+            "away": "closing_away_spread_market_prob",
+        }.get(side)
+    elif market == "total":
+        column = {
+            "over": "closing_over_market_prob",
+            "under": "closing_under_market_prob",
+        }.get(side)
+    return numeric(row.get(column)) if column else np.nan
+
+
+def selected_closing_line(row):
+    market = str(row.get("market_type", "")).strip().lower()
+    side = str(row.get("bet_side", "")).strip().lower()
+    if market == "spread":
+        if side == "home":
+            return numeric(row.get("closing_home_spread"))
+        if side == "away":
+            return numeric(row.get("closing_away_spread"))
+    elif market == "total":
+        return numeric(row.get("closing_total"))
+    return np.nan
+
+
+def calculate_clv(row):
+    market = str(row.get("market_type", "")).strip().lower()
+    side = str(row.get("bet_side", "")).strip().lower()
+
+    if market == "moneyline":
+        entry = numeric(row.get("entry_market_prob"))
+        close = numeric(row.get("closing_market_prob"))
+        if np.isnan(entry) or np.isnan(close):
+            return np.nan
+        # Positive means the market moved toward the selected side after entry.
+        return (close - entry) * 100.0
+
+    bet_line = numeric(row.get("bet_line"))
+    closing_line = numeric(row.get("closing_line"))
+    if np.isnan(bet_line) or np.isnan(closing_line):
+        return np.nan
+
+    if market == "spread":
+        # Signed side spread: -3 taken vs -4 close => +1 point CLV.
+        return bet_line - closing_line
+    if market == "total":
+        if side == "over":
+            return closing_line - bet_line
+        if side == "under":
+            return bet_line - closing_line
+    return np.nan
+
+
+def calculate_line_disagreement(row):
+    market = str(row.get("market_type", "")).strip().lower()
+    side = str(row.get("bet_side", "")).strip().lower()
+    home_proj = numeric(row.get("home_projected_points"))
+    away_proj = numeric(row.get("away_projected_points"))
+    total_proj = numeric(row.get("total_projected_points"))
+
+    if market == "spread":
+        closing_home_spread = numeric(row.get("closing_home_spread"))
+        if np.isnan(home_proj) or np.isnan(away_proj) or np.isnan(closing_home_spread):
+            return np.nan
+        home_model_minus_market = (home_proj - away_proj) + closing_home_spread
+        if side == "home":
+            return home_model_minus_market
+        if side == "away":
+            return -home_model_minus_market
+
+    if market == "total":
+        closing_total = numeric(row.get("closing_total"))
+        if np.isnan(total_proj) or np.isnan(closing_total):
+            return np.nan
+        diff = total_proj - closing_total
+        if side == "over":
+            return diff
+        if side == "under":
+            return -diff
+
+    return np.nan
+
+
+def add_quality_columns(work: pd.DataFrame) -> pd.DataFrame:
+    out = work.copy()
+
+    for col in MODEL_METADATA_COLUMNS:
+        if col not in out.columns:
+            out[col] = pd.NA
+
+    for col in [
+        "home_score", "away_score", "home_projected_points",
+        "away_projected_points", "total_projected_points",
+        "bet_model_prob", "bet_edge_vs_market", "bet_line",
+    ]:
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col], errors="coerce")
+
+    result = out.get("bet_result", pd.Series(index=out.index, dtype=object))
+    result = result.astype(str).str.strip().str.lower()
+    out["probability_outcome"] = np.where(
+        result.eq("win"), 1.0,
+        np.where(result.eq("loss"), 0.0, np.nan),
+    )
+
+    p = pd.to_numeric(out["bet_model_prob"], errors="coerce")
+    y = pd.to_numeric(out["probability_outcome"], errors="coerce")
+    valid_prob = p.between(0, 1, inclusive="both") & y.isin([0.0, 1.0])
+    out["brier_component"] = np.where(valid_prob, (p - y) ** 2, np.nan)
+    p_clip = p.clip(1e-15, 1 - 1e-15)
+    out["log_loss_component"] = np.where(
+        valid_prob,
+        -(y * np.log(p_clip) + (1.0 - y) * np.log(1.0 - p_clip)),
+        np.nan,
+    )
+
+    home_score = pd.to_numeric(out.get("home_score"), errors="coerce")
+    away_score = pd.to_numeric(out.get("away_score"), errors="coerce")
+    home_proj = pd.to_numeric(out.get("home_projected_points"), errors="coerce")
+    away_proj = pd.to_numeric(out.get("away_projected_points"), errors="coerce")
+    total_proj = pd.to_numeric(out.get("total_projected_points"), errors="coerce")
+
+    out["actual_margin"] = home_score - away_score
+    out["projected_margin"] = home_proj - away_proj
+    out["margin_error"] = out["projected_margin"] - out["actual_margin"]
+    out["margin_abs_error"] = out["margin_error"].abs()
+    out["margin_squared_error"] = out["margin_error"] ** 2
+
+    out["actual_total"] = home_score + away_score
+    out["projected_total"] = total_proj
+    out["total_error"] = out["projected_total"] - out["actual_total"]
+    out["total_abs_error"] = out["total_error"].abs()
+    out["total_squared_error"] = out["total_error"] ** 2
+
+    out["entry_market_prob"] = out.apply(selected_entry_market_prob, axis=1)
+    out["closing_market_prob"] = out.apply(selected_closing_market_prob, axis=1)
+    out["closing_line"] = out.apply(selected_closing_line, axis=1)
+    out["clv"] = out.apply(calculate_clv, axis=1)
+    out["clv_units"] = np.where(
+        out["market_type"].eq("moneyline"),
+        "probability_points",
+        np.where(out["market_type"].isin(["spread", "total"]), "points", ""),
+    )
+
+    out["model_vs_market_prob_pp"] = (
+        pd.to_numeric(out["bet_model_prob"], errors="coerce")
+        - pd.to_numeric(out["closing_market_prob"], errors="coerce")
+    ) * 100.0
+    out["abs_model_vs_market_prob_pp"] = out["model_vs_market_prob_pp"].abs()
+
+    out["model_vs_market_line"] = out.apply(calculate_line_disagreement, axis=1)
+    out["abs_model_vs_market_line"] = pd.to_numeric(
+        out["model_vs_market_line"], errors="coerce"
+    ).abs()
+
+    return out
+
+
+def calibration_error(sub: pd.DataFrame) -> float:
+    p = pd.to_numeric(sub.get("bet_model_prob"), errors="coerce")
+    y = pd.to_numeric(sub.get("probability_outcome"), errors="coerce")
+    valid = p.between(0, 1, inclusive="both") & y.isin([0.0, 1.0])
+    p = p[valid]
+    y = y[valid]
+    if len(p) < MIN_PROB_SAMPLE:
+        return np.nan
+
+    bins = pd.cut(
+        p,
+        bins=np.linspace(0.0, 1.0, 11),
+        include_lowest=True,
+        right=True,
+    )
+    frame = pd.DataFrame({"p": p, "y": y, "bin": bins})
+    total = len(frame)
+    ece = 0.0
+    for _, bucket in frame.groupby("bin", observed=True):
+        if bucket.empty:
+            continue
+        ece += (len(bucket) / total) * abs(bucket["p"].mean() - bucket["y"].mean())
+    return float(ece)
+
+
+def game_level_rows(sub: pd.DataFrame) -> pd.DataFrame:
+    keys = [
+        c for c in [
+            "game_id", "model_source", "model_version",
+            "feature_version", "ensemble_version",
+        ] if c in sub.columns
+    ]
+    if not keys:
+        return sub
+    return sub.drop_duplicates(keys, keep="last")
+
+
+def quality_row(
+    sub: pd.DataFrame,
+    *,
+    scope: str,
+    league: str,
+    market_type: str = "ALL",
+    model_source: str = "ALL",
+    model_version: str = "ALL",
+) -> dict:
+    p = pd.to_numeric(sub.get("bet_model_prob"), errors="coerce")
+    y = pd.to_numeric(sub.get("probability_outcome"), errors="coerce")
+    prob_valid = p.between(0, 1, inclusive="both") & y.isin([0.0, 1.0])
+    prob_n = int(prob_valid.sum())
+
+    brier = float(pd.to_numeric(sub.get("brier_component"), errors="coerce").mean()) \
+        if prob_n >= MIN_PROB_SAMPLE else np.nan
+    logloss = float(pd.to_numeric(sub.get("log_loss_component"), errors="coerce").mean()) \
+        if prob_n >= MIN_PROB_SAMPLE else np.nan
+    cal = calibration_error(sub)
+
+    games = game_level_rows(sub)
+    margin_values = pd.to_numeric(games.get("margin_error"), errors="coerce").dropna()
+    total_values = pd.to_numeric(games.get("total_error"), errors="coerce").dropna()
+    margin_n = len(margin_values)
+    total_n = len(total_values)
+
+    margin_mae = float(margin_values.abs().mean()) if margin_n >= MIN_GAME_ERROR_SAMPLE else np.nan
+    margin_rmse = float(np.sqrt((margin_values ** 2).mean())) if margin_n >= MIN_GAME_ERROR_SAMPLE else np.nan
+    total_mae = float(total_values.abs().mean()) if total_n >= MIN_GAME_ERROR_SAMPLE else np.nan
+    total_rmse = float(np.sqrt((total_values ** 2).mean())) if total_n >= MIN_GAME_ERROR_SAMPLE else np.nan
+
+    clv = pd.to_numeric(sub.get("clv"), errors="coerce").dropna()
+    clv_n = len(clv)
+    clv_units_values = sorted({
+        str(x) for x in sub.loc[pd.to_numeric(sub.get("clv"), errors="coerce").notna(), "clv_units"].dropna()
+        if str(x).strip()
+    }) if "clv_units" in sub.columns else []
+    clv_units = clv_units_values[0] if len(clv_units_values) == 1 else ("mixed" if clv_units_values else "")
+    avg_clv = (
+        float(clv.mean())
+        if clv_n >= MIN_CLV_SAMPLE and clv_units != "mixed"
+        else np.nan
+    )
+
+    prob_dis = pd.to_numeric(sub.get("model_vs_market_prob_pp"), errors="coerce").dropna()
+    prob_dis_n = len(prob_dis)
+    avg_prob_dis = float(prob_dis.mean()) if prob_dis_n >= MIN_DISAGREEMENT_SAMPLE else np.nan
+    abs_prob_dis = float(prob_dis.abs().mean()) if prob_dis_n >= MIN_DISAGREEMENT_SAMPLE else np.nan
+
+    line_dis = pd.to_numeric(sub.get("model_vs_market_line"), errors="coerce").dropna()
+    line_dis_n = len(line_dis)
+    market_values = {
+        str(x).lower()
+        for x in sub.loc[pd.to_numeric(sub.get("model_vs_market_line"), errors="coerce").notna(), "market_type"].dropna()
+    } if "market_type" in sub.columns else set()
+    line_mixed = len(market_values) > 1
+    avg_line_dis = (
+        float(line_dis.mean())
+        if line_dis_n >= MIN_DISAGREEMENT_SAMPLE and not line_mixed
+        else np.nan
+    )
+    abs_line_dis = (
+        float(line_dis.abs().mean())
+        if line_dis_n >= MIN_DISAGREEMENT_SAMPLE and not line_mixed
+        else np.nan
+    )
+
+    return {
+        "scope": scope,
+        "league": league.upper(),
+        "market_type": market_type,
+        "model_source": model_source,
+        "model_version": model_version,
+        "rows": len(sub),
+        "probability_n": prob_n,
+        "brier_score": brier,
+        "log_loss": logloss,
+        "calibration_error": cal,
+        "margin_n": margin_n,
+        "margin_mae": margin_mae,
+        "margin_rmse": margin_rmse,
+        "total_n": total_n,
+        "total_mae": total_mae,
+        "total_rmse": total_rmse,
+        "clv_n": clv_n,
+        "avg_clv": avg_clv,
+        "clv_units": clv_units,
+        "prob_disagreement_n": prob_dis_n,
+        "avg_model_vs_market_prob_pp": avg_prob_dis,
+        "mean_abs_model_vs_market_prob_pp": abs_prob_dis,
+        "line_disagreement_n": line_dis_n,
+        "avg_model_vs_market_line": avg_line_dis,
+        "mean_abs_model_vs_market_line": abs_line_dis,
+    }
+
+
+def build_quality_metrics(work: pd.DataFrame, league: str) -> pd.DataFrame:
+    if work.empty:
+        return pd.DataFrame(columns=QUALITY_COLUMNS)
+
+    frame = work.copy()
+    frame["_model_source"] = (
+        frame.get("model_source", pd.Series(index=frame.index, dtype=object))
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .replace("", "unknown")
+    )
+    frame["_model_version"] = (
+        frame.get("model_version", pd.Series(index=frame.index, dtype=object))
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .replace("", "unknown")
+    )
+
+    rows = [
+        quality_row(frame, scope="league", league=league)
+    ]
+
+    if "market_type" in frame.columns:
+        for market, sub in frame.groupby("market_type", dropna=False, observed=True):
+            rows.append(
+                quality_row(
+                    sub,
+                    scope="market",
+                    league=league,
+                    market_type=str(market).lower(),
+                )
+            )
+
+    for source, sub in frame.groupby("_model_source", dropna=False, observed=True):
+        rows.append(
+            quality_row(
+                sub,
+                scope="model_source",
+                league=league,
+                model_source=str(source),
+            )
+        )
+
+    for (source, version), sub in frame.groupby(
+        ["_model_source", "_model_version"], dropna=False, observed=True
+    ):
+        rows.append(
+            quality_row(
+                sub,
+                scope="model_version",
+                league=league,
+                model_source=str(source),
+                model_version=str(version),
+            )
+        )
+
+    if "market_type" in frame.columns:
+        for (market, source, version), sub in frame.groupby(
+            ["market_type", "_model_source", "_model_version"],
+            dropna=False,
+            observed=True,
+        ):
+            rows.append(
+                quality_row(
+                    sub,
+                    scope="market_model_version",
+                    league=league,
+                    market_type=str(market).lower(),
+                    model_source=str(source),
+                    model_version=str(version),
+                )
+            )
+
+    out = pd.DataFrame(rows, columns=QUALITY_COLUMNS)
+    return out
+
+
+
 # =========================
 # PREPARE
 # =========================
@@ -351,6 +879,12 @@ def prepare(df: pd.DataFrame, league_label: str) -> pd.DataFrame:
 
     # Tag with league
     work["market"] = league_label
+
+    # Preserve model provenance explicitly. Historical rows remain blank rather
+    # than being assigned invented versions.
+    for column in MODEL_METADATA_COLUMNS:
+        if column not in work.columns:
+            work[column] = pd.NA
 
     # Side grouping (HOME/AWAY/OVER/UNDER)
     work["side_group"] = work.apply(build_side_group, axis=1)
@@ -422,35 +956,52 @@ def run_one(league: str) -> None:
     upper = league.upper()
     in_path  = INPUT_DIR / league / "graded" / f"{upper}_final.csv"
     out_path = OUTPUT_DIR / f"work_{league}.csv"
+    quality_path = OUTPUT_DIR / f"quality_metrics_{league}.csv"
 
     if not in_path.exists():
         log_input(in_path, 0, exists=False)
         warn(f"[{upper}] input missing: {in_path} — skipping")
+        pd.DataFrame(columns=QUALITY_COLUMNS).to_csv(quality_path, index=False)
+        log_output(quality_path, 0)
         return
 
     df = pd.read_csv(in_path)
     log_input(in_path, len(df), exists=True)
 
     if df.empty:
-        warn(f"[{upper}] input is empty: {in_path} — writing empty work file")
+        warn(f"[{upper}] input is empty: {in_path} — writing empty work/quality files")
         df.to_csv(out_path, index=False)
         log_output(out_path, 0)
+        pd.DataFrame(columns=QUALITY_COLUMNS).to_csv(quality_path, index=False)
+        log_output(quality_path, 0)
         return
 
     work = prepare(df, upper)
+    work = attach_closing_lines(work, league)
+    work = add_quality_columns(work)
+
     work.to_csv(out_path, index=False)
     log_output(out_path, len(work))
+
+    quality = build_quality_metrics(work, league)
+    quality.to_csv(quality_path, index=False)
+    log_output(quality_path, len(quality))
+
     log("INFO", f"[{upper}] wrote {len(work)} rows -> {out_path}")
+    log("INFO", f"[{upper}] wrote {len(quality)} quality rows -> {quality_path}")
 
 
 def run() -> None:
     # Wipe basketball intermediate outputs before regenerating, matching the
     # previous behavior but after the run log has been initialized.
     for league in LEAGUES:
-        out_path = OUTPUT_DIR / f"work_{league}.csv"
-        if out_path.exists():
-            out_path.unlink()
-            log("INFO", f"REMOVED_STALE_OUTPUT | file={out_path}")
+        for out_path in [
+            OUTPUT_DIR / f"work_{league}.csv",
+            OUTPUT_DIR / f"quality_metrics_{league}.csv",
+        ]:
+            if out_path.exists():
+                out_path.unlink()
+                log("INFO", f"REMOVED_STALE_OUTPUT | file={out_path}")
 
     for league in LEAGUES:
         run_one(league)
