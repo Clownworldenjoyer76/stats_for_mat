@@ -1,30 +1,33 @@
-=== compute_ev_kelly RUN 2026-08-28T18:05:10.542088+00:00 ===
-2026-08-28T18:05:10.584393+00:00 | INFO  | Wiped old outputs.
-2026-08-28T18:05:10.584729+00:00 | INFO  | INPUT_DIR : C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input
-2026-08-28T18:05:10.584987+00:00 | INFO  | OUTPUT_DIR: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\output
-2026-08-28T18:05:10.585378+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\nba\moneyline
-2026-08-28T18:05:10.585701+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\nba\spread
-2026-08-28T18:05:10.585983+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\nba\total
-2026-08-28T18:05:10.586262+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\ncaam\moneyline
-2026-08-28T18:05:10.586662+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\ncaam\spread
-2026-08-28T18:05:10.586938+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\ncaam\total
-2026-08-28T18:05:10.587213+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\wnba\moneyline
-2026-08-28T18:05:10.587489+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\wnba\spread
-2026-08-28T18:05:10.587869+00:00 | WARN  | INPUT FOLDER MISSING: C:\Users\Mat\AppData\Local\Temp\basketball_ev_2ubpldx8\input\wnba\total
+=== compute_ev_kelly RUN 2026-08-30T10:08:19.912694+00:00 ===
+2026-08-30T10:08:19.913846+00:00 | INFO  | Wiped old outputs.
+2026-08-30T10:08:19.913894+00:00 | INFO  | INPUT_DIR : /tmp/basketball_ev_0b_wzxlq/input
+2026-08-30T10:08:19.913925+00:00 | INFO  | OUTPUT_DIR: /tmp/basketball_ev_0b_wzxlq/output
+2026-08-30T10:08:19.913975+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/nba/moneyline
+2026-08-30T10:08:19.914021+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/nba/spread
+2026-08-30T10:08:19.914062+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/nba/total
+2026-08-30T10:08:19.914108+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/ncaam/moneyline
+2026-08-30T10:08:19.914151+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/ncaam/spread
+2026-08-30T10:08:19.914191+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_0b_wzxlq/input/ncaam/total
+2026-08-30T10:08:19.930846+00:00 | INFO  | WROTE: /tmp/basketball_ev_0b_wzxlq/output/wnba/moneyline/2026_08_30_WNBA_moneyline.csv (4 rows)
+2026-08-30T10:08:19.940978+00:00 | INFO  | WROTE: /tmp/basketball_ev_0b_wzxlq/output/wnba/spread/2026_08_30_WNBA_spread.csv (4 rows)
+2026-08-30T10:08:19.950320+00:00 | INFO  | WROTE: /tmp/basketball_ev_0b_wzxlq/output/wnba/total/2026_08_30_WNBA_total.csv (4 rows)
 
 ======================================================================
-SUMMARY  2026-08-28T18:05:10.587976+00:00
+SUMMARY  2026-08-30T10:08:19.950379+00:00
 ======================================================================
-  files_processed   : 0
-  rows_processed    : 0
-  moneyline_files   : 0
-  spread_files      : 0
-  total_files       : 0
+  files_processed   : 3
+  rows_processed    : 12
+  moneyline_files   : 1
+  spread_files      : 1
+  total_files       : 1
   skipped           : 0
   schema_errors     : 0
   errors            : 0
 
   file                                             league market       rows     status
+  2026_08_30_WNBA_moneyline.csv                      WNBA moneyline       4         ok
+  2026_08_30_WNBA_spread.csv                         WNBA spread          4         ok
+  2026_08_30_WNBA_total.csv                          WNBA total           4         ok
 
 STATUS: SUCCESS
 ======================================================================
