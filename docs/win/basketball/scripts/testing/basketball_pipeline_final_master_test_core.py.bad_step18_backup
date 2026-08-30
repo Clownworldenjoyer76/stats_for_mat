@@ -1835,33 +1835,13 @@ def load_data(
         input_file
     )
 
-    if 'model_source' in df.columns:
-        seen_sources = {
-            str(v).strip().lower()
-            for v
-            in df[
-                'model_source'
-            ].dropna().tolist()
-            if str(v).strip()
-        }
-
-        if (
-            seen_sources
-            and seen_sources
-            != {
-                model_source
-            }
-        ):
-            raise ValueError(
-                'Input model_source values '
-                f'{sorted(seen_sources)} '
-                'do not match requested '
-                f'model_source={model_source}'
-            )
-
-    df[
-        'model_source'
-    ] = model_source
+    df = apply_historical_model_source(
+        df,
+        league,
+        settings,
+        model_source,
+        internal_season,
+    )
 
     required = [
         'game_date',
@@ -12862,6 +12842,949 @@ def write_report(
 
 
 
+import hashlib
+
+# Step 18 additions for basketball_pipeline_final_master_test_core.py
+
+SDV_MODEL_CONFIG = Path(
+    'docs/win/basketball/config/sdv_model.yaml'
+)
+SDV_PREDICT_SCRIPT = Path(
+    'docs/win/basketball/scripts/00_intake/sdv_predict.py'
+)
+ENSEMBLE_SCRIPT = Path(
+    'docs/win/basketball/scripts/00_intake/basketball_model_ensemble.py'
+)
+WNBA_MARKET_BANDS_REPORT = Path(
+    'docs/win/basketball/backtest/model_validation/'
+    'sdv_ensemble/wnba/WNBA_MARKET_BANDS_REPORT.txt'
+)
+
+
+def _load_module_with_sibling_imports(name: str, path: Path):
+    parent = str(path.resolve().parent)
+    inserted = parent not in sys.path
+    if inserted:
+        sys.path.insert(0, parent)
+    try:
+        return load_module_from_path(name, path)
+    finally:
+        if inserted:
+            try:
+                sys.path.remove(parent)
+            except ValueError:
+                pass
+
+
+def _normalize_match_text(value: Any) -> list[str]:
+    text = '' if value is None else str(value)
+    return ''.join(
+        ch.lower() if ch.isalnum() else ' '
+        for ch in text
+    ).split()
+
+
+def _normalized_team(value: Any) -> str:
+    return ' '.join(_normalize_match_text(value))
+
+
+def _normalized_date(value: Any) -> str:
+    text = '' if value is None else str(value).strip()
+    text = text[:10].replace('_', '-').replace('/', '-')
+    try:
+        return pd.Timestamp(text).strftime('%Y-%m-%d')
+    except Exception:
+        return ''
+
+
+def _target_team_candidates(row: dict[str, Any], side: str) -> set[str]:
+    values = {
+        _normalized_team(row.get(f'{side}_team')),
+        _normalized_team(row.get(f'{side}_display_name')),
+        _normalized_team(row.get(f'{side}_short_display_name')),
+        _normalized_team(row.get(f'{side}_name')),
+        _normalized_team(row.get(f'{side}_location')),
+    }
+    values.discard('')
+    return values
+
+
+def _historical_feature_map(
+    base_df: pd.DataFrame,
+    league: str,
+    internal_season: int,
+    sdv_module: Any,
+    sdv_cfg: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    try:
+        import polars as pl
+    except Exception as exc:
+        raise SystemExit(
+            'SDV/ensemble historical validation requires polars.'
+        ) from exc
+
+    paths = sdv_module.feature_generation.configured_paths(sdv_cfg)
+    feature_path = (
+        paths['history_output_root']
+        / league.lower()
+        / f'{internal_season}_{league.upper()}_features.parquet'
+    )
+    if not feature_path.exists():
+        raise FileNotFoundError(
+            f'Missing historical SDV feature file: {feature_path}'
+        )
+
+    feature_rows = pl.read_parquet(feature_path).to_dicts()
+    if not feature_rows:
+        raise RuntimeError(
+            f'Historical SDV feature file has zero rows: {feature_path}'
+        )
+
+    history_root = paths['history_input_root']
+    target_rows = (
+        sdv_module.feature_generation.historical_target_rows(
+            history_root,
+            league.lower(),
+            internal_season,
+        )
+    )
+
+    feature_by_id: dict[str, dict[str, Any]] = {}
+    for row in feature_rows:
+        game_id = sdv_module.clean_id(row.get('game_id'))
+        if not game_id:
+            raise RuntimeError(
+                f'{feature_path}: feature row has blank game_id'
+            )
+        if game_id in feature_by_id:
+            raise RuntimeError(
+                f'{feature_path}: duplicate feature game_id={game_id}'
+            )
+        feature_by_id[game_id] = row
+
+    target_by_id: dict[str, dict[str, Any]] = {}
+    for row in target_rows:
+        game_id = sdv_module.clean_id(
+            row.get('game_id') or row.get('id')
+        )
+        if game_id:
+            target_by_id[game_id] = row
+
+    base_ids = [str(v).strip() for v in base_df['game_id'].tolist()]
+    if len(base_ids) != len(set(base_ids)):
+        dupes = sorted(
+            pd.Series(base_ids)[pd.Series(base_ids).duplicated()].unique().tolist()
+        )
+        raise RuntimeError(
+            f'Historical input contains duplicate game_id values: {dupes}'
+        )
+
+    match_by_base_id: dict[str, dict[str, Any]] = {}
+    unresolved: list[str] = []
+
+    # Primary match: exact canonical game_id.
+    for base_id in base_ids:
+        if base_id in feature_by_id:
+            match_by_base_id[base_id] = feature_by_id[base_id]
+
+    # Fallback for older combined files whose game_id is a synthetic string:
+    # match by date + exact normalized home/away display name from SDV games.
+    if len(match_by_base_id) != len(base_ids):
+        target_candidates: list[tuple[str, str, set[str], set[str]]] = []
+        for sdv_id, target in target_by_id.items():
+            if sdv_id not in feature_by_id:
+                continue
+            parsed_target_date = (
+                sdv_module.feature_generation.row_game_date(target)
+            )
+            target_date = (
+                parsed_target_date.strftime('%Y-%m-%d')
+                if parsed_target_date is not None
+                else ''
+            )
+            homes = _target_team_candidates(target, 'home')
+            aways = _target_team_candidates(target, 'away')
+            if target_date and homes and aways:
+                target_candidates.append((sdv_id, target_date, homes, aways))
+
+        for _, base_row in base_df.iterrows():
+            base_id = str(base_row['game_id']).strip()
+            if base_id in match_by_base_id:
+                continue
+            base_date = _normalized_date(base_row.get('game_date'))
+            base_home = _normalized_team(base_row.get('home_team'))
+            base_away = _normalized_team(base_row.get('away_team'))
+            matches = [
+                sdv_id
+                for sdv_id, target_date, homes, aways in target_candidates
+                if (
+                    target_date == base_date
+                    and base_home in homes
+                    and base_away in aways
+                )
+            ]
+            if len(matches) == 1:
+                match_by_base_id[base_id] = feature_by_id[matches[0]]
+            else:
+                unresolved.append(
+                    f'{base_id} ({base_date} | {base_row.get("home_team")} vs '
+                    f'{base_row.get("away_team")}) matches={matches}'
+                )
+
+    if len(match_by_base_id) != len(base_ids):
+        missing = [
+            base_id for base_id in base_ids if base_id not in match_by_base_id
+        ]
+        raise RuntimeError(
+            'Historical SDV feature coverage failed. Missing base game_id values='
+            f'{missing}. Match detail={unresolved}'
+        )
+
+    return match_by_base_id
+
+
+def _historical_sdv_predictions(
+    base_df: pd.DataFrame,
+    league: str,
+    internal_season: int,
+) -> dict[str, dict[str, Any]]:
+    if not SDV_MODEL_CONFIG.exists():
+        raise FileNotFoundError(SDV_MODEL_CONFIG)
+
+    sdv_module = _load_module_with_sibling_imports(
+        'basketball_master_sdv_predict',
+        SDV_PREDICT_SCRIPT,
+    )
+    sdv_cfg = sdv_module.feature_generation.read_yaml(SDV_MODEL_CONFIG)
+    sdv_module.feature_generation.validate_config(sdv_cfg)
+
+    artifacts = sdv_module.load_artifacts(sdv_cfg, league.lower())
+    model_version, feature_version = sdv_module.validate_artifacts(
+        sdv_cfg,
+        league.lower(),
+        artifacts,
+    )
+    feature_map = _historical_feature_map(
+        base_df,
+        league,
+        internal_season,
+        sdv_module,
+        sdv_cfg,
+    )
+
+    predictions: dict[str, dict[str, Any]] = {}
+    for _, row in base_df.iterrows():
+        game_id = str(row['game_id']).strip()
+        prediction = sdv_module.build_prediction_row(
+            slate_row=row.to_dict(),
+            feature_row=feature_map[game_id],
+            artifacts=artifacts,
+            model_version=model_version,
+            feature_version=feature_version,
+            prediction_generated_at='historical_master_validation',
+        )
+        prediction['game_id'] = game_id
+        predictions[game_id] = prediction
+
+    return predictions
+
+
+def _raw_dratings_rows_for_ensemble(
+    base_df: pd.DataFrame,
+    league: str,
+    settings: dict[str, Any],
+    internal_season: int,
+) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for _, row in base_df.iterrows():
+        game_id = str(row['game_id']).strip()
+        raw_home, raw_away, raw_total = reverse_bias_row_to_raw(
+            row,
+            league,
+            settings,
+            internal_season,
+        )
+        payload = row.to_dict()
+        payload['game_id'] = game_id
+        payload['home_projected_points'] = raw_home
+        payload['away_projected_points'] = raw_away
+        payload['total_projected_points'] = raw_total
+        payload['bias_applied'] = 0
+        out[game_id] = payload
+    return out
+
+
+def apply_historical_model_source(
+    df: pd.DataFrame,
+    league: str,
+    settings: dict[str, Any],
+    model_source: str,
+    internal_season: int,
+) -> pd.DataFrame:
+    out = df.copy()
+
+    seen_sources: set[str] = set()
+    if 'model_source' in out.columns:
+        seen_sources = {
+            str(v).strip().lower()
+            for v in out['model_source'].dropna().tolist()
+            if str(v).strip()
+        }
+        if seen_sources and seen_sources != {model_source}:
+            raise ValueError(
+                f'Input model_source values {sorted(seen_sources)} do not match '
+                f'requested model_source={model_source}'
+            )
+
+    # An explicitly source-tagged historical file is already source-ready.
+    if seen_sources == {model_source}:
+        return out
+
+    if model_source == 'dratings':
+        out['model_source'] = 'dratings'
+        return out
+
+    sdv_predictions = _historical_sdv_predictions(
+        out,
+        league,
+        internal_season,
+    )
+
+    if model_source == 'sdv':
+        source_predictions = sdv_predictions
+    else:
+        ensemble_module = _load_module_with_sibling_imports(
+            'basketball_master_ensemble',
+            ENSEMBLE_SCRIPT,
+        )
+        weights = ensemble_module.load_weights(league.lower())
+        dratings_rows = _raw_dratings_rows_for_ensemble(
+            out,
+            league,
+            settings,
+            internal_season,
+        )
+        source_predictions: dict[str, dict[str, Any]] = {}
+        for game_id in out['game_id'].astype(str).str.strip().tolist():
+            source_predictions[game_id] = ensemble_module.combine_game(
+                league=league.lower(),
+                game_id=game_id,
+                dratings=dratings_rows[game_id],
+                sdv=sdv_predictions[game_id],
+                weights=weights,
+                prediction_time='historical_master_validation',
+            )
+
+    forecast_columns = (
+        'home_prob',
+        'away_prob',
+        'home_projected_points',
+        'away_projected_points',
+        'total_projected_points',
+    )
+    provenance_columns = (
+        'model_version',
+        'feature_version',
+        'ensemble_version',
+        'sdv_model_version',
+        'sdv_feature_version',
+    )
+
+    for index, row in out.iterrows():
+        game_id = str(row['game_id']).strip()
+        prediction = source_predictions.get(game_id)
+        if prediction is None:
+            raise RuntimeError(
+                f'{model_source}: missing historical prediction for game_id={game_id}'
+            )
+        for column in forecast_columns:
+            if column not in prediction:
+                raise RuntimeError(
+                    f'{model_source}: game_id={game_id} missing {column}'
+                )
+            out.at[index, column] = prediction[column]
+        for column in provenance_columns:
+            if column in prediction:
+                out.at[index, column] = prediction[column]
+
+    out['model_source'] = model_source
+    # SDV/ensemble projections are raw inputs to the production bias layer.
+    out['bias_applied'] = 0
+    if 'margin_bias' in out.columns:
+        out['margin_bias'] = np.nan
+    if 'total_bias' in out.columns:
+        out['total_bias'] = np.nan
+
+    return out
+
+
+def _bias_history_requirement(rule: dict[str, Any]) -> int:
+    normalized = normalize_production_bias_rule(rule)
+    method = normalized['method']
+    if method in {'none', 'fixed'}:
+        return 0
+    if method == 'rolling':
+        return int(normalized['window_games'])
+    return max(int(v) for v in normalized['windows_games'])
+
+
+def _production_fold_probabilities(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    market: str,
+    settings: dict[str, Any],
+) -> tuple[np.ndarray, np.ndarray] | None:
+    if market == 'moneyline':
+        return current_pipeline_probabilities(
+            test,
+            market,
+            settings,
+            prior_history=train,
+        )
+
+    rule = (
+        settings['MARGIN_BIAS_RULE']
+        if market == 'spread'
+        else settings['TOTAL_BIAS_RULE']
+    )
+    if len(train) < _bias_history_requirement(rule):
+        return None
+
+    return current_pipeline_probabilities(
+        test,
+        market,
+        settings,
+        prior_history=train,
+    )
+
+
+def _decimal_to_american(value: Any) -> float:
+    try:
+        decimal = float(value)
+    except Exception:
+        return np.nan
+    if not np.isfinite(decimal) or decimal <= 1.0:
+        return np.nan
+    if decimal >= 2.0:
+        return 100.0 * (decimal - 1.0)
+    return -100.0 / (decimal - 1.0)
+
+
+def _flatten_selected_side_bets(
+    meta: pd.DataFrame,
+    selected: pd.DataFrame,
+    market: str,
+    model_source: str,
+) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    side1, side2 = market_sides(market)
+
+    for position in range(len(selected)):
+        src = selected.iloc[position]
+        base = meta.iloc[position]
+        for side_index, side in ((1, side1), (2, side2)):
+            if not bool(src[f'side{side_index}_selected']):
+                continue
+            line = np.nan
+            if market == 'spread':
+                line = float(
+                    base['home_spread'] if side_index == 1 else base['away_spread']
+                )
+            elif market == 'total':
+                line = float(base['total'])
+
+            decimal_odds = float(src[f'side{side_index}_odds'])
+            rows.append({
+                'model_source': model_source,
+                'market': market,
+                'side': side,
+                'game_id': str(src['game_id']),
+                'date': src['date'],
+                'fold_id': int(src['fold_id']),
+                'line': line,
+                'odds': _decimal_to_american(decimal_odds),
+                'decimal_odds': decimal_odds,
+                'ev': float(src[f'side{side_index}_ev']),
+                'kelly': float(src[f'side{side_index}_kelly']),
+                'model_prob': float(src[f'side{side_index}_prob']),
+                'edge_vs_market': float(src[f'side{side_index}_edge_vs_market']),
+                'result': float(src[f'side{side_index}_result']),
+                'profit': float(src[f'side{side_index}_profit']),
+            })
+
+    return pd.DataFrame(rows)
+
+
+def _development_oos_bets(
+    dev: pd.DataFrame,
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    model_source: str,
+) -> pd.DataFrame:
+    folds = make_outer_folds(dev, TARGET_OUTER_FOLDS)
+    frames: list[pd.DataFrame] = []
+
+    for fold_id, train_idx, test_idx in folds:
+        train = dev.iloc[train_idx]
+        test = dev.iloc[test_idx].copy()
+        test['fold_id'] = fold_id
+        for market in ('moneyline', 'spread', 'total'):
+            probs = _production_fold_probabilities(
+                train,
+                test,
+                market,
+                settings,
+            )
+            if probs is None:
+                continue
+            p1, p2 = probs
+            base = market_opportunities(test, market, p1, p2)
+            selected = select_opportunities(
+                base,
+                selection_policies[market],
+                edge_mode='shared',
+                shared_edge=current_edge_for_market(market, settings),
+            )
+            flat = _flatten_selected_side_bets(
+                test,
+                selected,
+                market,
+                model_source,
+            )
+            if not flat.empty:
+                frames.append(flat)
+
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def _lockbox_bets(
+    dev: pd.DataFrame,
+    lockbox: pd.DataFrame,
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    model_source: str,
+) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    for market in ('moneyline', 'spread', 'total'):
+        p1, p2 = current_pipeline_probabilities(
+            lockbox,
+            market,
+            settings,
+            prior_history=dev,
+        )
+        meta = lockbox.copy()
+        meta['fold_id'] = 999
+        base = market_opportunities(meta, market, p1, p2)
+        selected = select_opportunities(
+            base,
+            selection_policies[market],
+            edge_mode='shared',
+            shared_edge=current_edge_for_market(market, settings),
+        )
+        flat = _flatten_selected_side_bets(
+            meta,
+            selected,
+            market,
+            model_source,
+        )
+        if not flat.empty:
+            frames.append(flat)
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def _bet_metrics(df: pd.DataFrame) -> dict[str, Any]:
+    if df.empty:
+        return {
+            'bets': 0,
+            'profit_units': 0.0,
+            'roi': np.nan,
+            'positive_fold_rate': np.nan,
+            'folds': 0,
+        }
+    profit = float(pd.to_numeric(df['profit'], errors='coerce').sum())
+    bets = int(len(df))
+    fold_profit = df.groupby('fold_id')['profit'].sum()
+    return {
+        'bets': bets,
+        'profit_units': profit,
+        'roi': profit / bets if bets else np.nan,
+        'positive_fold_rate': float((fold_profit > 0).mean()) if len(fold_profit) else np.nan,
+        'folds': int(len(fold_profit)),
+    }
+
+
+def _snap_band_value(metric: str, value: float) -> float:
+    if metric == 'odds':
+        return float(round(value / 25.0) * 25.0)
+    if metric == 'line':
+        return float(round(value * 2.0) / 2.0)
+    if metric in {'ev', 'kelly'}:
+        return float(round(value, 2))
+    if metric == 'model_prob':
+        return float(round(value / 0.025) * 0.025)
+    if metric == 'edge_vs_market':
+        return float(round(value))
+    return float(value)
+
+
+def _candidate_intervals(df: pd.DataFrame, metric: str) -> list[tuple[float, float]]:
+    values = pd.to_numeric(df[metric], errors='coerce').dropna()
+    if len(values) < 12:
+        return []
+    quantiles = np.unique(
+        np.quantile(
+            values.to_numpy(float),
+            [0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.33,
+             0.50, 0.67, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00],
+        )
+    )
+    cuts = sorted({_snap_band_value(metric, float(v)) for v in quantiles})
+    if len(cuts) < 2:
+        return []
+
+    intervals: set[tuple[float, float]] = set()
+    full_lo, full_hi = cuts[0], cuts[-1]
+    for cut in cuts[1:-1]:
+        intervals.add((cut, full_hi))
+        intervals.add((full_lo, cut))
+    for i in range(len(cuts) - 1):
+        for j in range(i + 1, len(cuts)):
+            lo, hi = cuts[i], cuts[j]
+            if lo < hi:
+                intervals.add((lo, hi))
+    intervals.discard((full_lo, full_hi))
+    return sorted(intervals)
+
+
+def _apply_band_filters(
+    df: pd.DataFrame,
+    bands: dict[str, tuple[float, float]],
+) -> pd.DataFrame:
+    mask = np.ones(len(df), dtype=bool)
+    for metric, (lo, hi) in bands.items():
+        values = pd.to_numeric(df[metric], errors='coerce').to_numpy(float)
+        mask &= np.isfinite(values) & (values >= lo) & (values <= hi)
+    return df.loc[mask].copy()
+
+
+def _discover_side_bands(side_df: pd.DataFrame) -> dict[str, Any]:
+    baseline = _bet_metrics(side_df)
+    bands: dict[str, tuple[float, float]] = {}
+    if baseline['bets'] < 12:
+        return {
+            'bands': bands,
+            'baseline': baseline,
+            'development': baseline,
+            'status': 'INSUFFICIENT_DEVELOPMENT_BETS',
+        }
+
+    dimensions = ['odds', 'ev', 'kelly', 'model_prob', 'edge_vs_market']
+    if side_df['market'].iloc[0] in {'spread', 'total'}:
+        dimensions.insert(1, 'line')
+
+    current = side_df.copy()
+    current_metrics = baseline
+    used: set[str] = set()
+
+    for _ in range(2):
+        best: tuple[Any, ...] | None = None
+        for metric in dimensions:
+            if metric in used:
+                continue
+            for lo, hi in _candidate_intervals(current, metric):
+                candidate_bands = dict(bands)
+                candidate_bands[metric] = (lo, hi)
+                candidate = _apply_band_filters(side_df, candidate_bands)
+                metrics = _bet_metrics(candidate)
+                min_bets = max(12, int(math.ceil(0.35 * baseline['bets'])))
+                if metrics['bets'] < min_bets:
+                    continue
+                if metrics['folds'] < min(3, max(1, baseline['folds'])):
+                    continue
+                current_roi = current_metrics['roi']
+                roi_improvement = (
+                    metrics['roi'] - current_roi
+                    if np.isfinite(metrics['roi']) and np.isfinite(current_roi)
+                    else -np.inf
+                )
+                profit_improvement = (
+                    metrics['profit_units'] - current_metrics['profit_units']
+                )
+                stable = (
+                    not np.isfinite(metrics['positive_fold_rate'])
+                    or metrics['positive_fold_rate'] >= 0.50
+                )
+                if (
+                    profit_improvement < 0.50
+                    or roi_improvement < 0.01
+                    or not stable
+                ):
+                    continue
+                key = (
+                    profit_improvement,
+                    metrics['positive_fold_rate']
+                    if np.isfinite(metrics['positive_fold_rate']) else -1.0,
+                    roi_improvement,
+                    metrics['bets'],
+                )
+                if best is None or key > best[0]:
+                    best = (key, metric, lo, hi, candidate, metrics)
+
+        if best is None:
+            break
+
+        _, metric, lo, hi, current, current_metrics = best
+        bands[metric] = (float(lo), float(hi))
+        used.add(metric)
+
+    status = 'CANDIDATE_FOUND' if bands else 'NO_CHANGE_CANDIDATE'
+    return {
+        'bands': bands,
+        'baseline': baseline,
+        'development': current_metrics,
+        'status': status,
+    }
+
+
+def _format_bands(bands: dict[str, tuple[float, float]]) -> str:
+    if not bands:
+        return 'NO_CHANGE'
+    return '; '.join(
+        f'{metric}=[{lo:g},{hi:g}]'
+        for metric, (lo, hi) in bands.items()
+    )
+
+
+def _market_band_report_text(
+    input_file: Path,
+    markets_file: Path,
+    split_summary: pd.DataFrame,
+    candidates: pd.DataFrame,
+    comparison: pd.DataFrame,
+    markets_sha256: str,
+) -> str:
+    line = '=' * 100
+    carried = comparison[
+        (comparison['model_source'] == 'ensemble')
+        & (comparison['lockbox_status'] == 'VALIDATED')
+    ].copy()
+
+    parts = [
+        'WNBA MARKET BANDS REPORT',
+        line,
+        f'Input: {input_file}',
+        f'Markets config (read only): {markets_file}',
+        f'markets.yaml sha256: {markets_sha256}',
+        'markets.yaml modified: NO',
+        'Band discovery source: ENSEMBLE only',
+        'DRatings and SDV are comparison-only; they do not choose band edges.',
+        'Candidate selection uses development/OOS rows only.',
+        'The lockbox is evaluated once after all candidate bands are frozen.',
+        '',
+        'SPLIT / SOURCE COVERAGE',
+        line,
+        split_summary.to_string(index=False),
+        '',
+        'DEVELOPMENT/OOS CANDIDATES (ENSEMBLE)',
+        line,
+        candidates.to_string(index=False),
+        '',
+        'UNTOUCHED LOCKBOX: DRATINGS vs SDV vs ENSEMBLE',
+        line,
+        comparison.to_string(index=False),
+        '',
+        'CARRY FORWARD TO ITEM 21',
+        line,
+    ]
+
+    if carried.empty:
+        parts.append('No WNBA market-band changes validated on the untouched lockbox.')
+    else:
+        for _, row in carried.iterrows():
+            parts.append(
+                f"{row['market']} {row['side']}: {row['candidate_bands']}"
+            )
+
+    parts.extend([
+        '',
+        'Do not modify markets.yaml during this item.',
+        '',
+    ])
+    return '\n'.join(parts)
+
+
+def run_wnba_market_band_validation(
+    input_file: Path,
+    internal_season: int,
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    markets_file: Path,
+    output_path: Path,
+) -> Path:
+    if internal_season != 2025:
+        raise ValueError(
+            'WNBA market-band validation currently requires the completed '
+            '2025_WNBA historical base file.'
+        )
+
+    before_hash = hashlib.sha256(markets_file.read_bytes()).hexdigest()
+
+    source_frames: dict[str, pd.DataFrame] = {}
+    source_dev: dict[str, pd.DataFrame] = {}
+    source_lockbox: dict[str, pd.DataFrame] = {}
+    split_rows: list[dict[str, Any]] = []
+
+    expected_dev_ids: list[str] | None = None
+    expected_lock_ids: list[str] | None = None
+
+    for source in MODEL_SOURCES:
+        frame = load_data(
+            input_file,
+            'WNBA',
+            settings,
+            source,
+            internal_season,
+        )
+        dev, lockbox = split_development_lockbox(frame, LOCKBOX_FRACTION)
+        dev_ids = dev['game_id'].astype(str).tolist()
+        lock_ids = lockbox['game_id'].astype(str).tolist()
+        if expected_dev_ids is None:
+            expected_dev_ids = dev_ids
+            expected_lock_ids = lock_ids
+        elif dev_ids != expected_dev_ids or lock_ids != expected_lock_ids:
+            raise RuntimeError(
+                f'{source}: WNBA development/lockbox game_id split differs '
+                'from the other model sources.'
+            )
+        source_frames[source] = frame
+        source_dev[source] = dev
+        source_lockbox[source] = lockbox
+        split_rows.append({
+            'model_source': source,
+            'full_games': len(frame),
+            'development_games': len(dev),
+            'lockbox_games': len(lockbox),
+            'development_start': str(dev['_date'].min().date()),
+            'development_end': str(dev['_date'].max().date()),
+            'lockbox_start': str(lockbox['_date'].min().date()),
+            'lockbox_end': str(lockbox['_date'].max().date()),
+        })
+
+    dev_bets = _development_oos_bets(
+        source_dev['ensemble'],
+        settings,
+        selection_policies,
+        'ensemble',
+    )
+    if dev_bets.empty:
+        raise RuntimeError('Ensemble WNBA development/OOS produced zero qualifying bets.')
+
+    candidate_records: list[dict[str, Any]] = []
+    frozen_bands: dict[tuple[str, str], dict[str, tuple[float, float]]] = {}
+
+    for market in ('moneyline', 'spread', 'total'):
+        for side in market_sides(market):
+            subset = dev_bets[
+                (dev_bets['market'] == market)
+                & (dev_bets['side'] == side)
+            ].copy()
+            discovered = _discover_side_bands(subset)
+            bands = discovered['bands']
+            frozen_bands[(market, side)] = bands
+            baseline = discovered['baseline']
+            candidate = discovered['development']
+            candidate_records.append({
+                'market': market,
+                'side': side,
+                'status': discovered['status'],
+                'candidate_bands': _format_bands(bands),
+                'dev_baseline_bets': baseline['bets'],
+                'dev_baseline_profit': baseline['profit_units'],
+                'dev_baseline_roi': baseline['roi'],
+                'dev_candidate_bets': candidate['bets'],
+                'dev_candidate_profit': candidate['profit_units'],
+                'dev_candidate_roi': candidate['roi'],
+                'dev_candidate_positive_fold_rate': candidate['positive_fold_rate'],
+            })
+
+    candidates = pd.DataFrame(candidate_records)
+
+    comparison_records: list[dict[str, Any]] = []
+    for source in MODEL_SOURCES:
+        lock_bets = _lockbox_bets(
+            source_dev[source],
+            source_lockbox[source],
+            settings,
+            selection_policies,
+            source,
+        )
+        for market in ('moneyline', 'spread', 'total'):
+            for side in market_sides(market):
+                baseline_df = lock_bets[
+                    (lock_bets['market'] == market)
+                    & (lock_bets['side'] == side)
+                ].copy()
+                bands = frozen_bands[(market, side)]
+                candidate_df = _apply_band_filters(baseline_df, bands)
+                baseline = _bet_metrics(baseline_df)
+                candidate = _bet_metrics(candidate_df)
+
+                if not bands:
+                    status = 'NO_CHANGE'
+                elif candidate['bets'] < 5:
+                    status = 'INSUFFICIENT_LOCKBOX_BETS'
+                elif (
+                    candidate['profit_units'] > 0
+                    and candidate['profit_units'] >= baseline['profit_units']
+                    and np.isfinite(candidate['roi'])
+                    and candidate['roi'] > 0
+                ):
+                    status = 'VALIDATED'
+                else:
+                    status = 'REJECTED'
+
+                comparison_records.append({
+                    'model_source': source,
+                    'market': market,
+                    'side': side,
+                    'candidate_bands': _format_bands(bands),
+                    'lockbox_status': status,
+                    'baseline_bets': baseline['bets'],
+                    'baseline_profit': baseline['profit_units'],
+                    'baseline_roi': baseline['roi'],
+                    'candidate_bets': candidate['bets'],
+                    'candidate_profit': candidate['profit_units'],
+                    'candidate_roi': candidate['roi'],
+                })
+
+    comparison = pd.DataFrame(comparison_records)
+    split_summary = pd.DataFrame(split_rows)
+
+    after_hash = hashlib.sha256(markets_file.read_bytes()).hexdigest()
+    if after_hash != before_hash:
+        raise RuntimeError(
+            f'Refusing result: markets.yaml changed during validation: {markets_file}'
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        _market_band_report_text(
+            input_file,
+            markets_file,
+            split_summary,
+            candidates,
+            comparison,
+            before_hash,
+        ),
+        encoding='utf-8',
+    )
+    return output_path
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
@@ -12931,6 +13854,26 @@ def main() -> None:
         ),
     )
 
+    parser.add_argument(
+        '--wnba-market-bands',
+        action='store_true',
+        help=(
+            'Run Step 18 WNBA market-band validation: '
+            'ensemble development/OOS discovery, then one '
+            'untouched-lockbox comparison of dratings/sdv/ensemble.'
+        ),
+    )
+
+    parser.add_argument(
+        '--market-bands-output',
+        default=str(
+            WNBA_MARKET_BANDS_REPORT
+        ),
+        help=(
+            'Output path for the frozen WNBA market-band report.'
+        ),
+    )
+
     args = parser.parse_args()
 
     league = (
@@ -12987,6 +13930,30 @@ def main() -> None:
     season = str(
         internal_season
     )
+
+    if args.wnba_market_bands:
+        if league != 'WNBA':
+            raise ValueError(
+                '--wnba-market-bands requires --league WNBA'
+            )
+
+        report_path = run_wnba_market_band_validation(
+            input_file=input_file,
+            internal_season=internal_season,
+            settings=settings,
+            selection_policies=selection_policies,
+            markets_file=markets_file,
+            output_path=Path(
+                args.market_bands_output
+            ),
+        )
+
+        progress(
+            'WNBA market-band validation complete: '
+            f'{report_path}'
+        )
+
+        return
 
     progress(
         f'Loading {league} data: '
