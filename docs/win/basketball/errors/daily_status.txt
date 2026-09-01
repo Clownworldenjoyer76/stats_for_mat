@@ -1,8 +1,8 @@
 BASKETBALL DAILY STATUS
 =======================
-generated_at_utc: 2026-08-30T10:08:25Z
-game_date_new_york: 2026_08_30
-github_run_id: 33305596512
+generated_at_utc: 2026-08-31T22:16:16Z
+game_date_new_york: 2026_08_31
+github_run_id: 33445149919
 github_run_attempt: 1
 workflow_status: success
 
@@ -15,8 +15,8 @@ wnba: in_season
 SUMMARY
 -------
 txt_files_checked_this_run: 29
-txt_files_with_issues: 5
-txt_issue_lines: 17
+txt_files_with_issues: 7
+txt_issue_lines: 27
 txt_issue_lines_suppressed_offseason: 24
 no_map_teams: 0
 no_map_teams_suppressed_offseason: 0
@@ -27,35 +27,51 @@ CURRENT-RUN TXT ISSUES
 ----------------------
 [docs/win/basketball/errors/00_intake/calculate_rolling_bias.txt]
 run_change: REWRITTEN
-15:2026-08-30T10:08:18+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=-5.19 total=-4.714 warnings=15
+15:2026-08-31T22:16:09+00:00 | INFO  | WNBA | READY_WITH_WARNINGS | margin=-5.413 total=-3.978 warnings=15
 
 [docs/win/basketball/errors/00_intake/clean_basketball_inputs_wnba.txt]
 run_change: REWRITTEN
-228:2026-08-30T10:08:18.710899 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_21_WNBA_predictions.csv
-229:2026-08-30T10:08:18.710948 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_22_WNBA_predictions.csv
-230:2026-08-30T10:08:18.710996 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_23_WNBA_predictions.csv
-231:2026-08-30T10:08:18.711041 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_24_WNBA_predictions.csv
-232:2026-08-30T10:08:18.711086 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_25_WNBA_predictions.csv
-233:2026-08-30T10:08:18.711131 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_26_WNBA_predictions.csv
+228:2026-08-31T22:16:09.393459 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_21_WNBA_predictions.csv
+229:2026-08-31T22:16:09.393503 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_22_WNBA_predictions.csv
+230:2026-08-31T22:16:09.393540 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_23_WNBA_predictions.csv
+231:2026-08-31T22:16:09.393576 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_24_WNBA_predictions.csv
+232:2026-08-31T22:16:09.393611 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_25_WNBA_predictions.csv
+233:2026-08-31T22:16:09.393646 | WARN | Historical raw prediction has no existing cleaned copy; not applying current bias retroactively: docs/win/basketball/00_intake/predictions_ensemble/wnba/2026_08_26_WNBA_predictions.csv
 
-[docs/win/basketball/errors/04_select/daily_slate.txt]
+[docs/win/basketball/errors/03_edges/compute_ev_kelly.txt]
 run_change: REWRITTEN
-5:2026-08-30T10:08:20.534542+00:00 | WARN  | [wnba] extra input headers ignored: provider_updated_at_utc, scraped_at_utc, sportsbook_provider
+11:2026-08-31T22:16:10.561351+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_e22girfy/input/wnba/moneyline
+12:2026-08-31T22:16:10.561382+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_e22girfy/input/wnba/spread
+13:2026-08-31T22:16:10.561414+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_ev_e22girfy/input/wnba/total
+
+[docs/win/basketball/errors/04_select/select_bets.txt]
+run_change: REWRITTEN
+17:2026-08-31T22:16:10.987869+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_8vap8stt/input/wnba/moneyline
+18:2026-08-31T22:16:10.987899+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_8vap8stt/input/wnba/spread
+19:2026-08-31T22:16:10.987929+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_8vap8stt/input/wnba/total
+
+[docs/win/basketball/errors/05_final_scores/02_basketball_results_analyze.txt]
+run_change: REWRITTEN
+11:2026-08-31T22:16:12.509156+00:00 | WARNING | [WNBA] no closing-line files in docs/win/basketball/05_final_scores/closing_lines/wnba; CLV will be unavailable
 
 [docs/win/basketball/errors/pipeline_health.txt]
 run_change: REWRITTEN
-9:WNBA drift 25: games=25 margin=0.1812 total=5.8356 warning=True
-11:WNBA drift 100: games=100 margin=-0.4907 total=-3.3941 warning=True
-12:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
-13:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
+17:WNBA drift 25: games=25 margin=0.6776 total=7.5376 warning=True
+18:WNBA drift 50: games=50 margin=-1.8492 total=3.1428 warning=True
+19:WNBA drift 100: games=100 margin=-0.4136 total=-3.0596 warning=True
+20:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.678, total=7.538
+21:WARN: WNBA 50-game residual drift exceeds 2.0: margin=-1.849, total=3.143
+22:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.414, total=-3.060
 
 [docs/win/basketball/errors/wnba_bias_drift.txt]
 run_change: REWRITTEN
-6:window_25: games=25 margin_mean_residual=0.1812 total_mean_residual=5.8356 warning=True
-8:window_100: games=100 margin_mean_residual=-0.4907 total_mean_residual=-3.3941 warning=True
-9:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
-10:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
-11:STATUS: WARNING
+6:window_25: games=25 margin_mean_residual=0.6776 total_mean_residual=7.5376 warning=True
+7:window_50: games=50 margin_mean_residual=-1.8492 total_mean_residual=3.1428 warning=True
+8:window_100: games=100 margin_mean_residual=-0.4136 total_mean_residual=-3.0596 warning=True
+9:WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.678, total=7.538
+10:WARN: WNBA 50-game residual drift exceeds 2.0: margin=-1.849, total=3.143
+11:WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.414, total=-3.060
+12:STATUS: WARNING
 
 NO-MAP TEAMS
 ------------

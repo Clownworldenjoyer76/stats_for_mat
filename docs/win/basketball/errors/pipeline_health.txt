@@ -1,13 +1,22 @@
-=== basketball pipeline health 2026-08-30T10:08:21.566593+00:00 ===
-game_date_new_york: 2026_08_30
+=== basketball pipeline health 2026-08-31T22:16:12.083426+00:00 ===
+game_date_new_york: 2026_08_31
 season_config: docs/win/basketball/config/season_dates.yaml
+sdv_seasons_config: docs/win/basketball/config/sdv_seasons.yaml
+sdv_storage_config: docs/win/basketball/config/sdv_storage.yaml
+model_config: docs/win/basketball/config/model_config.yaml
+production_prediction_source: ensemble
 status: healthy
 NBA: in_season=False season=10/15-07/01 scheduled=0 predictions=0 sportsbook=0 merged=0 selected=0 locked=0
 NCAAM: in_season=False season=10/31-07/01 scheduled=0 predictions=0 sportsbook=0 merged=0 selected=0 locked=0
-WNBA: in_season=True season=05/01-10/31 scheduled=4 predictions=4 sportsbook=4 merged=4 selected=9 locked=9
+WNBA: in_season=True season=05/01-10/31 scheduled=0 predictions=0 sportsbook=0 merged=0 selected=0 locked=0
+SDV historical manifests: valid=9/9
+SDV NBA: in_season=False scheduled=0 feature_rows=None sdv_prediction_rows=0 ensemble_enabled=True ensemble_prediction_rows=0 configured_source=ensemble source_confirmed_downstream=False
+SDV NCAAM: in_season=False scheduled=0 feature_rows=None sdv_prediction_rows=0 ensemble_enabled=True ensemble_prediction_rows=0 configured_source=ensemble source_confirmed_downstream=False
+SDV WNBA: in_season=True scheduled=0 feature_rows=None sdv_prediction_rows=0 ensemble_enabled=True ensemble_prediction_rows=0 configured_source=ensemble source_confirmed_downstream=False
 WNBA drift report: docs/win/basketball/errors/99_validation/wnba_bias_drift.csv
-WNBA drift 25: games=25 margin=0.1812 total=5.8356 warning=True
-WNBA drift 50: games=50 margin=-1.6674 total=1.2938 warning=False
-WNBA drift 100: games=100 margin=-0.4907 total=-3.3941 warning=True
-WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.181, total=5.836
-WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.491, total=-3.394
+WNBA drift 25: games=25 margin=0.6776 total=7.5376 warning=True
+WNBA drift 50: games=50 margin=-1.8492 total=3.1428 warning=True
+WNBA drift 100: games=100 margin=-0.4136 total=-3.0596 warning=True
+WARN: WNBA 25-game residual drift exceeds 2.0: margin=0.678, total=7.538
+WARN: WNBA 50-game residual drift exceeds 2.0: margin=-1.849, total=3.143
+WARN: WNBA 100-game residual drift exceeds 2.0: margin=-0.414, total=-3.060
