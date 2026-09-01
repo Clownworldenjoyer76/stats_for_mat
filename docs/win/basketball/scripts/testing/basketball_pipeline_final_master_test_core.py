@@ -16,6 +16,7 @@ Supports:
 - exact production-vs-backtest parity checks
 '''
 import argparse
+import hashlib
 import importlib.util
 import json
 import math
@@ -12862,6 +12863,932 @@ def write_report(
 
 
 
+
+
+# =============================================================================
+# STEP 18: WNBA MARKET-BAND REVALIDATION FROM FROZEN STEP 15 PREDICTIONS
+# =============================================================================
+
+STEP18_WNBA_ROOT = Path(
+    'docs/win/basketball/backtest/model_validation/sdv_ensemble/wnba'
+)
+STEP18_WNBA_FROZEN = (
+    STEP18_WNBA_ROOT / 'sdv' / '2025_common_games.csv'
+)
+WNBA_MARKET_BANDS_REPORT = (
+    STEP18_WNBA_ROOT / 'WNBA_MARKET_BANDS_REPORT.txt'
+)
+
+
+def _step18_norm_team(value: Any) -> str:
+    text = '' if value is None else str(value)
+    return ' '.join(
+        ''.join(
+            ch.lower() if ch.isalnum() else ' '
+            for ch in text
+        ).split()
+    )
+
+
+def _step18_norm_date(value: Any) -> str:
+    text = '' if value is None else str(value).strip()
+    text = text[:10].replace('_', '-').replace('/', '-')
+    try:
+        return pd.Timestamp(text).strftime('%Y-%m-%d')
+    except Exception:
+        return ''
+
+
+def _step18_match_key(row: pd.Series) -> str:
+    return '|'.join([
+        _step18_norm_date(row.get('game_date')),
+        _step18_norm_team(row.get('home_team')),
+        _step18_norm_team(row.get('away_team')),
+    ])
+
+
+def _step18_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _step18_build_source_frame(
+    input_file: Path,
+    source: str,
+    settings: dict[str, Any],
+    internal_season: int,
+    temp_dir: Path,
+) -> pd.DataFrame:
+    if source not in MODEL_SOURCES:
+        raise ValueError(f'Unsupported Step 18 model source={source!r}')
+
+    if internal_season != 2025:
+        raise ValueError(
+            'Step 18 WNBA market-band validation requires internal season 2025.'
+        )
+
+    if not STEP18_WNBA_FROZEN.exists():
+        raise FileNotFoundError(
+            f'Missing frozen Step 15 WNBA predictions: {STEP18_WNBA_FROZEN}'
+        )
+
+    base = pd.read_csv(input_file)
+    frozen = pd.read_csv(STEP18_WNBA_FROZEN)
+
+    required_base = {
+        'game_date', 'game_id', 'home_team', 'away_team',
+        'home_score', 'away_score',
+        'home_spread', 'away_spread', 'total',
+        'home_dk_moneyline_decimal', 'away_dk_moneyline_decimal',
+        'home_dk_spread_decimal', 'away_dk_spread_decimal',
+        'dk_total_over_decimal', 'dk_total_under_decimal',
+    }
+    missing_base = sorted(required_base - set(base.columns))
+    if missing_base:
+        raise ValueError(
+            f'{input_file}: missing Step 18 sportsbook/result columns={missing_base}'
+        )
+
+    required_frozen = {
+        'game_date', 'home_team', 'away_team',
+        'home_score', 'away_score',
+        'dratings_margin', 'dratings_total',
+        'sdv_margin', 'sdv_total',
+        'ensemble_margin', 'ensemble_total',
+    }
+    missing_frozen = sorted(required_frozen - set(frozen.columns))
+    if missing_frozen:
+        raise ValueError(
+            f'{STEP18_WNBA_FROZEN}: missing frozen columns={missing_frozen}'
+        )
+
+    base = base.copy()
+    frozen = frozen.copy()
+    base['_step18_key'] = base.apply(_step18_match_key, axis=1)
+    frozen['_step18_key'] = frozen.apply(_step18_match_key, axis=1)
+
+    for label, frame in (('base', base), ('frozen', frozen)):
+        blank = frame['_step18_key'].str.startswith('|') | frame['_step18_key'].str.endswith('|')
+        if bool(blank.any()):
+            keys = frame.loc[blank, '_step18_key'].tolist()
+            raise RuntimeError(
+                f'Step 18 {label} data contains incomplete match keys={keys}'
+            )
+
+        dupes = sorted(
+            frame.loc[
+                frame['_step18_key'].duplicated(keep=False),
+                '_step18_key',
+            ].unique().tolist()
+        )
+        if dupes:
+            raise RuntimeError(
+                f'Step 18 {label} data contains duplicate game keys={dupes}'
+            )
+
+    frozen_keep = [
+        '_step18_key',
+        'home_score', 'away_score',
+        'dratings_margin', 'dratings_total',
+        'sdv_margin', 'sdv_total',
+        'ensemble_margin', 'ensemble_total',
+    ]
+    merged = base.merge(
+        frozen[frozen_keep],
+        on='_step18_key',
+        how='inner',
+        validate='one_to_one',
+        suffixes=('', '_step15'),
+    )
+
+    missing_base_keys = sorted(set(base['_step18_key']) - set(merged['_step18_key']))
+    missing_frozen_keys = sorted(
+        set(frozen['_step18_key']) - set(merged['_step18_key'])
+    )
+    if missing_base_keys or missing_frozen_keys:
+        raise RuntimeError(
+            'Step 18 frozen/base coverage mismatch. '
+            f'base_without_step15={missing_base_keys} '
+            f'step15_without_base={missing_frozen_keys}'
+        )
+
+    if len(merged) != len(base) or len(merged) != len(frozen):
+        raise RuntimeError(
+            'Step 18 requires the same complete WNBA common sample. '
+            f'base={len(base)} frozen={len(frozen)} matched={len(merged)}'
+        )
+
+    for score in ('home_score', 'away_score'):
+        left = pd.to_numeric(merged[score], errors='coerce')
+        right = pd.to_numeric(merged[f'{score}_step15'], errors='coerce')
+        bad = ~np.isclose(left, right, equal_nan=False)
+        if bool(bad.any()):
+            keys = merged.loc[bad, '_step18_key'].tolist()
+            raise RuntimeError(
+                f'Step 18 score mismatch for {score}; game_keys={keys}'
+            )
+
+    margin_col = {
+        'dratings': 'dratings_margin',
+        'sdv': 'sdv_margin',
+        'ensemble': 'ensemble_margin',
+    }[source]
+    total_col = {
+        'dratings': 'dratings_total',
+        'sdv': 'sdv_total',
+        'ensemble': 'ensemble_total',
+    }[source]
+
+    margin = pd.to_numeric(merged[margin_col], errors='coerce')
+    projected_total = pd.to_numeric(merged[total_col], errors='coerce')
+
+    bad_projection = ~(np.isfinite(margin) & np.isfinite(projected_total))
+    if bool(bad_projection.any()):
+        keys = merged.loc[bad_projection, '_step18_key'].tolist()
+        raise RuntimeError(
+            f'{source}: non-finite frozen Step 15 projections game_keys={keys}'
+        )
+
+    merged['home_projected_points'] = (projected_total + margin) / 2.0
+    merged['away_projected_points'] = (projected_total - margin) / 2.0
+    merged['total_projected_points'] = projected_total
+
+    # Required by the existing master-test loader. Step 18 probabilities are
+    # rebuilt chronologically from the frozen source margins, so these values
+    # are deliberately not used by the Step 18 path.
+    merged['home_prob'] = 0.5
+    merged['away_prob'] = 0.5
+
+    # Step 15 projections are treated as the frozen source output; no legacy
+    # historical bias is reversed or re-applied in this Step 18 path.
+    merged['bias_applied'] = 0
+    merged['model_source'] = source
+
+    if source == 'dratings':
+        merged['model_version'] = 'step15_frozen_dratings_2025'
+        merged['feature_version'] = ''
+        merged['ensemble_version'] = ''
+    elif source == 'sdv':
+        merged['model_version'] = 'sdv_model_v1'
+        merged['feature_version'] = 'sdv_model_v1_pit_v2'
+        merged['ensemble_version'] = ''
+    else:
+        merged['model_version'] = 'dratings_sdv_ensemble_v1_50_50'
+        merged['feature_version'] = 'sdv_model_v1_pit_v2'
+        merged['ensemble_version'] = 'dratings_sdv_ensemble_v1_50_50'
+
+    drop_cols = [
+        c for c in merged.columns
+        if c.endswith('_step15') or c == '_step18_key'
+    ]
+    merged = merged.drop(columns=drop_cols)
+
+    temp_file = temp_dir / f'2025_WNBA_{source}_STEP18.csv'
+    merged.to_csv(temp_file, index=False)
+
+    return load_data(
+        temp_file,
+        'WNBA',
+        settings,
+        source,
+        internal_season,
+    )
+
+
+def _step18_residual_parameters(
+    train: pd.DataFrame,
+    market: str,
+) -> tuple[float, float]:
+    if market in {'moneyline', 'spread'}:
+        prediction = pd.to_numeric(train['raw_margin'], errors='coerce')
+        actual = pd.to_numeric(train['actual_margin'], errors='coerce')
+    elif market == 'total':
+        prediction = pd.to_numeric(train['raw_total'], errors='coerce')
+        actual = pd.to_numeric(train['actual_total_calc'], errors='coerce')
+    else:
+        raise ValueError(f'Unknown Step 18 market={market!r}')
+
+    residual = (actual - prediction).to_numpy(float)
+    residual = residual[np.isfinite(residual)]
+    if len(residual) < 30:
+        raise RuntimeError(
+            f'Step 18 {market}: insufficient training residuals={len(residual)}'
+        )
+
+    mean = float(np.mean(residual))
+    std = float(np.std(residual, ddof=1))
+    std = float(np.clip(std, MIN_STD, MAX_STD))
+    return mean, std
+
+
+def _step18_probabilities(
+    train: pd.DataFrame,
+    target: pd.DataFrame,
+    market: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    residual_mean, residual_std = _step18_residual_parameters(train, market)
+
+    if market == 'moneyline':
+        mean_margin = target['raw_margin'].to_numpy(float) + residual_mean
+        home = clip_prob(norm.cdf(mean_margin / residual_std))
+        return home, 1.0 - home
+
+    if market == 'spread':
+        mean_margin = target['raw_margin'].to_numpy(float) + residual_mean
+        sigma = np.repeat(residual_std, len(target))
+        home = home_spread_probability(
+            mean_margin,
+            target['home_spread'].to_numpy(float),
+            sigma,
+        )
+        return home, 1.0 - home
+
+    mean_total = target['raw_total'].to_numpy(float) + residual_mean
+    sigma = np.repeat(residual_std, len(target))
+    over = over_probability(
+        mean_total,
+        target['total'].to_numpy(float),
+        sigma,
+    )
+    return over, 1.0 - over
+
+
+def _step18_decimal_to_american(value: Any) -> float:
+    try:
+        decimal = float(value)
+    except Exception:
+        return np.nan
+    if not np.isfinite(decimal) or decimal <= 1.0:
+        return np.nan
+    if decimal >= 2.0:
+        return 100.0 * (decimal - 1.0)
+    return -100.0 / (decimal - 1.0)
+
+
+def _step18_flatten_bets(
+    meta: pd.DataFrame,
+    selected: pd.DataFrame,
+    market: str,
+    model_source: str,
+) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    side1, side2 = market_sides(market)
+
+    for position in range(len(selected)):
+        src = selected.iloc[position]
+        base = meta.iloc[position]
+
+        for side_index, side in ((1, side1), (2, side2)):
+            if not bool(src[f'side{side_index}_selected']):
+                continue
+
+            line = np.nan
+            if market == 'spread':
+                line = float(
+                    base['home_spread']
+                    if side_index == 1
+                    else base['away_spread']
+                )
+            elif market == 'total':
+                line = float(base['total'])
+
+            decimal_odds = float(src[f'side{side_index}_odds'])
+            rows.append({
+                'model_source': model_source,
+                'market': market,
+                'side': side,
+                'game_id': str(src['game_id']),
+                'date': src['date'],
+                'fold_id': int(src['fold_id']),
+                'line': line,
+                'odds': _step18_decimal_to_american(decimal_odds),
+                'decimal_odds': decimal_odds,
+                'ev': float(src[f'side{side_index}_ev']),
+                'kelly': float(src[f'side{side_index}_kelly']),
+                'model_prob': float(src[f'side{side_index}_prob']),
+                'edge_vs_market': float(
+                    src[f'side{side_index}_edge_vs_market']
+                ),
+                'result': float(src[f'side{side_index}_result']),
+                'profit': float(src[f'side{side_index}_profit']),
+            })
+
+    return pd.DataFrame(rows)
+
+
+def _step18_development_oos_bets(
+    dev: pd.DataFrame,
+    folds: list[tuple[int, np.ndarray, np.ndarray]],
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    model_source: str,
+) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+
+    for fold_id, train_idx, test_idx in folds:
+        train = dev.iloc[train_idx]
+        test = dev.iloc[test_idx].copy()
+        test['fold_id'] = fold_id
+
+        for market in ('moneyline', 'spread', 'total'):
+            p1, p2 = _step18_probabilities(train, test, market)
+            base = market_opportunities(test, market, p1, p2)
+            selected = select_opportunities(
+                base,
+                selection_policies[market],
+                edge_mode='shared',
+                shared_edge=current_edge_for_market(market, settings),
+            )
+            flat = _step18_flatten_bets(
+                test,
+                selected,
+                market,
+                model_source,
+            )
+            if not flat.empty:
+                frames.append(flat)
+
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def _step18_lockbox_bets(
+    dev: pd.DataFrame,
+    lockbox: pd.DataFrame,
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    model_source: str,
+) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+
+    for market in ('moneyline', 'spread', 'total'):
+        p1, p2 = _step18_probabilities(dev, lockbox, market)
+        meta = lockbox.copy()
+        meta['fold_id'] = 999
+        base = market_opportunities(meta, market, p1, p2)
+        selected = select_opportunities(
+            base,
+            selection_policies[market],
+            edge_mode='shared',
+            shared_edge=current_edge_for_market(market, settings),
+        )
+        flat = _step18_flatten_bets(
+            meta,
+            selected,
+            market,
+            model_source,
+        )
+        if not flat.empty:
+            frames.append(flat)
+
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def _step18_bet_metrics(df: pd.DataFrame) -> dict[str, Any]:
+    if df.empty:
+        return {
+            'bets': 0,
+            'profit_units': 0.0,
+            'roi': np.nan,
+            'positive_fold_rate': np.nan,
+            'folds': 0,
+        }
+
+    profit = float(pd.to_numeric(df['profit'], errors='coerce').sum())
+    bets = int(len(df))
+    fold_profit = df.groupby('fold_id')['profit'].sum()
+    return {
+        'bets': bets,
+        'profit_units': profit,
+        'roi': profit / bets if bets else np.nan,
+        'positive_fold_rate': (
+            float((fold_profit > 0).mean())
+            if len(fold_profit)
+            else np.nan
+        ),
+        'folds': int(len(fold_profit)),
+    }
+
+
+def _step18_snap_band_value(metric: str, value: float) -> float:
+    if metric == 'odds':
+        return float(round(value / 25.0) * 25.0)
+    if metric == 'line':
+        return float(round(value * 2.0) / 2.0)
+    if metric in {'ev', 'kelly'}:
+        return float(round(value, 2))
+    if metric == 'model_prob':
+        return float(round(value / 0.025) * 0.025)
+    if metric == 'edge_vs_market':
+        return float(round(value))
+    return float(value)
+
+
+def _step18_candidate_intervals(
+    df: pd.DataFrame,
+    metric: str,
+) -> list[tuple[float, float]]:
+    values = pd.to_numeric(df[metric], errors='coerce').dropna()
+    if len(values) < 12:
+        return []
+
+    quantiles = np.unique(np.quantile(
+        values.to_numpy(float),
+        [
+            0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.33,
+            0.50, 0.67, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00,
+        ],
+    ))
+    cuts = sorted({
+        _step18_snap_band_value(metric, float(v))
+        for v in quantiles
+    })
+    if len(cuts) < 2:
+        return []
+
+    intervals: set[tuple[float, float]] = set()
+    full_lo, full_hi = cuts[0], cuts[-1]
+
+    for cut in cuts[1:-1]:
+        intervals.add((cut, full_hi))
+        intervals.add((full_lo, cut))
+
+    for i in range(len(cuts) - 1):
+        for j in range(i + 1, len(cuts)):
+            lo, hi = cuts[i], cuts[j]
+            if lo < hi:
+                intervals.add((lo, hi))
+
+    intervals.discard((full_lo, full_hi))
+    return sorted(intervals)
+
+
+def _step18_apply_bands(
+    df: pd.DataFrame,
+    bands: dict[str, tuple[float, float]],
+) -> pd.DataFrame:
+    if df.empty or not bands:
+        return df.copy()
+
+    mask = np.ones(len(df), dtype=bool)
+    for metric, (lo, hi) in bands.items():
+        values = pd.to_numeric(df[metric], errors='coerce').to_numpy(float)
+        mask &= (
+            np.isfinite(values)
+            & (values >= lo)
+            & (values <= hi)
+        )
+    return df.loc[mask].copy()
+
+
+def _step18_discover_side_bands(side_df: pd.DataFrame) -> dict[str, Any]:
+    baseline = _step18_bet_metrics(side_df)
+    bands: dict[str, tuple[float, float]] = {}
+
+    if baseline['bets'] < 12:
+        return {
+            'bands': bands,
+            'baseline': baseline,
+            'development': baseline,
+            'status': 'INSUFFICIENT_DEVELOPMENT_BETS',
+        }
+
+    dimensions = [
+        'odds',
+        'ev',
+        'kelly',
+        'model_prob',
+        'edge_vs_market',
+    ]
+    if side_df['market'].iloc[0] in {'spread', 'total'}:
+        dimensions.insert(1, 'line')
+
+    current_metrics = baseline
+    used: set[str] = set()
+
+    # At most two independent filter dimensions may be frozen.
+    for _ in range(2):
+        best: tuple[Any, ...] | None = None
+
+        for metric in dimensions:
+            if metric in used:
+                continue
+
+            for lo, hi in _step18_candidate_intervals(side_df, metric):
+                candidate_bands = dict(bands)
+                candidate_bands[metric] = (lo, hi)
+                candidate = _step18_apply_bands(side_df, candidate_bands)
+                metrics = _step18_bet_metrics(candidate)
+
+                min_bets = max(
+                    12,
+                    int(math.ceil(0.35 * baseline['bets'])),
+                )
+                if metrics['bets'] < min_bets:
+                    continue
+
+                minimum_folds = min(
+                    3,
+                    max(1, baseline['folds']),
+                )
+                if metrics['folds'] < minimum_folds:
+                    continue
+
+                current_roi = current_metrics['roi']
+                roi_improvement = (
+                    metrics['roi'] - current_roi
+                    if (
+                        np.isfinite(metrics['roi'])
+                        and np.isfinite(current_roi)
+                    )
+                    else -np.inf
+                )
+                profit_improvement = (
+                    metrics['profit_units']
+                    - current_metrics['profit_units']
+                )
+                stable = (
+                    not np.isfinite(metrics['positive_fold_rate'])
+                    or metrics['positive_fold_rate'] >= 0.50
+                )
+
+                if (
+                    profit_improvement < 0.50
+                    or roi_improvement < 0.01
+                    or not stable
+                ):
+                    continue
+
+                key = (
+                    profit_improvement,
+                    (
+                        metrics['positive_fold_rate']
+                        if np.isfinite(metrics['positive_fold_rate'])
+                        else -1.0
+                    ),
+                    roi_improvement,
+                    metrics['bets'],
+                )
+                if best is None or key > best[0]:
+                    best = (
+                        key,
+                        metric,
+                        lo,
+                        hi,
+                        metrics,
+                    )
+
+        if best is None:
+            break
+
+        _, metric, lo, hi, current_metrics = best
+        bands[metric] = (float(lo), float(hi))
+        used.add(metric)
+
+    return {
+        'bands': bands,
+        'baseline': baseline,
+        'development': current_metrics,
+        'status': (
+            'CANDIDATE_FOUND'
+            if bands
+            else 'NO_CHANGE_CANDIDATE'
+        ),
+    }
+
+
+def _step18_format_bands(
+    bands: dict[str, tuple[float, float]],
+) -> str:
+    if not bands:
+        return 'NO_CHANGE'
+    return '; '.join(
+        f'{metric}=[{lo:g},{hi:g}]'
+        for metric, (lo, hi) in bands.items()
+    )
+
+
+def _step18_report_text(
+    input_file: Path,
+    markets_file: Path,
+    split_summary: pd.DataFrame,
+    candidates: pd.DataFrame,
+    comparison: pd.DataFrame,
+    markets_sha256: str,
+    frozen_sha256: str,
+) -> str:
+    line = '=' * 100
+    carried = comparison[
+        (comparison['model_source'] == 'ensemble')
+        & (comparison['lockbox_status'] == 'VALIDATED')
+    ].copy()
+
+    parts = [
+        'WNBA MARKET BANDS REPORT',
+        line,
+        f'Historical sportsbook/results input: {input_file}',
+        f'Frozen Step 15 projections: {STEP18_WNBA_FROZEN}',
+        f'Frozen Step 15 sha256: {frozen_sha256}',
+        f'Markets config (read only): {markets_file}',
+        f'markets.yaml sha256: {markets_sha256}',
+        'markets.yaml modified: NO',
+        '',
+        'VALIDATION CONTRACT',
+        line,
+        'Model sources: dratings, sdv, ensemble.',
+        'All three sources use the identical chronological 85% development / 15% lockbox game split.',
+        'The frozen Step 15 margin/total projections are never retrained or recomputed.',
+        'Model probabilities are generated from each source frozen projection using residual mean/std fitted only on the applicable development training history.',
+        'Candidate band discovery uses ENSEMBLE development/OOS bets only.',
+        'DRatings and SDV are comparison-only and cannot choose or change candidate edges.',
+        'Candidate bands are frozen before any lockbox evaluation.',
+        'The untouched lockbox is evaluated once after candidates are frozen.',
+        'No lockbox result is used to change a candidate.',
+        '',
+        'SPLIT / SOURCE COVERAGE',
+        line,
+        split_summary.to_string(index=False),
+        '',
+        'DEVELOPMENT/OOS CANDIDATES (ENSEMBLE ONLY)',
+        line,
+        candidates.to_string(index=False),
+        '',
+        'UNTOUCHED LOCKBOX: DRATINGS vs SDV vs ENSEMBLE',
+        line,
+        comparison.to_string(index=False),
+        '',
+        'CARRY FORWARD TO ITEM 21',
+        line,
+    ]
+
+    if carried.empty:
+        parts.append(
+            'No WNBA market-band changes validated on the untouched ensemble lockbox.'
+        )
+    else:
+        for _, row in carried.iterrows():
+            parts.append(
+                f"{row['market']} {row['side']}: {row['candidate_bands']}"
+            )
+
+    parts.extend([
+        '',
+        'Do not modify markets.yaml during this item.',
+        '',
+    ])
+    return '\n'.join(parts)
+
+
+def run_wnba_market_band_validation(
+    input_file: Path,
+    internal_season: int,
+    settings: dict[str, Any],
+    selection_policies: dict[str, MarketSelectionPolicy],
+    markets_file: Path,
+    output_path: Path,
+) -> Path:
+    if internal_season != 2025:
+        raise ValueError(
+            '--wnba-market-bands requires --season 2025'
+        )
+
+    before_hash = _step18_sha256(markets_file)
+    frozen_hash = _step18_sha256(STEP18_WNBA_FROZEN)
+
+    source_dev: dict[str, pd.DataFrame] = {}
+    source_lockbox: dict[str, pd.DataFrame] = {}
+    split_rows: list[dict[str, Any]] = []
+
+    expected_dev_ids: list[str] | None = None
+    expected_lock_ids: list[str] | None = None
+
+    with tempfile.TemporaryDirectory(prefix='wnba_step18_') as temp_name:
+        temp_dir = Path(temp_name)
+
+        for source in MODEL_SOURCES:
+            frame = _step18_build_source_frame(
+                input_file,
+                source,
+                settings,
+                internal_season,
+                temp_dir,
+            )
+            dev, lockbox = split_development_lockbox(
+                frame,
+                LOCKBOX_FRACTION,
+            )
+
+            dev_ids = dev['game_id'].astype(str).tolist()
+            lock_ids = lockbox['game_id'].astype(str).tolist()
+
+            if expected_dev_ids is None:
+                expected_dev_ids = dev_ids
+                expected_lock_ids = lock_ids
+            elif (
+                dev_ids != expected_dev_ids
+                or lock_ids != expected_lock_ids
+            ):
+                raise RuntimeError(
+                    f'{source}: development/lockbox game_id split '
+                    'differs from the other model sources'
+                )
+
+            source_dev[source] = dev
+            source_lockbox[source] = lockbox
+
+            split_rows.append({
+                'model_source': source,
+                'full_games': len(frame),
+                'development_games': len(dev),
+                'lockbox_games': len(lockbox),
+                'development_start': str(dev['_date'].min().date()),
+                'development_end': str(dev['_date'].max().date()),
+                'lockbox_start': str(lockbox['_date'].min().date()),
+                'lockbox_end': str(lockbox['_date'].max().date()),
+            })
+
+    # One identical chronological fold layout for all three sources.
+    folds = make_outer_folds(
+        source_dev['ensemble'],
+        TARGET_OUTER_FOLDS,
+    )
+
+    ensemble_dev_bets = _step18_development_oos_bets(
+        source_dev['ensemble'],
+        folds,
+        settings,
+        selection_policies,
+        'ensemble',
+    )
+    if ensemble_dev_bets.empty:
+        raise RuntimeError(
+            'Ensemble WNBA development/OOS produced zero qualifying bets'
+        )
+
+    candidate_records: list[dict[str, Any]] = []
+    frozen_bands: dict[
+        tuple[str, str],
+        dict[str, tuple[float, float]],
+    ] = {}
+
+    for market in ('moneyline', 'spread', 'total'):
+        for side in market_sides(market):
+            subset = ensemble_dev_bets[
+                (ensemble_dev_bets['market'] == market)
+                & (ensemble_dev_bets['side'] == side)
+            ].copy()
+
+            discovered = _step18_discover_side_bands(subset)
+            bands = discovered['bands']
+            frozen_bands[(market, side)] = bands
+            baseline = discovered['baseline']
+            candidate = discovered['development']
+
+            candidate_records.append({
+                'market': market,
+                'side': side,
+                'status': discovered['status'],
+                'candidate_bands': _step18_format_bands(bands),
+                'dev_baseline_bets': baseline['bets'],
+                'dev_baseline_profit': baseline['profit_units'],
+                'dev_baseline_roi': baseline['roi'],
+                'dev_candidate_bets': candidate['bets'],
+                'dev_candidate_profit': candidate['profit_units'],
+                'dev_candidate_roi': candidate['roi'],
+                'dev_candidate_positive_fold_rate': (
+                    candidate['positive_fold_rate']
+                ),
+            })
+
+    candidates = pd.DataFrame(candidate_records)
+
+    comparison_records: list[dict[str, Any]] = []
+
+    # Lockbox is touched only after every ensemble candidate is frozen.
+    for source in MODEL_SOURCES:
+        lock_bets = _step18_lockbox_bets(
+            source_dev[source],
+            source_lockbox[source],
+            settings,
+            selection_policies,
+            source,
+        )
+
+        for market in ('moneyline', 'spread', 'total'):
+            for side in market_sides(market):
+                baseline_df = lock_bets[
+                    (lock_bets['market'] == market)
+                    & (lock_bets['side'] == side)
+                ].copy()
+
+                bands = frozen_bands[(market, side)]
+                candidate_df = _step18_apply_bands(
+                    baseline_df,
+                    bands,
+                )
+
+                baseline = _step18_bet_metrics(baseline_df)
+                candidate = _step18_bet_metrics(candidate_df)
+
+                if not bands:
+                    status = 'NO_CHANGE'
+                elif candidate['bets'] < 5:
+                    status = 'INSUFFICIENT_LOCKBOX_BETS'
+                elif (
+                    candidate['profit_units'] > 0
+                    and candidate['profit_units'] >= baseline['profit_units']
+                    and np.isfinite(candidate['roi'])
+                    and (
+                        not np.isfinite(baseline['roi'])
+                        or candidate['roi'] >= baseline['roi']
+                    )
+                ):
+                    status = 'VALIDATED'
+                else:
+                    status = 'REJECTED'
+
+                comparison_records.append({
+                    'model_source': source,
+                    'market': market,
+                    'side': side,
+                    'candidate_bands': _step18_format_bands(bands),
+                    'lockbox_status': status,
+                    'baseline_bets': baseline['bets'],
+                    'baseline_profit': baseline['profit_units'],
+                    'baseline_roi': baseline['roi'],
+                    'candidate_bets': candidate['bets'],
+                    'candidate_profit': candidate['profit_units'],
+                    'candidate_roi': candidate['roi'],
+                })
+
+    comparison = pd.DataFrame(comparison_records)
+    split_summary = pd.DataFrame(split_rows)
+
+    after_hash = _step18_sha256(markets_file)
+    if after_hash != before_hash:
+        raise RuntimeError(
+            'Refusing Step 18 result: markets.yaml changed during validation: '
+            f'{markets_file}'
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        _step18_report_text(
+            input_file,
+            markets_file,
+            split_summary,
+            candidates,
+            comparison,
+            before_hash,
+            frozen_hash,
+        ),
+        encoding='utf-8',
+    )
+    return output_path
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
@@ -12931,6 +13858,21 @@ def main() -> None:
         ),
     )
 
+    parser.add_argument(
+        '--wnba-market-bands',
+        action='store_true',
+        help=(
+            'Run Step 18 WNBA market-band revalidation using frozen '
+            'Step 15 dratings/SDV/ensemble 2025 projections.'
+        ),
+    )
+
+    parser.add_argument(
+        '--market-bands-output',
+        default=str(WNBA_MARKET_BANDS_REPORT),
+        help='Step 18 WNBA market-band report path.',
+    )
+
     args = parser.parse_args()
 
     league = (
@@ -12987,6 +13929,27 @@ def main() -> None:
     season = str(
         internal_season
     )
+
+    if args.wnba_market_bands:
+        if league != 'WNBA':
+            raise ValueError(
+                '--wnba-market-bands requires --league WNBA'
+            )
+
+        report_path = run_wnba_market_band_validation(
+            input_file=input_file,
+            internal_season=internal_season,
+            settings=settings,
+            selection_policies=selection_policies,
+            markets_file=markets_file,
+            output_path=Path(args.market_bands_output),
+        )
+
+        progress(
+            'WNBA market-band validation complete: '
+            f'{report_path}'
+        )
+        return
 
     progress(
         f'Loading {league} data: '

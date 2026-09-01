@@ -1,0 +1,65 @@
+WNBA MARKET BANDS REPORT
+====================================================================================================
+Historical sportsbook/results input: docs\win\basketball\00_intake\final_combined_files\combined\2025_WNBA.csv
+Frozen Step 15 projections: docs\win\basketball\backtest\model_validation\sdv_ensemble\wnba\sdv\2025_common_games.csv
+Frozen Step 15 sha256: 9c9a1796e31218dc93f8b19d779fe85d3032fe5f963702fee9a62564209b1b12
+Markets config (read only): C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml
+markets.yaml sha256: dd8bfec6a1d4156ca3de2c744a6d5f67ccfa0383b07ed1f7ecac3265c6dc529c
+markets.yaml modified: NO
+
+VALIDATION CONTRACT
+====================================================================================================
+Model sources: dratings, sdv, ensemble.
+All three sources use the identical chronological 85% development / 15% lockbox game split.
+The frozen Step 15 margin/total projections are never retrained or recomputed.
+Model probabilities are generated from each source frozen projection using residual mean/std fitted only on the applicable development training history.
+Candidate band discovery uses ENSEMBLE development/OOS bets only.
+DRatings and SDV are comparison-only and cannot choose or change candidate edges.
+Candidate bands are frozen before any lockbox evaluation.
+The untouched lockbox is evaluated once after candidates are frozen.
+No lockbox result is used to change a candidate.
+
+SPLIT / SOURCE COVERAGE
+====================================================================================================
+model_source  full_games  development_games  lockbox_games development_start development_end lockbox_start lockbox_end
+    dratings         262                222             40        2025-05-16      2025-09-03    2025-09-04  2025-10-10
+         sdv         262                222             40        2025-05-16      2025-09-03    2025-09-04  2025-10-10
+    ensemble         262                222             40        2025-05-16      2025-09-03    2025-09-04  2025-10-10
+
+DEVELOPMENT/OOS CANDIDATES (ENSEMBLE ONLY)
+====================================================================================================
+   market  side          status                     candidate_bands  dev_baseline_bets  dev_baseline_profit  dev_baseline_roi  dev_candidate_bets  dev_candidate_profit  dev_candidate_roi  dev_candidate_positive_fold_rate
+moneyline  HOME CANDIDATE_FOUND kelly=[0.02,0.26]; odds=[-275,1075]                 68              28.1611          0.414134                  54               32.0722           0.593930                               0.8
+moneyline  AWAY CANDIDATE_FOUND                         ev=[0,0.52]                 64              19.4443          0.303817                  48               33.3443           0.694673                               1.0
+   spread  HOME CANDIDATE_FOUND                         line=[-3,4]                 56               6.1778          0.110318                  21               11.5413           0.549586                               1.0
+   spread  AWAY CANDIDATE_FOUND                         line=[-4,5]                 38               4.0949          0.107761                  14                9.0039           0.643136                               1.0
+    total  OVER CANDIDATE_FOUND                   kelly=[0.25,0.85]                 60              -2.7070         -0.045117                  21                5.8019           0.276281                               0.6
+    total UNDER CANDIDATE_FOUND      ev=[0.13,0.47]; line=[165,182]                 59              -3.0803         -0.052208                  26                2.9252           0.112508                               0.6
+
+UNTOUCHED LOCKBOX: DRATINGS vs SDV vs ENSEMBLE
+====================================================================================================
+model_source    market  side                     candidate_bands            lockbox_status  baseline_bets  baseline_profit  baseline_roi  candidate_bets  candidate_profit  candidate_roi
+    dratings moneyline  HOME kelly=[0.02,0.26]; odds=[-275,1075]                 VALIDATED             19           3.8254      0.201337              14            4.7745       0.341036
+    dratings moneyline  AWAY                         ev=[0,0.52]                 VALIDATED             14           0.1333      0.009521              12            2.1333       0.177775
+    dratings    spread  HOME                         line=[-3,4] INSUFFICIENT_LOCKBOX_BETS             11           2.3637      0.214882               2           -0.0909      -0.045450
+    dratings    spread  AWAY                         line=[-4,5] INSUFFICIENT_LOCKBOX_BETS              3          -3.0000     -1.000000               0            0.0000            NaN
+    dratings     total  OVER                   kelly=[0.25,0.85] INSUFFICIENT_LOCKBOX_BETS             20           1.0461      0.052305               4            1.7624       0.440600
+    dratings     total UNDER      ev=[0.13,0.47]; line=[165,182] INSUFFICIENT_LOCKBOX_BETS             11          -1.3399     -0.121809               0            0.0000            NaN
+         sdv moneyline  HOME kelly=[0.02,0.26]; odds=[-275,1075]                  REJECTED             13          -1.6121     -0.124008              10           -1.2698      -0.126980
+         sdv moneyline  AWAY                         ev=[0,0.52]                  REJECTED             25          -7.2745     -0.290980              14          -10.7045      -0.764607
+         sdv    spread  HOME                         line=[-3,4] INSUFFICIENT_LOCKBOX_BETS             10          -0.4545     -0.045450               2           -2.0000      -1.000000
+         sdv    spread  AWAY                         line=[-4,5] INSUFFICIENT_LOCKBOX_BETS             21          -7.6325     -0.363452               4           -0.1780      -0.044500
+         sdv     total  OVER                   kelly=[0.25,0.85]                  REJECTED             21          -1.9063     -0.090776              10           -0.4772      -0.047720
+         sdv     total UNDER      ev=[0.13,0.47]; line=[165,182] INSUFFICIENT_LOCKBOX_BETS              8           1.6797      0.209962               1           -1.0000      -1.000000
+    ensemble moneyline  HOME kelly=[0.02,0.26]; odds=[-275,1075]                  REJECTED             13          -2.9757     -0.228900              11           -2.2698      -0.206345
+    ensemble moneyline  AWAY                         ev=[0,0.52]                  REJECTED             23          -7.0437     -0.306248              19           -6.6037      -0.347563
+    ensemble    spread  HOME                         line=[-3,4] INSUFFICIENT_LOCKBOX_BETS             11          -1.4545     -0.132227               1           -1.0000      -1.000000
+    ensemble    spread  AWAY                         line=[-4,5] INSUFFICIENT_LOCKBOX_BETS             14          -4.4112     -0.315086               3           -1.0476      -0.349200
+    ensemble     total  OVER                   kelly=[0.25,0.85] INSUFFICIENT_LOCKBOX_BETS             21           0.0461      0.002195               4            1.7359       0.433975
+    ensemble     total UNDER      ev=[0.13,0.47]; line=[165,182] INSUFFICIENT_LOCKBOX_BETS              6           1.7706      0.295100               2            0.0000       0.000000
+
+CARRY FORWARD TO ITEM 21
+====================================================================================================
+No WNBA market-band changes validated on the untouched ensemble lockbox.
+
+Do not modify markets.yaml during this item.

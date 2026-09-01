@@ -467,6 +467,11 @@ def maybe_write_provenance(
     settings: dict,
     model_source: str,
 ) -> None:
+    # Step 18 contract: the validation run itself writes only
+    # WNBA_MARKET_BANDS_REPORT.txt.
+    if '--wnba-market-bands' in sys.argv:
+        return
+
     parser = argparse.ArgumentParser(
         add_help=False
     )
