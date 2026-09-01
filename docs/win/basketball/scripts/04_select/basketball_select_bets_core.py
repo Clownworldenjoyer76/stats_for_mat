@@ -13,8 +13,20 @@ from collections import defaultdict
 from datetime import datetime, UTC
 from pathlib import Path
 
+# ITEM 19 shared staking/uncertainty rules
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
 import pandas as pd
 import yaml
+
+from staking_runtime import (
+    KELLY_FRACTION, KELLY_CAP, MAX_EXPOSURE_PER_GAME,
+    MAX_EXPOSURE_PER_LEAGUE_DAY, MAX_TOTAL_DAILY_EXPOSURE,
+    UNCERTAINTY_METHOD, UNCERTAINTY_VERSION,
+    attach_candidate_uncertainty, requested_stake, apply_exposure_limits,
+)
 
 INPUT_DIR        = Path("docs/win/basketball/03_edges/ev_kelly")
 SELECT_DIR       = Path("docs/win/basketball/04_select")
@@ -31,10 +43,6 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
 
 with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
     MODEL_CONFIG = yaml.safe_load(f) or {}
-
-STAKE = CONFIG.get("stake_sizing", {}) or {}
-KELLY_FRACTION = float(STAKE.get("kelly_fraction", 1.0))
-KELLY_CAP      = float(STAKE.get("kelly_cap", 1.0))
 
 ML_VS_SPREAD_TIEBREAK = str(CONFIG.get("ml_vs_spread_tiebreak", "ev")).strip().lower()
 TIEBREAK_COL_MAP = {
@@ -114,6 +122,7 @@ def _write_summary(summary: dict, per_file: list) -> None:
         f"SUMMARY  {_now()}",
         "=" * 70,
         f"  files_processed       : {summary['files_processed']}",
+        f"  candidate_selected    : {summary['total_candidates']}",
         f"  total_selected        : {summary['total_selected']}",
         f"  nba_bets              : {summary['nba_bets']}",
         f"  ncaam_bets            : {summary['ncaam_bets']}",
@@ -123,6 +132,11 @@ def _write_summary(summary: dict, per_file: list) -> None:
         f"  errors                : {summary['errors']}",
         f"  kelly_fraction        : {KELLY_FRACTION}",
         f"  kelly_cap             : {KELLY_CAP}",
+        f"  max_game_exposure     : {MAX_EXPOSURE_PER_GAME}",
+        f"  max_league_day        : {MAX_EXPOSURE_PER_LEAGUE_DAY}",
+        f"  max_total_day         : {MAX_TOTAL_DAILY_EXPOSURE}",
+        f"  uncertainty_method    : {UNCERTAINTY_METHOD}",
+        f"  uncertainty_version   : {UNCERTAINTY_VERSION}",
         f"  ml_vs_spread_tiebreak : {ML_VS_SPREAD_TIEBREAK}",
         "",
         "--- Filter Reject Counts ---",
@@ -251,11 +265,10 @@ def extract_date(filename):
     return m.group(0) if m else None
 
 
-def stake_pct(kelly):
-    if kelly is None or kelly <= 0:
-        return None
-    raw = kelly * KELLY_FRACTION
-    return min(raw, KELLY_CAP)
+def stake_pct(kelly, uncertainty_multiplier=1.0):
+    # raw Kelly is a sizing input only; it is not a predicted win rate.
+    _, _, requested = requested_stake(kelly, uncertainty_multiplier)
+    return requested if requested > 0 else None
 
 
 def clear_old_select_outputs() -> None:
@@ -483,6 +496,10 @@ def process_file(file: Path, league: str, market_type: str):
     for _, row in df.iterrows():
         game_date = row.get("game_date") or file_date
         sides = builder(row, league, game_date, cfg)
+        sides = [
+            attach_candidate_uncertainty(row, market_type, side)
+            for side in sides
+        ]
 
         if not sides:
             continue
@@ -501,10 +518,18 @@ def process_file(file: Path, league: str, market_type: str):
                 "bet_line":           sel["line"],
                 "bet_odds_american":  sel["odds"],
                 "bet_ev":             sel["ev"],
+                "bet_raw_ev":         sel["raw_ev"],
+                "bet_uncertainty_adjusted_ev": sel["uncertainty_adjusted_ev"],
                 "bet_kelly":          sel["kelly"],
+                "bet_raw_kelly":      sel["raw_kelly"],
                 "bet_model_prob":     sel["model_prob"],
+                "bet_adjusted_model_prob": sel["adjusted_model_prob"],
                 "bet_edge_vs_market": sel["edge_vs_market"],
-                "bet_stake_pct":      stake_pct(sel["kelly"]),
+                "bet_uncertainty_multiplier": sel["uncertainty_multiplier"],
+                "bet_uncertainty_points": sel["uncertainty_points"],
+                "bet_signal_points": sel["signal_points"],
+                "bet_requested_stake_pct": stake_pct(sel["raw_kelly"], sel["uncertainty_multiplier"]),
+                "bet_stake_pct":      stake_pct(sel["raw_kelly"], sel["uncertainty_multiplier"]),
                 "market_type":        market_type,
                 "league_lower":       league,
                 "league":             league.upper(),
@@ -528,7 +553,7 @@ def main():
     clear_old_select_outputs()
 
     summary = {
-        "files_processed": 0, "total_selected": 0,
+        "files_processed": 0, "total_candidates": 0, "total_selected": 0,
         "nba_bets": 0, "ncaam_bets": 0, "wnba_bets": 0,
         "ml_vs_spread_dropped": 0,
         "skipped": 0, "errors": 0,
@@ -538,7 +563,12 @@ def main():
     _log(f"INPUT_DIR : {INPUT_DIR}")
     _log(f"OUTPUT_DIR: {SELECT_DIR}")
     _log(f"MODEL_CONFIG: {MODEL_CONFIG_PATH}")
-    _log(f"stake_sizing: kelly_fraction={KELLY_FRACTION} kelly_cap={KELLY_CAP}")
+    _log(
+        "staking.yaml: "
+        f"kelly_fraction={KELLY_FRACTION} individual_cap={KELLY_CAP} "
+        f"game_cap={MAX_EXPOSURE_PER_GAME} league_day_cap={MAX_EXPOSURE_PER_LEAGUE_DAY} "
+        f"daily_cap={MAX_TOTAL_DAILY_EXPOSURE} uncertainty={UNCERTAINTY_METHOD}/{UNCERTAINTY_VERSION}"
+    )
     _log(f"ml_vs_spread_tiebreak: {ML_VS_SPREAD_TIEBREAK}")
     for league in LEAGUES:
         _log(
@@ -570,8 +600,7 @@ def main():
                         df, n = process_file(f, league, market)
                         pf["selected"] = n
                         summary["files_processed"] += 1
-                        summary["total_selected"]  += n
-                        summary[f"{league}_bets"]  += n
+                        summary["total_candidates"] += n
                         if not df.empty:
                             league_dfs[league].append(df)
                     except KeyError as e:
@@ -584,17 +613,30 @@ def main():
                         summary["errors"] += 1
                     per_file.append(pf)
 
+        candidate_frames = [
+            pd.concat(league_dfs[league], ignore_index=True)
+            for league in LEAGUES
+            if league_dfs[league]
+        ]
+        all_candidates = (
+            pd.concat(candidate_frames, ignore_index=True)
+            if candidate_frames
+            else pd.DataFrame()
+        )
+        final_picks = apply_exposure_limits(all_candidates) if not all_candidates.empty else all_candidates
+        summary["total_candidates"] = len(all_candidates)
+        summary["total_selected"] = len(final_picks)
+
         for league in LEAGUES:
-            dfs = league_dfs[league]
-            if not dfs:
-                _log(f"NO SELECTED ROWS FOR LEAGUE: {league}; daily pick files not written")
+            out_df = (
+                final_picks[final_picks["league_lower"].astype(str).str.lower() == league].copy()
+                if not final_picks.empty
+                else pd.DataFrame()
+            )
+            summary[f"{league}_bets"] = len(out_df)
+            if out_df.empty:
+                _log(f"NO FINAL STAKED ROWS FOR LEAGUE: {league}; daily pick files not written")
                 continue
-
-            out_df = pd.concat(dfs, ignore_index=True)
-
-            dropped = 0
-            _log(f"RECONCILE {league}: skipped ML/spread reconciliation; dropped 0 rows")
-
             write_daily_pick_files(league, out_df)
 
     except Exception as e:

@@ -30,8 +30,15 @@ import traceback
 from datetime import datetime, UTC
 from pathlib import Path
 
+# ITEM 19 shared staking/uncertainty rules
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
 import numpy as np
 import pandas as pd
+
+from staking_runtime import add_uncertainty_adjusted_ev
 
 # =========================
 # PATHS
@@ -135,7 +142,7 @@ def atomic_write_csv(df, path):
 # MARKET PROCESSORS
 # =========================
 
-def process_moneyline(df: pd.DataFrame) -> pd.DataFrame:
+def process_moneyline(df: pd.DataFrame, league: str | None = None) -> pd.DataFrame:
     """
     Required columns from merguiced ML file:
       home_model_prob, away_model_prob          (model)
@@ -165,6 +172,15 @@ def process_moneyline(df: pd.DataFrame) -> pd.DataFrame:
     df["home_ml_kelly"] = compute_kelly(df["home_model_prob"], df["home_dk_moneyline_decimal"])
     df["away_ml_kelly"] = compute_kelly(df["away_model_prob"], df["away_dk_moneyline_decimal"])
 
+    df = add_uncertainty_adjusted_ev(
+        df, "moneyline",
+        [
+            ("home_ml", "home_model_prob", "home_market_prob", "home_dk_moneyline_decimal", "home_ml_kelly"),
+            ("away_ml", "away_model_prob", "away_market_prob", "away_dk_moneyline_decimal", "away_ml_kelly"),
+        ],
+        league,
+    )
+
     # Convenience: percent versions
     df["home_ml_ev_pct"]              = df["home_ml_ev"] * 100
     df["away_ml_ev_pct"]              = df["away_ml_ev"] * 100
@@ -174,7 +190,7 @@ def process_moneyline(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def process_spread(df: pd.DataFrame) -> pd.DataFrame:
+def process_spread(df: pd.DataFrame, league: str | None = None) -> pd.DataFrame:
     """
     Required columns from merguiced spread file:
       home_spread_model_prob, away_spread_model_prob       (model — sign fix applied upstream)
@@ -201,6 +217,15 @@ def process_spread(df: pd.DataFrame) -> pd.DataFrame:
     df["home_spread_kelly"] = compute_kelly(df["home_spread_model_prob"], df["home_dk_spread_decimal"])
     df["away_spread_kelly"] = compute_kelly(df["away_spread_model_prob"], df["away_dk_spread_decimal"])
 
+    df = add_uncertainty_adjusted_ev(
+        df, "spread",
+        [
+            ("home_spread", "home_spread_model_prob", "home_spread_market_prob", "home_dk_spread_decimal", "home_spread_kelly"),
+            ("away_spread", "away_spread_model_prob", "away_spread_market_prob", "away_dk_spread_decimal", "away_spread_kelly"),
+        ],
+        league,
+    )
+
     df["home_spread_ev_pct"]              = df["home_spread_ev"] * 100
     df["away_spread_ev_pct"]              = df["away_spread_ev"] * 100
     df["home_spread_edge_vs_market_pct"]  = df["home_spread_edge_vs_market"] * 100
@@ -209,7 +234,7 @@ def process_spread(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def process_total(df: pd.DataFrame) -> pd.DataFrame:
+def process_total(df: pd.DataFrame, league: str | None = None) -> pd.DataFrame:
     """
     Required columns from merguiced total file:
       over_model_prob, under_model_prob              (model — Poisson removed upstream)
@@ -235,6 +260,15 @@ def process_total(df: pd.DataFrame) -> pd.DataFrame:
 
     df["over_kelly"]  = compute_kelly(df["over_model_prob"],  df["dk_total_over_decimal"])
     df["under_kelly"] = compute_kelly(df["under_model_prob"], df["dk_total_under_decimal"])
+
+    df = add_uncertainty_adjusted_ev(
+        df, "total",
+        [
+            ("over", "over_model_prob", "over_market_prob", "dk_total_over_decimal", "over_kelly"),
+            ("under", "under_model_prob", "under_market_prob", "dk_total_under_decimal", "under_kelly"),
+        ],
+        league,
+    )
 
     df["over_ev_pct"]               = df["over_ev"]  * 100
     df["under_ev_pct"]              = df["under_ev"] * 100
@@ -272,7 +306,7 @@ def process_one(path: Path, league: str, market: str,
         pf["rows"] = len(df)
         summary["rows_processed"] += len(df)
 
-        df = MARKET_PROCESSORS[market](df)
+        df = MARKET_PROCESSORS[market](df, league)
 
         out_dir = OUTPUT_DIR / league / market
         out_dir.mkdir(parents=True, exist_ok=True)

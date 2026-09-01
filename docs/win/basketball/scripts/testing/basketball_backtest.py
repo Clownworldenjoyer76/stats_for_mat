@@ -13,11 +13,22 @@ import traceback
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+
+# ITEM 19 shared staking/uncertainty rules
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 from typing import Any
 
 import pandas as pd
 import yaml
 from scipy.stats import norm
+
+from staking_runtime import (
+    KELLY_FRACTION, KELLY_CAP, STAKING_CONFIG_PATH,
+    add_uncertainty_adjusted_ev, attach_candidate_uncertainty,
+    requested_stake, apply_exposure_limits,
+)
 
 LEAGUES = ["nba", "ncaam", "wnba"]
 MARKETS = ["moneyline", "spread", "total"]
@@ -26,6 +37,7 @@ BASKETBALL_ROOT = Path("docs/win/basketball")
 DEFAULT_BACKTEST_DIR = BASKETBALL_ROOT / "backtest"
 DEFAULT_MODEL_CONFIG = BASKETBALL_ROOT / "config" / "model_config.yaml"
 DEFAULT_MARKETS_CONFIG = BASKETBALL_ROOT / "config" / "markets.yaml"
+DEFAULT_STAKING_CONFIG = BASKETBALL_ROOT / "config" / "staking.yaml"
 
 MODEL_SOURCES = ("dratings", "sdv", "ensemble")
 
@@ -2545,6 +2557,13 @@ def process_moneyline_ev(
             * 100.0
         )
 
+    out = add_uncertainty_adjusted_ev(
+        out, "moneyline",
+        [
+            ("home_ml", "home_model_prob", "home_market_prob", "home_dk_moneyline_decimal", "home_ml_kelly"),
+            ("away_ml", "away_model_prob", "away_market_prob", "away_dk_moneyline_decimal", "away_ml_kelly"),
+        ],
+    )
     return out
 
 
@@ -2620,6 +2639,13 @@ def process_spread_ev(
             * 100.0
         )
 
+    out = add_uncertainty_adjusted_ev(
+        out, "spread",
+        [
+            ("home_spread", "home_spread_model_prob", "home_spread_market_prob", "home_dk_spread_decimal", "home_spread_kelly"),
+            ("away_spread", "away_spread_model_prob", "away_spread_market_prob", "away_dk_spread_decimal", "away_spread_kelly"),
+        ],
+    )
     return out
 
 
@@ -2695,6 +2721,13 @@ def process_total_ev(
             * 100.0
         )
 
+    out = add_uncertainty_adjusted_ev(
+        out, "total",
+        [
+            ("over", "over_model_prob", "over_market_prob", "dk_total_over_decimal", "over_kelly"),
+            ("under", "under_model_prob", "under_market_prob", "dk_total_under_decimal", "under_kelly"),
+        ],
+    )
     return out
 
 
@@ -2998,17 +3031,12 @@ def stake_pct(
     kelly: float | None,
     fraction: float,
     cap: float,
+    uncertainty_multiplier: float | None = 1.0,
 ) -> float | None:
-    if (
-        kelly is None
-        or kelly <= 0
-    ):
+    if kelly is None or kelly <= 0:
         return None
-
-    return min(
-        kelly * fraction,
-        cap,
-    )
+    _, _, requested = requested_stake(kelly, uncertainty_multiplier)
+    return requested if requested > 0 else None
 
 
 def market_config(
@@ -3414,6 +3442,7 @@ def select_bets_for_market(
             cfg,
             settings,
         )
+        sides = [attach_candidate_uncertainty(row, market, side) for side in sides]
 
         if not sides:
             continue
@@ -3446,17 +3475,21 @@ def select_bets_for_market(
                     "odds"
                 ],
                 "bet_ev": sel["ev"],
+                "bet_raw_ev": sel["raw_ev"],
+                "bet_uncertainty_adjusted_ev": sel["uncertainty_adjusted_ev"],
                 "bet_kelly": sel["kelly"],
-                "bet_model_prob": sel[
-                    "model_prob"
-                ],
-                "bet_edge_vs_market": sel[
-                    "edge_vs_market"
-                ],
+                "bet_raw_kelly": sel["raw_kelly"],
+                "bet_model_prob": sel["model_prob"],
+                "bet_adjusted_model_prob": sel["adjusted_model_prob"],
+                "bet_edge_vs_market": sel["edge_vs_market"],
+                "bet_uncertainty_multiplier": sel["uncertainty_multiplier"],
+                "bet_uncertainty_points": sel["uncertainty_points"],
+                "bet_signal_points": sel["signal_points"],
+                "bet_requested_stake_pct": stake_pct(
+                    sel["raw_kelly"], kelly_fraction, kelly_cap, sel["uncertainty_multiplier"]
+                ),
                 "bet_stake_pct": stake_pct(
-                    sel["kelly"],
-                    kelly_fraction,
-                    kelly_cap,
+                    sel["raw_kelly"], kelly_fraction, kelly_cap, sel["uncertainty_multiplier"]
                 ),
                 "market_type": market,
                 "league_lower": league,
@@ -4146,6 +4179,10 @@ def write_manifest(
             "sha256": sha256_file(
                 production_markets_path
             ),
+        },
+        "staking_config": {
+            "path": str(DEFAULT_STAKING_CONFIG),
+            "sha256": sha256_file(DEFAULT_STAKING_CONFIG),
         },
         "input_files": [
             {
@@ -4939,6 +4976,45 @@ def process_historical_file(
     )
 
 
+def apply_final_exposure_to_graded(candidate_graded: pd.DataFrame, final_selected: pd.DataFrame) -> pd.DataFrame:
+    if candidate_graded.empty or final_selected.empty:
+        return candidate_graded.iloc[0:0].copy()
+    keys = ['source_file', 'game_id', 'market_type', 'bet_side']
+    exposure_cols = [
+        'bet_fractional_kelly_pct', 'bet_individual_capped_stake_pct',
+        'bet_requested_stake_pct', 'bet_final_stake_pct', 'bet_stake_pct',
+        'exposure_rank', 'exposure_limited', 'exposure_limit_reason',
+        'game_exposure_after_pct', 'league_day_exposure_after_pct', 'total_day_exposure_after_pct',
+        'maximum_exposure_per_game', 'maximum_exposure_per_league_per_day',
+        'maximum_total_daily_exposure', 'maximum_individual_bet_kelly_fraction',
+        'uncertainty_adjustment_method', 'uncertainty_adjustment_version',
+    ]
+    keep = [c for c in exposure_cols if c in final_selected.columns]
+    base = candidate_graded.drop(columns=[c for c in keep if c in candidate_graded.columns], errors='ignore')
+    final_fields = final_selected[[*keys, *keep]].drop_duplicates(subset=keys, keep='last')
+    merged = base.merge(final_fields, on=keys, how='inner', validate='one_to_one')
+    merged = merged.drop(columns=[c for c in ('profit_unit', 'profit_kelly') if c in merged.columns])
+    profits = merged.apply(compute_profits, axis=1, result_type='expand')
+    profits.columns = ['profit_unit', 'profit_kelly']
+    return pd.concat([merged, profits], axis=1)
+
+
+def rewrite_final_backtest_files(input_files, final_selected, final_graded, selections_dir, graded_dir):
+    for path in input_files:
+        source_file = path.stem
+        league = source_file.rsplit('_', 1)[-1].lower()
+        selected = final_selected[
+            (final_selected['source_file'].astype(str) == source_file)
+            & (final_selected['league_lower'].astype(str).str.lower() == league)
+        ].copy() if not final_selected.empty else final_selected.copy()
+        graded = final_graded[
+            (final_graded['source_file'].astype(str) == source_file)
+            & (final_graded['league_lower'].astype(str).str.lower() == league)
+        ].copy() if not final_graded.empty else final_graded.copy()
+        atomic_write_csv(selected, selections_dir / league / f'{source_file}_selected.csv')
+        atomic_write_csv(graded, graded_dir / league / f'{source_file}_graded.csv')
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description=(
@@ -5121,6 +5197,7 @@ def main():
         "production_markets_config="
         f"{production_markets_path}"
     )
+    logger.log(f"staking_config={DEFAULT_STAKING_CONFIG}")
 
     model_cfg = read_yaml(
         model_config_path
@@ -5163,27 +5240,14 @@ def main():
         model_cfg
     )
 
-    stake_cfg = (
-        filter_cfg.get(
-            "stake_sizing"
-        )
-        or {}
-    )
-
+    staking_cfg = read_yaml(DEFAULT_STAKING_CONFIG)
     kelly_fraction = require_number(
-        stake_cfg.get(
-            "kelly_fraction",
-            1.0,
-        ),
-        "stake_sizing.kelly_fraction",
+        (staking_cfg.get("kelly") or {}).get("fractional_multiplier"),
+        "staking.kelly.fractional_multiplier",
     )
-
     kelly_cap = require_number(
-        stake_cfg.get(
-            "kelly_cap",
-            1.0,
-        ),
-        "stake_sizing.kelly_cap",
+        (staking_cfg.get("exposure_limits") or {}).get("maximum_individual_bet_kelly_fraction"),
+        "staking.exposure_limits.maximum_individual_bet_kelly_fraction",
     )
 
     config_warnings = (
@@ -5300,6 +5364,11 @@ def main():
             pd.DataFrame()
         )
 
+    candidate_selected_count = len(combined_selected)
+    combined_selected = apply_exposure_limits(combined_selected) if not combined_selected.empty else combined_selected
+    combined_graded = apply_final_exposure_to_graded(combined_graded, combined_selected)
+    rewrite_final_backtest_files(input_files, combined_selected, combined_graded, selections_dir, graded_dir)
+
     atomic_write_csv(
         combined_selected,
         selections_dir
@@ -5311,6 +5380,7 @@ def main():
         graded_dir
         / "all_graded.csv",
     )
+    logger.log(f"staking exposure replay | candidates={candidate_selected_count} final={len(combined_selected)}")
 
     reports = build_reports(
         combined_graded,
@@ -5413,6 +5483,11 @@ def main():
         model_config_path,
         run_dir
         / "model_config.yaml",
+    )
+    shutil.copy2(
+        DEFAULT_STAKING_CONFIG,
+        run_dir
+        / "staking.yaml",
     )
 
     copy_tree_contents(
