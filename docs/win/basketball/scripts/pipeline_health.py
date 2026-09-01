@@ -685,7 +685,7 @@ def validate_sdv_storage_config(
     report["history_root"] = root or None
     report["format"] = storage_format or None
 
-    if root != str(SDV_HISTORY_ROOT):
+    if os.path.normcase(os.path.normpath(root)) != os.path.normcase(os.path.normpath(str(SDV_HISTORY_ROOT))):
         report["errors"].append(
             f"{SDV_STORAGE_CONFIG}: storage.root mismatch "
             f"expected={SDV_HISTORY_ROOT} actual={root!r}"
@@ -802,7 +802,7 @@ def validate_sdv_model_config() -> tuple[dict, dict, list[str]]:
     artifacts = cfg.get("artifacts")
     artifacts = artifacts if isinstance(artifacts, dict) else {}
 
-    if clean(artifacts.get("root")) != str(SDV_MODEL_ROOT):
+    if os.path.normcase(os.path.normpath(clean(artifacts.get("root")))) != os.path.normcase(os.path.normpath(str(SDV_MODEL_ROOT))):
         report["errors"].append(
             f"{SDV_MODEL_CONFIG}: artifacts.root mismatch "
             f"expected={SDV_MODEL_ROOT} actual={artifacts.get('root')!r}"
