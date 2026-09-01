@@ -1,22 +1,24 @@
 === 02_basketball_results_analyze ===
-START_TIMESTAMP_UTC: 2026-08-31T22:16:12.471277+00:00
-2026-08-31T22:16:12.471746+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv
-2026-08-31T22:16:12.471841+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv | exists=0 | rows=0
-2026-08-31T22:16:12.471869+00:00 | WARNING | [NBA] input missing: docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv — skipping
-2026-08-31T22:16:12.476230+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_nba.csv | rows=0
-2026-08-31T22:16:12.476320+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv | exists=0 | rows=0
-2026-08-31T22:16:12.476353+00:00 | WARNING | [NCAAM] input missing: docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv — skipping
-2026-08-31T22:16:12.477432+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_ncaam.csv | rows=0
-2026-08-31T22:16:12.484374+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv | exists=1 | rows=100
-2026-08-31T22:16:12.509156+00:00 | WARNING | [WNBA] no closing-line files in docs/win/basketball/05_final_scores/closing_lines/wnba; CLV will be unavailable
-2026-08-31T22:16:12.547342+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv | rows=100
-2026-08-31T22:16:12.669711+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_wnba.csv | rows=14
-2026-08-31T22:16:12.669753+00:00 | INFO | [WNBA] wrote 100 rows -> docs/win/basketball/05_final_scores/work_wnba.csv
-2026-08-31T22:16:12.669779+00:00 | INFO | [WNBA] wrote 14 quality rows -> docs/win/basketball/05_final_scores/quality_metrics_wnba.csv
-2026-08-31T22:16:12.670077+00:00 | INFO | Analyze complete.
+START_TIMESTAMP_UTC: 2026-09-01T15:44:16.636236+00:00
+2026-09-01T15:44:16.637115+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_nba.csv
+2026-09-01T15:44:16.637674+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_ncaam.csv
+2026-09-01T15:44:16.638149+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs\win\basketball\05_final_scores\work_wnba.csv
+2026-09-01T15:44:16.638602+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_wnba.csv
+2026-09-01T15:44:16.638927+00:00 | INFO | INPUT | file=docs\win\basketball\05_final_scores\results\nba\graded\NBA_final.csv | exists=0 | rows=0
+2026-09-01T15:44:16.639215+00:00 | WARNING | [NBA] input missing: docs\win\basketball\05_final_scores\results\nba\graded\NBA_final.csv — skipping
+2026-09-01T15:44:16.642488+00:00 | INFO | OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_nba.csv | rows=0
+2026-09-01T15:44:16.642809+00:00 | INFO | INPUT | file=docs\win\basketball\05_final_scores\results\ncaam\graded\NCAAM_final.csv | exists=0 | rows=0
+2026-09-01T15:44:16.643080+00:00 | WARNING | [NCAAM] input missing: docs\win\basketball\05_final_scores\results\ncaam\graded\NCAAM_final.csv — skipping
+2026-09-01T15:44:16.644435+00:00 | INFO | OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_ncaam.csv | rows=0
+2026-09-01T15:44:16.649492+00:00 | INFO | INPUT | file=docs\win\basketball\05_final_scores\results\wnba\graded\WNBA_final.csv | exists=1 | rows=100
+2026-09-01T15:44:16.709667+00:00 | INFO | OUTPUT | file=docs\win\basketball\05_final_scores\work_wnba.csv | rows=100
+2026-09-01T15:44:16.812862+00:00 | INFO | OUTPUT | file=docs\win\basketball\05_final_scores\quality_metrics_wnba.csv | rows=14
+2026-09-01T15:44:16.813175+00:00 | INFO | [WNBA] wrote 100 rows -> docs\win\basketball\05_final_scores\work_wnba.csv
+2026-09-01T15:44:16.813449+00:00 | INFO | [WNBA] wrote 14 quality rows -> docs\win\basketball\05_final_scores\quality_metrics_wnba.csv
+2026-09-01T15:44:16.813879+00:00 | INFO | Analyze complete.
 INPUT_SUMMARY | files=3 | rows=100
 OUTPUT_SUMMARY | files=4 | rows=114
-WARNING_COUNT: 3
+WARNING_COUNT: 2
 ERROR_COUNT: 0
-END_TIMESTAMP_UTC: 2026-08-31T22:16:12.670093+00:00
+END_TIMESTAMP_UTC: 2026-09-01T15:44:16.813982+00:00
 STATUS: SUCCESS

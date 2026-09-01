@@ -1,0 +1,23 @@
+ITEM 20 ADVANCED SDV FEATURE VALIDATION
+==========================================================================================
+Candidate feature version: sdv_model_v2_advanced_candidate_v1
+Production V1 feature version preserved: sdv_model_v1_pit_v2
+2025 lockbox is evaluated only after candidate families are fixed.
+No production model or market band is modified by this script.
+
+PROMOTION DECISIONS
+==========================================================================================
+NBA   lineup        NO_MATERIAL_GAIN   no_lockbox_metric_degraded_but_no_gain
+NBA   possessions   REJECT             validation_error_worse=1.000000;calibration_worse=0.244833>0.244833
+NBA   shots         NO_MATERIAL_GAIN   no_lockbox_metric_degraded_but_no_gain
+NBA   all_advanced  REJECT             validation_error_worse=1.000000
+NCAAM lineup        REJECT             validation_error_worse=1.000000
+NCAAM possessions   REJECT             validation_error_worse=1.000000
+NCAAM shots         REJECT             validation_error_worse=1.000000
+NCAAM all_advanced  REJECT             validation_error_worse=1.000000;calibration_worse=0.242488>0.242488
+WNBA  lineup        REJECT             validation_error_worse=1.000000;calibration_worse=0.256856>0.256856
+WNBA  possessions   REJECT             validation_error_worse=1.000000;calibration_worse=0.256856>0.256856
+WNBA  shots         REJECT             calibration_worse=0.256856>0.256856
+WNBA  all_advanced  REJECT             validation_error_worse=1.000000;calibration_worse=0.256856>0.256856
+
+Rule: reject any candidate that worsens untouched lockbox error, calibration, or profit ROI versus V1.

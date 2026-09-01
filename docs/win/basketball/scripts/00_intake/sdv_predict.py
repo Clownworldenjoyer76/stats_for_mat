@@ -1358,8 +1358,9 @@ def validate_artifacts(
                 f"actual={artifact_league}"
             )
 
-    configured_feature_version = clean(
-        cfg.get("feature_version")
+    configured_feature_version = (
+        feature_generation
+        .production_feature_version(cfg)
     )
 
     training_cfg = required_mapping(

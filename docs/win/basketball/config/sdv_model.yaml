@@ -1,5 +1,27 @@
 schema_version: 1
-feature_version: sdv_model_v1_pit_v2
+feature_version: sdv_model_v2_advanced_candidate_v1
+
+advanced_features:
+  promotion_status: candidate_not_promoted
+  production_feature_version: sdv_model_v1_pit_v2
+  candidate_history_output_root: docs/win/basketball/00_intake/sdv/features/advanced_candidate/history
+  candidate_current_output_root: docs/win/basketball/00_intake/sdv/features/advanced_candidate/current
+  windows: [5, 10, 20]
+  lineup:
+    source_table: lineups.parquet
+    missing_policy: explicit_null
+  possessions:
+    source_table: possessions.parquet
+    missing_policy: explicit_null
+  shots:
+    source_table: shots.parquet
+    missing_policy: explicit_null
+  tracking:
+    enabled: false
+    real_source: null
+    missing_policy: explicit_null
+  player_impact:
+    enabled: false
 
 paths:
   history_input_root: docs/win/basketball/00_intake/sdv/history

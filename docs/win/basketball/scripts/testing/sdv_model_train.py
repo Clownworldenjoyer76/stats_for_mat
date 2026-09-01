@@ -873,10 +873,15 @@ def load_season_rows(
             f"feature columns={missing}"
         )
 
-    expected_feature_version = clean(
-        cfg[
-            "feature_version"
-        ]
+    advanced_features = cfg.get("advanced_features")
+    advanced_features = (
+        advanced_features
+        if isinstance(advanced_features, dict)
+        else {}
+    )
+    expected_feature_version = (
+        clean(advanced_features.get("production_feature_version"))
+        or clean(cfg["feature_version"])
     )
 
     versions = {

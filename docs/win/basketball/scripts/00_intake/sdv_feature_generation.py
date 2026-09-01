@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/00_intake/sdv_feature_generation.py
-"""Build strict point-in-time SportsDataVerse Model V1 basketball features."""
+"""Build validated V1 SDV features plus isolated Item 20 advanced candidates."""
 from __future__ import annotations
 
 import argparse
@@ -2838,11 +2838,468 @@ def add_differentials(
         )
 
 
+# ITEM 20 ADVANCED SDV CANDIDATE FEATURES
+ADVANCED_CANDIDATE_MODE = False
+ADVANCED_INDEXES: dict[str, dict[str, dict[str, list[dict[str, Any]]]]] = {}
+
+ADVANCED_FAMILY_METRICS = {
+    "lineup": (
+        "lineup_units_used",
+        "lineup_players_used",
+        "lineup_top_unit_share",
+        "lineup_concentration",
+    ),
+    "possession": (
+        "possession_transition_share",
+        "possession_transition_ppp",
+        "possession_avg_duration_seconds",
+        "possession_early_offense_share",
+        "possession_ppp",
+    ),
+    "shot": (
+        "shot_rim_rate",
+        "shot_rim_fg_pct",
+        "shot_three_rate",
+        "shot_three_fg_pct",
+        "shot_high_value_rate",
+        "shot_avg_distance",
+    ),
+}
+
+
+def set_advanced_candidate_mode(enabled: bool) -> None:
+    global ADVANCED_CANDIDATE_MODE
+    ADVANCED_CANDIDATE_MODE = bool(enabled)
+
+
+def production_feature_version(cfg: dict[str, Any]) -> str:
+    advanced = cfg.get("advanced_features")
+    if isinstance(advanced, dict):
+        value = clean(advanced.get("production_feature_version"))
+        if value:
+            return value
+    return clean(cfg.get("feature_version"))
+
+
+def active_feature_version(cfg: dict[str, Any]) -> str:
+    if ADVANCED_CANDIDATE_MODE:
+        return clean(cfg.get("feature_version"))
+    return production_feature_version(cfg)
+
+
+def advanced_history_output_root(cfg: dict[str, Any]) -> Path:
+    advanced = required_mapping(cfg, "advanced_features")
+    value = clean(advanced.get("candidate_history_output_root"))
+    if not value:
+        raise ValueError("advanced_features.candidate_history_output_root is blank")
+    return Path(value)
+
+
+def advanced_current_output_root(cfg: dict[str, Any]) -> Path:
+    advanced = required_mapping(cfg, "advanced_features")
+    value = clean(advanced.get("candidate_current_output_root"))
+    if not value:
+        raise ValueError("advanced_features.candidate_current_output_root is blank")
+    return Path(value)
+
+
+def advanced_windows(cfg: dict[str, Any]) -> list[int]:
+    advanced = required_mapping(cfg, "advanced_features")
+    raw = advanced.get("windows")
+    if not isinstance(raw, list) or not raw:
+        return sorted(int(x) for x in required_mapping(cfg, "feature_windows")["team_games"])
+    return sorted({int(x) for x in raw if int(x) > 0})
+
+
+def advanced_team_id(row: dict[str, Any]) -> str:
+    for column in (
+        "team_id", "offense_team_id", "offensive_team_id", "possession_team_id",
+        "shooting_team_id", "shooter_team_id", "lineup_team_id",
+    ):
+        value = clean_id(row.get(column))
+        if value:
+            return value
+    return ""
+
+
+def first_numeric(row: dict[str, Any], columns: tuple[str, ...]) -> float | None:
+    for column in columns:
+        value = to_float(row.get(column))
+        if value is not None:
+            return value
+    return None
+
+
+def first_text(row: dict[str, Any], columns: tuple[str, ...]) -> str:
+    for column in columns:
+        value = clean(row.get(column))
+        if value:
+            return value
+    return ""
+
+
+def bool_from_columns(row: dict[str, Any], columns: tuple[str, ...]) -> bool | None:
+    for column in columns:
+        if column not in row:
+            continue
+        parsed = normalize_bool(row.get(column))
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def prepared_advanced_rows(
+    history_root: Path,
+    league: str,
+    seasons: list[int],
+    table: str,
+    game_context: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for season in seasons:
+        path = history_root / league / str(season) / f"{table}.parquet"
+        if not path.exists():
+            log(f"ADVANCED SOURCE MISSING | league={LEAGUE_LABELS[league]} season={season} table={table} path={path}")
+            continue
+        frame = pl.read_parquet(path)
+        if frame.is_empty():
+            log(f"ADVANCED SOURCE EMPTY | league={LEAGUE_LABELS[league]} season={season} table={table} path={path}")
+            continue
+        for raw in frame.to_dicts():
+            game_id = row_game_id(raw)
+            team_id = advanced_team_id(raw)
+            context = game_context.get(game_id)
+            if not game_id or not team_id or context is None:
+                continue
+            rows.append({
+                **raw,
+                "game_id": game_id,
+                "team_id": team_id,
+                "_date": context["_date"],
+                "_dt": context["_dt"],
+            })
+        log(f"ADVANCED SOURCE READY | league={LEAGUE_LABELS[league]} season={season} table={table} rows={frame.height} path={path}")
+    return rows
+
+
+def group_advanced_rows(rows: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        team_id = row_team_id(row)
+        game_id = row_game_id(row)
+        if team_id and game_id:
+            grouped[(team_id, game_id)].append(row)
+    return dict(grouped)
+
+
+def index_game_summaries(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    index: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        team_id = row_team_id(row)
+        if team_id:
+            index[team_id].append(row)
+    for team_rows in index.values():
+        team_rows.sort(key=source_sort_key)
+    return dict(index)
+
+
+def lineup_key(row: dict[str, Any]) -> str:
+    return first_text(row, (
+        "lineup_id", "lineup", "lineup_name", "unit_id", "group_id",
+        "players", "player_ids", "athlete_ids", "lineup_players",
+    ))
+
+
+def player_ids_from_lineup_row(row: dict[str, Any]) -> set[str]:
+    result: set[str] = set()
+    for column in ("player_id", "athlete_id"):
+        value = clean_id(row.get(column))
+        if value:
+            result.add(value)
+    for column in ("player_ids", "athlete_ids", "players", "lineup_players"):
+        value = row.get(column)
+        if isinstance(value, (list, tuple, set)):
+            for item in value:
+                identifier = clean_id(item)
+                if identifier:
+                    result.add(identifier)
+    return result
+
+
+def lineup_weight(row: dict[str, Any]) -> float | None:
+    seconds = first_numeric(row, (
+        "seconds", "duration_seconds", "seconds_played", "stint_seconds",
+    ))
+    if seconds is not None and seconds >= 0:
+        return seconds
+    minutes = first_numeric(row, ("minutes", "minutes_played", "stint_minutes"))
+    if minutes is not None and minutes >= 0:
+        return minutes * 60.0
+    possessions = first_numeric(row, ("possessions", "possession_count"))
+    if possessions is not None and possessions >= 0:
+        return possessions
+    return None
+
+
+def build_lineup_index(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    summaries: list[dict[str, Any]] = []
+    for (team_id, game_id), game_rows in group_advanced_rows(rows).items():
+        lineup_weights: dict[str, float] = defaultdict(float)
+        lineup_keys: set[str] = set()
+        player_ids: set[str] = set()
+        context = game_rows[0]
+        for row in game_rows:
+            key = lineup_key(row)
+            if key:
+                lineup_keys.add(key)
+            player_ids.update(player_ids_from_lineup_row(row))
+            weight = lineup_weight(row)
+            if key and weight is not None:
+                lineup_weights[key] += weight
+        total_weight = sum(lineup_weights.values())
+        shares = [value / total_weight for value in lineup_weights.values()] if total_weight > 0 else []
+        summaries.append({
+            "game_id": game_id,
+            "team_id": team_id,
+            "_date": context["_date"],
+            "_dt": context["_dt"],
+            "lineup_units_used": float(len(lineup_keys)) if lineup_keys else None,
+            "lineup_players_used": float(len(player_ids)) if player_ids else None,
+            "lineup_top_unit_share": max(shares) if shares else None,
+            "lineup_concentration": sum(x * x for x in shares) if shares else None,
+        })
+    return index_game_summaries(summaries)
+
+
+def possession_counted(row: dict[str, Any]) -> bool:
+    if "count_as_possession" not in row:
+        return True
+    parsed = normalize_bool(row.get("count_as_possession"))
+    return True if parsed is None else parsed
+
+
+def possession_transition(row: dict[str, Any]) -> bool | None:
+    explicit = bool_from_columns(row, (
+        "is_transition", "transition", "is_fast_break", "fast_break",
+    ))
+    if explicit is not None:
+        return explicit
+    text = first_text(row, ("possession_type", "play_type", "type"))
+    if not text:
+        return None
+    normalized = text.lower()
+    return ("transition" in normalized) or ("fast break" in normalized) or ("fastbreak" in normalized)
+
+
+def parse_duration_seconds(value: Any) -> float | None:
+    direct = to_float(value)
+    if direct is not None and direct >= 0:
+        return direct
+    text = clean(value)
+    match = re.fullmatch(r"(\d+):(\d+(?:\.\d+)?)", text)
+    if match:
+        return float(match.group(1)) * 60.0 + float(match.group(2))
+    return None
+
+
+def possession_duration(row: dict[str, Any]) -> float | None:
+    for column in ("duration_seconds", "possession_seconds", "seconds", "duration"):
+        if column in row:
+            value = parse_duration_seconds(row.get(column))
+            if value is not None:
+                return value
+    return None
+
+
+def build_possession_index(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    summaries: list[dict[str, Any]] = []
+    for (team_id, game_id), game_rows in group_advanced_rows(rows).items():
+        valid = [row for row in game_rows if possession_counted(row)]
+        if not valid:
+            continue
+        transitions: list[bool] = []
+        transition_points: list[float] = []
+        points: list[float] = []
+        durations: list[float] = []
+        context = valid[0]
+        for row in valid:
+            transition = possession_transition(row)
+            pts = first_numeric(row, ("possession_points", "points_scored", "points", "score_value"))
+            duration = possession_duration(row)
+            if transition is not None:
+                transitions.append(transition)
+                if transition and pts is not None:
+                    transition_points.append(pts)
+            if pts is not None:
+                points.append(pts)
+            if duration is not None:
+                durations.append(duration)
+        summaries.append({
+            "game_id": game_id,
+            "team_id": team_id,
+            "_date": context["_date"],
+            "_dt": context["_dt"],
+            "possession_transition_share": (sum(1 for x in transitions if x) / len(transitions)) if transitions else None,
+            "possession_transition_ppp": (sum(transition_points) / sum(1 for x in transitions if x)) if transitions and any(transitions) and transition_points else None,
+            "possession_avg_duration_seconds": mean(durations),
+            "possession_early_offense_share": (sum(1 for x in durations if x <= 7.0) / len(durations)) if durations else None,
+            "possession_ppp": (sum(points) / len(valid)) if points else None,
+        })
+    return index_game_summaries(summaries)
+
+
+def shot_made(row: dict[str, Any]) -> bool | None:
+    return bool_from_columns(row, ("made", "shot_made", "is_made", "made_shot"))
+
+
+def shot_three(row: dict[str, Any]) -> bool | None:
+    explicit = bool_from_columns(row, ("is_three", "three_point", "is_three_point"))
+    if explicit is not None:
+        return explicit
+    value = first_numeric(row, ("shot_value", "point_value", "points_possible"))
+    if value is not None:
+        return value == 3.0
+    text = first_text(row, ("shot_type", "type", "shot_type_text"))
+    if text:
+        normalized = text.lower()
+        if "three" in normalized or "3pt" in normalized or "3-point" in normalized or "3 point" in normalized:
+            return True
+        if "2pt" in normalized or "2-point" in normalized or "2 point" in normalized:
+            return False
+    return None
+
+
+def shot_distance(row: dict[str, Any]) -> float | None:
+    return first_numeric(row, ("shot_distance", "distance", "distance_feet", "shot_distance_feet"))
+
+
+def shot_rim(row: dict[str, Any]) -> bool | None:
+    explicit = bool_from_columns(row, ("is_rim", "at_rim", "rim"))
+    if explicit is not None:
+        return explicit
+    zone = first_text(row, ("shot_zone", "zone", "shot_zone_basic", "shot_area"))
+    if zone:
+        normalized = zone.lower()
+        if "restricted" in normalized or "at rim" in normalized or "rim" in normalized:
+            return True
+        if any(token in normalized for token in ("paint", "mid", "three", "3pt", "corner", "arc")):
+            return False
+    distance = shot_distance(row)
+    if distance is not None:
+        return distance <= 4.0
+    return None
+
+
+def build_shot_index(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    summaries: list[dict[str, Any]] = []
+    for (team_id, game_id), game_rows in group_advanced_rows(rows).items():
+        rim_flags: list[bool] = []
+        three_flags: list[bool] = []
+        rim_makes: list[bool] = []
+        three_makes: list[bool] = []
+        high_value: list[bool] = []
+        distances: list[float] = []
+        context = game_rows[0]
+        for row in game_rows:
+            rim = shot_rim(row)
+            three = shot_three(row)
+            made = shot_made(row)
+            distance = shot_distance(row)
+            if rim is not None:
+                rim_flags.append(rim)
+                if rim and made is not None:
+                    rim_makes.append(made)
+            if three is not None:
+                three_flags.append(three)
+                if three and made is not None:
+                    three_makes.append(made)
+            if rim is not None and three is not None:
+                high_value.append(rim or three)
+            if distance is not None:
+                distances.append(distance)
+        summaries.append({
+            "game_id": game_id,
+            "team_id": team_id,
+            "_date": context["_date"],
+            "_dt": context["_dt"],
+            "shot_rim_rate": (sum(1 for x in rim_flags if x) / len(rim_flags)) if rim_flags else None,
+            "shot_rim_fg_pct": (sum(1 for x in rim_makes if x) / len(rim_makes)) if rim_makes else None,
+            "shot_three_rate": (sum(1 for x in three_flags if x) / len(three_flags)) if three_flags else None,
+            "shot_three_fg_pct": (sum(1 for x in three_makes if x) / len(three_makes)) if three_makes else None,
+            "shot_high_value_rate": (sum(1 for x in high_value if x) / len(high_value)) if high_value else None,
+            "shot_avg_distance": mean(distances),
+        })
+    return index_game_summaries(summaries)
+
+
+def build_advanced_indexes(
+    history_root: Path,
+    league: str,
+    seasons: list[int],
+    game_context: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    lineups = prepared_advanced_rows(history_root, league, seasons, "lineups", game_context)
+    possessions = prepared_advanced_rows(history_root, league, seasons, "possessions", game_context)
+    shots = prepared_advanced_rows(history_root, league, seasons, "shots", game_context)
+    return {
+        "lineup": build_lineup_index(lineups),
+        "possession": build_possession_index(possessions),
+        "shot": build_shot_index(shots),
+    }
+
+
+def advanced_side_features(
+    family: str,
+    team_id: str,
+    target_game_id: str,
+    target_dt: datetime | None,
+    target_date: date,
+    family_index: dict[str, list[dict[str, Any]]],
+    windows: list[int],
+    side: str,
+) -> dict[str, Any]:
+    eligible = prior_rows(family_index.get(team_id, []), target_dt, target_date)
+    assert_target_absent(eligible, target_game_id, f"advanced:{family}:{side}")
+    result: dict[str, Any] = {}
+    for window in windows:
+        recent = eligible[-window:]
+        for metric in ADVANCED_FAMILY_METRICS[family]:
+            values = [float(row[metric]) for row in recent if row.get(metric) is not None]
+            result[f"{side}_{metric}_{window}"] = mean(values)
+    return result
+
+
+def advanced_features_for_target(
+    league: str,
+    home_team_id: str,
+    away_team_id: str,
+    target_game_id: str,
+    target_dt: datetime | None,
+    target_date: date,
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    indexes = ADVANCED_INDEXES.get(league, {})
+    windows = advanced_windows(cfg)
+    result: dict[str, Any] = {}
+    for family in ("lineup", "possession", "shot"):
+        family_index = indexes.get(family, {})
+        result.update(advanced_side_features(family, home_team_id, target_game_id, target_dt, target_date, family_index, windows, "home"))
+        result.update(advanced_side_features(family, away_team_id, target_game_id, target_dt, target_date, family_index, windows, "away"))
+        for window in windows:
+            for metric in ADVANCED_FAMILY_METRICS[family]:
+                result[f"diff_{metric}_{window}"] = difference(
+                    result.get(f"home_{metric}_{window}"),
+                    result.get(f"away_{metric}_{window}"),
+                )
+    return result
+
+
 def feature_row(
     target: dict[str, Any],
     *,
     canonical: bool,
     league: str,
+    cfg: dict[str, Any],
     feature_version: str,
     generated_at: str,
     team_index: dict[
@@ -3089,6 +3546,19 @@ def feature_row(
         result,
         team_windows,
     )
+
+    if ADVANCED_CANDIDATE_MODE:
+        result.update(
+            advanced_features_for_target(
+                league,
+                home_team_id,
+                away_team_id,
+                target_game_id,
+                target_dt,
+                target_date,
+                cfg,
+            )
+        )
 
     return result
 
@@ -3475,6 +3945,16 @@ def build_indexes(
         )
     )
 
+    if ADVANCED_CANDIDATE_MODE:
+        ADVANCED_INDEXES[league] = build_advanced_indexes(
+            history_root,
+            league,
+            seasons,
+            game_context,
+        )
+    else:
+        ADVANCED_INDEXES.pop(league, None)
+
     return (
         seasons,
         team_index,
@@ -3529,17 +4009,14 @@ def generate_rows(
         cfg
     )
 
-    feature_version = clean(
-        cfg[
-            "feature_version"
-        ]
-    )
+    feature_version = active_feature_version(cfg)
 
     rows = [
         feature_row(
             target,
             canonical=canonical,
             league=league,
+            cfg=cfg,
             feature_version=feature_version,
             generated_at=generated_at,
             team_index=team_index,
@@ -3674,10 +4151,14 @@ def build_historical(
             ),
         )
 
+        output_root = (
+            advanced_history_output_root(cfg)
+            if ADVANCED_CANDIDATE_MODE
+            else paths["history_output_root"]
+        )
+
         output = (
-            paths[
-                "history_output_root"
-            ]
+            output_root
             / league
             / (
                 f"{season}_"
@@ -3846,10 +4327,14 @@ def build_current(
             ),
         )
 
+        output_root = (
+            advanced_current_output_root(cfg)
+            if ADVANCED_CANDIDATE_MODE
+            else paths["current_output_root"]
+        )
+
         output = (
-            paths[
-                "current_output_root"
-            ]
+            output_root
             / league
             / (
                 f"{game_date}_"
@@ -3921,6 +4406,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--advanced-candidate",
+        action="store_true",
+        help=(
+            "Generate isolated Item 20 candidate features. "
+            "Default remains the validated V1 feature pipeline."
+        ),
+    )
+
+    parser.add_argument(
         "--config",
         type=Path,
         default=CONFIG_PATH,
@@ -3956,6 +4450,10 @@ def main() -> int:
 
         validate_config(
             cfg
+        )
+
+        set_advanced_candidate_mode(
+            args.advanced_candidate
         )
 
         leagues = (

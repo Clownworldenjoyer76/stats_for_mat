@@ -781,7 +781,17 @@ def validate_sdv_model_config() -> tuple[dict, dict, list[str]]:
         fatals.append(message)
         return {}, report, fatals
 
-    feature_version = clean(cfg.get("feature_version"))
+    advanced_features = cfg.get("advanced_features")
+    advanced_features = (
+        advanced_features
+        if isinstance(advanced_features, dict)
+        else {}
+    )
+    candidate_feature_version = clean(cfg.get("feature_version"))
+    feature_version = (
+        clean(advanced_features.get("production_feature_version"))
+        or candidate_feature_version
+    )
     training = cfg.get("training")
     training = training if isinstance(training, dict) else {}
     model_version = clean(training.get("model_version"))
