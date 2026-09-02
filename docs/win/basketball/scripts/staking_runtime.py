@@ -155,7 +155,14 @@ def add_uncertainty_adjusted_ev(
         raw_prob = _numeric(out, raw_prob_col)
         market_prob = _numeric(out, market_prob_col)
         decimal = _numeric(out, decimal_col)
-        adjusted_prob = (market_prob + multiplier * (raw_prob - market_prob)).clip(0.001, 0.999)
+
+        if league_key == 'nba' and market == 'moneyline':
+            adjusted_prob = raw_prob.clip(0.001, 0.999)
+        else:
+            adjusted_prob = (
+                market_prob + multiplier * (raw_prob - market_prob)
+            ).clip(0.001, 0.999)
+
         adjusted_ev = adjusted_prob * decimal - 1.0
         raw_ev_col = f'{prefix}_ev'
         out[f'{prefix}_raw_ev'] = out[raw_ev_col]

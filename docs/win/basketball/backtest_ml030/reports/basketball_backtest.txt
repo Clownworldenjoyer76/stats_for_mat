@@ -1,0 +1,38 @@
+=== basketball_backtest RUN 2026-09-02T12:30:10.622864+00:00 ===
+2026-09-02T12:30:10.623248+00:00 | INFO  | run_id=ml030
+2026-09-02T12:30:10.623656+00:00 | INFO  | backtest_dir=docs\win\basketball\backtest_ml030
+2026-09-02T12:30:10.624055+00:00 | INFO  | model_config=docs\win\basketball\config\model_config.yaml
+2026-09-02T12:30:10.624418+00:00 | INFO  | filter_config=docs\win\basketball\backtest_ml030\configs\markets_test.yaml
+2026-09-02T12:30:10.624766+00:00 | INFO  | production_markets_config=docs\win\basketball\config\markets.yaml
+2026-09-02T12:30:10.625146+00:00 | INFO  | staking_config=docs\win\basketball\config\staking.yaml
+2026-09-02T12:30:10.694734+00:00 | INFO  | model_source=ensemble
+2026-09-02T12:30:10.700514+00:00 | INFO  | [NBA] reading docs\win\basketball\backtest_ml030\input\2025_NBA.csv | internal_season=2025
+2026-09-02T12:30:10.841645+00:00 | WARN  | [NBA] 2025_NBA: skipping 150 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:30:11.105470+00:00 | INFO  | PARITY PASS | NBA | rows=25
+2026-09-02T12:30:11.828947+00:00 | INFO  | [NBA] 2025_NBA moneyline: rows=1118 selected=357
+2026-09-02T12:30:12.151007+00:00 | INFO  | [NBA] 2025_NBA spread: rows=1118 selected=748
+2026-09-02T12:30:12.502189+00:00 | INFO  | [NBA] 2025_NBA total: rows=1118 selected=911
+2026-09-02T12:30:13.037901+00:00 | INFO  | [NBA] 2025_NBA: internal_season=2025 historical_rows=1118 selected=2016 graded=2016
+2026-09-02T12:30:13.040050+00:00 | INFO  | [NCAAM] reading docs\win\basketball\backtest_ml030\input\2025_NCAAM.csv | internal_season=2025
+2026-09-02T12:30:13.425465+00:00 | WARN  | [NCAAM] 2025_NCAAM: skipping 1 incomplete historical rows with missing projection or final-score values
+2026-09-02T12:30:13.426348+00:00 | WARN  | [NCAAM] 2025_NCAAM: skipping 500 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:30:13.681953+00:00 | INFO  | PARITY PASS | NCAAM | rows=25
+2026-09-02T12:30:16.046573+00:00 | INFO  | [NCAAM] 2025_NCAAM moneyline: rows=3531 selected=1721
+2026-09-02T12:30:16.686648+00:00 | INFO  | [NCAAM] 2025_NCAAM spread: rows=3531 selected=716
+2026-09-02T12:30:17.634030+00:00 | INFO  | [NCAAM] 2025_NCAAM total: rows=3531 selected=2126
+2026-09-02T12:30:18.724791+00:00 | INFO  | [NCAAM] 2025_NCAAM: internal_season=2025 historical_rows=3531 selected=4563 graded=4563
+2026-09-02T12:30:18.727441+00:00 | INFO  | [WNBA] reading docs\win\basketball\backtest_ml030\input\2025_WNBA.csv | internal_season=2025
+2026-09-02T12:30:18.771271+00:00 | WARN  | [WNBA] 2025_WNBA: skipping 100 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:30:19.025025+00:00 | INFO  | PARITY PASS | WNBA | rows=25
+2026-09-02T12:30:19.194280+00:00 | INFO  | [WNBA] 2025_WNBA moneyline: rows=162 selected=121
+2026-09-02T12:30:19.237480+00:00 | INFO  | [WNBA] 2025_WNBA spread: rows=162 selected=74
+2026-09-02T12:30:19.291230+00:00 | INFO  | [WNBA] 2025_WNBA total: rows=162 selected=126
+2026-09-02T12:30:19.383253+00:00 | INFO  | [WNBA] 2025_WNBA: internal_season=2025 historical_rows=162 selected=321 graded=321
+2026-09-02T12:30:22.390864+00:00 | INFO  | staking exposure replay | candidates=6900 final=3170
+2026-09-02T12:30:22.526683+00:00 | INFO  | --- FINAL SUMMARY ---
+2026-09-02T12:30:22.527129+00:00 | INFO  | historical_rows=4811
+2026-09-02T12:30:22.527477+00:00 | INFO  | selected_bets=3170
+2026-09-02T12:30:22.527769+00:00 | INFO  | graded_bets=3170
+2026-09-02T12:30:22.528392+00:00 | INFO  | W/L/P/U=1635/1514/21/0 profit_units=+204.6994 roi_units=+6.4574%
+2026-09-02T12:30:22.528808+00:00 | INFO  | run_snapshot=docs\win\basketball\backtest_ml030\runs\ml030
+2026-09-02T12:30:22.529171+00:00 | INFO  | STATUS: SUCCESS

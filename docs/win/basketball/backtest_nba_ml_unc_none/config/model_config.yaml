@@ -1,0 +1,175 @@
+# Basketball model configuration
+# Permanent league-level rules only.
+# Dynamic rolling bias values should be calculated separately and are not stored here.
+#
+# Bias schema:
+#   method: rolling      -> window_games required, value must be null
+#   method: regime_aware -> windows_games + weights + sign_conflict_shrink required,
+#                          value must be null
+#   method: fixed        -> value required, window_games must be null
+#
+# regime_aware:
+#   - calculates projected_minus_actual residual means for every configured window
+#   - combines them with the configured weights
+#   - if both positive and negative window means are present, multiplies the
+#     weighted value by sign_conflict_shrink to avoid chasing an unstable regime
+#
+# Calibration schema:
+#   moneyline may retain side-specific calibration.
+#
+#   spread / total use complementary binary calibration:
+#     canonical_side: <side to calibrate>
+#     <canonical_side>:
+#       method: none | beta
+#
+#   The opposite spread/total side is NOT calibrated independently.
+#   It is always derived as:
+#       p_opposite = 1 - p_canonical
+#
+#   method: none -> no probability adjustment
+#   method: beta -> p_adj = logistic(
+#                       intercept
+#                       + coef_log_p * ln(p_raw)
+#                       + coef_log_1mp * ln(1 - p_raw)
+#                   )
+
+schema_version: 1
+production_prediction_source: ensemble
+
+leagues:
+
+  nba:
+    status: active
+
+    edge:
+      moneyline: 0.020
+      spread: 0.015
+      total: 0.000
+
+    std:
+      spread:
+        mode: fixed
+        value: 14.4581
+      total:
+        mode: fixed
+        value: 18.7672
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 150
+        value: null
+      total:
+        method: rolling
+        window_games: 50
+        value: null
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: none
+
+      total:
+        canonical_side: over
+        over:
+          method: none
+
+
+  wnba:
+    status: active
+
+    edge:
+      moneyline: 0.000
+      spread: 0.050
+      total: 0.030
+
+    std:
+      spread:
+        mode: fixed
+        value: 13.0424
+      total:
+        mode: fixed
+        value: 16.6675
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 100
+        value: null
+      total:
+        method: regime_aware
+        windows_games: [25, 50, 100]
+        weights: [0.50, 0.30, 0.20]
+        sign_conflict_shrink: 0.35
+        value: null
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: none
+
+      total:
+        canonical_side: over
+        over:
+          method: none
+
+
+  ncaam:
+    status: active
+
+    edge:
+      moneyline: 0.015
+      spread: 0.015
+      total: 0.030
+
+    std:
+      spread:
+        mode: fixed
+        value: 11.3946
+      total:
+        mode: fixed
+        value: 17.7495
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 500
+        value: null
+      total:
+        method: fixed
+        window_games: null
+        value: 1.200
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: beta
+          intercept: 0.59787618
+          coef_log_p: 0.59540409
+          coef_log_1mp: 0.36284251
+
+      total:
+        canonical_side: over
+        over:
+          method: none

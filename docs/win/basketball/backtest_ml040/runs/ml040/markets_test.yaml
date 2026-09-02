@@ -1,0 +1,440 @@
+pick_preference:
+  metric: model_prob
+  direction: max
+ml_vs_spread_tiebreak: kelly
+markets:
+  nba:
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.4
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.4
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      over:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      under:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+  ncaam:
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      over:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      under:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+  wnba:
+    moneyline:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    spread:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      home:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      away:
+        enabled: true
+        line_bands:
+        - - -100.0
+          - 100.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+    total:
+      enabled: true
+      selection_mode: all_qualifying
+      pick_preference:
+        metric: model_prob
+        direction: max
+      over:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []
+      under:
+        enabled: true
+        line_bands:
+        - - 0.0
+          - 500.0
+        odds_bands:
+        - - -100000
+          - 100000
+        ev_bands:
+        - - -1.0
+          - 100.0
+        kelly_bands:
+        - - 0.0
+          - 1.0
+        model_prob_bands:
+        - - 0.0
+          - 1.0
+        edge_vs_market_bands:
+        - - -100.0
+          - 100.0
+        months: []
+        exclude_days_of_week: []

@@ -1,0 +1,38 @@
+=== basketball_backtest RUN 2026-09-02T12:47:26.735392+00:00 ===
+2026-09-02T12:47:26.735740+00:00 | INFO  | run_id=rawprob_scaledstake
+2026-09-02T12:47:26.736226+00:00 | INFO  | backtest_dir=docs\win\basketball\backtest_nba_ml_rawprob_scaledstake
+2026-09-02T12:47:26.736635+00:00 | INFO  | model_config=docs\win\basketball\config\model_config.yaml
+2026-09-02T12:47:26.736970+00:00 | INFO  | filter_config=docs\win\basketball\backtest_nba_ml_rawprob_scaledstake\configs\markets_test.yaml
+2026-09-02T12:47:26.737318+00:00 | INFO  | production_markets_config=docs\win\basketball\config\markets.yaml
+2026-09-02T12:47:26.737834+00:00 | INFO  | staking_config=docs\win\basketball\config\staking.yaml
+2026-09-02T12:47:26.807793+00:00 | INFO  | model_source=ensemble
+2026-09-02T12:47:26.812817+00:00 | INFO  | [NBA] reading docs\win\basketball\backtest_nba_ml_rawprob_scaledstake\input\2025_NBA.csv | internal_season=2025
+2026-09-02T12:47:26.950616+00:00 | WARN  | [NBA] 2025_NBA: skipping 150 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:47:26.956197+00:00 | INFO  | [NBA] experimental parity skipped: NBA ML uncertainty variant
+2026-09-02T12:47:27.678457+00:00 | INFO  | [NBA] 2025_NBA moneyline: rows=1118 selected=357
+2026-09-02T12:47:27.999385+00:00 | INFO  | [NBA] 2025_NBA spread: rows=1118 selected=748
+2026-09-02T12:47:28.349922+00:00 | INFO  | [NBA] 2025_NBA total: rows=1118 selected=911
+2026-09-02T12:47:28.849610+00:00 | INFO  | [NBA] 2025_NBA: internal_season=2025 historical_rows=1118 selected=2016 graded=2016
+2026-09-02T12:47:28.851893+00:00 | INFO  | [NCAAM] reading docs\win\basketball\backtest_nba_ml_rawprob_scaledstake\input\2025_NCAAM.csv | internal_season=2025
+2026-09-02T12:47:29.263385+00:00 | WARN  | [NCAAM] 2025_NCAAM: skipping 1 incomplete historical rows with missing projection or final-score values
+2026-09-02T12:47:29.264226+00:00 | WARN  | [NCAAM] 2025_NCAAM: skipping 500 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:47:29.270966+00:00 | INFO  | [NCAAM] experimental parity skipped: NBA ML uncertainty variant
+2026-09-02T12:47:31.675598+00:00 | INFO  | [NCAAM] 2025_NCAAM moneyline: rows=3531 selected=1721
+2026-09-02T12:47:32.330596+00:00 | INFO  | [NCAAM] 2025_NCAAM spread: rows=3531 selected=716
+2026-09-02T12:47:33.280660+00:00 | INFO  | [NCAAM] 2025_NCAAM total: rows=3531 selected=2126
+2026-09-02T12:47:34.364727+00:00 | INFO  | [NCAAM] 2025_NCAAM: internal_season=2025 historical_rows=3531 selected=4563 graded=4563
+2026-09-02T12:47:34.367498+00:00 | INFO  | [WNBA] reading docs\win\basketball\backtest_nba_ml_rawprob_scaledstake\input\2025_WNBA.csv | internal_season=2025
+2026-09-02T12:47:34.411144+00:00 | WARN  | [WNBA] 2025_WNBA: skipping 100 early rows because production rolling/regime-aware bias does not yet have its full lookback
+2026-09-02T12:47:34.416247+00:00 | INFO  | [WNBA] experimental parity skipped: NBA ML uncertainty variant
+2026-09-02T12:47:34.598371+00:00 | INFO  | [WNBA] 2025_WNBA moneyline: rows=162 selected=121
+2026-09-02T12:47:34.654878+00:00 | INFO  | [WNBA] 2025_WNBA spread: rows=162 selected=74
+2026-09-02T12:47:34.727781+00:00 | INFO  | [WNBA] 2025_WNBA total: rows=162 selected=126
+2026-09-02T12:47:34.836233+00:00 | INFO  | [WNBA] 2025_WNBA: internal_season=2025 historical_rows=162 selected=321 graded=321
+2026-09-02T12:47:37.902076+00:00 | INFO  | staking exposure replay | candidates=6900 final=3203
+2026-09-02T12:47:37.984636+00:00 | INFO  | --- FINAL SUMMARY ---
+2026-09-02T12:47:37.985201+00:00 | INFO  | historical_rows=4811
+2026-09-02T12:47:37.985574+00:00 | INFO  | selected_bets=3203
+2026-09-02T12:47:37.985913+00:00 | INFO  | graded_bets=3203
+2026-09-02T12:47:37.986536+00:00 | INFO  | W/L/P/U=1657/1525/21/0 profit_units=+221.5690 roi_units=+6.9175%
+2026-09-02T12:47:37.986856+00:00 | INFO  | run_snapshot=docs\win\basketball\backtest_nba_ml_rawprob_scaledstake\runs\rawprob_scaledstake
+2026-09-02T12:47:37.987196+00:00 | INFO  | STATUS: SUCCESS
