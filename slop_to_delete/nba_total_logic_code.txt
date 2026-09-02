@@ -1,0 +1,951 @@
+
+============================================================
+FILE: .\docs\win\basketball\scripts\00_intake\clean_basketball_inputs.py
+LINES: 880-980
+============================================================
+  880: 
+  881: # =========================
+  882: # STEP 6B: APPLY PREDICTION BIASES
+  883: # =========================
+  884: 
+  885: def apply_prediction_biases(pred_files, bias_values):
+  886:     stats = {
+  887:         league: {
+  888:             "files_with_biased_rows": 0,
+  889:             "rows_adjusted": 0,
+  890:             "rows_skipped_already_flagged": 0,
+  891:         }
+  892:         for league in pred_files
+  893:     }
+  894: 
+  895:     required = {
+  896:         "home_projected_points",
+  897:         "away_projected_points",
+  898:         "total_projected_points",
+  899:     }
+  900: 
+  901:     for league, files in pred_files.items():
+  902:         margin_info = bias_values[league]["margin"]
+  903:         total_info = bias_values[league]["total"]
+  904:         margin_bias = margin_info["value"]
+  905:         total_bias = total_info["value"]
+  906:         margin_half = margin_bias / 2.0
+  907:         total_half = total_bias / 2.0
+  908: 
+  909:         for path, data in files.items():
+  910:             fieldnames, rows = data
+  911: 
+  912:             if not required.issubset(set(fieldnames)):
+  913:                 log_league(league, f"WARN | Missing prediction columns, skipped: {path}")
+  914:                 continue
+  915: 
+  916:             fieldnames = list(fieldnames)
+  917:             for col in (BIAS_FLAG_COLUMN, MARGIN_BIAS_COLUMN, TOTAL_BIAS_COLUMN):
+  918:                 if col not in fieldnames:
+  919:                     fieldnames.append(col)
+  920:             data[0] = fieldnames
+  921: 
+  922:             file_adjusted = 0
+  923:             file_skipped = 0
+  924: 
+  925:             for row in rows:
+  926:                 if str(row.get(BIAS_FLAG_COLUMN, "")).strip() == BIAS_FLAG_VALUE:
+  927:                     if (
+  928:                         str(row.get(MARGIN_BIAS_COLUMN, "")).strip() == ""
+  929:                         and margin_info["method"] in ("fixed", "none")
+  930:                     ):
+  931:                         row[MARGIN_BIAS_COLUMN] = f"{margin_bias:.3f}"
+  932: 
+  933:                     if (
+  934:                         str(row.get(TOTAL_BIAS_COLUMN, "")).strip() == ""
+  935:                         and total_info["method"] in ("fixed", "none")
+  936:                     ):
+  937:                         row[TOTAL_BIAS_COLUMN] = f"{total_bias:.3f}"
+  938: 
+  939:                     file_skipped += 1
+  940:                     stats[league]["rows_skipped_already_flagged"] += 1
+  941:                     continue
+  942: 
+  943:                 home = to_float(row.get("home_projected_points"))
+  944:                 away = to_float(row.get("away_projected_points"))
+  945:                 total = to_float(row.get("total_projected_points"))
+  946: 
+  947:                 if home is None or away is None or total is None:
+  948:                     continue
+  949: 
+  950:                 new_home = round(home - margin_half - total_half, 2)
+  951:                 new_away = round(away + margin_half - total_half, 2)
+  952:                 new_total = round(total - total_bias, 2)
+  953: 
+  954:                 row["home_projected_points"] = f"{new_home:.2f}"
+  955:                 row["away_projected_points"] = f"{new_away:.2f}"
+  956:                 row["total_projected_points"] = f"{new_total:.2f}"
+  957:                 row[BIAS_FLAG_COLUMN] = BIAS_FLAG_VALUE
+  958:                 row[MARGIN_BIAS_COLUMN] = f"{margin_bias:.3f}"
+  959:                 row[TOTAL_BIAS_COLUMN] = f"{total_bias:.3f}"
+  960: 
+  961:                 file_adjusted += 1
+  962:                 stats[league]["rows_adjusted"] += 1
+  963: 
+  964:             if file_adjusted:
+  965:                 stats[league]["files_with_biased_rows"] += 1
+  966:                 log_league(
+  967:                     league,
+  968:                     f"BIASED | {path} | league={league} "
+  969:                     f"margin_method={margin_info['method']} margin_bias={margin_bias} "
+  970:                     f"total_method={total_info['method']} total_bias={total_bias} "
+  971:                     f"adjusted={file_adjusted} skipped_already_flagged={file_skipped}"
+  972:                 )
+  973: 
+  974:     return stats
+  975: 
+  976: 
+  977: # =========================
+  978: # STEP 7: WRITE CLEANED FILES
+  979: # =========================
+  980: 
+
+============================================================
+FILE: .\docs\win\basketball\scripts\01_merge\build_juice_files_core.py
+LINES: 390-505
+============================================================
+  390:     ].apply(to_american)
+  391: 
+  392:     out_path = OUTPUT_DIR / league / "moneyline" / f"{date}_{league_upper}_moneyline.csv"
+  393:     ml_df.to_csv(out_path, index=False)
+  394:     return out_path, len(ml_df)
+  395: 
+  396: 
+  397: # ============================================================
+  398: # PROCESS TOTALS
+  399: # ============================================================
+  400: 
+  401: def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
+  402:     TOTAL_EDGE = settings["TOTAL_EDGE"]
+  403:     TOTAL_STD = settings["TOTAL_STD"]
+  404:     cal = settings["CALIBRATION"]["total"]
+  405: 
+  406:     total_df = df.copy()
+  407: 
+  408:     over_model_prob = []
+  409:     under_model_prob = []
+  410:     fair_over = []
+  411:     fair_under = []
+  412:     acc_over = []
+  413:     acc_under = []
+  414: 
+  415:     for _, row in total_df.iterrows():
+  416:         try:
+  417:             T = float(row["total"])
+  418:             mean = float(row["total_projected_points"])
+  419:         except (ValueError, TypeError):
+  420:             over_model_prob.append("")
+  421:             under_model_prob.append("")
+  422:             fair_over.append("")
+  423:             fair_under.append("")
+  424:             acc_over.append("")
+  425:             acc_under.append("")
+  426:             continue
+  427: 
+  428:         if not math.isfinite(T) or not math.isfinite(mean):
+  429:             over_model_prob.append("")
+  430:             under_model_prob.append("")
+  431:             fair_over.append("")
+  432:             fair_under.append("")
+  433:             acc_over.append("")
+  434:             acc_under.append("")
+  435:             continue
+  436: 
+  437:         z = (T - mean) / TOTAL_STD
+  438: 
+  439:         if not math.isfinite(z):
+  440:             over_model_prob.append("")
+  441:             under_model_prob.append("")
+  442:             fair_over.append("")
+  443:             fair_under.append("")
+  444:             acc_over.append("")
+  445:             acc_under.append("")
+  446:             continue
+  447: 
+  448:         raw_under = clamp_probability(norm.cdf(z))
+  449:         raw_over = 1.0 - raw_under
+  450: 
+  451:         p_over, p_under = apply_complementary_calibration(
+  452:             raw_over,
+  453:             raw_under,
+  454:             cal,
+  455:             "over",
+  456:             "under",
+  457:         )
+  458: 
+  459:         if p_over == "" or p_under == "":
+  460:             over_model_prob.append("")
+  461:             under_model_prob.append("")
+  462:             fair_over.append("")
+  463:             fair_under.append("")
+  464:             acc_over.append("")
+  465:             acc_under.append("")
+  466:             continue
+  467: 
+  468:         p_over = float(p_over)
+  469:         p_under = float(p_under)
+  470: 
+  471:         if (
+  472:             not math.isfinite(p_over)
+  473:             or not math.isfinite(p_under)
+  474:             or p_over <= 0
+  475:             or p_under <= 0
+  476:             or not math.isclose(p_over + p_under, 1.0, abs_tol=1e-12)
+  477:         ):
+  478:             raise ValueError(
+  479:                 f"{league_upper} total probabilities are not complementary: "
+  480:                 f"over={p_over}, under={p_under}"
+  481:             )
+  482: 
+  483:         over_model_prob.append(p_over)
+  484:         under_model_prob.append(p_under)
+  485: 
+  486:         fair_over_dec = 1 / p_over
+  487:         fair_under_dec = 1 / p_under
+  488:         fair_over.append(fair_over_dec)
+  489:         fair_under.append(fair_under_dec)
+  490:         acc_over.append(fair_over_dec * (1 + TOTAL_EDGE))
+  491:         acc_under.append(fair_under_dec * (1 + TOTAL_EDGE))
+  492: 
+  493:     total_df["over_model_prob"] = over_model_prob
+  494:     total_df["under_model_prob"] = under_model_prob
+  495:     total_df["fair_over"] = fair_over
+  496:     total_df["fair_under"] = fair_under
+  497:     total_df["acceptable_over"] = acc_over
+  498:     total_df["acceptable_under"] = acc_under
+  499: 
+  500:     total_df["over_implied_prob"] = total_df[
+  501:         "dk_total_over_decimal"
+  502:     ].apply(safe_implied_prob)
+  503:     total_df["under_implied_prob"] = total_df[
+  504:         "dk_total_under_decimal"
+  505:     ].apply(safe_implied_prob)
+
+============================================================
+FILE: .\docs\win\basketball\scripts\03_edges\compute_ev_kelly_core.py
+LINES: 230-280
+============================================================
+  230:     df["away_spread_ev_pct"]              = df["away_spread_ev"] * 100
+  231:     df["home_spread_edge_vs_market_pct"]  = df["home_spread_edge_vs_market"] * 100
+  232:     df["away_spread_edge_vs_market_pct"]  = df["away_spread_edge_vs_market"] * 100
+  233: 
+  234:     return df
+  235: 
+  236: 
+  237: def process_total(df: pd.DataFrame, league: str | None = None) -> pd.DataFrame:
+  238:     """
+  239:     Required columns from merguiced total file:
+  240:       over_model_prob, under_model_prob              (model — Poisson removed upstream)
+  241:       over_market_prob, under_market_prob            (devigged market)
+  242:       dk_total_over_decimal, dk_total_under_decimal  (book)
+  243:     """
+  244:     df = to_numeric(df, [
+  245:         "over_model_prob", "under_model_prob",
+  246:         "over_market_prob", "under_market_prob",
+  247:         "dk_total_over_decimal", "dk_total_under_decimal",
+  248:     ])
+  249:     validate_columns(df, [
+  250:         "over_model_prob", "under_model_prob",
+  251:         "over_market_prob", "under_market_prob",
+  252:         "dk_total_over_decimal", "dk_total_under_decimal",
+  253:     ])
+  254: 
+  255:     df["over_ev"]  = compute_ev(df["over_model_prob"],  df["dk_total_over_decimal"])
+  256:     df["under_ev"] = compute_ev(df["under_model_prob"], df["dk_total_under_decimal"])
+  257: 
+  258:     df["over_edge_vs_market"]  = df["over_model_prob"]  - df["over_market_prob"]
+  259:     df["under_edge_vs_market"] = df["under_model_prob"] - df["under_market_prob"]
+  260: 
+  261:     df["over_kelly"]  = compute_kelly(df["over_model_prob"],  df["dk_total_over_decimal"])
+  262:     df["under_kelly"] = compute_kelly(df["under_model_prob"], df["dk_total_under_decimal"])
+  263: 
+  264:     df = add_uncertainty_adjusted_ev(
+  265:         df, "total",
+  266:         [
+  267:             ("over", "over_model_prob", "over_market_prob", "dk_total_over_decimal", "over_kelly"),
+  268:             ("under", "under_model_prob", "under_market_prob", "dk_total_under_decimal", "under_kelly"),
+  269:         ],
+  270:         league,
+  271:     )
+  272: 
+  273:     df["over_ev_pct"]               = df["over_ev"]  * 100
+  274:     df["under_ev_pct"]              = df["under_ev"] * 100
+  275:     df["over_edge_vs_market_pct"]   = df["over_edge_vs_market"]  * 100
+  276:     df["under_edge_vs_market_pct"]  = df["under_edge_vs_market"] * 100
+  277: 
+  278:     return df
+  279: 
+  280: 
+
+============================================================
+FILE: .\docs\win\basketball\scripts\staking_runtime.py
+LINES: 120-210
+============================================================
+  120:     return pd.to_numeric(df[column], errors='coerce')
+  121: 
+  122: 
+  123: def _signal_points(df: pd.DataFrame, market: str) -> pd.Series:
+  124:     margin = _numeric(df, 'home_projected_points') - _numeric(df, 'away_projected_points')
+  125:     if market == 'moneyline':
+  126:         return margin.abs()
+  127:     if market == 'spread':
+  128:         return (margin + _numeric(df, 'home_spread')).abs()
+  129:     if market == 'total':
+  130:         return (_numeric(df, 'total_projected_points') - _numeric(df, 'total')).abs()
+  131:     raise ValueError(f'Unsupported market={market!r}')
+  132: 
+  133: 
+  134: def add_uncertainty_adjusted_ev(
+  135:     df: pd.DataFrame,
+  136:     market: str,
+  137:     side_specs: list[tuple[str, str, str, str, str]],
+  138:     league: str | None = None,
+  139: ) -> pd.DataFrame:
+  140:     out = df
+  141:     league_key = _league_key(out, league)
+  142:     uncertainty_points = _oos_uncertainty_points(league_key, market)
+  143:     signal = _signal_points(out, market)
+  144:     denom = np.sqrt(np.square(signal.to_numpy(float)) + uncertainty_points ** 2)
+  145:     multiplier = np.divide(
+  146:         signal.to_numpy(float),
+  147:         denom,
+  148:         out=np.zeros(len(out), dtype=float),
+  149:         where=np.isfinite(denom) & (denom > 0),
+  150:     )
+  151:     if not bool(UNCERTAINTY_CFG.get('enabled', True)):
+  152:         multiplier = np.ones(len(out), dtype=float)
+  153: 
+  154:     for prefix, raw_prob_col, market_prob_col, decimal_col, raw_kelly_col in side_specs:
+  155:         raw_prob = _numeric(out, raw_prob_col)
+  156:         market_prob = _numeric(out, market_prob_col)
+  157:         decimal = _numeric(out, decimal_col)
+  158: 
+  159:         if league_key == 'nba' and market == 'moneyline':
+  160:             adjusted_prob = raw_prob.clip(0.001, 0.999)
+  161:         else:
+  162:             adjusted_prob = (
+  163:                 market_prob + multiplier * (raw_prob - market_prob)
+  164:             ).clip(0.001, 0.999)
+  165: 
+  166:         adjusted_ev = adjusted_prob * decimal - 1.0
+  167:         raw_ev_col = f'{prefix}_ev'
+  168:         out[f'{prefix}_raw_ev'] = out[raw_ev_col]
+  169:         out[f'{prefix}_raw_kelly'] = out[raw_kelly_col]
+  170:         out[f'{prefix}_uncertainty_adjusted_ev'] = adjusted_ev
+  171:         out[f'{prefix}_adjusted_model_prob'] = adjusted_prob
+  172:         out[f'{prefix}_uncertainty_multiplier'] = multiplier
+  173:         out[f'{prefix}_uncertainty_points'] = uncertainty_points
+  174:         out[f'{prefix}_signal_points'] = signal
+  175: 
+  176:     out['uncertainty_adjustment_method'] = UNCERTAINTY_METHOD
+  177:     out['uncertainty_adjustment_version'] = UNCERTAINTY_VERSION
+  178:     out['uncertainty_source'] = UNCERTAINTY_SOURCE
+  179:     return out
+  180: 
+  181: 
+  182: def attach_candidate_uncertainty(row: Any, market: str, candidate: dict) -> dict:
+  183:     side = candidate['side']
+  184:     prefix = f'{side}_ml' if market == 'moneyline' else f'{side}_spread' if market == 'spread' else side
+  185:     adjusted_ev = fv(row.get(f'{prefix}_uncertainty_adjusted_ev'))
+  186:     adjusted_prob = fv(row.get(f'{prefix}_adjusted_model_prob'))
+  187:     multiplier = fv(row.get(f'{prefix}_uncertainty_multiplier'))
+  188:     uncertainty_points = fv(row.get(f'{prefix}_uncertainty_points'))
+  189:     signal_points = fv(row.get(f'{prefix}_signal_points'))
+  190:     out = dict(candidate)
+  191:     out.update({
+  192:         'raw_ev': candidate.get('ev'),
+  193:         'raw_kelly': candidate.get('kelly'),
+  194:         'uncertainty_adjusted_ev': candidate.get('ev') if adjusted_ev is None else adjusted_ev,
+  195:         'adjusted_model_prob': candidate.get('model_prob') if adjusted_prob is None else adjusted_prob,
+  196:         'uncertainty_multiplier': 1.0 if multiplier is None else multiplier,
+  197:         'uncertainty_points': uncertainty_points,
+  198:         'signal_points': signal_points,
+  199:     })
+  200:     return out
+  201: 
+  202: 
+  203: def requested_stake(raw_kelly: Any, uncertainty_multiplier: Any = 1.0) -> tuple[float, float, float]:
+  204:     kelly = fv(raw_kelly)
+  205:     multiplier = fv(uncertainty_multiplier)
+  206:     if kelly is None or kelly <= 0:
+  207:         return 0.0, 0.0, 0.0
+  208:     if multiplier is None:
+  209:         multiplier = 1.0
+  210:     multiplier = min(max(multiplier, 0.0), 1.0)
+
+============================================================
+FILE: .\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py
+LINES: 430-550
+============================================================
+  430:     return sides
+  431: 
+  432: 
+  433: def build_total_sides(row, league, game_date, cfg):
+  434:     sides = []
+  435:     line = fv(row.get("total"))
+  436:     for side in ("over", "under"):
+  437:         scfg = cfg[side]
+  438:         if not scfg.get("enabled", True):
+  439:             continue
+  440:         odds  = fv(row.get(f"dk_total_{side}_american"))
+  441:         ev    = fv(row.get(f"{side}_ev"))
+  442:         kelly = fv(row.get(f"{side}_kelly"))
+  443:         mp    = fv(row.get(f"{side}_model_prob"))
+  444:         evm   = fv(row.get(f"{side}_edge_vs_market_pct"))
+  445: 
+  446:         if not passes_model_edge(ev, league, "total"):
+  447:             DEBUG_COUNTS["rejected_total"] += 1
+  448:             continue
+  449: 
+  450:         values = {"odds": odds, "line": line, "ev": ev, "kelly": kelly,
+  451:                   "model_prob": mp, "edge_vs_market_pct": evm}
+  452:         if passes_filters(values, scfg, game_date):
+  453:             sides.append({
+  454:                 "side": side, "line": line, "odds": odds,
+  455:                 "ev": ev, "kelly": kelly,
+  456:                 "model_prob": mp, "edge_vs_market": evm,
+  457:             })
+  458:         else:
+  459:             DEBUG_COUNTS["rejected_total"] += 1
+  460:     return sides
+  461: 
+  462: 
+  463: SIDE_BUILDERS = {
+  464:     "moneyline": build_ml_sides,
+  465:     "spread":    build_spread_sides,
+  466:     "total":     build_total_sides,
+  467: }
+  468: 
+  469: 
+  470: # =========================
+  471: # FILE PROCESSOR
+  472: # =========================
+  473: 
+  474: def process_file(file: Path, league: str, market_type: str):
+  475:     df = pd.read_csv(file)
+  476:     if df.empty:
+  477:         _log(f"EMPTY: {file.name}", "WARN")
+  478:         return pd.DataFrame(), 0
+  479: 
+  480:     cfg = market_cfg(league, market_type)
+  481:     if not cfg.get("enabled", True):
+  482:         _log(f"DISABLED in config: league={league} market={market_type}")
+  483:         return pd.DataFrame(), 0
+  484: 
+  485:     selection_mode = cfg.get("selection_mode", "pick_one")
+  486:     preference     = cfg.get("pick_preference", {"metric": "ev", "direction": "max"})
+  487:     builder        = SIDE_BUILDERS[market_type]
+  488:     file_date      = extract_date(file.name)
+  489: 
+  490:     _log(
+  491:         f"--- FILE: {file.name} league={league} market={market_type} "
+  492:         f"rows={len(df)} mode={selection_mode} model_edge={model_edge(league, market_type)}"
+  493:     )
+  494: 
+  495:     out_rows = []
+  496:     for _, row in df.iterrows():
+  497:         game_date = row.get("game_date") or file_date
+  498:         sides = builder(row, league, game_date, cfg)
+  499:         sides = [
+  500:             attach_candidate_uncertainty(row, market_type, side)
+  501:             for side in sides
+  502:         ]
+  503: 
+  504:         if not sides:
+  505:             continue
+  506: 
+  507:         if selection_mode == "all_qualifying":
+  508:             picks = sides
+  509:         else:
+  510:             p = pick(sides, preference)
+  511:             picks = [p] if p else []
+  512: 
+  513:         for sel in picks:
+  514:             DEBUG_COUNTS["selected"] += 1
+  515:             r = row.to_dict()
+  516:             r.update({
+  517:                 "bet_side":           sel["side"],
+  518:                 "bet_line":           sel["line"],
+  519:                 "bet_odds_american":  sel["odds"],
+  520:                 "bet_ev":             sel["ev"],
+  521:                 "bet_raw_ev":         sel["raw_ev"],
+  522:                 "bet_uncertainty_adjusted_ev": sel["uncertainty_adjusted_ev"],
+  523:                 "bet_kelly":          sel["kelly"],
+  524:                 "bet_raw_kelly":      sel["raw_kelly"],
+  525:                 "bet_model_prob":     sel["model_prob"],
+  526:                 "bet_adjusted_model_prob": sel["adjusted_model_prob"],
+  527:                 "bet_edge_vs_market": sel["edge_vs_market"],
+  528:                 "bet_uncertainty_multiplier": sel["uncertainty_multiplier"],
+  529:                 "bet_uncertainty_points": sel["uncertainty_points"],
+  530:                 "bet_signal_points": sel["signal_points"],
+  531:                 "bet_requested_stake_pct": stake_pct(sel["raw_kelly"], sel["uncertainty_multiplier"]),
+  532:                 "bet_stake_pct":      stake_pct(sel["raw_kelly"], sel["uncertainty_multiplier"]),
+  533:                 "market_type":        market_type,
+  534:                 "league_lower":       league,
+  535:                 "league":             league.upper(),
+  536:                 "game_date":          game_date,
+  537:             })
+  538:             out_rows.append(r)
+  539: 
+  540:     n = len(out_rows)
+  541:     _log(f"{file.name} | {n} selected from {len(df)} rows")
+  542:     return pd.DataFrame(out_rows), n
+  543: 
+  544: 
+  545: # =========================
+  546: # MAIN
+  547: # =========================
+  548: 
+  549: def main():
+  550:     with open(LOG_FILE, "w", encoding="utf-8") as f:
+
+============================================================
+CONFIG: model_config.yaml
+============================================================
+# Basketball model configuration
+# Permanent league-level rules only.
+# Dynamic rolling bias values should be calculated separately and are not stored here.
+#
+# Bias schema:
+#   method: rolling      -> window_games required, value must be null
+#   method: regime_aware -> windows_games + weights + sign_conflict_shrink required,
+#                          value must be null
+#   method: fixed        -> value required, window_games must be null
+#
+# regime_aware:
+#   - calculates projected_minus_actual residual means for every configured window
+#   - combines them with the configured weights
+#   - if both positive and negative window means are present, multiplies the
+#     weighted value by sign_conflict_shrink to avoid chasing an unstable regime
+#
+# Calibration schema:
+#   moneyline may retain side-specific calibration.
+#
+#   spread / total use complementary binary calibration:
+#     canonical_side: <side to calibrate>
+#     <canonical_side>:
+#       method: none | beta
+#
+#   The opposite spread/total side is NOT calibrated independently.
+#   It is always derived as:
+#       p_opposite = 1 - p_canonical
+#
+#   method: none -> no probability adjustment
+#   method: beta -> p_adj = logistic(
+#                       intercept
+#                       + coef_log_p * ln(p_raw)
+#                       + coef_log_1mp * ln(1 - p_raw)
+#                   )
+
+schema_version: 1
+production_prediction_source: ensemble
+
+leagues:
+
+  nba:
+    status: active
+
+    edge:
+      moneyline: 0.020
+      spread: 0.015
+      total: 0.000
+
+    std:
+      spread:
+        mode: fixed
+        value: 14.4581
+      total:
+        mode: fixed
+        value: 18.7672
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 150
+        value: null
+      total:
+        method: rolling
+        window_games: 50
+        value: null
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: none
+
+      total:
+        canonical_side: over
+        over:
+          method: none
+
+
+  wnba:
+    status: active
+
+    edge:
+      moneyline: 0.000
+      spread: 0.050
+      total: 0.030
+
+    std:
+      spread:
+        mode: fixed
+        value: 13.0424
+      total:
+        mode: fixed
+        value: 16.6675
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 100
+        value: null
+      total:
+        method: regime_aware
+        windows_games: [25, 50, 100]
+        weights: [0.50, 0.30, 0.20]
+        sign_conflict_shrink: 0.35
+        value: null
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: none
+
+      total:
+        canonical_side: over
+        over:
+          method: none
+
+
+  ncaam:
+    status: active
+
+    edge:
+      moneyline: 0.015
+      spread: 0.015
+      total: 0.030
+
+    std:
+      spread:
+        mode: fixed
+        value: 11.3946
+      total:
+        mode: fixed
+        value: 17.7495
+
+    bias:
+      margin:
+        method: rolling
+        window_games: 500
+        value: null
+      total:
+        method: fixed
+        window_games: null
+        value: 1.200
+
+    calibration:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+
+      spread:
+        canonical_side: home
+        home:
+          method: beta
+          intercept: 0.59787618
+          coef_log_p: 0.59540409
+          coef_log_1mp: 0.36284251
+
+      total:
+        canonical_side: over
+        over:
+          method: none
+
+============================================================
+CONFIG: rolling_bias_state.yaml
+============================================================
+schema_version: 1
+generated_at_utc: '2026-09-02T10:53:33+00:00'
+source_config: docs/win/basketball/config/model_config.yaml
+script_path: docs/win/basketball/scripts/00_intake/calculate_rolling_bias.py
+script_sha256: 0c152822b0634500df58f9929199b1b83a29c05aed3c841a15fd47338c76b3e0
+leagues:
+  nba:
+    status: ready
+    config_status: active
+    margin_bias:
+      status: ready
+      method: rolling
+      value: -1.589
+      window_games: 150
+      games_used: 150
+      first_game_date: '2026-04-02'
+      last_game_date: '2026-06-08'
+      mean_error_definition: projected_minus_actual
+    total_bias:
+      status: ready
+      method: rolling
+      value: -2.498
+      window_games: 50
+      games_used: 50
+      first_game_date: '2026-04-26'
+      last_game_date: '2026-06-08'
+      mean_error_definition: projected_minus_actual
+    history:
+      historical_files_scanned: 1
+      historical_rows: 1268
+      historical_usable_games: 1268
+      historical_incomplete_rows: 0
+      historical_rows_invalid_date: 0
+      historical_invalid_bias_flag_rows: 0
+      historical_rows_bias_reversed: 1268
+      historical_rows_bias_reversed_per_game: 0
+      historical_rows_bias_reversed_legacy: 1268
+      historical_rows_raw_unadjusted: 0
+      historical_unreversible_bias_rows: 0
+      current_season: null
+      season_status: offseason
+      prediction_files_scanned: 0
+      prediction_rows_scanned: 0
+      prediction_rows_current_season: 0
+      prediction_rows_ignored_not_current_season: 0
+      prediction_rows_invalid_date: 0
+      final_files_scanned: 0
+      final_rows_scanned: 0
+      final_rows_current_season: 0
+      final_rows_ignored_not_current_season: 0
+      final_rows_invalid_date: 0
+      prediction_rows_missing_game_id: 0
+      prediction_rows_missing_composite: 0
+      duplicate_prediction_game_ids: 0
+      duplicate_prediction_composites: 0
+      conflicting_prediction_game_ids: 0
+      conflicting_prediction_composites: 0
+      duplicate_final_game_ids: 0
+      duplicate_final_composites: 0
+      conflicting_final_game_ids: 0
+      conflicting_final_composites: 0
+      final_duplicate_rows_removed: 0
+      final_conflicting_rows_excluded: 0
+      finals_already_covered_by_historical: 0
+      matched_by_game_id: 0
+      matched_by_composite: 0
+      game_id_identity_mismatches: 0
+      ambiguous_prediction_matches: 0
+      true_unmatched_current_finals: 0
+      invalid_current_matches: 0
+      current_matched_games: 0
+      duplicates_removed_from_completed_history: 0
+      unique_completed_games: 1268
+      first_game_date: '2025-10-21'
+      last_game_date: '2026-06-08'
+  ncaam:
+    status: ready
+    config_status: active
+    margin_bias:
+      status: ready
+      method: rolling
+      value: -0.063
+      window_games: 500
+      games_used: 500
+      first_game_date: '2026-03-02'
+      last_game_date: '2026-04-06'
+      mean_error_definition: projected_minus_actual
+    total_bias:
+      status: ready
+      method: fixed
+      value: 1.2
+      window_games: null
+      games_used: 0
+      first_game_date: null
+      last_game_date: null
+    history:
+      historical_files_scanned: 1
+      historical_rows: 4031
+      historical_usable_games: 4031
+      historical_incomplete_rows: 0
+      historical_rows_invalid_date: 0
+      historical_invalid_bias_flag_rows: 0
+      historical_rows_bias_reversed: 4031
+      historical_rows_bias_reversed_per_game: 0
+      historical_rows_bias_reversed_legacy: 4031
+      historical_rows_raw_unadjusted: 0
+      historical_unreversible_bias_rows: 0
+      current_season: null
+      season_status: offseason
+      prediction_files_scanned: 0
+      prediction_rows_scanned: 0
+      prediction_rows_current_season: 0
+      prediction_rows_ignored_not_current_season: 0
+      prediction_rows_invalid_date: 0
+      final_files_scanned: 0
+      final_rows_scanned: 0
+      final_rows_current_season: 0
+      final_rows_ignored_not_current_season: 0
+      final_rows_invalid_date: 0
+      prediction_rows_missing_game_id: 0
+      prediction_rows_missing_composite: 0
+      duplicate_prediction_game_ids: 0
+      duplicate_prediction_composites: 0
+      conflicting_prediction_game_ids: 0
+      conflicting_prediction_composites: 0
+      duplicate_final_game_ids: 0
+      duplicate_final_composites: 0
+      conflicting_final_game_ids: 0
+      conflicting_final_composites: 0
+      final_duplicate_rows_removed: 0
+      final_conflicting_rows_excluded: 0
+      finals_already_covered_by_historical: 0
+      matched_by_game_id: 0
+      matched_by_composite: 0
+      game_id_identity_mismatches: 0
+      ambiguous_prediction_matches: 0
+      true_unmatched_current_finals: 0
+      invalid_current_matches: 0
+      current_matched_games: 0
+      duplicates_removed_from_completed_history: 0
+      unique_completed_games: 4031
+      first_game_date: '2025-11-04'
+      last_game_date: '2026-04-06'
+  wnba:
+    status: ready_with_warnings
+    config_status: active
+    margin_bias:
+      status: ready
+      method: rolling
+      value: -5.413
+      window_games: 100
+      games_used: 100
+      first_game_date: '2026-07-18'
+      last_game_date: '2026-08-30'
+      mean_error_definition: projected_minus_actual
+    total_bias:
+      status: ready
+      method: regime_aware
+      value: -3.978
+      window_games: 100
+      windows_games:
+      - 25
+      - 50
+      - 100
+      weights:
+      - 0.5
+      - 0.3
+      - 0.2
+      window_mean_residuals:
+        '25': -2.6071
+        '50': -3.1309
+        '100': -8.677
+      unshrunk_weighted_value: -3.9782
+      sign_conflict: false
+      sign_conflict_shrink: 0.35
+      regime_status: aligned
+      games_used: 100
+      first_game_date: '2026-07-18'
+      last_game_date: '2026-08-30'
+      mean_error_definition: projected_minus_actual
+    history:
+      historical_files_scanned: 1
+      historical_rows: 262
+      historical_usable_games: 262
+      historical_incomplete_rows: 0
+      historical_rows_invalid_date: 0
+      historical_invalid_bias_flag_rows: 0
+      historical_rows_bias_reversed: 262
+      historical_rows_bias_reversed_per_game: 0
+      historical_rows_bias_reversed_legacy: 262
+      historical_rows_raw_unadjusted: 0
+      historical_unreversible_bias_rows: 0
+      current_season: 2026
+      season_status: in_season
+      prediction_files_scanned: 100
+      prediction_rows_scanned: 287
+      prediction_rows_current_season: 287
+      prediction_rows_ignored_not_current_season: 0
+      prediction_rows_invalid_date: 0
+      final_files_scanned: 113
+      final_rows_scanned: 311
+      final_rows_current_season: 295
+      final_rows_ignored_not_current_season: 16
+      final_rows_invalid_date: 0
+      prediction_rows_missing_game_id: 0
+      prediction_rows_missing_composite: 0
+      duplicate_prediction_game_ids: 0
+      duplicate_prediction_composites: 0
+      conflicting_prediction_game_ids: 0
+      conflicting_prediction_composites: 0
+      duplicate_final_game_ids: 0
+      duplicate_final_composites: 0
+      conflicting_final_game_ids: 0
+      conflicting_final_composites: 0
+      final_duplicate_rows_removed: 0
+      final_conflicting_rows_excluded: 0
+      finals_already_covered_by_historical: 0
+      matched_by_game_id: 280
+      matched_by_composite: 0
+      game_id_identity_mismatches: 0
+      ambiguous_prediction_matches: 0
+      true_unmatched_current_finals: 15
+      invalid_current_matches: 0
+      current_matched_games: 280
+      duplicates_removed_from_completed_history: 0
+      unique_completed_games: 542
+      first_game_date: '2025-05-16'
+      last_game_date: '2026-08-30'
+run_status: success_with_warnings
+
+============================================================
+CONFIG: staking.yaml
+============================================================
+# Basketball staking / exposure configuration
+# Fractions are fractions of bankroll: 0.05 = 5%.
+# raw Kelly is a sizing input only. It is NOT a predicted win rate.
+schema_version: 1
+units: fraction_of_bankroll
+
+kelly:
+  fractional_multiplier: 0.25
+
+exposure_limits:
+  maximum_exposure_per_game: 0.05
+  maximum_exposure_per_league_per_day: 0.15
+  maximum_total_daily_exposure: 0.25
+  maximum_individual_bet_kelly_fraction: 0.05
+
+uncertainty_adjustment:
+  enabled: true
+  method: signal_to_noise_market_shrink
+  version: signal_to_noise_market_shrink_v1
+  uncertainty_source: model_config_oos_residual_std
+  market_std_source:
+    moneyline: spread
+    spread: spread
+    total: total
+  ranking_metric: uncertainty_adjusted_ev
+  stake_scaling: uncertainty_multiplier
+
+ranking:
+  primary: uncertainty_adjusted_ev
+  tie_breakers: [raw_ev, raw_kelly]

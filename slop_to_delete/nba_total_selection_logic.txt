@@ -1,0 +1,653 @@
+
+> docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:98:def model_edge(league: str, market: str) -> float:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:99:    try:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:100:        return MODEL_EDGES[league.lower()][market]
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:101:    except KeyError as exc:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:102:        raise KeyError(f"No model EDGE: league={league!r} market={market!r}") from exc
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:103:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:104:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:105:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:106:# LOGGING
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:107:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:108:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:109:def _now():
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:110:    return datetime.now(UTC).isoformat()
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:111:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:112:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:113:def _log(msg: str, level: str = "INFO"):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:114:    with open(LOG_FILE, "a", encoding="utf-8") as f:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:115:        f.write(f"{_now()} | {level:<5} | {msg.rstrip()}\n")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:116:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:117:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:118:def _write_summary(summary: dict, per_file: list) -> None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:119:    lines = [
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:120:        "",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:121:        "=" * 70,
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:122:        f"SUMMARY  {_now()}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:123:        "=" * 70,
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:124:        f"  files_processed       : {summary['files_processed']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:125:        f"  candidate_selected    : {summary['total_candidates']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:126:        f"  total_selected        : {summary['total_selected']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:127:        f"  nba_bets              : {summary['nba_bets']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:128:        f"  ncaam_bets            : {summary['ncaam_bets']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:129:        f"  wnba_bets             : {summary['wnba_bets']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:130:        f"  ml_vs_spread_dropped  : {summary['ml_vs_spread_dropped']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:131:        f"  skipped               : {summary['skipped']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:132:        f"  errors                : {summary['errors']}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:133:        f"  kelly_fraction        : {KELLY_FRACTION}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:134:        f"  kelly_cap             : {KELLY_CAP}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:135:        f"  max_game_exposure     : {MAX_EXPOSURE_PER_GAME}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:136:        f"  max_league_day        : {MAX_EXPOSURE_PER_LEAGUE_DAY}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:137:        f"  max_total_day         : {MAX_TOTAL_DAILY_EXPOSURE}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:138:        f"  uncertainty_method    : {UNCERTAINTY_METHOD}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:139:        f"  uncertainty_version   : {UNCERTAINTY_VERSION}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:140:        f"  ml_vs_spread_tiebreak : {ML_VS_SPREAD_TIEBREAK}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:141:        "",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:142:        "--- Filter Reject Counts ---",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:143:    ]
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:144:    for k, v in sorted(DEBUG_COUNTS.items()):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:145:        lines.append(f"  {k:<28} : {v}")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:146:    lines += [
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:147:        "",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:148:        f"  {'file':<48} {'market':<10} {'league':>6} {'selected':>9} {'status':>10}",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:149:    ]
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:150:    for pf in per_file:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:151:        lines.append(
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:152:            f"  {pf['name']:<48} {pf['market']:<10} {pf['league']:>6} "
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:153:            f"{pf['selected']:>9} {pf['status']:>10}"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:154:        )
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:155:    status = "SUCCESS" if summary["errors"] == 0 else "COMPLETED WITH ERRORS"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:156:    lines += ["", f"STATUS: {status}", "=" * 70]
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:157:    with open(LOG_FILE, "a", encoding="utf-8") as f:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:158:        f.write("\n".join(lines) + "\n")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:159:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:160:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:161:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:162:# HELPERS
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:163:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:164:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:165:def fv(x):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:166:    try:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:167:        if x is None or pd.isna(x):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:168:            return None
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:169:        return float(x)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:170:    except Exception:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:171:        return None
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:172:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:173:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:174:def in_any_band(value, bands):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:175:    if value is None or bands is None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:176:        return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:177:    return any(lo <= value <= hi for lo, hi in bands)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:178:
+> docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:202:def passes_filters(values: dict, scfg: dict, game_date: str) -> bool:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:203:    if "odds_bands" in scfg:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:204:        if not in_any_band(values.get("odds"), scfg["odds_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:205:            DEBUG_COUNTS["fail_odds"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:206:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:207:    if "line_bands" in scfg and values.get("line") is not None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:208:        if not in_any_band(values.get("line"), scfg["line_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:209:            DEBUG_COUNTS["fail_line"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:210:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:211:    if "ev_bands" in scfg:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:212:        if not in_any_band(values.get("ev"), scfg["ev_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:213:            DEBUG_COUNTS["fail_ev"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:214:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:215:    if "kelly_bands" in scfg:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:216:        if not in_any_band(values.get("kelly"), scfg["kelly_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:217:            DEBUG_COUNTS["fail_kelly"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:218:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:219:    if "model_prob_bands" in scfg:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:220:        if not in_any_band(values.get("model_prob"), scfg["model_prob_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:221:            DEBUG_COUNTS["fail_model_prob"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:222:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:223:    if "edge_vs_market_bands" in scfg:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:224:        if not in_any_band(values.get("edge_vs_market_pct"), scfg["edge_vs_market_bands"]):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:225:            DEBUG_COUNTS["fail_edge_vs_market"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:226:            return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:227:    if not date_ok(game_date, scfg.get("months", []) or [],
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:228:                   scfg.get("exclude_days_of_week", []) or []):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:229:        return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:230:    return True
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:231:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:232:
+> docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:233:def passes_model_edge(ev, league: str, market: str) -> bool:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:234:    threshold = model_edge(league, market)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:235:    if ev is None or ev < threshold:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:236:        DEBUG_COUNTS[f"fail_model_edge_{market}"] += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:237:        return False
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:238:    return True
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:239:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:240:
+> docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:241:def pick(qualifying, preference):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:242:    if not qualifying:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:243:        return None
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:244:    metric = preference.get("metric", "ev")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:245:    direction = preference.get("direction", "max")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:246:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:247:    def key(c):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:248:        v = c.get(metric)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:249:        if v is None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:250:            return float("-inf") if direction == "max" else float("inf")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:251:        return v
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:252:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:253:    return max(qualifying, key=key) if direction == "max" else min(qualifying, key=key)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:254:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:255:
+> docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:256:def market_cfg(league, market_type):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:257:    try:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:258:        return CONFIG["markets"][league.lower()][market_type]
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:259:    except KeyError as e:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:260:        raise KeyError(f"No config: league={league!r} market_type={market_type!r}") from e
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:261:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:262:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:263:def extract_date(filename):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:264:    m = re.search(r"\d{4}_\d{2}_\d{2}", filename)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:265:    return m.group(0) if m else None
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:266:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:267:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:268:def stake_pct(kelly, uncertainty_multiplier=1.0):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:269:    # raw Kelly is a sizing input only; it is not a predicted win rate.
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:270:    _, _, requested = requested_stake(kelly, uncertainty_multiplier)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:271:    return requested if requested > 0 else None
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:272:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:273:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:274:def clear_old_select_outputs() -> None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:275:    deleted_daily_picks = 0
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:276:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:277:    for league in LEAGUES:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:278:        daily_pick_dir = SELECT_DIR / league / "daily_picks"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:279:        if not daily_pick_dir.exists():
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:280:            continue
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:281:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:282:        for stale in daily_pick_dir.glob("*_selected.csv"):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:283:            stale.unlink(missing_ok=True)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:284:            deleted_daily_picks += 1
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:285:            _log(f"DELETED OLD DAILY PICK FILE: {stale}")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:286:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:287:    DEBUG_COUNTS["deleted_old_daily_pick_files"] += deleted_daily_picks
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:288:    _log(f"Old basketball daily pick outputs deleted: daily_picks={deleted_daily_picks}")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:289:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:290:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:291:def write_daily_pick_files(league: str, out_df: pd.DataFrame) -> None:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:292:    daily_pick_dir = SELECT_DIR / league / "daily_picks"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:293:    daily_pick_dir.mkdir(parents=True, exist_ok=True)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:294:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:295:    if "game_date" not in out_df.columns:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:296:        _log(f"Cannot write daily picks for {league}: missing game_date column", "ERROR")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:297:        return
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:298:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:299:    for game_date, date_df in out_df.groupby("game_date", dropna=False):
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:300:        if pd.isna(game_date) or not str(game_date).strip():
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:301:            game_date = "unknown_date"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:302:        out_path = daily_pick_dir / f"{game_date}_{league}_selected.csv"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:303:        date_df.to_csv(out_path, index=False)
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:304:        _log(f"WROTE DAILY PICKS: {out_path} ({len(date_df)} rows)")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:305:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:306:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:307:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:308:# ML vs SPREAD RECONCILIATION
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:309:# =========================
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:310:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:311:def reconcile_ml_vs_spread(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:312:    if df.empty:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:313:        return df, 0
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:314:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:315:    if "game_id" not in df.columns or "market_type" not in df.columns:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:316:        _log("Cannot reconcile ML vs spread: missing 'game_id' or 'market_type' column",
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:317:             "WARN")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:318:        return df, 0
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:319:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:320:    metric_col = TIEBREAK_COL_MAP.get(ML_VS_SPREAD_TIEBREAK, "bet_ev")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:321:    if metric_col not in df.columns:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:322:        _log(f"Cannot reconcile: tiebreak column {metric_col!r} missing", "WARN")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:323:        return df, 0
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:324:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:325:    df = df.copy()
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:326:    df["_tiebreak_metric"] = pd.to_numeric(df[metric_col], errors="coerce")
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:327:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:328:    ml_mask     = df["market_type"] == "moneyline"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:329:    spread_mask = df["market_type"] == "spread"
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:330:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:331:    if not ml_mask.any() or not spread_mask.any():
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:332:        df = df.drop(columns=["_tiebreak_metric"])
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:333:        return df, 0
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:334:
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:335:    ml_best     = df.loc[ml_mask].groupby("game_id")["_tiebreak_metric"].max()
+  docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:336:    spread_best = df.loc[spread_mask].groupby("game_id")["_tiebreak_metric"].max()
+
+
+===== CONFIG FILE MATCHES =====
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:8:#   are being developed and validated.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:9:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:10:# selection_mode:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:11:#   pick_one       = if both sides pass, keep only one
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:12:#   all_qualifying = keep every side that passes
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:13:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:14:# During model development, all_qualifying is preferred so the analysis retains
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:15:# both sides whenever both pass the upstream requirements.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:16:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:17:# pick_preference:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:18:#   Only matters when selection_mode = pick_one.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:19:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:20:#   metric options:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:21:#     ev
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:22:#     kelly
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:23:#     model_prob
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:28:#     min
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:29:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:30:pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:31:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:32:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:33:# NOTE:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:34:# This setting can still eliminate one market when both moneyline and spread
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:35:# qualify on the same game. The currently supported options are:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:47:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:48:#########################################################################################################################################################
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:49:######################################              NBA                                   ###############################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:50:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:51:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:52:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:53:  nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:54:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:55:    moneyline:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:56:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:57:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:58:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:59:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:60:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:61:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:62:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:63:        ev_bands:             [[-1.00, 100.00]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:79:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:80:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:81:###  NBA SPREAD  #######################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:82:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:83:    spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:84:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:85:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:86:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:87:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:88:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:89:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:90:        line_bands:           [[-100.0, 100.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:91:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:109:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:110:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:111:###  NBA TOTAL  ########################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:112:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:113:    total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:114:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:115:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:116:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:117:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:118:      over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:119:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:120:        line_bands:           [[0.0, 500.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:121:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:149:    moneyline:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:150:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:151:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:152:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:153:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:154:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:155:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:156:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:157:        ev_bands:             [[-1.00, 100.00]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:177:    spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:178:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:179:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:180:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:181:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:182:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:183:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:184:        line_bands:           [[-100.0, 100.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:185:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:203:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:204:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:205:###  NCAAM TOTAL  ######################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:206:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:207:    total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:208:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:209:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:210:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:211:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:212:      over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:213:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:214:        line_bands:           [[0.0, 500.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:215:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:235:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:236:#########################################################################################################################################################
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:237:######################################              WNBA                                  ###############################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:238:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:239:#########################################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:240:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:241:  wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:242:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:243:    moneyline:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:244:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:245:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:246:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:247:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:248:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:249:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:250:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:251:        ev_bands:             [[-1.00, 100.00]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:267:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:268:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:269:###  WNBA SPREAD  ######################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:270:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:271:    spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:272:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:273:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:274:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:275:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:276:      home:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:277:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:278:        line_bands:           [[-100.0, 100.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:279:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:297:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:298:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:299:###  WNBA TOTAL  #######################################################################################################################################
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:300:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:301:    total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:302:      enabled: true
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:303:      selection_mode: all_qualifying
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:304:      pick_preference: { metric: model_prob, direction: max }
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:305:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:306:      over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:307:        enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:308:        line_bands:           [[0.0, 500.0]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:309:        odds_bands:           [[-100000, 100000]]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:348:#     - edge vs market
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:349:#     - odds
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:350:#     - spread/total line
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:351:#     - side
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:352:#     - league
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:353:#     - date/time buckets
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:354:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:355:# Filter structure (each side):
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:361:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:362:#   line_bands
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:363:#     Spread/total ranges that are allowed.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:364:#     Spread development range:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:365:#       [-100, 100]
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:366:#     Total development range:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:367:#       [0, 500]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:368:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:369:#   ev_bands
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:370:#     Model expected-value ranges in decimal form.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:371:#     Example:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:419:# Per-market:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:420:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:421:#   selection_mode
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:422:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:423:#     pick_one
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:424:#       If both sides qualify, retain only one according to pick_preference.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:425:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:426:#     all_qualifying
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:427:#       Retain every side that passes.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:428:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:429:#     Development configuration uses:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:434:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:435:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:436:#   pick_preference.metric
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:437:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:438:#     Supported:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:439:#       ev
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:440:#       kelly
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:441:#       model_prob
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:442:#       edge_vs_market
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:443:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:444:#   pick_preference.direction
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:445:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:446:#     Supported:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:447:#       max
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:448:#       min
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:449:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:450:#   pick_preference remains configured even though it does not control
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:451:#   all_qualifying mode. This preserves a valid value if a market is later
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:452:#   switched back to pick_one.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:453:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:454:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\markets.yaml:455:# Top-level stake sizing:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:18:#   moneyline may retain side-specific calibration.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:19:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:20:#   spread / total use complementary binary calibration:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:21:#     canonical_side: <side to calibrate>
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:22:#     <canonical_side>:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:23:#       method: none | beta
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:24:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:25:#   The opposite spread/total side is NOT calibrated independently.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:26:#   It is always derived as:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:27:#       p_opposite = 1 - p_canonical
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:28:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:29:#   method: none -> no probability adjustment
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:30:#   method: beta -> p_adj = logistic(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:39:leagues:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:40:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:41:  nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:42:    status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:43:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:44:    edge:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:45:      moneyline: 0.020
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:46:      spread: 0.015
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:47:      total: 0.000
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:48:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:49:    std:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:50:      spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:51:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:52:        value: 14.4581
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:53:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:54:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:55:        value: 18.7672
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:56:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:57:    bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:58:      margin:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:60:        window_games: 150
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:61:        value: null
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:62:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:63:        method: rolling
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:64:        window_games: 50
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:65:        value: null
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:66:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:67:    calibration:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:77:          method: none
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:78:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:79:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:80:        canonical_side: over
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:81:        over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:82:          method: none
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:83:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:84:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:85:  wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:86:    status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:87:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:88:    edge:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:89:      moneyline: 0.000
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:90:      spread: 0.050
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:91:      total: 0.030
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:92:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:93:    std:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:94:      spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:95:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:96:        value: 13.0424
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:97:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:98:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:99:        value: 16.6675
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:100:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:101:    bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:102:      margin:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:104:        window_games: 100
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:105:        value: null
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:106:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:107:        method: regime_aware
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:108:        windows_games: [25, 50, 100]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:109:        weights: [0.50, 0.30, 0.20]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:110:        sign_conflict_shrink: 0.35
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:111:        value: null
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:123:          method: none
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:124:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:125:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:126:        canonical_side: over
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:127:        over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:128:          method: none
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:129:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:130:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:135:      moneyline: 0.015
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:136:      spread: 0.015
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:137:      total: 0.030
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:138:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:139:    std:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:140:      spread:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:141:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:142:        value: 11.3946
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:143:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:144:        mode: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:145:        value: 17.7495
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:146:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:147:    bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:148:      margin:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:150:        window_games: 500
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:151:        value: null
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:152:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:153:        method: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:154:        window_games: null
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:155:        value: 1.200
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:156:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:157:    calibration:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:170:          coef_log_1mp: 0.36284251
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:171:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:172:      total:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:173:        canonical_side: over
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:174:        over:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\model_config.yaml:175:          method: none
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:5:script_sha256: 0c152822b0634500df58f9929199b1b83a29c05aed3c841a15fd47338c76b3e0
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:6:leagues:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:7:  nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:8:    status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:9:    config_status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:10:    margin_bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:11:      status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:12:      method: rolling
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:17:      last_game_date: '2026-06-08'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:18:      mean_error_definition: projected_minus_actual
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:19:    total_bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:20:      status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:21:      method: rolling
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:22:      value: -2.498
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:23:      window_games: 50
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:24:      games_used: 50
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:86:      last_game_date: '2026-04-06'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:87:      mean_error_definition: projected_minus_actual
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:88:    total_bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:89:      status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:90:      method: fixed
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:91:      value: 1.2
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:92:      window_games: null
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:93:      games_used: 0
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:142:      first_game_date: '2025-11-04'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:143:      last_game_date: '2026-04-06'
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:144:  wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:145:    status: ready_with_warnings
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:146:    config_status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:147:    margin_bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:148:      status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:149:      method: rolling
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:154:      last_game_date: '2026-08-30'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:155:      mean_error_definition: projected_minus_actual
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:156:    total_bias:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:157:      status: ready
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:158:      method: regime_aware
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:159:      value: -3.978
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:160:      window_games: 100
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\rolling_bias_state.yaml:161:      windows_games:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:112:  targets:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:113:    margin: actual_home_points - actual_away_points
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:114:    total: actual_home_points + actual_away_points
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:115:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:116:  ridge_alpha: 10.0
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:117:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:118:  lockbox:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:119:    policy: latest_internal_season
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:139:      away_definition: 1 - home_spread_prob
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:140:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:141:    total:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:142:      over_definition: P(actual_total > total_line)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:143:      under_definition: 1 - over_prob
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:144:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:145:  evaluation_output_root: docs/win/basketball/errors/99_validation/sdv_model_v1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:146:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_model.yaml:147:  production:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:1:# SportsDataVerse season-ID translation.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:2:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:3:# Internal NBA/NCAAM season files use the season START year:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:4:#   2025_NBA.csv   -> 2025-26 season -> SDV 2026
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:5:#   2025_NCAAM.csv -> 2025-26 season -> SDV 2026
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:6:#
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:7:# Internal WNBA season files use the calendar year:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:8:#   2026_WNBA.csv -> 2026 season -> SDV 2026
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:9:#
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:10:# Mapping policy is explicit_only:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:11:# - Never pass an internal season directly to SportsDataVerse.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:12:# - Every supported internal season must have an explicit mapping below.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:13:# - Missing mappings are fatal so a new season cannot silently query the wrong SDV year.
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:17:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:18:leagues:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:19:  nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:20:    status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:21:    internal_season_definition: start_year
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:22:    sdv_season_definition: end_year
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:23:    mappings:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:24:      2023: 2024
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:37:      2026: 2027
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:38:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:39:  wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:40:    status: active
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:41:    internal_season_definition: calendar_year
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:42:    sdv_season_definition: calendar_year
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:43:    mappings:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_seasons.yaml:44:      2023: 2023
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:37:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:38:historical_internal_seasons:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:39:  nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:40:    - 2023
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:41:    - 2024
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:42:    - 2025
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:43:  ncaam:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:44:    - 2023
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:45:    - 2024
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:46:    - 2025
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:47:  wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:48:    - 2023
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:49:    - 2024
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\sdv_storage.yaml:50:    - 2025
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:1:nba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:2:  start_month: 10
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:3:  start_day: 15
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:4:  end_month: 7
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:5:  end_day: 1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:6:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:11:  end_day: 1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:12:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:13:wnba:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:14:  start_month: 5
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:15:  start_day: 1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:16:  end_month: 10
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\season_dates.yaml:17:  end_day: 31
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:11:  maximum_exposure_per_game: 0.05
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:12:  maximum_exposure_per_league_per_day: 0.15
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:13:  maximum_total_daily_exposure: 0.25
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:14:  maximum_individual_bet_kelly_fraction: 0.05
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:15:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:16:uncertainty_adjustment:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:17:  enabled: true
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:18:  method: signal_to_noise_market_shrink
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:22:    moneyline: spread
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:23:    spread: spread
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:24:    total: total
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:25:  ranking_metric: uncertainty_adjusted_ev
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:26:  stake_scaling: uncertainty_multiplier
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:27:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:28:ranking:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\config\staking.yaml:29:  primary: uncertainty_adjusted_ev

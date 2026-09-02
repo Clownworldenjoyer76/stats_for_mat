@@ -1,0 +1,319 @@
+===== NBA TOTAL CONFIG: markets.yaml lines 111-145 =====
+  111: ###  NBA TOTAL  ########################################################################################################################################
+  112: 
+  113:     total:
+  114:       enabled: true
+  115:       selection_mode: all_qualifying
+  116:       pick_preference: { metric: model_prob, direction: max }
+  117: 
+  118:       over:
+  119:         enabled: true
+  120:         line_bands:           [[0.0, 500.0]]
+  121:         odds_bands:           [[-100000, 100000]]
+  122:         ev_bands:             [[-1.00, 100.00]]
+  123:         kelly_bands:          [[0.00, 1.00]]
+  124:         model_prob_bands:     [[0.00, 1.00]]
+  125:         edge_vs_market_bands: [[-100.0, 100.0]]
+  126:         months:               []
+  127:         exclude_days_of_week: []
+  128: 
+  129:       under:
+  130:         enabled: true
+  131:         line_bands:           [[0.0, 500.0]]
+  132:         odds_bands:           [[-100000, 100000]]
+  133:         ev_bands:             [[-1.00, 100.00]]
+  134:         kelly_bands:          [[0.00, 1.00]]
+  135:         model_prob_bands:     [[0.00, 1.00]]
+  136:         edge_vs_market_bands: [[-100.0, 100.0]]
+  137:         months:               []
+  138:         exclude_days_of_week: []
+  139: 
+  140: 
+  141: #########################################################################################################################################################
+  142: #########################################################################################################################################################
+  143: ######################################              NCAAM                                 ###############################################################
+  144: #########################################################################################################################################################
+  145: #########################################################################################################################################################
+
+===== EXPOSURE / FINAL RANKING CODE =====
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:26:        raise ValueError(f'YAML root must be a mapping: {path}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:27:    return payload
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:28:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:29:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:30:STAKING_CONFIG = _read_yaml(STAKING_CONFIG_PATH)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:31:MODEL_CONFIG = _read_yaml(MODEL_CONFIG_PATH)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:32:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:33:KELLY_CFG = STAKING_CONFIG.get('kelly') or {}
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:34:EXPOSURE_CFG = STAKING_CONFIG.get('exposure_limits') or {}
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:35:UNCERTAINTY_CFG = STAKING_CONFIG.get('uncertainty_adjustment') or {}
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:36:RANKING_CFG = STAKING_CONFIG.get('ranking') or {}
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:37:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:38:KELLY_FRACTION = float(KELLY_CFG['fractional_multiplier'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:39:KELLY_CAP = float(EXPOSURE_CFG['maximum_individual_bet_kelly_fraction'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:40:MAX_EXPOSURE_PER_GAME = float(EXPOSURE_CFG['maximum_exposure_per_game'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:41:MAX_EXPOSURE_PER_LEAGUE_DAY = float(EXPOSURE_CFG['maximum_exposure_per_league_per_day'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:42:MAX_TOTAL_DAILY_EXPOSURE = float(EXPOSURE_CFG['maximum_total_daily_exposure'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:43:UNCERTAINTY_METHOD = str(UNCERTAINTY_CFG.get('method', '')).strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:44:UNCERTAINTY_VERSION = str(UNCERTAINTY_CFG.get('version', '')).strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:45:UNCERTAINTY_SOURCE = str(UNCERTAINTY_CFG.get('uncertainty_source', '')).strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:46:STAKE_SCALING = str(UNCERTAINTY_CFG.get('stake_scaling', '')).strip()
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:47:RANKING_PRIMARY = str(RANKING_CFG.get('primary', '')).strip()
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:48:RANKING_TIE_BREAKERS = [str(v).strip() for v in (RANKING_CFG.get('tie_breakers') or [])]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:49:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:50:for name, value in {
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:51:    'kelly.fractional_multiplier': KELLY_FRACTION,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:52:    'maximum_individual_bet_kelly_fraction': KELLY_CAP,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:53:    'maximum_exposure_per_game': MAX_EXPOSURE_PER_GAME,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:54:    'maximum_exposure_per_league_per_day': MAX_EXPOSURE_PER_LEAGUE_DAY,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:55:    'maximum_total_daily_exposure': MAX_TOTAL_DAILY_EXPOSURE,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:56:}.items():
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:57:    if not math.isfinite(value) or value < 0 or value > 1:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:58:        raise ValueError(f'staking.yaml {name} must be between 0 and 1')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:59:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:60:if not (MAX_EXPOSURE_PER_GAME <= MAX_EXPOSURE_PER_LEAGUE_DAY <= MAX_TOTAL_DAILY_EXPOSURE):
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:61:    raise ValueError('staking exposure limits must satisfy per_game <= per_league_day <= total_day')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:62:if UNCERTAINTY_METHOD != 'signal_to_noise_market_shrink':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:63:    raise ValueError(f'Unsupported uncertainty method={UNCERTAINTY_METHOD!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:64:if STAKE_SCALING not in {'uncertainty_multiplier', 'none', 'raw'}:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:65:    raise ValueError(f'Unsupported uncertainty stake_scaling={STAKE_SCALING!r}')
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:66:if RANKING_PRIMARY != 'uncertainty_adjusted_ev':
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:67:    raise ValueError('staking ranking.primary must be uncertainty_adjusted_ev')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:68:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:69:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:70:def fv(value: Any) -> float | None:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:71:    try:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:72:        if value is None or pd.isna(value) or str(value).strip() == '':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:73:            return None
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:74:        number = float(value)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:75:        return number if math.isfinite(number) else None
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:76:    except Exception:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:77:        return None
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:78:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:79:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:80:def _league_key(df: pd.DataFrame, explicit: str | None = None) -> str:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:81:    if explicit:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:82:        league = str(explicit).strip().lower()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:83:    else:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:84:        values = []
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:85:        for column in ('league_lower', 'league'):
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:86:            if column in df.columns:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:87:                values.extend(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:88:                    str(v).strip().lower()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:89:                    for v in df[column].dropna().unique().tolist()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:90:                    if str(v).strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:91:                )
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:92:        unique = sorted(set(values))
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:93:        if len(unique) != 1:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:94:            raise ValueError(f'Cannot resolve one league for staking uncertainty; values={unique}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:95:        league = unique[0]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:96:    if league not in LEAGUES:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:97:        raise ValueError(f'Unsupported league={league!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:98:    return league
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:99:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:100:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:101:def _oos_uncertainty_points(league: str, market: str) -> float:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:102:    sources = UNCERTAINTY_CFG.get('market_std_source') or {}
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:103:    std_market = str(sources.get(market, '')).strip().lower()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:104:    if std_market not in {'spread', 'total'}:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:105:        raise ValueError(f'Invalid market_std_source.{market}={std_market!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:106:    try:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:107:        value = float(MODEL_CONFIG['leagues'][league]['std'][std_market]['value'])
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:108:    except Exception as exc:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:109:        raise ValueError(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:110:            f'Missing OOS uncertainty: model_config.leagues.{league}.std.{std_market}.value'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:111:        ) from exc
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:112:    if not math.isfinite(value) or value <= 0:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:113:        raise ValueError(f'Invalid OOS uncertainty {league}.{std_market}={value!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:114:    return value
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:115:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:116:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:117:def _numeric(df: pd.DataFrame, column: str) -> pd.Series:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:118:    if column not in df.columns:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:119:        return pd.Series(np.nan, index=df.index, dtype=float)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:120:    return pd.to_numeric(df[column], errors='coerce')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:121:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:122:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:123:def _signal_points(df: pd.DataFrame, market: str) -> pd.Series:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:124:    margin = _numeric(df, 'home_projected_points') - _numeric(df, 'away_projected_points')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:125:    if market == 'moneyline':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:126:        return margin.abs()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:127:    if market == 'spread':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:128:        return (margin + _numeric(df, 'home_spread')).abs()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:129:    if market == 'total':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:130:        return (_numeric(df, 'total_projected_points') - _numeric(df, 'total')).abs()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:131:    raise ValueError(f'Unsupported market={market!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:132:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:133:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:134:def add_uncertainty_adjusted_ev(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:135:    df: pd.DataFrame,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:136:    market: str,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:137:    side_specs: list[tuple[str, str, str, str, str]],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:138:    league: str | None = None,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:139:) -> pd.DataFrame:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:140:    out = df
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:141:    league_key = _league_key(out, league)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:142:    uncertainty_points = _oos_uncertainty_points(league_key, market)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:143:    signal = _signal_points(out, market)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:144:    denom = np.sqrt(np.square(signal.to_numpy(float)) + uncertainty_points ** 2)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:145:    multiplier = np.divide(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:146:        signal.to_numpy(float),
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:147:        denom,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:148:        out=np.zeros(len(out), dtype=float),
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:149:        where=np.isfinite(denom) & (denom > 0),
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:150:    )
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:151:    if not bool(UNCERTAINTY_CFG.get('enabled', True)):
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:152:        multiplier = np.ones(len(out), dtype=float)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:153:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:154:    for prefix, raw_prob_col, market_prob_col, decimal_col, raw_kelly_col in side_specs:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:155:        raw_prob = _numeric(out, raw_prob_col)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:156:        market_prob = _numeric(out, market_prob_col)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:157:        decimal = _numeric(out, decimal_col)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:158:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:159:        if league_key == 'nba' and market == 'moneyline':
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:160:            adjusted_prob = raw_prob.clip(0.001, 0.999)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:161:        else:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:162:            adjusted_prob = (
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:163:                market_prob + multiplier * (raw_prob - market_prob)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:164:            ).clip(0.001, 0.999)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:165:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:166:        adjusted_ev = adjusted_prob * decimal - 1.0
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:167:        raw_ev_col = f'{prefix}_ev'
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:215:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:216:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:217:RANK_COLUMN_MAP = {
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:218:    'uncertainty_adjusted_ev': 'bet_uncertainty_adjusted_ev',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:219:    'raw_ev': 'bet_raw_ev',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:220:    'raw_kelly': 'bet_raw_kelly',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:221:    'model_prob': 'bet_model_prob',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:222:}
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:223:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:224:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:225:def apply_exposure_limits(df: pd.DataFrame) -> pd.DataFrame:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:226:    if df.empty:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:227:        return df.copy()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:228:    out = df.copy()
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:229:    rank_names = [RANKING_PRIMARY, *RANKING_TIE_BREAKERS]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:230:    rank_cols = []
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:231:    for name in rank_names:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:232:        col = RANK_COLUMN_MAP.get(name)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:233:        if col is None:
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:234:            raise ValueError(f'Unsupported staking ranking field={name!r}')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:235:        if col not in rank_cols:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:236:            rank_cols.append(col)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:237:    for col in rank_cols:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:238:        out[col] = pd.to_numeric(out[col], errors='coerce')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:239:    out['_rank_date'] = out['game_date'].astype(str)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:240:    out = out.sort_values(
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:241:        ['_rank_date', *rank_cols, 'game_id', 'market_type', 'bet_side'],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:242:        ascending=[True, *([False] * len(rank_cols)), True, True, True],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:243:        kind='stable',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:244:        na_position='last',
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:245:    ).reset_index(drop=True)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:246:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:247:    game_used = defaultdict(float)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:248:    league_day_used = defaultdict(float)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:249:    day_used = defaultdict(float)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:250:    day_rank = defaultdict(int)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:251:    final_rows = []
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:252:    eps = 1e-12
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:253:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:254:    for _, row in out.iterrows():
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:255:        raw_kelly = fv(row.get('bet_raw_kelly'))
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:256:        if raw_kelly is None:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:257:            raw_kelly = fv(row.get('bet_kelly'))
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:258:        multiplier = fv(row.get('bet_uncertainty_multiplier'))
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:259:        if multiplier is None:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:260:            multiplier = 1.0
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:261:        fractional, individual_capped, requested = requested_stake(raw_kelly, multiplier)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:262:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:263:        league = str(row.get('league_lower') or row.get('league') or '').strip().lower()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:264:        game_date = str(row.get('game_date') or '').strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:265:        game_id = str(row.get('game_id') or '').strip()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:266:        game_key = (league, game_id)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:267:        league_day_key = (league, game_date)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:268:        day_key = game_date
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:269:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:270:        remaining_game = max(MAX_EXPOSURE_PER_GAME - game_used[game_key], 0.0)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:271:        remaining_league = max(MAX_EXPOSURE_PER_LEAGUE_DAY - league_day_used[league_day_key], 0.0)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:272:        remaining_day = max(MAX_TOTAL_DAILY_EXPOSURE - day_used[day_key], 0.0)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:273:        final_stake = max(min(requested, remaining_game, remaining_league, remaining_day), 0.0)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:274:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:275:        reasons = []
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:276:        if fractional > KELLY_CAP + eps:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:277:            reasons.append('individual_kelly_cap')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:278:        if requested > remaining_game + eps:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:279:            reasons.append('game_exposure_cap')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:280:        if requested > remaining_league + eps:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:281:            reasons.append('league_day_exposure_cap')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:282:        if requested > remaining_day + eps:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:283:            reasons.append('total_daily_exposure_cap')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:284:        if final_stake <= eps:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:285:            continue
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:286:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:287:        game_used[game_key] += final_stake
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:288:        league_day_used[league_day_key] += final_stake
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:289:        day_used[day_key] += final_stake
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:290:        day_rank[day_key] += 1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:291:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:292:        r = row.to_dict()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:293:        r.update({
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:294:            'bet_fractional_kelly_pct': fractional,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:295:            'bet_individual_capped_stake_pct': individual_capped,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:296:            'bet_requested_stake_pct': requested,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:297:            'bet_final_stake_pct': final_stake,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:298:            'bet_stake_pct': final_stake,
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:299:            'exposure_rank': day_rank[day_key],
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:300:            'exposure_limited': bool(reasons or final_stake + eps < requested),
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:301:            'exposure_limit_reason': ';'.join(reasons),
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:302:            'game_exposure_after_pct': game_used[game_key],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:303:            'league_day_exposure_after_pct': league_day_used[league_day_key],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:304:            'total_day_exposure_after_pct': day_used[day_key],
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:305:            'maximum_exposure_per_game': MAX_EXPOSURE_PER_GAME,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:306:            'maximum_exposure_per_league_per_day': MAX_EXPOSURE_PER_LEAGUE_DAY,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:307:            'maximum_total_daily_exposure': MAX_TOTAL_DAILY_EXPOSURE,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:308:            'maximum_individual_bet_kelly_fraction': KELLY_CAP,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:309:            'uncertainty_adjustment_method': UNCERTAINTY_METHOD,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:310:            'uncertainty_adjustment_version': UNCERTAINTY_VERSION,
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:311:        })
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:312:        final_rows.append(r)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:313:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:314:    if not final_rows:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:315:        return out.iloc[0:0].drop(columns=['_rank_date'], errors='ignore')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:316:    final = pd.DataFrame(final_rows)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\staking_runtime.py:317:    return final.drop(columns=['_rank_date'], errors='ignore')
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:616:        candidate_frames = [
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:617:            pd.concat(league_dfs[league], ignore_index=True)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:618:            for league in LEAGUES
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:619:            if league_dfs[league]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:620:        ]
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:621:        all_candidates = (
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:622:            pd.concat(candidate_frames, ignore_index=True)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:623:            if candidate_frames
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:624:            else pd.DataFrame()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:625:        )
+> C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:626:        final_picks = apply_exposure_limits(all_candidates) if not all_candidates.empty else all_candidates
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:627:        summary["total_candidates"] = len(all_candidates)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:628:        summary["total_selected"] = len(final_picks)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:629:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:630:        for league in LEAGUES:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:631:            out_df = (
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:632:                final_picks[final_picks["league_lower"].astype(str).str.lower() == league].copy()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:633:                if not final_picks.empty
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:634:                else pd.DataFrame()
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:635:            )
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:636:            summary[f"{league}_bets"] = len(out_df)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:637:            if out_df.empty:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:638:                _log(f"NO FINAL STAKED ROWS FOR LEAGUE: {league}; daily pick files not written")
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:639:                continue
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:640:            write_daily_pick_files(league, out_df)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:641:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:642:    except Exception as e:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:643:        _log(f"FATAL: {e}\n{traceback.format_exc()}", "ERROR")
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:644:        summary["errors"] += 1
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:645:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:646:    _write_summary(summary, per_file)
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:647:    print("basketball select_bets complete.")
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:648:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:649:
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:650:if __name__ == "__main__":
+  C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\scripts\04_select\basketball_select_bets_core.py:651:    main()
