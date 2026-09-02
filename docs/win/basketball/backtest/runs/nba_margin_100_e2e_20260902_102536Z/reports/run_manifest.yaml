@@ -1,0 +1,111 @@
+schema_version: 1
+run_id: nba_margin_100_e2e_20260902_102536Z
+generated_at_utc: '2026-09-02T10:25:49.335613+00:00'
+backtest_method: frozen_historical_predictions_current_downstream_logic
+historical_bias_handling: reverse_stored_bias_then_point_in_time_replay_of_model_config_bias
+season_identity: internal_season_from_historical_input_filename
+model_source: ensemble
+outcome_leakage_prevention: final_score_columns_removed_before_selection_and_rejoined_by_game_id_after_selection
+model_config:
+  path: C:\Users\Mat\Documents\GitHub\stats_for_mat\docs\win\basketball\backtest\configs\model_config_nba_margin_100_20260902_102536Z.yaml
+  sha256: 64de36a07c8101e49abfc015cfc2573a74d70658cdf4c190c181735198e41dd1
+filter_config:
+  path: docs\win\basketball\backtest\configs\markets_test.yaml
+  sha256: 726966e7e8f27a7b27206dcfbc1499849a7b872ef42da8fc0a4cb8950e87a062
+production_markets_config:
+  path: docs\win\basketball\config\markets.yaml
+  sha256: d64bd8ce1d99d56b668b8c23b5c1c023422a01c130ee810d5027c1402a05d93a
+staking_config:
+  path: docs\win\basketball\config\staking.yaml
+  sha256: 9e92725769d1a0ca7a6adc56b71311721e2ae76972384aaa398833bb99672d4e
+input_files:
+- path: docs\win\basketball\backtest\input\2025_NBA.csv
+  sha256: c2dbeb33b99ea4f34c42a0b7053f29a637289e6af95154f81c8f5aaffe3c93a6
+  size_bytes: 432620
+- path: docs\win\basketball\backtest\input\2025_NCAAM.csv
+  sha256: 801ff51f6e1a19691696e741a6c663254c00589d8d745e122d5625373bc295b4
+  size_bytes: 1453721
+- path: docs\win\basketball\backtest\input\2025_WNBA.csv
+  sha256: 80842f914a2c25bb0eb6f869b7672121a014c93f4f1dcc956bdd3a528bfdb8d9
+  size_bytes: 86405
+model_settings:
+  nba:
+    ML_EDGE: 0.02
+    SPREAD_EDGE: 0.015
+    TOTAL_EDGE: 0.0
+    SPREAD_STD: 14.4581
+    TOTAL_STD: 18.7672
+    CALIBRATION:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+      spread:
+        canonical_side: home
+        config:
+          method: none
+      total:
+        canonical_side: over
+        config:
+          method: none
+  ncaam:
+    ML_EDGE: 0.015
+    SPREAD_EDGE: 0.015
+    TOTAL_EDGE: 0.03
+    SPREAD_STD: 11.3946
+    TOTAL_STD: 17.7495
+    CALIBRATION:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+      spread:
+        canonical_side: home
+        config:
+          method: beta
+          intercept: 0.59787618
+          coef_log_p: 0.59540409
+          coef_log_1mp: 0.36284251
+      total:
+        canonical_side: over
+        config:
+          method: none
+  wnba:
+    ML_EDGE: 0.0
+    SPREAD_EDGE: 0.05
+    TOTAL_EDGE: 0.03
+    SPREAD_STD: 13.0424
+    TOTAL_STD: 16.6675
+    CALIBRATION:
+      moneyline:
+        home:
+          method: none
+        away:
+          method: none
+      spread:
+        canonical_side: home
+        config:
+          method: none
+      total:
+        canonical_side: over
+        config:
+          method: none
+config_warnings: []
+counts:
+  historical_rows: 4861
+  selected_bets: 2803
+  graded_bets: 2803
+filter_counts:
+  fail_ev: 4
+  fail_line: 427
+  fail_model_edge_moneyline: 7403
+  fail_model_edge_spread: 8254
+  fail_model_edge_total: 6625
+  fail_model_prob: 628
+  fail_odds: 84
+  rejected_ml: 8112
+  rejected_spread: 8261
+  rejected_total: 7052
+  selected: 6191
