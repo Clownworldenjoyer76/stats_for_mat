@@ -25,13 +25,19 @@ import yaml
 from scipy.stats import norm
 
 from staking_runtime import (
-    KELLY_FRACTION, KELLY_CAP, STAKING_CONFIG_PATH,
+    KELLY_FRACTION, STAKING_CONFIG_PATH,
     add_uncertainty_adjusted_ev, attach_candidate_uncertainty,
-    requested_stake, apply_exposure_limits,
+    requested_stake,
 )
 
 LEAGUES = ["nba", "ncaam", "wnba"]
 MARKETS = ["moneyline", "spread", "total"]
+
+TIEBREAK_COL_MAP = {
+    "ev": "bet_ev",
+    "kelly": "bet_kelly",
+    "edge_vs_market": "bet_edge_vs_market",
+}
 
 BASKETBALL_ROOT = Path("docs/win/basketball")
 DEFAULT_BACKTEST_DIR = BASKETBALL_ROOT / "backtest"
@@ -1095,6 +1101,16 @@ def apply_production_selection_policy(
         production_cfg.get("markets"),
         "markets.yaml markets",
     )
+
+    out["ml_vs_spread_tiebreak"] = str(
+        production_cfg.get(
+            "ml_vs_spread_tiebreak",
+            "ev",
+        )
+    ).strip().lower()
+
+    if out["ml_vs_spread_tiebreak"] not in TIEBREAK_COL_MAP:
+        out["ml_vs_spread_tiebreak"] = "ev"
 
     for league in LEAGUES:
         out["markets"].setdefault(
@@ -3029,8 +3045,6 @@ def pick_one(
 
 def stake_pct(
     kelly: float | None,
-    fraction: float,
-    cap: float,
     uncertainty_multiplier: float | None = 1.0,
 ) -> float | None:
     if kelly is None or kelly <= 0:
@@ -3065,6 +3079,155 @@ def market_config(
             f"markets.{league}."
             f"{market}"
         ),
+    )
+
+
+
+def reconcile_ml_vs_spread(
+    df: pd.DataFrame,
+    filter_cfg: dict,
+) -> tuple[pd.DataFrame, int]:
+    if df.empty:
+        return df, 0
+
+    if (
+        "game_id" not in df.columns
+        or "market_type" not in df.columns
+    ):
+        return df, 0
+
+    tiebreak = str(
+        filter_cfg.get(
+            "ml_vs_spread_tiebreak",
+            "ev",
+        )
+    ).strip().lower()
+
+    if tiebreak not in TIEBREAK_COL_MAP:
+        tiebreak = "ev"
+
+    metric_col = TIEBREAK_COL_MAP[tiebreak]
+
+    if metric_col not in df.columns:
+        return df, 0
+
+    out = df.copy()
+    out["_tiebreak_metric"] = pd.to_numeric(
+        out[metric_col],
+        errors="coerce",
+    )
+
+    ml_mask = (
+        out["market_type"]
+        .astype(str)
+        .str.lower()
+        == "moneyline"
+    )
+    spread_mask = (
+        out["market_type"]
+        .astype(str)
+        .str.lower()
+        == "spread"
+    )
+
+    if (
+        not ml_mask.any()
+        or not spread_mask.any()
+    ):
+        return out.drop(
+            columns=["_tiebreak_metric"],
+        ), 0
+
+    ml_best = (
+        out.loc[ml_mask]
+        .groupby("game_id")[
+            "_tiebreak_metric"
+        ]
+        .max()
+    )
+
+    spread_best = (
+        out.loc[spread_mask]
+        .groupby("game_id")[
+            "_tiebreak_metric"
+        ]
+        .max()
+    )
+
+    conflict_games = (
+        ml_best.index.intersection(
+            spread_best.index
+        )
+    )
+
+    if len(conflict_games) == 0:
+        return out.drop(
+            columns=["_tiebreak_metric"],
+        ), 0
+
+    drop_indices = []
+
+    for game_id in conflict_games:
+        ml_value = ml_best.loc[game_id]
+        spread_value = spread_best.loc[
+            game_id
+        ]
+
+        if (
+            pd.isna(ml_value)
+            and pd.isna(spread_value)
+        ):
+            losing_market = "spread"
+        elif pd.isna(ml_value):
+            losing_market = "moneyline"
+        elif pd.isna(spread_value):
+            losing_market = "spread"
+        else:
+            losing_market = (
+                "spread"
+                if ml_value >= spread_value
+                else "moneyline"
+            )
+
+        loss_mask = (
+            out["game_id"].eq(game_id)
+            & (
+                out["market_type"]
+                .astype(str)
+                .str.lower()
+                == losing_market
+            )
+        )
+
+        drop_indices.extend(
+            out.index[
+                loss_mask
+            ].tolist()
+        )
+
+        DEBUG_COUNTS[
+            (
+                "ml_vs_spread_dropped_"
+                f"{losing_market}"
+            )
+        ] += int(
+            loss_mask.sum()
+        )
+
+    dropped = len(drop_indices)
+
+    if dropped:
+        out = out.drop(
+            index=drop_indices
+        )
+
+    out = out.drop(
+        columns=["_tiebreak_metric"],
+    )
+
+    return (
+        out.reset_index(drop=True),
+        dropped,
     )
 
 
@@ -3394,8 +3557,6 @@ def select_bets_for_market(
     market,
     filter_cfg,
     settings,
-    kelly_fraction,
-    kelly_cap,
 ):
     cfg = market_config(
         filter_cfg,
@@ -3486,10 +3647,10 @@ def select_bets_for_market(
                 "bet_uncertainty_points": sel["uncertainty_points"],
                 "bet_signal_points": sel["signal_points"],
                 "bet_requested_stake_pct": stake_pct(
-                    sel["raw_kelly"], kelly_fraction, kelly_cap, sel["uncertainty_multiplier"]
+                    sel["raw_kelly"], sel["uncertainty_multiplier"]
                 ),
                 "bet_stake_pct": stake_pct(
-                    sel["raw_kelly"], kelly_fraction, kelly_cap, sel["uncertainty_multiplier"]
+                    sel["raw_kelly"], sel["uncertainty_multiplier"]
                 ),
                 "market_type": market,
                 "league_lower": league,
@@ -4418,6 +4579,9 @@ def run_production_parity_test(
                 exist_ok=True,
             )
 
+        back_selected_parts = []
+        prod_selected_parts = []
+
         for market in MARKETS:
             if market == "moneyline":
                 (
@@ -4542,14 +4706,6 @@ def run_production_parity_test(
                     market,
                     production_filter_cfg,
                     settings,
-                    float(
-                        prod_select
-                        .KELLY_FRACTION
-                    ),
-                    float(
-                        prod_select
-                        .KELLY_CAP
-                    ),
                 )
             )
 
@@ -4620,6 +4776,15 @@ def run_production_parity_test(
                         "bet_side": sel[
                             "side"
                         ],
+                        "bet_ev": sel.get(
+                            "ev"
+                        ),
+                        "bet_kelly": sel.get(
+                            "kelly"
+                        ),
+                        "bet_edge_vs_market": sel.get(
+                            "edge_vs_market"
+                        ),
                     })
 
             prod_selected = pd.DataFrame(
@@ -4674,6 +4839,61 @@ def run_production_parity_test(
                     f"production={sorted(prod_keys)}"
                 )
 
+            if not back_selected.empty:
+                back_selected_parts.append(
+                    back_selected
+                )
+
+            if not prod_selected.empty:
+                prod_selected_parts.append(
+                    prod_selected
+                )
+
+        back_combined = (
+            pd.concat(
+                back_selected_parts,
+                ignore_index=True,
+            )
+            if back_selected_parts
+            else pd.DataFrame()
+        )
+
+        prod_combined = (
+            pd.concat(
+                prod_selected_parts,
+                ignore_index=True,
+            )
+            if prod_selected_parts
+            else pd.DataFrame()
+        )
+
+        back_reconciled, _ = (
+            reconcile_ml_vs_spread(
+                back_combined,
+                production_filter_cfg,
+            )
+        )
+
+        prod_reconciled, _ = (
+            reconcile_ml_vs_spread(
+                prod_combined,
+                production_filter_cfg,
+            )
+        )
+
+        if keys(back_reconciled) != keys(
+            prod_reconciled
+        ):
+            raise AssertionError(
+                "PARITY FAILED "
+                f"{league}.ml_vs_spread."
+                "reconciliation | "
+                "backtest="
+                f"{sorted(keys(back_reconciled))} | "
+                "production="
+                f"{sorted(keys(prod_reconciled))}"
+            )
+
     logger.log(
         "PARITY PASS | "
         f"{league.upper()} | "
@@ -4693,8 +4913,6 @@ def process_historical_file(
     working_dir,
     selections_dir,
     graded_dir,
-    kelly_fraction,
-    kelly_cap,
     parity_rows,
     logger,
 ):
@@ -4895,8 +5113,6 @@ def process_historical_file(
                 market,
                 filter_cfg,
                 settings,
-                kelly_fraction,
-                kelly_cap,
             )
         )
 
@@ -4917,6 +5133,18 @@ def process_historical_file(
         selections = pd.concat(
             selected_parts,
             ignore_index=True,
+        )
+        selections, ml_vs_spread_dropped = (
+            reconcile_ml_vs_spread(
+                selections,
+                filter_cfg,
+            )
+        )
+        logger.log(
+            f"[{league.upper()}] "
+            f"{source_file}: "
+            "ml_vs_spread_dropped="
+            f"{ml_vs_spread_dropped}"
         )
     else:
         selections = pd.DataFrame()
@@ -4974,45 +5202,6 @@ def process_historical_file(
         graded,
         len(raw),
     )
-
-
-def apply_final_exposure_to_graded(candidate_graded: pd.DataFrame, final_selected: pd.DataFrame) -> pd.DataFrame:
-    if candidate_graded.empty or final_selected.empty:
-        return candidate_graded.iloc[0:0].copy()
-    keys = ['source_file', 'game_id', 'market_type', 'bet_side']
-    exposure_cols = [
-        'bet_fractional_kelly_pct', 'bet_individual_capped_stake_pct',
-        'bet_requested_stake_pct', 'bet_final_stake_pct', 'bet_stake_pct',
-        'exposure_rank', 'exposure_limited', 'exposure_limit_reason',
-        'game_exposure_after_pct', 'league_day_exposure_after_pct', 'total_day_exposure_after_pct',
-        'maximum_exposure_per_game', 'maximum_exposure_per_league_per_day',
-        'maximum_total_daily_exposure', 'maximum_individual_bet_kelly_fraction',
-        'uncertainty_adjustment_method', 'uncertainty_adjustment_version',
-    ]
-    keep = [c for c in exposure_cols if c in final_selected.columns]
-    base = candidate_graded.drop(columns=[c for c in keep if c in candidate_graded.columns], errors='ignore')
-    final_fields = final_selected[[*keys, *keep]].drop_duplicates(subset=keys, keep='last')
-    merged = base.merge(final_fields, on=keys, how='inner', validate='one_to_one')
-    merged = merged.drop(columns=[c for c in ('profit_unit', 'profit_kelly') if c in merged.columns])
-    profits = merged.apply(compute_profits, axis=1, result_type='expand')
-    profits.columns = ['profit_unit', 'profit_kelly']
-    return pd.concat([merged, profits], axis=1)
-
-
-def rewrite_final_backtest_files(input_files, final_selected, final_graded, selections_dir, graded_dir):
-    for path in input_files:
-        source_file = path.stem
-        league = source_file.rsplit('_', 1)[-1].lower()
-        selected = final_selected[
-            (final_selected['source_file'].astype(str) == source_file)
-            & (final_selected['league_lower'].astype(str).str.lower() == league)
-        ].copy() if not final_selected.empty else final_selected.copy()
-        graded = final_graded[
-            (final_graded['source_file'].astype(str) == source_file)
-            & (final_graded['league_lower'].astype(str).str.lower() == league)
-        ].copy() if not final_graded.empty else final_graded.copy()
-        atomic_write_csv(selected, selections_dir / league / f'{source_file}_selected.csv')
-        atomic_write_csv(graded, graded_dir / league / f'{source_file}_graded.csv')
 
 
 def parse_args():
@@ -5240,16 +5429,6 @@ def main():
         model_cfg
     )
 
-    staking_cfg = read_yaml(DEFAULT_STAKING_CONFIG)
-    kelly_fraction = require_number(
-        (staking_cfg.get("kelly") or {}).get("fractional_multiplier"),
-        "staking.kelly.fractional_multiplier",
-    )
-    kelly_cap = require_number(
-        (staking_cfg.get("exposure_limits") or {}).get("maximum_individual_bet_kelly_fraction"),
-        "staking.exposure_limits.maximum_individual_bet_kelly_fraction",
-    )
-
     config_warnings = (
         collect_config_warnings(
             filter_cfg
@@ -5326,8 +5505,6 @@ def main():
                 working_dir,
                 selections_dir,
                 graded_dir,
-                kelly_fraction,
-                kelly_cap,
                 args.parity_rows,
                 logger,
             )
@@ -5364,11 +5541,8 @@ def main():
             pd.DataFrame()
         )
 
-    candidate_selected_count = len(combined_selected)
-    combined_selected = apply_exposure_limits(combined_selected) if not combined_selected.empty else combined_selected
-    combined_graded = apply_final_exposure_to_graded(combined_graded, combined_selected)
-    rewrite_final_backtest_files(input_files, combined_selected, combined_graded, selections_dir, graded_dir)
-
+    # Keep every selection produced by the configured selection rules.
+    # Stake suggestions are informational and never remove a selected row.
     atomic_write_csv(
         combined_selected,
         selections_dir
@@ -5380,7 +5554,7 @@ def main():
         graded_dir
         / "all_graded.csv",
     )
-    logger.log(f"staking exposure replay | candidates={candidate_selected_count} final={len(combined_selected)}")
+    logger.log(f"selection rows retained without exposure filtering: {len(combined_selected)}")
 
     reports = build_reports(
         combined_graded,

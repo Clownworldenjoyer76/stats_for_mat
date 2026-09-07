@@ -22,10 +22,9 @@ import pandas as pd
 import yaml
 
 from staking_runtime import (
-    KELLY_FRACTION, KELLY_CAP, MAX_EXPOSURE_PER_GAME,
-    MAX_EXPOSURE_PER_LEAGUE_DAY, MAX_TOTAL_DAILY_EXPOSURE,
+    KELLY_FRACTION,
     UNCERTAINTY_METHOD, UNCERTAINTY_VERSION,
-    attach_candidate_uncertainty, requested_stake, apply_exposure_limits,
+    attach_candidate_uncertainty, requested_stake,
 )
 
 INPUT_DIR        = Path("docs/win/basketball/03_edges/ev_kelly")
@@ -131,10 +130,6 @@ def _write_summary(summary: dict, per_file: list) -> None:
         f"  skipped               : {summary['skipped']}",
         f"  errors                : {summary['errors']}",
         f"  kelly_fraction        : {KELLY_FRACTION}",
-        f"  kelly_cap             : {KELLY_CAP}",
-        f"  max_game_exposure     : {MAX_EXPOSURE_PER_GAME}",
-        f"  max_league_day        : {MAX_EXPOSURE_PER_LEAGUE_DAY}",
-        f"  max_total_day         : {MAX_TOTAL_DAILY_EXPOSURE}",
         f"  uncertainty_method    : {UNCERTAINTY_METHOD}",
         f"  uncertainty_version   : {UNCERTAINTY_VERSION}",
         f"  ml_vs_spread_tiebreak : {ML_VS_SPREAD_TIEBREAK}",
@@ -565,9 +560,9 @@ def main():
     _log(f"MODEL_CONFIG: {MODEL_CONFIG_PATH}")
     _log(
         "staking.yaml: "
-        f"kelly_fraction={KELLY_FRACTION} individual_cap={KELLY_CAP} "
-        f"game_cap={MAX_EXPOSURE_PER_GAME} league_day_cap={MAX_EXPOSURE_PER_LEAGUE_DAY} "
-        f"daily_cap={MAX_TOTAL_DAILY_EXPOSURE} uncertainty={UNCERTAINTY_METHOD}/{UNCERTAINTY_VERSION}"
+        f"kelly_fraction={KELLY_FRACTION} "
+        f"uncertainty={UNCERTAINTY_METHOD}/{UNCERTAINTY_VERSION}; "
+        "exposure-based selection filtering disabled"
     )
     _log(f"ml_vs_spread_tiebreak: {ML_VS_SPREAD_TIEBREAK}")
     for league in LEAGUES:
@@ -623,8 +618,12 @@ def main():
             if candidate_frames
             else pd.DataFrame()
         )
-        final_picks = apply_exposure_limits(all_candidates) if not all_candidates.empty else all_candidates
-        summary["total_candidates"] = len(all_candidates)
+        if not all_candidates.empty:
+            all_candidates, n_dropped = reconcile_ml_vs_spread(all_candidates)
+            summary["ml_vs_spread_dropped"] = n_dropped
+
+        final_picks = all_candidates.copy()
+        summary["total_candidates"] = len(all_candidates) + summary["ml_vs_spread_dropped"]
         summary["total_selected"] = len(final_picks)
 
         for league in LEAGUES:
@@ -635,7 +634,7 @@ def main():
             )
             summary[f"{league}_bets"] = len(out_df)
             if out_df.empty:
-                _log(f"NO FINAL STAKED ROWS FOR LEAGUE: {league}; daily pick files not written")
+                _log(f"NO FINAL SELECTED ROWS FOR LEAGUE: {league}; daily pick files not written")
                 continue
             write_daily_pick_files(league, out_df)
 

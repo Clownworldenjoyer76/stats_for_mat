@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import math
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -31,40 +30,20 @@ STAKING_CONFIG = _read_yaml(STAKING_CONFIG_PATH)
 MODEL_CONFIG = _read_yaml(MODEL_CONFIG_PATH)
 
 KELLY_CFG = STAKING_CONFIG.get('kelly') or {}
-EXPOSURE_CFG = STAKING_CONFIG.get('exposure_limits') or {}
 UNCERTAINTY_CFG = STAKING_CONFIG.get('uncertainty_adjustment') or {}
-RANKING_CFG = STAKING_CONFIG.get('ranking') or {}
 
 KELLY_FRACTION = float(KELLY_CFG['fractional_multiplier'])
-KELLY_CAP = float(EXPOSURE_CFG['maximum_individual_bet_kelly_fraction'])
-MAX_EXPOSURE_PER_GAME = float(EXPOSURE_CFG['maximum_exposure_per_game'])
-MAX_EXPOSURE_PER_LEAGUE_DAY = float(EXPOSURE_CFG['maximum_exposure_per_league_per_day'])
-MAX_TOTAL_DAILY_EXPOSURE = float(EXPOSURE_CFG['maximum_total_daily_exposure'])
 UNCERTAINTY_METHOD = str(UNCERTAINTY_CFG.get('method', '')).strip()
 UNCERTAINTY_VERSION = str(UNCERTAINTY_CFG.get('version', '')).strip()
 UNCERTAINTY_SOURCE = str(UNCERTAINTY_CFG.get('uncertainty_source', '')).strip()
 STAKE_SCALING = str(UNCERTAINTY_CFG.get('stake_scaling', '')).strip()
-RANKING_PRIMARY = str(RANKING_CFG.get('primary', '')).strip()
-RANKING_TIE_BREAKERS = [str(v).strip() for v in (RANKING_CFG.get('tie_breakers') or [])]
 
-for name, value in {
-    'kelly.fractional_multiplier': KELLY_FRACTION,
-    'maximum_individual_bet_kelly_fraction': KELLY_CAP,
-    'maximum_exposure_per_game': MAX_EXPOSURE_PER_GAME,
-    'maximum_exposure_per_league_per_day': MAX_EXPOSURE_PER_LEAGUE_DAY,
-    'maximum_total_daily_exposure': MAX_TOTAL_DAILY_EXPOSURE,
-}.items():
-    if not math.isfinite(value) or value < 0 or value > 1:
-        raise ValueError(f'staking.yaml {name} must be between 0 and 1')
-
-if not (MAX_EXPOSURE_PER_GAME <= MAX_EXPOSURE_PER_LEAGUE_DAY <= MAX_TOTAL_DAILY_EXPOSURE):
-    raise ValueError('staking exposure limits must satisfy per_game <= per_league_day <= total_day')
+if not math.isfinite(KELLY_FRACTION) or KELLY_FRACTION < 0 or KELLY_FRACTION > 1:
+    raise ValueError('staking.yaml kelly.fractional_multiplier must be between 0 and 1')
 if UNCERTAINTY_METHOD != 'signal_to_noise_market_shrink':
     raise ValueError(f'Unsupported uncertainty method={UNCERTAINTY_METHOD!r}')
 if STAKE_SCALING not in {'uncertainty_multiplier', 'none', 'raw'}:
     raise ValueError(f'Unsupported uncertainty stake_scaling={STAKE_SCALING!r}')
-if RANKING_PRIMARY != 'uncertainty_adjusted_ev':
-    raise ValueError('staking ranking.primary must be uncertainty_adjusted_ev')
 
 
 def fv(value: Any) -> float | None:
@@ -201,6 +180,11 @@ def attach_candidate_uncertainty(row: Any, market: str, candidate: dict) -> dict
 
 
 def requested_stake(raw_kelly: Any, uncertainty_multiplier: Any = 1.0) -> tuple[float, float, float]:
+    """Return fractional-Kelly stake suggestion without filtering any bet.
+
+    The second tuple value is retained for compatibility with existing callers;
+    it is identical to the uncapped fractional-Kelly value.
+    """
     kelly = fv(raw_kelly)
     multiplier = fv(uncertainty_multiplier)
     if kelly is None or kelly <= 0:
@@ -209,109 +193,5 @@ def requested_stake(raw_kelly: Any, uncertainty_multiplier: Any = 1.0) -> tuple[
         multiplier = 1.0
     multiplier = min(max(multiplier, 0.0), 1.0)
     fractional = max(kelly * KELLY_FRACTION, 0.0)
-    individual_capped = min(fractional, KELLY_CAP)
-    requested = individual_capped * multiplier if STAKE_SCALING == 'uncertainty_multiplier' else individual_capped
-    return fractional, individual_capped, requested
-
-
-RANK_COLUMN_MAP = {
-    'uncertainty_adjusted_ev': 'bet_uncertainty_adjusted_ev',
-    'raw_ev': 'bet_raw_ev',
-    'raw_kelly': 'bet_raw_kelly',
-    'model_prob': 'bet_model_prob',
-}
-
-
-def apply_exposure_limits(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty:
-        return df.copy()
-    out = df.copy()
-    rank_names = [RANKING_PRIMARY, *RANKING_TIE_BREAKERS]
-    rank_cols = []
-    for name in rank_names:
-        col = RANK_COLUMN_MAP.get(name)
-        if col is None:
-            raise ValueError(f'Unsupported staking ranking field={name!r}')
-        if col not in rank_cols:
-            rank_cols.append(col)
-    for col in rank_cols:
-        out[col] = pd.to_numeric(out[col], errors='coerce')
-    out['_rank_date'] = out['game_date'].astype(str)
-    out = out.sort_values(
-        ['_rank_date', *rank_cols, 'game_id', 'market_type', 'bet_side'],
-        ascending=[True, *([False] * len(rank_cols)), True, True, True],
-        kind='stable',
-        na_position='last',
-    ).reset_index(drop=True)
-
-    game_used = defaultdict(float)
-    league_day_used = defaultdict(float)
-    day_used = defaultdict(float)
-    day_rank = defaultdict(int)
-    final_rows = []
-    eps = 1e-12
-
-    for _, row in out.iterrows():
-        raw_kelly = fv(row.get('bet_raw_kelly'))
-        if raw_kelly is None:
-            raw_kelly = fv(row.get('bet_kelly'))
-        multiplier = fv(row.get('bet_uncertainty_multiplier'))
-        if multiplier is None:
-            multiplier = 1.0
-        fractional, individual_capped, requested = requested_stake(raw_kelly, multiplier)
-
-        league = str(row.get('league_lower') or row.get('league') or '').strip().lower()
-        game_date = str(row.get('game_date') or '').strip()
-        game_id = str(row.get('game_id') or '').strip()
-        game_key = (league, game_id)
-        league_day_key = (league, game_date)
-        day_key = game_date
-
-        remaining_game = max(MAX_EXPOSURE_PER_GAME - game_used[game_key], 0.0)
-        remaining_league = max(MAX_EXPOSURE_PER_LEAGUE_DAY - league_day_used[league_day_key], 0.0)
-        remaining_day = max(MAX_TOTAL_DAILY_EXPOSURE - day_used[day_key], 0.0)
-        final_stake = max(min(requested, remaining_game, remaining_league, remaining_day), 0.0)
-
-        reasons = []
-        if fractional > KELLY_CAP + eps:
-            reasons.append('individual_kelly_cap')
-        if requested > remaining_game + eps:
-            reasons.append('game_exposure_cap')
-        if requested > remaining_league + eps:
-            reasons.append('league_day_exposure_cap')
-        if requested > remaining_day + eps:
-            reasons.append('total_daily_exposure_cap')
-        if final_stake <= eps:
-            continue
-
-        game_used[game_key] += final_stake
-        league_day_used[league_day_key] += final_stake
-        day_used[day_key] += final_stake
-        day_rank[day_key] += 1
-
-        r = row.to_dict()
-        r.update({
-            'bet_fractional_kelly_pct': fractional,
-            'bet_individual_capped_stake_pct': individual_capped,
-            'bet_requested_stake_pct': requested,
-            'bet_final_stake_pct': final_stake,
-            'bet_stake_pct': final_stake,
-            'exposure_rank': day_rank[day_key],
-            'exposure_limited': bool(reasons or final_stake + eps < requested),
-            'exposure_limit_reason': ';'.join(reasons),
-            'game_exposure_after_pct': game_used[game_key],
-            'league_day_exposure_after_pct': league_day_used[league_day_key],
-            'total_day_exposure_after_pct': day_used[day_key],
-            'maximum_exposure_per_game': MAX_EXPOSURE_PER_GAME,
-            'maximum_exposure_per_league_per_day': MAX_EXPOSURE_PER_LEAGUE_DAY,
-            'maximum_total_daily_exposure': MAX_TOTAL_DAILY_EXPOSURE,
-            'maximum_individual_bet_kelly_fraction': KELLY_CAP,
-            'uncertainty_adjustment_method': UNCERTAINTY_METHOD,
-            'uncertainty_adjustment_version': UNCERTAINTY_VERSION,
-        })
-        final_rows.append(r)
-
-    if not final_rows:
-        return out.iloc[0:0].drop(columns=['_rank_date'], errors='ignore')
-    final = pd.DataFrame(final_rows)
-    return final.drop(columns=['_rank_date'], errors='ignore')
+    requested = fractional * multiplier if STAKE_SCALING == 'uncertainty_multiplier' else fractional
+    return fractional, fractional, requested

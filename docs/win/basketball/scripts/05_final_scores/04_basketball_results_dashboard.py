@@ -10,7 +10,7 @@
 #   docs/win/basketball/05_final_scores/reports/{league}/{moneyline,spread,total,overview}/*.csv
 #
 # Output (single file):
-#   docs/basketball_dashboard.html
+#   frontend/basketball_dashboard.html
 #
 # Log:
 #   docs/win/basketball/errors/05_final_scores/04_basketball_results_dashboard.txt
@@ -30,7 +30,7 @@ MARKETS = ["moneyline", "spread", "total"]
 
 BASE        = Path("docs/win/basketball/05_final_scores")
 REPORT_DIR  = BASE / "reports"
-OUTPUT_FILE = Path("docs/basketball_dashboard.html")
+OUTPUT_FILE = Path("frontend/basketball_dashboard.html")
 ERROR_DIR   = Path("docs/win/basketball/errors/05_final_scores")
 LOG_FILE    = ERROR_DIR / "04_basketball_results_dashboard.txt"
 
