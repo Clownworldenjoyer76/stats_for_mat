@@ -1,24 +1,25 @@
 === 02_basketball_results_analyze ===
-START_TIMESTAMP_UTC: 2026-09-07T09:29:53.328883+00:00
-2026-09-07T09:29:53.329376+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_nba.csv
-2026-09-07T09:29:53.329503+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_ncaam.csv
-2026-09-07T09:29:53.329605+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv
-2026-09-07T09:29:53.329676+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_wnba.csv
-2026-09-07T09:29:53.329746+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv | exists=0 | rows=0
-2026-09-07T09:29:53.329782+00:00 | WARNING | [NBA] input missing: docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv — skipping
-2026-09-07T09:29:53.335445+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_nba.csv | rows=0
-2026-09-07T09:29:53.335590+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv | exists=0 | rows=0
-2026-09-07T09:29:53.335632+00:00 | WARNING | [NCAAM] input missing: docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv — skipping
-2026-09-07T09:29:53.337172+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_ncaam.csv | rows=0
-2026-09-07T09:29:53.343834+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv | exists=1 | rows=109
-2026-09-07T09:29:53.453419+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv | rows=109
-2026-09-07T09:29:53.626944+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_wnba.csv | rows=14
-2026-09-07T09:29:53.626993+00:00 | INFO | [WNBA] wrote 109 rows -> docs/win/basketball/05_final_scores/work_wnba.csv
-2026-09-07T09:29:53.627023+00:00 | INFO | [WNBA] wrote 14 quality rows -> docs/win/basketball/05_final_scores/quality_metrics_wnba.csv
-2026-09-07T09:29:53.627455+00:00 | INFO | Analyze complete.
+START_TIMESTAMP_UTC: 2026-09-11T18:29:08.682328+00:00
+2026-09-11T18:29:08.682682+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_nba.csv
+2026-09-11T18:29:08.682831+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_ncaam.csv
+2026-09-11T18:29:08.682935+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv
+2026-09-11T18:29:08.683006+00:00 | INFO | REMOVED_STALE_OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_wnba.csv
+2026-09-11T18:29:08.683074+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv | exists=0 | rows=0
+2026-09-11T18:29:08.683108+00:00 | WARNING | [NBA] input missing: docs/win/basketball/05_final_scores/results/nba/graded/NBA_final.csv — skipping
+2026-09-11T18:29:08.687743+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_nba.csv | rows=0
+2026-09-11T18:29:08.687870+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv | exists=0 | rows=0
+2026-09-11T18:29:08.687913+00:00 | WARNING | [NCAAM] input missing: docs/win/basketball/05_final_scores/results/ncaam/graded/NCAAM_final.csv — skipping
+2026-09-11T18:29:08.689150+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_ncaam.csv | rows=0
+2026-09-11T18:29:08.697207+00:00 | INFO | INPUT | file=docs/win/basketball/05_final_scores/results/wnba/graded/WNBA_final.csv | exists=1 | rows=109
+2026-09-11T18:29:08.726343+00:00 | WARNING | [WNBA] no closing-line files in docs/win/basketball/05_final_scores/closing_lines/wnba; CLV will be unavailable
+2026-09-11T18:29:08.768895+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/work_wnba.csv | rows=109
+2026-09-11T18:29:08.916146+00:00 | INFO | OUTPUT | file=docs/win/basketball/05_final_scores/quality_metrics_wnba.csv | rows=14
+2026-09-11T18:29:08.916187+00:00 | INFO | [WNBA] wrote 109 rows -> docs/win/basketball/05_final_scores/work_wnba.csv
+2026-09-11T18:29:08.916215+00:00 | INFO | [WNBA] wrote 14 quality rows -> docs/win/basketball/05_final_scores/quality_metrics_wnba.csv
+2026-09-11T18:29:08.916478+00:00 | INFO | Analyze complete.
 INPUT_SUMMARY | files=3 | rows=109
 OUTPUT_SUMMARY | files=4 | rows=123
-WARNING_COUNT: 2
+WARNING_COUNT: 3
 ERROR_COUNT: 0
-END_TIMESTAMP_UTC: 2026-09-07T09:29:53.627476+00:00
+END_TIMESTAMP_UTC: 2026-09-11T18:29:08.916495+00:00
 STATUS: SUCCESS
