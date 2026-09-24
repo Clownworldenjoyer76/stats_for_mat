@@ -37,11 +37,11 @@ LOG_FILE         = ERROR_DIR / "select_bets.txt"
 SELECT_DIR.mkdir(parents=True, exist_ok=True)
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-    CONFIG = yaml.safe_load(f) or {}
+with open(CONFIG_PATH, "r", encoding="utf-8") as markets_config_handle:
+    CONFIG = yaml.safe_load(markets_config_handle) or {}
 
-with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as f:
-    MODEL_CONFIG = yaml.safe_load(f) or {}
+with open(MODEL_CONFIG_PATH, "r", encoding="utf-8") as model_config_handle:
+    MODEL_CONFIG = yaml.safe_load(model_config_handle) or {}
 
 ML_VS_SPREAD_TIEBREAK = str(CONFIG.get("ml_vs_spread_tiebreak", "ev")).strip().lower()
 TIEBREAK_COL_MAP = {
