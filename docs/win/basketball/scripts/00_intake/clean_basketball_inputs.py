@@ -1257,9 +1257,9 @@ if __name__ == "__main__":
             log_master("STATUS: FAILED")
             log_master(traceback.format_exc())
 
-            for league in ("NBA", "NCAAM", "WNBA"):
-                log_league(league, "STATUS: FAILED")
-                log_league(league, traceback.format_exc())
+            for error_league in ("NBA", "NCAAM", "WNBA"):
+                log_league(error_league, "STATUS: FAILED")
+                log_league(error_league, traceback.format_exc())
         except Exception:
             pass
 
