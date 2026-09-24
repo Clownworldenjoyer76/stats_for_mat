@@ -79,6 +79,12 @@ ALIAS_FIELDS = [
     "source_file",
 ]
 
+UNRESOLVED_TEAM_NAMES = {
+    "tbd",
+    "to be determined",
+    "unknown",
+}
+
 
 def log(msg: str) -> None:
     with LOG_FILE.open("a", encoding="utf-8") as f:
@@ -89,16 +95,39 @@ def clean(v) -> str:
     return "" if v is None else str(v).strip()
 
 
+def unresolved_team(value) -> bool:
+    team = clean(value).casefold()
+    return not team or team in UNRESOLVED_TEAM_NAMES
+
+
 def build_row(row: dict) -> dict:
     return {k: clean(row.get(k)) for k in FIELDNAMES}
 
 
 def identity_key(row: dict) -> tuple[str, str, str, str]:
+    league = clean(row.get("league")).upper()
+    game_date = clean(row.get("game_date"))
+    home_team = clean(row.get("home_team"))
+    away_team = clean(row.get("away_team"))
+
+    if unresolved_team(home_team) or unresolved_team(away_team):
+        game_id = clean(row.get("game_id"))
+
+        if game_id:
+            return (
+                league,
+                game_date,
+                "__game_id__",
+                game_id.casefold(),
+            )
+
+        return league, game_date, "", ""
+
     return (
-        clean(row.get("league")).upper(),
-        clean(row.get("game_date")),
-        clean(row.get("home_team")).casefold(),
-        clean(row.get("away_team")).casefold(),
+        league,
+        game_date,
+        home_team.casefold(),
+        away_team.casefold(),
     )
 
 
@@ -219,6 +248,16 @@ def load_source_files(
                     continue
 
                 key = identity_key(row)
+
+                if not all(key):
+                    passthrough_key = (
+                        clean(row.get("league")).upper(),
+                        clean(row.get("game_date")),
+                        f"__unresolved__:{source_kind}",
+                        f"{csv_path}:{rows_read}",
+                    )
+                    canonical[passthrough_key] = row
+                    continue
 
                 if key in canonical:
                     duplicates += 1

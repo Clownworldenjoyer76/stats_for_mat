@@ -1,35 +1,38 @@
-=== basketball select_bets RUN 2026-09-11T18:29:03.743436+00:00 ===
-2026-09-11T18:29:03.743578+00:00 | INFO  | Old basketball daily pick outputs deleted: daily_picks=0
-2026-09-11T18:29:03.743625+00:00 | INFO  | INPUT_DIR : /tmp/basketball_select_k_ddv_wc/input
-2026-09-11T18:29:03.743657+00:00 | INFO  | OUTPUT_DIR: /tmp/basketball_select_k_ddv_wc/select
-2026-09-11T18:29:03.743685+00:00 | INFO  | MODEL_CONFIG: docs/win/basketball/config/model_config.yaml
-2026-09-11T18:29:03.743714+00:00 | INFO  | staking.yaml: kelly_fraction=0.25 uncertainty=signal_to_noise_market_shrink/signal_to_noise_market_shrink_v1; exposure-based selection filtering disabled
-2026-09-11T18:29:03.743738+00:00 | INFO  | ml_vs_spread_tiebreak: kelly
-2026-09-11T18:29:03.743768+00:00 | INFO  | NBA model edges: moneyline=0.02 spread=0.015 total=0.0
-2026-09-11T18:29:03.743796+00:00 | INFO  | NCAAM model edges: moneyline=0.015 spread=0.015 total=0.03
-2026-09-11T18:29:03.743876+00:00 | INFO  | WNBA model edges: moneyline=0.0 spread=0.05 total=0.03
-2026-09-11T18:29:03.743937+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/nba/moneyline
-2026-09-11T18:29:03.743982+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/nba/spread
-2026-09-11T18:29:03.744025+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/nba/total
-2026-09-11T18:29:03.744071+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/ncaam/moneyline
-2026-09-11T18:29:03.744110+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/ncaam/spread
-2026-09-11T18:29:03.744150+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/ncaam/total
-2026-09-11T18:29:03.744190+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/wnba/moneyline
-2026-09-11T18:29:03.744228+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/wnba/spread
-2026-09-11T18:29:03.744266+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select_k_ddv_wc/input/wnba/total
-2026-09-11T18:29:03.744648+00:00 | INFO  | NO FINAL SELECTED ROWS FOR LEAGUE: nba; daily pick files not written
-2026-09-11T18:29:03.744767+00:00 | INFO  | NO FINAL SELECTED ROWS FOR LEAGUE: ncaam; daily pick files not written
-2026-09-11T18:29:03.744908+00:00 | INFO  | NO FINAL SELECTED ROWS FOR LEAGUE: wnba; daily pick files not written
+=== basketball select_bets RUN 2026-09-24T09:29:27.921214+00:00 ===
+2026-09-24T09:29:27.921347+00:00 | INFO  | Old basketball daily pick outputs deleted: daily_picks=0
+2026-09-24T09:29:27.921394+00:00 | INFO  | INPUT_DIR : /tmp/basketball_select__ci_yesq/input
+2026-09-24T09:29:27.921424+00:00 | INFO  | OUTPUT_DIR: /tmp/basketball_select__ci_yesq/select
+2026-09-24T09:29:27.921449+00:00 | INFO  | MODEL_CONFIG: docs/win/basketball/config/model_config.yaml
+2026-09-24T09:29:27.921498+00:00 | INFO  | staking.yaml: kelly_fraction=0.25 uncertainty=signal_to_noise_market_shrink/signal_to_noise_market_shrink_v1; exposure-based selection filtering disabled
+2026-09-24T09:29:27.921539+00:00 | INFO  | ml_vs_spread_tiebreak: kelly
+2026-09-24T09:29:27.921570+00:00 | INFO  | NBA model edges: moneyline=0.02 spread=0.015 total=0.0
+2026-09-24T09:29:27.921597+00:00 | INFO  | NCAAM model edges: moneyline=0.015 spread=0.015 total=0.03
+2026-09-24T09:29:27.921631+00:00 | INFO  | WNBA model edges: moneyline=0.0 spread=0.05 total=0.03
+2026-09-24T09:29:27.921713+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/nba/moneyline
+2026-09-24T09:29:27.921760+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/nba/spread
+2026-09-24T09:29:27.921801+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/nba/total
+2026-09-24T09:29:27.921850+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/ncaam/moneyline
+2026-09-24T09:29:27.921891+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/ncaam/spread
+2026-09-24T09:29:27.921930+00:00 | WARN  | INPUT FOLDER MISSING: /tmp/basketball_select__ci_yesq/input/ncaam/total
+2026-09-24T09:29:27.928853+00:00 | INFO  | --- FILE: 2026_09_24_WNBA_moneyline.csv league=wnba market=moneyline rows=5 mode=all_qualifying model_edge=0.0
+2026-09-24T09:29:27.931085+00:00 | INFO  | 2026_09_24_WNBA_moneyline.csv | 0 selected from 5 rows
+2026-09-24T09:29:27.935502+00:00 | INFO  | --- FILE: 2026_09_24_WNBA_spread.csv league=wnba market=spread rows=5 mode=all_qualifying model_edge=0.05
+2026-09-24T09:29:27.937383+00:00 | INFO  | 2026_09_24_WNBA_spread.csv | 1 selected from 5 rows
+2026-09-24T09:29:27.943120+00:00 | INFO  | --- FILE: 2026_09_24_WNBA_total.csv league=wnba market=total rows=5 mode=all_qualifying model_edge=0.03
+2026-09-24T09:29:27.944753+00:00 | INFO  | 2026_09_24_WNBA_total.csv | 1 selected from 5 rows
+2026-09-24T09:29:27.958723+00:00 | INFO  | NO FINAL SELECTED ROWS FOR LEAGUE: nba; daily pick files not written
+2026-09-24T09:29:27.960145+00:00 | INFO  | NO FINAL SELECTED ROWS FOR LEAGUE: ncaam; daily pick files not written
+2026-09-24T09:29:27.965249+00:00 | INFO  | WROTE DAILY PICKS: /tmp/basketball_select__ci_yesq/select/wnba/daily_picks/2026_09_24_wnba_selected.csv (2 rows)
 
 ======================================================================
-SUMMARY  2026-09-11T18:29:03.744929+00:00
+SUMMARY  2026-09-24T09:29:27.965309+00:00
 ======================================================================
-  files_processed       : 0
-  candidate_selected    : 0
-  total_selected        : 0
+  files_processed       : 3
+  candidate_selected    : 2
+  total_selected        : 2
   nba_bets              : 0
   ncaam_bets            : 0
-  wnba_bets             : 0
+  wnba_bets             : 2
   ml_vs_spread_dropped  : 0
   skipped               : 0
   errors                : 0
@@ -40,8 +43,22 @@ SUMMARY  2026-09-11T18:29:03.744929+00:00
 
 --- Filter Reject Counts ---
   deleted_old_daily_pick_files : 0
+  fail_ev                      : 2
+  fail_line                    : 2
+  fail_model_edge_moneyline    : 6
+  fail_model_edge_spread       : 7
+  fail_model_edge_total        : 6
+  fail_model_prob              : 4
+  fail_odds                    : 1
+  rejected_ml                  : 10
+  rejected_spread              : 9
+  rejected_total               : 9
+  selected                     : 2
 
   file                                             market     league  selected     status
+  2026_09_24_WNBA_moneyline.csv                    moneyline    WNBA         0         ok
+  2026_09_24_WNBA_spread.csv                       spread       WNBA         1         ok
+  2026_09_24_WNBA_total.csv                        total        WNBA         1         ok
 
 STATUS: SUCCESS
 ======================================================================

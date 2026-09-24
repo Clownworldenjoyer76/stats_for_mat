@@ -4,6 +4,7 @@
 Identity is league + game_date + normalized home + normalized away. Numeric ESPN
 IDs are preferred over legacy/custom IDs. Distinct numeric IDs for one identity are
 fatal because that indicates a genuine identity conflict rather than an alias.
+Rows with unresolved placeholder teams are excluded from identity consolidation.
 
 Sportsbook provenance fields are preserved through normalization, alias
 consolidation, and file rewrites:
@@ -43,9 +44,20 @@ FIELDNAMES = [
     "dk_total_over_decimal", "dk_total_under_decimal",
 ]
 
+UNRESOLVED_TEAM_NAMES = {
+    "tbd",
+    "to be determined",
+    "unknown",
+}
+
 
 def clean(value) -> str:
     return "" if value is None else str(value).strip()
+
+
+def unresolved_team(value) -> bool:
+    team = clean(value).casefold()
+    return not team or team in UNRESOLVED_TEAM_NAMES
 
 
 def log(message: str) -> None:
@@ -58,11 +70,19 @@ def normalize_row(row: dict) -> dict:
 
 
 def identity_key(row: dict) -> tuple[str, str, str, str]:
+    league = clean(row.get("league")).upper()
+    game_date = clean(row.get("game_date"))
+    home_team = clean(row.get("home_team"))
+    away_team = clean(row.get("away_team"))
+
+    if unresolved_team(home_team) or unresolved_team(away_team):
+        return league, game_date, "", ""
+
     return (
-        clean(row.get("league")).upper(),
-        clean(row.get("game_date")),
-        clean(row.get("home_team")).casefold(),
-        clean(row.get("away_team")).casefold(),
+        league,
+        game_date,
+        home_team.casefold(),
+        away_team.casefold(),
     )
 
 

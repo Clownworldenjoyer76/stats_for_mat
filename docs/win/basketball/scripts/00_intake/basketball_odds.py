@@ -35,7 +35,8 @@ Both normal calendar-year windows and cross-year windows are supported.
 After a successful collection, raw sportsbook files are normalized to one row
 per (date, home team, away team) matchup. Numeric ESPN game IDs outrank legacy
 IDs; legacy alias rows are merged into the canonical row and removed.
-Conflicting numeric IDs for the same matchup are a hard failure.
+Conflicting numeric IDs for the same matchup are a hard failure. Rows with
+unresolved placeholder teams are excluded from matchup consolidation.
 """
 from __future__ import annotations
 
@@ -75,6 +76,12 @@ ALIAS_FIELDS = [
     "alias_game_id",
     "canonical_game_id",
 ]
+
+UNRESOLVED_TEAM_NAMES = {
+    "tbd",
+    "to be determined",
+    "unknown",
+}
 
 
 def truthy(value: str | None) -> bool:
@@ -216,11 +223,23 @@ def clean(value) -> str:
     return "" if value is None else str(value).strip()
 
 
+def unresolved_team(value) -> bool:
+    team = clean(value).casefold()
+    return not team or team in UNRESOLVED_TEAM_NAMES
+
+
 def matchup_key(row: dict) -> tuple[str, str, str]:
+    game_date = clean(row.get("game_date"))
+    home_team = clean(row.get("home_team"))
+    away_team = clean(row.get("away_team"))
+
+    if unresolved_team(home_team) or unresolved_team(away_team):
+        return game_date, "", ""
+
     return (
-        clean(row.get("game_date")),
-        clean(row.get("home_team")).casefold(),
-        clean(row.get("away_team")).casefold(),
+        game_date,
+        home_team.casefold(),
+        away_team.casefold(),
     )
 
 
