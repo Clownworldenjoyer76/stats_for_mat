@@ -819,7 +819,7 @@ def validate_sdv_model_config() -> tuple[dict, dict, list[str]]:
             f"expected={SDV_MODEL_ROOT} actual={artifacts.get('root')!r}"
         )
 
-    if bool_value(artifacts.get("require_feature_version_match")) is not True:
+    if not bool_value(artifacts.get("require_feature_version_match")):
         report["errors"].append(
             f"{SDV_MODEL_CONFIG}: artifacts.require_feature_version_match "
             "must be true"

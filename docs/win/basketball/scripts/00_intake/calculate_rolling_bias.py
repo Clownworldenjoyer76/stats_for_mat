@@ -3061,7 +3061,7 @@ def load_current_completed_games(
 
                 continue
 
-            if identity_result is False:
+            if not identity_result:
                 stats[
                     "game_id_identity_mismatches"
                 ] += 1
