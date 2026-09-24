@@ -1,0 +1,17 @@
+####################################################################################################################
+# WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
+####################################################################################################################
+
+version: "1.0"
+linter: qodana-python
+
+profile:
+  name: qodana.recommended
+
+bootstrap: |
+  python -m pip install --upgrade pip
+  python -m pip install -r docs/win/basketball/requirements.txt
+
+include:
+  - name: CheckDependencyLicenses
+
