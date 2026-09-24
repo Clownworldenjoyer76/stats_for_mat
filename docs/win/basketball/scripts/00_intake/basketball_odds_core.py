@@ -96,13 +96,13 @@ ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = ERROR_DIR / "basketball_odds.txt"
 
-for league, cfg in LEAGUES.items():
-    cfg["output_dir"].mkdir(parents=True, exist_ok=True)
-    cfg["snapshot_dir"] = SNAPSHOT_ROOT / league
-    cfg["snapshot_dir"].mkdir(parents=True, exist_ok=True)
+for league, league_cfg in LEAGUES.items():
+    league_cfg["output_dir"].mkdir(parents=True, exist_ok=True)
+    league_cfg["snapshot_dir"] = SNAPSHOT_ROOT / league
+    league_cfg["snapshot_dir"].mkdir(parents=True, exist_ok=True)
 
-with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== basketball_odds RUN {datetime.now().isoformat()} ===\n")
+with open(LOG_FILE, "w", encoding="utf-8") as startup_log_handle:
+    startup_log_handle.write(f"=== basketball_odds RUN {datetime.now().isoformat()} ===\n")
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -433,7 +433,7 @@ def get_competition(
     return competitions[0]
 
 
-def competition_id(
+def resolve_competition_id(
     competition: dict,
     event_id: str,
 ) -> str:
@@ -1351,7 +1351,7 @@ def main():
                         continue
 
                     comp_id = (
-                        competition_id(
+                        resolve_competition_id(
                             competition,
                             event_id,
                         )
