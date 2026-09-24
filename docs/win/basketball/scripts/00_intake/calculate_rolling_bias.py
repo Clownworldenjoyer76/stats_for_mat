@@ -2328,12 +2328,12 @@ def build_prediction_index_for_key(
                 key
             ] = sorted(
                 group,
-                key=lambda row: (
-                    row.get(
+                key=lambda sort_row: (
+                    sort_row.get(
                         "_source_file",
                         "",
                     ),
-                    row.get(
+                    sort_row.get(
                         "_source_row",
                         "",
                     ),
@@ -2712,21 +2712,21 @@ def deduplicate_final_rows(
     for group in grouped_remaining.values():
         preferred = sorted(
             group,
-            key=lambda row: (
+            key=lambda sort_row: (
                 (
                     0
                     if canonical_game_id(
-                        row.get(
+                        sort_row.get(
                             "game_id"
                         )
                     )
                     else 1
                 ),
-                row.get(
+                sort_row.get(
                     "_source_file",
                     "",
                 ),
-                row.get(
+                sort_row.get(
                     "_source_row",
                     "",
                 ),
@@ -2745,25 +2745,25 @@ def deduplicate_final_rows(
         )
 
     deduped.sort(
-        key=lambda row: (
+        key=lambda sort_row: (
             parse_game_datetime(
-                row.get(
+                sort_row.get(
                     "game_date"
                 ),
                 "",
             ),
             normalize_text(
-                row.get(
+                sort_row.get(
                     "home_team"
                 )
             ),
             normalize_text(
-                row.get(
+                sort_row.get(
                     "away_team"
                 )
             ),
             canonical_game_id(
-                row.get(
+                sort_row.get(
                     "game_id"
                 )
             ),
@@ -3427,9 +3427,9 @@ def deduplicate_completed_games(
         # ordering.
         winner = sorted(
             group,
-            key=lambda game: (
-                game.source_priority,
-                game.sort_key,
+            key=lambda sort_game: (
+                sort_game.source_priority,
+                sort_game.sort_key,
             ),
         )[-1]
 
@@ -3438,8 +3438,8 @@ def deduplicate_completed_games(
         )
 
     chosen.sort(
-        key=lambda game: (
-            game.sort_key
+        key=lambda sort_game: (
+            sort_game.sort_key
         )
     )
 
