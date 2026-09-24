@@ -723,7 +723,7 @@ def find_market_outlier_actions(pred_index, book_index):
         if key not in book_index:
             continue
 
-        league = pred_item["league"]
+        pred_league = pred_item["league"]
         pred = pred_item["row"]
 
         home_proj = to_float(pred.get("home_projected_points"))
@@ -745,17 +745,17 @@ def find_market_outlier_actions(pred_index, book_index):
                 if spread_diff > SPREAD_OUTLIER_MAX:
                     add_market_action(
                         actions,
-                        league,
+                        pred_league,
                         book_path,
                         key,
                         "SPREAD",
                         f"SPREAD_OUTLIER_DIFF_{round(spread_diff, 4)}",
                     )
 
-                    outlier_counts[league]["spread"] += 1
+                    outlier_counts[pred_league]["spread"] += 1
 
                     log_league(
-                        league,
+                        pred_league,
                         f"BLANK_OUTLIER_SPREAD | {key} | {book_path} | "
                         f"model_spread_home_minus_away={round(model_spread, 4)} "
                         f"book_home_spread={book_home_spread} "
@@ -769,17 +769,17 @@ def find_market_outlier_actions(pred_index, book_index):
                 if total_diff > TOTAL_OUTLIER_MAX:
                     add_market_action(
                         actions,
-                        league,
+                        pred_league,
                         book_path,
                         key,
                         "TOTAL",
                         f"TOTAL_OUTLIER_DIFF_{round(total_diff, 4)}",
                     )
 
-                    outlier_counts[league]["total"] += 1
+                    outlier_counts[pred_league]["total"] += 1
 
                     log_league(
-                        league,
+                        pred_league,
                         f"BLANK_OUTLIER_TOTAL | {key} | {book_path} | "
                         f"model_total={model_total} book_total={book_total} "
                         f"diff={round(total_diff, 4)}"
