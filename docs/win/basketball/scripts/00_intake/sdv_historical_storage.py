@@ -997,96 +997,96 @@ def build_nba_legacy_schedule_crosswalk(
         }
 
     def side_identity(
-        side: dict[str, Any] | None,
+        side_data: dict[str, Any] | None,
     ) -> tuple[Any, ...] | None:
-        if side is None:
+        if side_data is None:
             return None
 
         return (
             clean(
-                side.get(
+                side_data.get(
                     "team_name"
                 )
             ).lower(),
             clean(
-                side.get(
+                side_data.get(
                     "team_abbreviation"
                 )
             ).lower(),
-            side.get(
+            side_data.get(
                 "pts"
             ),
         )
 
     def side_team_identity(
-        side: dict[str, Any] | None,
+        side_data: dict[str, Any] | None,
     ) -> tuple[str, str] | None:
-        if side is None:
+        if side_data is None:
             return None
 
         return (
             clean(
-                side.get(
+                side_data.get(
                     "team_name"
                 )
             ).lower(),
             clean(
-                side.get(
+                side_data.get(
                     "team_abbreviation"
                 )
             ).lower(),
         )
 
     def side_variants(
-        side: dict[str, Any] | None,
+        side_data: dict[str, Any] | None,
     ) -> set[str]:
-        if side is None:
+        if side_data is None:
             return set()
 
         return (
             team_variants(
-                side.get(
+                side_data.get(
                     "team_name"
                 )
             )
             | team_variants(
-                side.get(
+                side_data.get(
                     "team_abbreviation"
                 )
             )
         )
 
     def game_identity(
-        game: dict[str, Any],
+        game_data: dict[str, Any],
     ) -> tuple[Any, ...]:
         return (
             clean(
-                game.get(
+                game_data.get(
                     "game_date_key"
                 )
             ),
             clean(
-                game.get(
+                game_data.get(
                     "match_mode"
                 )
             ),
             side_identity(
-                game.get(
+                game_data.get(
                     "home"
                 )
             ),
             side_identity(
-                game.get(
+                game_data.get(
                     "away"
                 )
             ),
             side_identity(
-                game.get(
+                game_data.get(
                     "team_a"
                 )
             ),
             side_identity(
-                game.get(
+                game_data.get(
                     "team_b"
                 )
             ),
@@ -1578,7 +1578,7 @@ def build_nba_legacy_schedule_crosswalk(
         )
 
     def candidate_variants(
-        candidate: dict[str, Any],
+        candidate_row: dict[str, Any],
         name_columns: list[str],
     ) -> set[str]:
         variants: set[str] = set()
@@ -1586,7 +1586,7 @@ def build_nba_legacy_schedule_crosswalk(
         for column in name_columns:
             variants.update(
                 team_variants(
-                    candidate.get(
+                    candidate_row.get(
                         column
                     )
                 )
@@ -1597,7 +1597,7 @@ def build_nba_legacy_schedule_crosswalk(
     def unordered_orientations(
         team_a: dict[str, Any],
         team_b: dict[str, Any],
-        candidate: dict[str, Any],
+        candidate_row: dict[str, Any],
     ) -> set[str]:
         team_a_variants = side_variants(
             team_a
@@ -1607,39 +1607,39 @@ def build_nba_legacy_schedule_crosswalk(
             team_b
         )
 
-        home_variants = candidate_variants(
-            candidate,
+        candidate_home_variants = candidate_variants(
+            candidate_row,
             home_name_columns,
         )
 
-        away_variants = candidate_variants(
-            candidate,
+        candidate_away_variants = candidate_variants(
+            candidate_row,
             away_name_columns,
         )
 
-        orientations: set[str] = set()
+        matched_orientations: set[str] = set()
 
         if (
             team_a_variants
-            & home_variants
+            & candidate_home_variants
             and team_b_variants
-            & away_variants
+            & candidate_away_variants
         ):
-            orientations.add(
+            matched_orientations.add(
                 "a_home"
             )
 
         if (
             team_a_variants
-            & away_variants
+            & candidate_away_variants
             and team_b_variants
-            & home_variants
+            & candidate_home_variants
         ):
-            orientations.add(
+            matched_orientations.add(
                 "a_away"
             )
 
-        return orientations
+        return matched_orientations
 
     mappings: list[
         dict[str, str]
