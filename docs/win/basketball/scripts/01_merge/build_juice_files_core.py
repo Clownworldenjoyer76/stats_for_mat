@@ -25,8 +25,8 @@ CONFIG_PATH = Path("docs/win/basketball/config/model_config.yaml")
 
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 
-with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== build_juice_files RUN {datetime.now(timezone.utc).isoformat()} ===\n\n")
+with open(LOG_FILE, "w", encoding="utf-8") as startup_log_handle:
+    startup_log_handle.write(f"=== build_juice_files RUN {datetime.now(timezone.utc).isoformat()} ===\n\n")
 
 
 def log(msg: str) -> None:
