@@ -774,7 +774,7 @@ def load_nba_stats_schedule(
 
     loader_error = None
 
-    if loader is not None:
+    if callable(loader):
         try:
             frame = loader(
                 seasons=[
@@ -2059,7 +2059,7 @@ def load_wnba_stats_schedule(
 
     loader_error = None
 
-    if loader is not None:
+    if callable(loader):
         try:
             frame = loader(
                 seasons=[
@@ -2987,7 +2987,7 @@ def load_pro_schedule_crosswalk(
 
     loader_error = None
 
-    if loader is not None:
+    if callable(loader):
         try:
             frame = loader(
                 seasons=[
@@ -3635,7 +3635,7 @@ def call_loader(
 
     primary_error: Exception | None = None
 
-    if loader is not None:
+    if callable(loader):
         try:
             return (
                 loader(
@@ -3719,7 +3719,7 @@ def call_loader(
             None,
         )
 
-        if fallback_loader is None:
+        if not callable(fallback_loader):
             fallback_error = RuntimeError(
                 "SportsDataVerse fallback "
                 "loader missing: "
