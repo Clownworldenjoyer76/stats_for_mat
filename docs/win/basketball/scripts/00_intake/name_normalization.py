@@ -16,21 +16,21 @@ def audit(log_path, stage, status, msg="", df=None):
     log_path = Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(f"\n[{ts}] [{stage}] {status}\n")
+    with open(log_path, "a", encoding="utf-8") as audit_handle:
+        audit_handle.write(f"\n[{ts}] [{stage}] {status}\n")
 
         if msg:
-            f.write(f"  MSG: {msg}\n")
+            audit_handle.write(f"  MSG: {msg}\n")
 
         if df is not None and isinstance(df, pd.DataFrame):
-            f.write(f"  STATS: {len(df)} rows | {len(df.columns)} cols\n")
-            f.write(f"  NULLS: {df.isnull().sum().sum()} total\n")
-            f.write(
+            audit_handle.write(f"  STATS: {len(df)} rows | {len(df.columns)} cols\n")
+            audit_handle.write(f"  NULLS: {df.isnull().sum().sum()} total\n")
+            audit_handle.write(
                 f"  SAMPLE:\n"
                 f"{df.head(3).to_string(index=False)}\n"
             )
 
-        f.write("-" * 40 + "\n")
+        audit_handle.write("-" * 40 + "\n")
 
     if df is not None and isinstance(df, pd.DataFrame):
         summary_path = log_path.parent / "condensed_summary.txt"
@@ -54,8 +54,8 @@ def audit(log_path, stage, status, msg="", df=None):
                     summary_path,
                     "a",
                     encoding="utf-8",
-                ) as f:
-                    f.write(
+                ) as audit_handle:
+                    audit_handle.write(
                         f"\n--- BETTING SIGNALS: {ts} ---\n"
                     )
 
@@ -77,13 +77,13 @@ def audit(log_path, stage, status, msg="", df=None):
                         if c in signals.columns
                     ]
 
-                    f.write(
+                    audit_handle.write(
                         signals[
                             final_cols
                         ].to_string(index=False)
                     )
 
-                    f.write(
+                    audit_handle.write(
                         "\n" + "=" * 30 + "\n"
                     )
 
@@ -153,8 +153,8 @@ def log(msg: str) -> None:
         LOG_FILE,
         "a",
         encoding="utf-8",
-    ) as f:
-        f.write(
+    ) as log_handle:
+        log_handle.write(
             f"{datetime.now(timezone.utc).isoformat()} | "
             f"{msg}\n"
         )
@@ -178,31 +178,31 @@ def load_map(map_file: Path):
         map_file,
         newline="",
         encoding="utf-8",
-    ) as f:
-        reader = csv.DictReader(f)
+    ) as map_handle:
+        map_reader = csv.DictReader(map_handle)
 
-        for row in reader:
-            league = (
-                row.get("league", "")
+        for map_row in map_reader:
+            map_league = (
+                map_row.get("league", "")
                 .strip()
                 .lower()
             )
 
             alias = (
-                row.get("alias", "")
+                map_row.get("alias", "")
                 .strip()
                 .lower()
             )
 
-            canonical = (
-                row.get("canonical_team", "")
+            canonical_team = (
+                map_row.get("canonical_team", "")
                 .strip()
             )
 
-            if league and alias and canonical:
+            if map_league and alias and canonical_team:
                 team_map[
-                    (league, alias)
-                ] = canonical
+                    (map_league, alias)
+                ] = canonical_team
 
 
 load_map(NBA_MAP_FILE)
