@@ -165,13 +165,13 @@ def clean_scalar(value):
     try:
         if pd.isna(value):
             return None
-    except Exception:
+    except (TypeError, ValueError):
         pass
 
     if hasattr(value, "item"):
         try:
             return value.item()
-        except Exception:
+        except (TypeError, ValueError):
             pass
 
     if isinstance(value, pd.Timestamp):
@@ -227,7 +227,7 @@ def to_number(value, default: float = 0.0) -> float:
         if value is None or pd.isna(value):
             return default
         return float(value)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return default
 
 

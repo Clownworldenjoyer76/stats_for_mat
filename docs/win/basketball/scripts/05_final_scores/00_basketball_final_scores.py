@@ -97,7 +97,7 @@ def score_value(value: Any) -> int | None:
         value = value.get("displayValue") or value.get("value")
     try:
         return int(float(str(value).strip()))
-    except Exception:
+    except (ValueError, OverflowError):
         return None
 
 

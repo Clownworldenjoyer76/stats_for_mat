@@ -144,7 +144,7 @@ def to_float(value):
         if value is None or pd.isna(value):
             return pd.NA
         return float(value)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return pd.NA
 
 

@@ -212,7 +212,7 @@ def optional_float(v):
         if v is None or pd.isna(v):
             return None
         return float(v)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
