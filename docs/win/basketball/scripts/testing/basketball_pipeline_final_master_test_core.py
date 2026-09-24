@@ -7843,26 +7843,26 @@ def stress_top_joint_configs(
         blocks
     )
 
-    B = len(
+    block_count = len(
         unique_blocks
     )
 
-    K = len(
+    config_count = len(
         top
     )
 
     block_profit = np.zeros(
         (
-            B,
-            K,
+            block_count,
+            config_count,
         ),
         dtype=float,
     )
 
     block_bets = np.zeros(
         (
-            B,
-            K,
+            block_count,
+            config_count,
         ),
         dtype=float,
     )
@@ -7935,11 +7935,11 @@ def stress_top_joint_configs(
             )
 
     draws = rng.multinomial(
-        B,
+        block_count,
         np.repeat(
             1.0
-            / B,
-            B,
+            / block_count,
+            block_count,
         ),
         size=reps,
     )
@@ -12446,7 +12446,7 @@ def write_report(
         Path
     ],
 ) -> None:
-    L: list[
+    lines: list[
         str
     ] = []
 
@@ -12455,7 +12455,7 @@ def write_report(
         * 110
     )
 
-    L += [
+    lines += [
         line,
         (
             f'{league} FINAL MASTER '
@@ -12552,7 +12552,7 @@ def write_report(
         ),
     ]
 
-    L += [
+    lines += [
         '',
         line,
         (
@@ -12643,7 +12643,7 @@ def write_report(
             row
         )
 
-    L.append(
+    lines.append(
         dataframe_text(
             pd.DataFrame(
                 frozen_rows
@@ -12651,7 +12651,7 @@ def write_report(
         )
     )
 
-    L += [
+    lines += [
         '',
         line,
         (
@@ -12679,7 +12679,7 @@ def write_report(
         'spread',
         'total',
     ]:
-        L += [
+        lines += [
             (
                 f'\n{market.upper()} '
                 'BIAS OOS SUMMARY'
@@ -12700,7 +12700,7 @@ def write_report(
             ),
         ]
 
-    L += [
+    lines += [
         '',
         line,
         (
@@ -12714,7 +12714,7 @@ def write_report(
         'spread',
         'total',
     ]:
-        L += [
+        lines += [
             (
                 f'\n{market.upper()} '
                 'STD OOS SUMMARY'
@@ -12735,7 +12735,7 @@ def write_report(
             ),
         ]
 
-    L += [
+    lines += [
         '',
         line,
         (
@@ -12750,7 +12750,7 @@ def write_report(
         'spread',
         'total',
     ]:
-        L += [
+        lines += [
             f'\n{market.upper()}',
             dataframe_text(
                 cal_summaries[
@@ -12759,7 +12759,7 @@ def write_report(
             ),
         ]
 
-    L += [
+    lines += [
         '',
         line,
         '7. JOINT CONFIGURATION STRESS TESTS',
@@ -12771,7 +12771,7 @@ def write_report(
         'spread',
         'total',
     ]:
-        L += [
+        lines += [
             (
                 f'\n{market.upper()} '
                 'TOP CONFIGURATIONS'
@@ -12784,7 +12784,7 @@ def write_report(
             ),
         ]
 
-    L += [
+    lines += [
         '',
         line,
         (
@@ -12847,7 +12847,7 @@ def write_report(
     ]
 
     for p in output_files:
-        L.append(
+        lines.append(
             str(
                 p
             )
@@ -12855,7 +12855,7 @@ def write_report(
 
     path.write_text(
         '\n'.join(
-            L
+            lines
         )
         + '\n',
         encoding='utf-8',

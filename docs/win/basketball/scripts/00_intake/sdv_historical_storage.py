@@ -290,26 +290,26 @@ def snake(value: str) -> str:
 
 
 def to_pl(frame):
-    P = pl()
+    pl_module = pl()
 
     if frame is None:
-        return P.DataFrame()
+        return pl_module.DataFrame()
 
-    if isinstance(frame, P.DataFrame):
+    if isinstance(frame, pl_module.DataFrame):
         return frame
 
     if hasattr(frame, "collect"):
         collected = frame.collect()
 
-        if isinstance(collected, P.DataFrame):
+        if isinstance(collected, pl_module.DataFrame):
             return collected
 
     if hasattr(frame, "to_pandas"):
-        return P.from_pandas(
+        return pl_module.from_pandas(
             frame.to_pandas()
         )
 
-    return P.DataFrame(frame)
+    return pl_module.DataFrame(frame)
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -579,7 +579,7 @@ def release_fallback(
     internal_season: int,
     sdv_season: int,
 ):
-    P = pl()
+    pl_module = pl()
 
     source, template = (
         RELEASE_FALLBACKS[
@@ -612,7 +612,7 @@ def release_fallback(
     response = http_get(url)
 
     return (
-        P.read_parquet(
+        pl_module.read_parquet(
             io.BytesIO(
                 response.content
             )
@@ -752,7 +752,7 @@ def load_nba_stats_schedule(
     The SportsDataVerse loader uses the NBA season start year, while the
     published release asset used as fallback is keyed by the season end year.
     """
-    P = pl()
+    pl_module = pl()
 
     module_name = (
         "sportsdataverse.nba"
@@ -841,7 +841,7 @@ def load_nba_stats_schedule(
         )
 
         df = normalize_frame_columns(
-            P.read_parquet(
+            pl_module.read_parquet(
                 io.BytesIO(
                     response.content
                 )
@@ -898,7 +898,7 @@ def build_nba_legacy_schedule_crosswalk(
     schedule supplies the final home/away orientation. Scores are used only as
     a deterministic disambiguator if more than one canonical candidate remains.
     """
-    P = pl()
+    pl_module = pl()
 
     (
         stats_schedule,
@@ -1453,7 +1453,7 @@ def build_nba_legacy_schedule_crosswalk(
             f"{games_file}"
         )
 
-    games = P.read_parquet(
+    games = pl_module.read_parquet(
         games_file
     )
 
@@ -1933,7 +1933,7 @@ def build_nba_legacy_schedule_crosswalk(
             f"internal={internal_season} sdv={sdv_season}"
         )
 
-    xwalk = P.DataFrame(
+    xwalk = pl_module.DataFrame(
         mappings
     )
 
@@ -1943,7 +1943,7 @@ def build_nba_legacy_schedule_crosswalk(
             "nba_game_id"
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             )
             .n_unique()
@@ -1952,7 +1952,7 @@ def build_nba_legacy_schedule_crosswalk(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -1965,7 +1965,7 @@ def build_nba_legacy_schedule_crosswalk(
             "espn_game_id"
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "nba_game_id"
             )
             .n_unique()
@@ -1974,7 +1974,7 @@ def build_nba_legacy_schedule_crosswalk(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -2037,7 +2037,7 @@ def build_nba_legacy_schedule_crosswalk(
 def load_wnba_stats_schedule(
     sdv_season: int,
 ):
-    P = pl()
+    pl_module = pl()
 
     module_name = (
         "sportsdataverse.wnba"
@@ -2104,7 +2104,7 @@ def load_wnba_stats_schedule(
     response = http_get(url)
 
     df = normalize_frame_columns(
-        P.read_parquet(
+        pl_module.read_parquet(
             io.BytesIO(
                 response.content
             )
@@ -2140,7 +2140,7 @@ def build_wnba_legacy_schedule_crosswalk(
     internal_season: int,
     sdv_season: int,
 ):
-    P = pl()
+    pl_module = pl()
 
     (
         stats_schedule,
@@ -2172,22 +2172,22 @@ def build_wnba_legacy_schedule_crosswalk(
         )
 
     expressions = [
-        P.col(
+        pl_module.col(
             "game_id"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .str.strip_chars()
         .alias(
             "game_id"
         ),
-        P.col(
+        pl_module.col(
             "game_date"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .str.slice(
@@ -2197,31 +2197,31 @@ def build_wnba_legacy_schedule_crosswalk(
         .alias(
             "game_date_key"
         ),
-        P.col(
+        pl_module.col(
             "team_name"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .alias(
             "team_name"
         ),
-        P.col(
+        pl_module.col(
             "team_abbreviation"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .alias(
             "team_abbreviation"
         ),
-        P.col(
+        pl_module.col(
             "matchup"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .alias(
@@ -2234,11 +2234,11 @@ def build_wnba_legacy_schedule_crosswalk(
         in stats_schedule.columns
     ):
         expressions.append(
-            P.col(
+            pl_module.col(
                 "pts"
             )
             .cast(
-                P.Float64,
+                pl_module.Float64,
                 strict=False,
             )
             .alias(
@@ -2247,9 +2247,9 @@ def build_wnba_legacy_schedule_crosswalk(
         )
     else:
         expressions.append(
-            P.lit(
+            pl_module.lit(
                 None,
-                dtype=P.Float64,
+                dtype=pl_module.Float64,
             ).alias(
                 "pts"
             )
@@ -2261,19 +2261,19 @@ def build_wnba_legacy_schedule_crosswalk(
             expressions
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "game_id"
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     "game_id"
                 )
                 != ""
             )
         )
         .with_columns(
-            P.when(
-                P.col(
+            pl_module.when(
+                pl_module.col(
                     "matchup"
                 )
                 .str.contains(
@@ -2282,12 +2282,12 @@ def build_wnba_legacy_schedule_crosswalk(
                 )
             )
             .then(
-                P.lit(
+                pl_module.lit(
                     "away"
                 )
             )
             .when(
-                P.col(
+                pl_module.col(
                     "matchup"
                 )
                 .str.to_lowercase()
@@ -2297,14 +2297,14 @@ def build_wnba_legacy_schedule_crosswalk(
                 )
             )
             .then(
-                P.lit(
+                pl_module.lit(
                     "home"
                 )
             )
             .otherwise(
-                P.lit(
+                pl_module.lit(
                     None,
-                    dtype=P.Utf8,
+                    dtype=pl_module.Utf8,
                 )
             )
             .alias(
@@ -2316,7 +2316,7 @@ def build_wnba_legacy_schedule_crosswalk(
     unclassified = (
         stats_schedule
         .filter(
-            P.col(
+            pl_module.col(
                 "home_away"
             ).is_null()
         )
@@ -2348,7 +2348,7 @@ def build_wnba_legacy_schedule_crosswalk(
             maintain_order=False,
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "game_date_key"
             )
             .drop_nulls()
@@ -2356,11 +2356,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "game_date_key"
             ),
-            P.col(
+            pl_module.col(
                 "team_name"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "home"
@@ -2369,11 +2369,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "home_team_name"
             ),
-            P.col(
+            pl_module.col(
                 "team_abbreviation"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "home"
@@ -2382,11 +2382,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "home_team_abbreviation"
             ),
-            P.col(
+            pl_module.col(
                 "pts"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "home"
@@ -2395,11 +2395,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "home_pts"
             ),
-            P.col(
+            pl_module.col(
                 "team_name"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "away"
@@ -2408,11 +2408,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "away_team_name"
             ),
-            P.col(
+            pl_module.col(
                 "team_abbreviation"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "away"
@@ -2421,11 +2421,11 @@ def build_wnba_legacy_schedule_crosswalk(
             .alias(
                 "away_team_abbreviation"
             ),
-            P.col(
+            pl_module.col(
                 "pts"
             )
             .filter(
-                P.col(
+                pl_module.col(
                     "home_away"
                 )
                 == "away"
@@ -2440,13 +2440,13 @@ def build_wnba_legacy_schedule_crosswalk(
     incomplete = (
         grouped
         .filter(
-            P.col(
+            pl_module.col(
                 "game_date_key"
             ).is_null()
-            | P.col(
+            | pl_module.col(
                 "home_team_name"
             ).is_null()
-            | P.col(
+            | pl_module.col(
                 "away_team_name"
             ).is_null()
         )
@@ -2482,7 +2482,7 @@ def build_wnba_legacy_schedule_crosswalk(
             f"missing: {games_file}"
         )
 
-    games = P.read_parquet(
+    games = pl_module.read_parquet(
         games_file
     )
 
@@ -2801,7 +2801,7 @@ def build_wnba_legacy_schedule_crosswalk(
             "mapped games"
         )
 
-    xwalk = P.DataFrame(
+    xwalk = pl_module.DataFrame(
         mappings
     )
 
@@ -2811,7 +2811,7 @@ def build_wnba_legacy_schedule_crosswalk(
             "wnba_game_id"
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             )
             .n_unique()
@@ -2820,7 +2820,7 @@ def build_wnba_legacy_schedule_crosswalk(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -2833,7 +2833,7 @@ def build_wnba_legacy_schedule_crosswalk(
             "espn_game_id"
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "wnba_game_id"
             )
             .n_unique()
@@ -2842,7 +2842,7 @@ def build_wnba_legacy_schedule_crosswalk(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -2955,7 +2955,7 @@ def load_pro_schedule_crosswalk(
             f"sdv_season={sdv_season}"
         )
 
-    P = pl()
+    pl_module = pl()
 
     module_name = clean(
         spec[
@@ -3054,7 +3054,7 @@ def load_pro_schedule_crosswalk(
         ) from exc
 
     xwalk = normalize_frame_columns(
-        P.read_parquet(
+        pl_module.read_parquet(
             io.BytesIO(
                 response.content
             )
@@ -3081,7 +3081,7 @@ def prepare_pro_crosswalk(
     native_game_id: str,
     league: str,
 ):
-    P = pl()
+    pl_module = pl()
 
     required = {
         native_game_id,
@@ -3105,22 +3105,22 @@ def prepare_pro_crosswalk(
     xwalk = (
         xwalk
         .select(
-            P.col(
+            pl_module.col(
                 native_game_id
             )
             .cast(
-                P.Utf8,
+                pl_module.Utf8,
                 strict=False,
             )
             .str.strip_chars()
             .alias(
                 native_game_id
             ),
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             )
             .cast(
-                P.Utf8,
+                pl_module.Utf8,
                 strict=False,
             )
             .str.strip_chars()
@@ -3129,20 +3129,20 @@ def prepare_pro_crosswalk(
             ),
         )
         .filter(
-            P.col(
+            pl_module.col(
                 native_game_id
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     native_game_id
                 )
                 != ""
             )
-            & P.col(
+            & pl_module.col(
                 "espn_game_id"
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     "espn_game_id"
                 )
                 != ""
@@ -3162,7 +3162,7 @@ def prepare_pro_crosswalk(
             native_game_id
         )
         .agg(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             )
             .n_unique()
@@ -3171,7 +3171,7 @@ def prepare_pro_crosswalk(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -3230,7 +3230,7 @@ def canonicalize_pro_game_ids(
             {},
         )
 
-    P = pl()
+    pl_module = pl()
 
     if "game_id" not in df.columns:
         raise RuntimeError(
@@ -3255,7 +3255,7 @@ def canonicalize_pro_game_ids(
             f"missing: {games_file}"
         )
 
-    games = P.read_parquet(
+    games = pl_module.read_parquet(
         games_file
     )
 
@@ -3268,11 +3268,11 @@ def canonicalize_pro_game_ids(
     canonical_ids = (
         games
         .select(
-            P.col(
+            pl_module.col(
                 "game_id"
             )
             .cast(
-                P.Utf8,
+                pl_module.Utf8,
                 strict=False,
             )
             .str.strip_chars()
@@ -3281,11 +3281,11 @@ def canonicalize_pro_game_ids(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "game_id"
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     "game_id"
                 )
                 != ""
@@ -3326,11 +3326,11 @@ def canonicalize_pro_game_ids(
     source_ids = (
         df
         .select(
-            P.col(
+            pl_module.col(
                 "game_id"
             )
             .cast(
-                P.Utf8,
+                pl_module.Utf8,
                 strict=False,
             )
             .str.strip_chars()
@@ -3339,11 +3339,11 @@ def canonicalize_pro_game_ids(
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 native_game_id
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     native_game_id
                 )
                 != ""
@@ -3362,11 +3362,11 @@ def canonicalize_pro_game_ids(
         )
 
     df = df.with_columns(
-        P.col(
+        pl_module.col(
             "game_id"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .str.strip_chars()
@@ -3385,11 +3385,11 @@ def canonicalize_pro_game_ids(
     unmapped_source_ids = (
         df
         .filter(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             ).is_null()
             | (
-                P.col(
+                pl_module.col(
                     "espn_game_id"
                 )
                 == ""
@@ -3409,17 +3409,17 @@ def canonicalize_pro_game_ids(
     outside_schedule_source_ids = (
         df
         .filter(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             ).is_not_null()
             & (
-                P.col(
+                pl_module.col(
                     "espn_game_id"
                 )
                 != ""
             )
             & (
-                ~P.col(
+                ~pl_module.col(
                     "espn_game_id"
                 )
                 .is_in(
@@ -3443,7 +3443,7 @@ def canonicalize_pro_game_ids(
     df = (
         df
         .filter(
-            P.col(
+            pl_module.col(
                 "espn_game_id"
             )
             .is_in(
@@ -3826,7 +3826,7 @@ def normalize(
     source: str,
     ingested_at_utc: str,
 ):
-    P = pl()
+    pl_module = pl()
 
     df = to_pl(frame)
 
@@ -3882,7 +3882,7 @@ def normalize(
 
         if source_column is not None:
             df = df.with_columns(
-                P.col(
+                pl_module.col(
                     source_column
                 ).alias(
                     canonical
@@ -3909,11 +3909,11 @@ def normalize(
     if id_columns:
         df = df.with_columns(
             [
-                P.col(
+                pl_module.col(
                     column
                 )
                 .cast(
-                    P.Utf8,
+                    pl_module.Utf8,
                     strict=False,
                 )
                 .alias(
@@ -3931,39 +3931,39 @@ def normalize(
         )
 
     df = df.with_columns(
-        P.lit(
+        pl_module.lit(
             league.upper()
         ).alias(
             "league"
         ),
-        P.lit(
+        pl_module.lit(
             int(
                 internal_season
             )
         )
         .cast(
-            P.Int32
+            pl_module.Int32
         )
         .alias(
             "internal_season"
         ),
-        P.lit(
+        pl_module.lit(
             int(
                 sdv_season
             )
         )
         .cast(
-            P.Int32
+            pl_module.Int32
         )
         .alias(
             "sdv_season"
         ),
-        P.lit(
+        pl_module.lit(
             source
         ).alias(
             "source_loader"
         ),
-        P.lit(
+        pl_module.lit(
             ingested_at_utc
         ).alias(
             "ingested_at_utc"
@@ -4200,7 +4200,7 @@ def build_release_table(
 def download_parquet(
     url: str,
 ):
-    P = pl()
+    pl_module = pl()
 
     temp_path: Path | None = None
 
@@ -4236,7 +4236,7 @@ def download_parquet(
                     if chunk:
                         handle.write(chunk)
 
-        return P.read_parquet(
+        return pl_module.read_parquet(
             temp_path
         )
 
@@ -4251,7 +4251,7 @@ def download_parquet(
 def load_ncaam_game_crosswalk(
     sdv_season: int,
 ):
-    P = pl()
+    pl_module = pl()
 
     url = (
         NCAAM_GAME_XWALK_URL.format(
@@ -4324,7 +4324,7 @@ def load_ncaam_game_crosswalk(
         )
 
     xwalk = (
-        P.DataFrame(rows)
+        pl_module.DataFrame(rows)
         .unique(
             subset=[
                 "ncaa_game_id"
@@ -4339,12 +4339,12 @@ def load_ncaam_game_crosswalk(
             "game_id"
         )
         .agg(
-            P.len().alias(
+            pl_module.len().alias(
                 "n"
             )
         )
         .filter(
-            P.col(
+            pl_module.col(
                 "n"
             )
             > 1
@@ -4375,7 +4375,7 @@ def load_ncaam_game_crosswalk(
 def prepare_ncaa_pbp_for_transform(
     game_rows,
 ):
-    P = pl()
+    pl_module = pl()
 
     if (
         "contest_id"
@@ -4394,11 +4394,11 @@ def prepare_ncaa_pbp_for_transform(
         )
 
     return df.with_columns(
-        P.col(
+        pl_module.col(
             "contest_id"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .alias(
@@ -4413,7 +4413,7 @@ def stamp_ncaam_derived_ids(
     espn_game_id: str,
     ncaa_game_id: str,
 ):
-    P = pl()
+    pl_module = pl()
 
     df = to_pl(frame)
 
@@ -4431,20 +4431,20 @@ def stamp_ncaam_derived_ids(
         )
 
     return df.with_columns(
-        P.lit(
+        pl_module.lit(
             espn_game_id
         )
         .cast(
-            P.Utf8
+            pl_module.Utf8
         )
         .alias(
             "game_id"
         ),
-        P.lit(
+        pl_module.lit(
             ncaa_game_id
         )
         .cast(
-            P.Utf8
+            pl_module.Utf8
         )
         .alias(
             "ncaa_game_id"
@@ -4459,7 +4459,7 @@ def build_ncaam_derived_tables(
     ingested_at_utc: str,
     force: bool,
 ) -> dict[str, dict[str, Any]]:
-    P = pl()
+    pl_module = pl()
 
     root = storage_root(cfg)
 
@@ -4498,7 +4498,7 @@ def build_ncaam_derived_tables(
     ):
         return {
             "possessions": manifest_entry(
-                P.read_parquet(
+                pl_module.read_parquet(
                     out_possessions
                 ),
                 out_possessions,
@@ -4506,7 +4506,7 @@ def build_ncaam_derived_tables(
                 "existing_not_rebuilt",
             ),
             "lineups": manifest_entry(
-                P.read_parquet(
+                pl_module.read_parquet(
                     out_lineups
                 ),
                 out_lineups,
@@ -4528,7 +4528,7 @@ def build_ncaam_derived_tables(
             f"{games_file}"
         )
 
-    games = P.read_parquet(
+    games = pl_module.read_parquet(
         games_file
     )
 
@@ -4544,7 +4544,7 @@ def build_ncaam_derived_tables(
             "game_id"
         )
         .cast(
-            P.Utf8,
+            pl_module.Utf8,
             strict=False,
         )
         .drop_nulls()
@@ -4569,7 +4569,7 @@ def build_ncaam_derived_tables(
     )
 
     xwalk = xwalk.filter(
-        P.col(
+        pl_module.col(
             "game_id"
         ).is_in(
             sorted(
@@ -4652,11 +4652,11 @@ def build_ncaam_derived_tables(
     ncaa_pbp = (
         ncaa_pbp
         .with_columns(
-            P.col(
+            pl_module.col(
                 "contest_id"
             )
             .cast(
-                P.Utf8,
+                pl_module.Utf8,
                 strict=False,
             )
             .alias(
@@ -4676,7 +4676,7 @@ def build_ncaam_derived_tables(
     ncaa_pbp = (
         ncaa_pbp
         .filter(
-            P.col(
+            pl_module.col(
                 "contest_id"
             )
             .is_in(
@@ -4961,12 +4961,12 @@ def build_ncaam_derived_tables(
             "zero usable season rows"
         )
 
-    possessions = P.concat(
+    possessions = pl_module.concat(
         possession_frames,
         how="diagonal_relaxed",
     )
 
-    lineups = P.concat(
+    lineups = pl_module.concat(
         lineup_frames,
         how="diagonal_relaxed",
     )

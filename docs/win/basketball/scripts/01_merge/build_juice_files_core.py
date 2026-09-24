@@ -346,7 +346,7 @@ def wipe_outputs():
 # ============================================================
 
 def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
-    ML_EDGE = settings["ML_EDGE"]
+    ml_edge = settings["ML_EDGE"]
     cal = settings["CALIBRATION"]["moneyline"]
 
     ml_df = df.copy()
@@ -377,10 +377,10 @@ def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: 
     )
 
     ml_df["away_acceptable_decimal_moneyline"] = ml_df["away_fair"].apply(
-        lambda x: float(x) * (1 + ML_EDGE) if x != "" else ""
+        lambda x: float(x) * (1 + ml_edge) if x != "" else ""
     )
     ml_df["home_acceptable_decimal_moneyline"] = ml_df["home_fair"].apply(
-        lambda x: float(x) * (1 + ML_EDGE) if x != "" else ""
+        lambda x: float(x) * (1 + ml_edge) if x != "" else ""
     )
     ml_df["away_acceptable_american_moneyline"] = ml_df[
         "away_acceptable_decimal_moneyline"
@@ -399,8 +399,8 @@ def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: 
 # ============================================================
 
 def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
-    TOTAL_EDGE = settings["TOTAL_EDGE"]
-    TOTAL_STD = settings["TOTAL_STD"]
+    total_edge = settings["TOTAL_EDGE"]
+    total_std = settings["TOTAL_STD"]
     cal = settings["CALIBRATION"]["total"]
 
     total_df = df.copy()
@@ -414,7 +414,7 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
 
     for _, row in total_df.iterrows():
         try:
-            T = float(row["total"])
+            total_line = float(row["total"])
             mean = float(row["total_projected_points"])
         except (ValueError, TypeError):
             over_model_prob.append("")
@@ -425,7 +425,7 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_under.append("")
             continue
 
-        if not math.isfinite(T) or not math.isfinite(mean):
+        if not math.isfinite(total_line) or not math.isfinite(mean):
             over_model_prob.append("")
             under_model_prob.append("")
             fair_over.append("")
@@ -434,7 +434,7 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             acc_under.append("")
             continue
 
-        z = (T - mean) / TOTAL_STD
+        z = (total_line - mean) / total_std
 
         if not math.isfinite(z):
             over_model_prob.append("")
@@ -487,8 +487,8 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
         fair_under_dec = 1 / p_under
         fair_over.append(fair_over_dec)
         fair_under.append(fair_under_dec)
-        acc_over.append(fair_over_dec * (1 + TOTAL_EDGE))
-        acc_under.append(fair_under_dec * (1 + TOTAL_EDGE))
+        acc_over.append(fair_over_dec * (1 + total_edge))
+        acc_under.append(fair_under_dec * (1 + total_edge))
 
     total_df["over_model_prob"] = over_model_prob
     total_df["under_model_prob"] = under_model_prob
@@ -520,8 +520,8 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
 # ============================================================
 
 def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dict, league: str) -> tuple:
-    SPREAD_EDGE = settings["SPREAD_EDGE"]
-    SPREAD_STD = settings["SPREAD_STD"]
+    spread_edge = settings["SPREAD_EDGE"]
+    spread_std = settings["SPREAD_STD"]
     cal = settings["CALIBRATION"]["spread"]
 
     spread_df = df.copy()
@@ -566,7 +566,7 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
         raw_home = 1 - norm.cdf(
             cover_threshold,
             loc=mean_margin,
-            scale=SPREAD_STD,
+            scale=spread_std,
         )
 
         if not math.isfinite(raw_home):
@@ -620,8 +620,8 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
         fair_away_dec = 1 / p_away
         fair_home.append(fair_home_dec)
         fair_away.append(fair_away_dec)
-        acc_home.append(fair_home_dec * (1 + SPREAD_EDGE))
-        acc_away.append(fair_away_dec * (1 + SPREAD_EDGE))
+        acc_home.append(fair_home_dec * (1 + spread_edge))
+        acc_away.append(fair_away_dec * (1 + spread_edge))
 
     spread_df["home_spread_model_prob"] = home_model_prob
     spread_df["away_spread_model_prob"] = away_model_prob
