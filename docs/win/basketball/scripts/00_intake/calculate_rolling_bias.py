@@ -711,11 +711,12 @@ def read_csv_rows(
             f
         )
 
-        return (
+        result = (
             reader.fieldnames
             or [],
             list(reader),
         )
+    return result
 
 
 def require_columns(

@@ -297,7 +297,8 @@ def in_season(
 
 def load_rows(path: Path) -> list[dict]:
     with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+        result = list(csv.DictReader(f))
+    return result
 
 
 def wipe_outputs() -> None:

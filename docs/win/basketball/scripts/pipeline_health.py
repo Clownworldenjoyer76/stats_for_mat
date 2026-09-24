@@ -182,7 +182,8 @@ def read_rows(path: Path) -> list[dict]:
         return []
 
     with path.open(newline="", encoding="utf-8-sig") as handle:
-        return list(csv.DictReader(handle))
+        result = list(csv.DictReader(handle))
+    return result
 
 
 def read_yaml_mapping(path: Path) -> dict:

@@ -60,10 +60,11 @@ def load_yaml(
         'r',
         encoding='utf-8',
     ) as f:
-        return (
+        result = (
             yaml.safe_load(f)
             or {}
         )
+    return result
 
 
 def resolve_model_source(

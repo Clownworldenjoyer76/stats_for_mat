@@ -46,7 +46,8 @@ def read_rows(path: Path) -> list[dict]:
     if not path.exists():
         return []
     with open(path, newline="", encoding="utf-8-sig") as f:
-        return list(csv.DictReader(f))
+        result = list(csv.DictReader(f))
+    return result
 
 
 def unique_map(rows: list[dict]) -> tuple[dict[tuple[str, str, str], dict], list[dict]]:

@@ -429,13 +429,14 @@ def read_csv_rows(
         newline="",
         encoding="utf-8-sig",
     ) as handle:
-        return [
+        result = [
             dict(row)
             for row
             in csv.DictReader(
                 handle
             )
         ]
+    return result
 
 
 def write_csv_atomic(

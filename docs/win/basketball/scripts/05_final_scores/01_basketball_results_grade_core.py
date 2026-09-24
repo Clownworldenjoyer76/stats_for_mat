@@ -94,6 +94,10 @@ def _log(msg: str, level: str = "INFO"):
         f.write(line + "\n")
 
 
+
+def log(msg: str, level: str = "INFO"):
+    _log(msg, level)
+
 # =========================
 # LOCK CURRENT PICKS
 # =========================

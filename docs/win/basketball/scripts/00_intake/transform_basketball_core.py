@@ -90,7 +90,8 @@ def load_json(path: Path) -> list:
     if not path or not path.exists():
         return []
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        result = json.load(f)
+    return result
 
 
 def games_to_df(games: list) -> pd.DataFrame:

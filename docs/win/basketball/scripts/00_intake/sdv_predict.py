@@ -192,10 +192,11 @@ def read_csv_rows(path: Path) -> list[dict[str, Any]]:
         newline="",
         encoding="utf-8-sig",
     ) as handle:
-        return [
+        result = [
             dict(row)
             for row in csv.DictReader(handle)
         ]
+    return result
 
 
 def required_mapping(

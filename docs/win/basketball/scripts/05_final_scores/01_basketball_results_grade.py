@@ -214,7 +214,7 @@ def install_composite_score_fallback(core) -> None:
             alias_df = pd.DataFrame(aliases)
             scores = pd.concat([scores, alias_df], ignore_index=True)
             scores = scores.drop_duplicates(subset=["game_id"], keep="last")
-            core._log(
+            core.log(
                 f"[{league}] composite final-score fallback added "
                 f"{len(alias_df)} game_id alias(es)"
             )

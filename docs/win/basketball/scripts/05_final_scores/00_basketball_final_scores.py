@@ -220,7 +220,8 @@ def read_existing(path: Path) -> list[dict]:
     if not path.exists():
         return []
     with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+        result = list(csv.DictReader(f))
+    return result
 
 
 def merge_rows(existing: list[dict], fetched: list[dict], label: str) -> list[dict]:
