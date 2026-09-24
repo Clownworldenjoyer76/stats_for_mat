@@ -97,9 +97,9 @@ INPUT_ROW_COUNT = 0
 OUTPUT_FILE_COUNT = 0
 OUTPUT_ROW_COUNT = 0
 
-with open(LOG_FILE, "w", encoding="utf-8") as log_handle:
-    log_handle.write("=== 03_basketball_results_reports ===\n")
-    log_handle.write(
+with open(LOG_FILE, "w", encoding="utf-8") as startup_log_handle:
+    startup_log_handle.write("=== 03_basketball_results_reports ===\n")
+    startup_log_handle.write(
         f"START_TIMESTAMP_UTC: {RUN_STARTED.isoformat()}\n"
     )
 

@@ -230,23 +230,23 @@ def merge_rows(existing: list[dict], fetched: list[dict], label: str) -> list[di
     by_comp: dict[tuple[str, str, str], tuple[str, str]] = {}
 
     def register(row: dict) -> None:
-        gid = str(row.get("game_id") or "").strip()
-        key = composite(row)
-        scores = score_signature(row)
+        registered_gid = str(row.get("game_id") or "").strip()
+        registered_key = composite(row)
+        registered_scores = score_signature(row)
 
-        if not gid or not all(key) or not all(scores):
+        if not registered_gid or not all(registered_key) or not all(registered_scores):
             return
 
-        prior_id = by_id.get(gid)
-        if prior_id and (prior_id[0] != key or prior_id[1] != scores):
-            raise RuntimeError(f"{label}: conflicting final score for game_id {gid}")
+        registered_prior_id = by_id.get(registered_gid)
+        if registered_prior_id and (registered_prior_id[0] != registered_key or registered_prior_id[1] != registered_scores):
+            raise RuntimeError(f"{label}: conflicting final score for game_id {registered_gid}")
 
-        prior_comp = by_comp.get(key)
-        if prior_comp and prior_comp != scores:
-            raise RuntimeError(f"{label}: conflicting final score for {key}")
+        registered_prior_comp = by_comp.get(registered_key)
+        if registered_prior_comp and registered_prior_comp != registered_scores:
+            raise RuntimeError(f"{label}: conflicting final score for {registered_key}")
 
-        by_id[gid] = (key, scores)
-        by_comp[key] = scores
+        by_id[registered_gid] = (registered_key, registered_scores)
+        by_comp[registered_key] = registered_scores
 
     for row in merged:
         register(row)
@@ -406,6 +406,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as exc:
-        print(f"STATUS: FAILED | {exc}", file=sys.stderr)
+    except Exception as main_exc:
+        print(f"STATUS: FAILED | {main_exc}", file=sys.stderr)
         sys.exit(1)
