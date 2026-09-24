@@ -51,8 +51,8 @@ LEAGUES = {
     },
 }
 
-for cfg in LEAGUES.values():
-    cfg["output_dir"].mkdir(parents=True, exist_ok=True)
+for league_cfg in LEAGUES.values():
+    league_cfg["output_dir"].mkdir(parents=True, exist_ok=True)
 
 ERROR_DIR = BASE / "errors/00_intake"
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
