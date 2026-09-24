@@ -341,6 +341,8 @@ def fetch_schedule(
     sdv_season: int,
     limit: int,
 ) -> pd.DataFrame:
+    df: Any
+
     if league == "nba":
         from sportsdataverse.nba import espn_nba_schedule
 

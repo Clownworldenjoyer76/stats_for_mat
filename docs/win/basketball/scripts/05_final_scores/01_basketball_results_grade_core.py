@@ -202,7 +202,7 @@ def american_to_decimal(odds):
         a = float(odds)
     except (TypeError, ValueError):
         return None
-    if a == 0:
+    if not bool(a):
         return None
     return 1 + (a / 100.0) if a > 0 else 1 + (100.0 / abs(a))
 

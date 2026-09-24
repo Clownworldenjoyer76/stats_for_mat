@@ -772,8 +772,6 @@ def load_nba_stats_schedule(
         None,
     )
 
-    loader_error = None
-
     if callable(loader):
         try:
             frame = loader(
@@ -3632,8 +3630,6 @@ def call_loader(
         function_name,
         None,
     )
-
-    primary_error: Exception | None = None
 
     if callable(loader):
         try:

@@ -1271,7 +1271,6 @@ def current_season_for_league(
 
 
 def season_status_for_league(
-    league: str,
     current_season: int | None,
 ) -> str:
     return (
@@ -2933,7 +2932,6 @@ def load_current_completed_games(
     ] = {
         "current_season": current_season,
         "season_status": season_status_for_league(
-            league,
             current_season,
         ),
         **prediction_load_stats,

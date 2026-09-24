@@ -20,7 +20,6 @@ import hashlib
 import importlib.util
 import json
 import math
-import sys
 import tempfile
 import time
 import warnings
@@ -1611,10 +1610,6 @@ def apply_production_complementary_calibration(
 def reverse_bias_row_to_raw(
     row: pd.Series,
     league: str,
-    settings: dict[
-        str,
-        Any,
-    ],
     internal_season: int,
 ) -> tuple[
     float,
@@ -2082,7 +2077,6 @@ def load_data(
         reverse_bias_row_to_raw(
             row,
             league,
-            settings,
             internal_season,
         )
         for (
@@ -3955,13 +3949,6 @@ def evaluate_std_modes(
         'mode',
         sort=False,
     ):
-        fold_nll = (
-            g.groupby(
-                'fold_id'
-            )[
-                'residual_nll'
-            ].mean()
-        )
 
         summary_rows.append({
             'market': market,
@@ -12420,10 +12407,6 @@ def write_report(
         str,
         pd.DataFrame,
     ],
-    chosen_by_market: dict[
-        str,
-        pd.Series,
-    ],
     frozen_candidates: dict[
         str,
         dict[
@@ -14916,7 +14899,6 @@ def main() -> None:
         std_summaries,
         std_stress,
         cal_summaries,
-        chosen_by_market,
         frozen_candidates,
         stress_by_market,
         lockbox_summary,

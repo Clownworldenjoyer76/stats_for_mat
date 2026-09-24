@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # docs/win/basketball/scripts/01_merge/build_juice_files_core.py
 
-import csv
 import math
 import traceback
 import sys
@@ -321,12 +320,6 @@ def devig_pair(p_a, p_b):
 
     if not math.isfinite(s) or s <= 0:
         return "", ""
-
-    return a / s, b / s
-
-    s = a + b
-    if not math.isfinite(s) or s <= 0:
-        return ""
 
     return a / s, b / s
 

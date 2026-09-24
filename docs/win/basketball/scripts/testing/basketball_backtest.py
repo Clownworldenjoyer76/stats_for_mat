@@ -25,7 +25,6 @@ import yaml
 from scipy.stats import norm
 
 from staking_runtime import (
-    KELLY_FRACTION, STAKING_CONFIG_PATH,
     add_uncertainty_adjusted_ev, attach_candidate_uncertainty,
     requested_stake,
 )
@@ -1680,7 +1679,7 @@ def american_to_decimal(
     ):
         return ""
 
-    if a == 0:
+    if not bool(a):
         return ""
 
     return (

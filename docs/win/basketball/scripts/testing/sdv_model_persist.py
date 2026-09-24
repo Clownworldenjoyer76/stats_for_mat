@@ -277,8 +277,6 @@ def sportsdataverse_version(
             "is blank"
         )
 
-    installed: str | None = None
-
     try:
         installed = (
             importlib.metadata.version(

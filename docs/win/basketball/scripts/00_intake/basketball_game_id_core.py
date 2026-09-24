@@ -135,7 +135,7 @@ def load_daily_games_for_league(daily_games_dir: Path, league_label: str):
     return daily_map, daily_keys_by_date, duplicate_rows, files_found, rows_loaded
 
 
-def update_predictions(predictions_dir: Path, daily_map: dict, daily_keys_by_date: dict, league_label: str):
+def update_predictions(predictions_dir: Path, daily_map: dict, league_label: str):
     files_processed = 0
     rows_processed = 0
     rows_updated = 0
@@ -328,7 +328,6 @@ def main():
             ) = update_predictions(
                 cfg["predictions_dir"],
                 daily_map,
-                daily_keys_by_date,
                 league_label,
             )
 
