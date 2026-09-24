@@ -160,7 +160,7 @@ def to_float(value):
         if value == "":
             return None
         return float(value)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -1260,7 +1260,7 @@ if __name__ == "__main__":
             for error_league in ("NBA", "NCAAM", "WNBA"):
                 log_league(error_league, "STATUS: FAILED")
                 log_league(error_league, traceback.format_exc())
-        except Exception:
+        except OSError:
             pass
 
         print("STATUS: FAILED")

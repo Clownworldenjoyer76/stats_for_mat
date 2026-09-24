@@ -141,7 +141,7 @@ def fnum(value):
             return None
         number = float(value)
         return number if math.isfinite(number) else None
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -2147,7 +2147,7 @@ def load_all_csv(
     for path in sorted(folder.glob(pattern)):
         try:
             rows.extend(read_rows(path))
-        except Exception:
+        except (OSError, UnicodeError, csv.Error):
             continue
 
     return rows

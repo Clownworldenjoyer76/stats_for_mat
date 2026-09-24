@@ -1089,7 +1089,7 @@ def read_possession_counts(
                 ],
             )
 
-        except Exception:
+        except pl.exceptions.ColumnNotFoundError:
             has_count_flag = False
             frame = game_frame
 

@@ -183,7 +183,7 @@ def fv(value: Any) -> float | None:
 
         return number
 
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -2764,7 +2764,7 @@ def in_any_band(
             <= float(hi)
             for lo, hi in bands
         )
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return False
 
 

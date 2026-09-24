@@ -52,7 +52,7 @@ def fv(value: Any) -> float | None:
             return None
         number = float(value)
         return number if math.isfinite(number) else None
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 

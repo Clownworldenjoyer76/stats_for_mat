@@ -648,7 +648,7 @@ def format_float(
             f'{float(v):.{digits}f}'
         )
 
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return str(v)
 
 
@@ -1666,7 +1666,7 @@ def reverse_bias_row_to_raw(
             flag
         )
 
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         flag = 0.0
 
     if flag == 0.0:
@@ -4355,7 +4355,7 @@ def fit_calibrator(
                 ],
             }
 
-        except Exception:
+        except (TypeError, ValueError):
             return {
                 'method': 'raw'
             }
@@ -11209,7 +11209,7 @@ def segment_betting_summary(
                     duplicates='drop',
                 )
 
-            except Exception:
+            except ValueError:
                 t[
                     'total_range'
                 ] = 'all'
@@ -12895,7 +12895,7 @@ def _step18_norm_date(value: Any) -> str:
     text = text[:10].replace('_', '-').replace('/', '-')
     try:
         return pd.Timestamp(text).strftime('%Y-%m-%d')
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return ''
 
 
@@ -13155,7 +13155,7 @@ def _step18_probabilities(
 def _step18_decimal_to_american(value: Any) -> float:
     try:
         decimal = float(value)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return np.nan
     if not np.isfinite(decimal) or decimal <= 1.0:
         return np.nan
