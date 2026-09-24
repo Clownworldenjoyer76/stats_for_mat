@@ -36,8 +36,8 @@ ERROR_DIR = Path("docs/win/basketball/errors/00_intake")
 ERROR_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = ERROR_DIR / "basketball_game_id.txt"
 
-with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== basketball_game_id RUN {datetime.now().isoformat()} ===\n")
+with open(LOG_FILE, "w", encoding="utf-8") as startup_log_handle:
+    startup_log_handle.write(f"=== basketball_game_id RUN {datetime.now().isoformat()} ===\n")
 
 
 def log(msg: str) -> None:
