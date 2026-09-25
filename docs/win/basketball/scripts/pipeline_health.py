@@ -315,49 +315,97 @@ def validate_month_day(league: str, label: str, month: int, day: int) -> None:
         ) from exc
 
 
+def parse_season_config_row(
+    league: str,
+    row,
+    required_fields: tuple[str, ...],
+) -> dict[str, int]:
+    if not isinstance(
+        row,
+        dict,
+    ):
+        raise ValueError(
+            "Missing season configuration "
+            f"for league={league}"
+        )
+
+    values: dict[
+        str,
+        int,
+    ] = {}
+
+    for field in required_fields:
+        if field not in row:
+            raise ValueError(
+                f"Missing {league}.{field} "
+                f"in {SEASON_CONFIG}"
+            )
+
+        raw_value = row[
+            field
+        ]
+
+        try:
+            values[
+                field
+            ] = int(
+                raw_value
+            )
+        except (
+            TypeError,
+            ValueError,
+        ) as exc:
+            raise ValueError(
+                f"Invalid {league}.{field}: "
+                f"{raw_value!r}"
+            ) from exc
+
+    for label in (
+        "start",
+        "end",
+    ):
+        validate_month_day(
+            league,
+            label,
+            values[
+                f"{label}_month"
+            ],
+            values[
+                f"{label}_day"
+            ],
+        )
+
+    return values
+
+
 def load_season_config() -> dict[str, dict[str, int]]:
     if not SEASON_CONFIG.exists():
-        raise FileNotFoundError(f"Season config not found: {SEASON_CONFIG}")
-
-    raw = read_yaml_mapping(SEASON_CONFIG)
-    required_fields = ("start_month", "start_day", "end_month", "end_day")
-    config: dict[str, dict[str, int]] = {}
-
-    for league in LEAGUES:
-        row = raw.get(league)
-
-        if not isinstance(row, dict):
-            raise ValueError(f"Missing season configuration for league={league}")
-
-        values: dict[str, int] = {}
-
-        for field in required_fields:
-            if field not in row:
-                raise ValueError(f"Missing {league}.{field} in {SEASON_CONFIG}")
-
-            try:
-                values[field] = int(row[field])
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    f"Invalid {league}.{field}: {row[field]!r}"
-                ) from exc
-
-        validate_month_day(
-            league,
-            "start",
-            values["start_month"],
-            values["start_day"],
-        )
-        validate_month_day(
-            league,
-            "end",
-            values["end_month"],
-            values["end_day"],
+        raise FileNotFoundError(
+            f"Season config not found: "
+            f"{SEASON_CONFIG}"
         )
 
-        config[league] = values
+    raw = read_yaml_mapping(
+        SEASON_CONFIG
+    )
 
-    return config
+    required_fields = (
+        "start_month",
+        "start_day",
+        "end_month",
+        "end_day",
+    )
+
+    return {
+        league: parse_season_config_row(
+            league,
+            raw.get(
+                league
+            ),
+            required_fields,
+        )
+        for league in LEAGUES
+    }
 
 
 def in_season(
