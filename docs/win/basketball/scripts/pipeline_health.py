@@ -2244,9 +2244,9 @@ def wnba_bias_drift() -> dict:
         })
 
     residuals.sort(
-        key=lambda row: (
-            row["game_date"],
-            row["game_id"],
+        key=lambda sort_row: (
+            sort_row["game_date"],
+            sort_row["game_id"],
         )
     )
 

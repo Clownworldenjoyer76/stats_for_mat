@@ -1814,10 +1814,6 @@ def load_module_from_path(
 def load_data(
     input_file: Path,
     league: str,
-    settings: dict[
-        str,
-        Any,
-    ],
     model_source: str,
     internal_season: int,
 ) -> pd.DataFrame:
@@ -11719,10 +11715,10 @@ def build_final_recommendations(
     )
 
     def evidence_for(
-        market: str,
+        market_name: str,
     ) -> str:
         d = decisions.loc[
-            market
+            market_name
         ]
 
         return (
@@ -11750,11 +11746,11 @@ def build_final_recommendations(
         )
 
     def market_pass(
-        market: str,
+        market_name: str,
     ) -> bool:
         return bool(
             decisions.loc[
-                market,
+                market_name,
                 'market_validated',
             ]
         )
@@ -13071,7 +13067,6 @@ def _step18_build_source_frame(
     return load_data(
         temp_file,
         'WNBA',
-        settings,
         source,
         internal_season,
     )
@@ -13944,7 +13939,6 @@ def main() -> None:
     full_df = load_data(
         input_file,
         league,
-        settings,
         model_source,
         internal_season,
     )

@@ -1038,16 +1038,16 @@ def load_season_rows(
         )
 
     rows.sort(
-        key=lambda row: (
-            row[
+        key=lambda sort_row: (
+            sort_row[
                 "_target_date"
             ],
             clean(
-                row.get(
+                sort_row.get(
                     "game_date_time_utc"
                 )
             ),
-            row[
+            sort_row[
                 "game_id"
             ],
         )

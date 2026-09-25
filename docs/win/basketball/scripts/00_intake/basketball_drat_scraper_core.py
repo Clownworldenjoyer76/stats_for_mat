@@ -62,7 +62,7 @@ def split_pair(value):
         return "", ""
 
     if "\n" in value:
-        parts = [p.strip() for p in re.split(r"[\n]+", value) if p.strip()]
+        parts = [p.strip() for p in re.split(r"\n+", value) if p.strip()]
     elif "|" in value:
         parts = [p.strip() for p in value.split("|") if p.strip()]
     else:
@@ -113,7 +113,7 @@ def is_game_row(row):
 def is_score(s):
     try:
         v = float(str(s).strip())
-        return v >= 0 and v == int(v) and v < 250
+        return 0 <= v == int(v) < 250
     except (ValueError, TypeError):
         return False
 
@@ -166,7 +166,7 @@ def parse_nba_ncaa(row, sport):
             total = normalize_cell(row[5]) if len(row) > 5 else ""
             over_line, under_line = split_pair_expected(row[6], "over_under", sport, row)
             game_status = " ".join(
-                [p for p in re.split(r"[\n]+", normalize_cell(row[7])) if p.strip()]
+                [p for p in re.split(r"\n+", normalize_cell(row[7])) if p.strip()]
             ) if len(row) > 7 else ""
             score1, score2 = split_pair_expected(row[8], "score", sport, row)
 

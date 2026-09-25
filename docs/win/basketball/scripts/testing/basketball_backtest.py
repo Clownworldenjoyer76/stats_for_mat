@@ -5696,9 +5696,9 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as exc:
+    except Exception as main_exc:
         print(
-            f"STATUS: FAILED | {exc}",
+            f"STATUS: FAILED | {main_exc}",
             file=sys.stderr,
         )
 
