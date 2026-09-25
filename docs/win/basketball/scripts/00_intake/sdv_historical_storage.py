@@ -3664,46 +3664,37 @@ def call_loader(
         except Exception as exc:
             primary_error = exc
 
-            if (
-                fallback_key
-                in LOADER_FALLBACKS
-            ):
-                action = (
-                    "loader_fallback"
-                )
-            elif (
-                fallback_key
-                in RELEASE_FALLBACKS
-            ):
-                action = (
-                    "release_fallback"
-                )
-            else:
-                raise
-
-            log(
-                "RELEASE LOADER FAILED | "
-                f"league={league} "
-                f"table={table} "
-                f"loader={module_name}.{function_name} "
-                f"loader_season={loader_season} "
-                f"error={exc} "
-                f"action={action}"
-            )
-
     else:
         primary_error = RuntimeError(
             "SportsDataVerse loader missing: "
             f"{module_name}.{function_name}"
         )
 
-        if (
-            fallback_key
-            not in LOADER_FALLBACKS
-            and fallback_key
-            not in RELEASE_FALLBACKS
-        ):
-            raise primary_error
+    if (
+        fallback_key
+        in LOADER_FALLBACKS
+    ):
+        action = "loader_fallback"
+
+    elif (
+        fallback_key
+        in RELEASE_FALLBACKS
+    ):
+        action = "release_fallback"
+
+    else:
+        raise primary_error
+
+    if loader is not None:
+        log(
+            "RELEASE LOADER FAILED | "
+            f"league={league} "
+            f"table={table} "
+            f"loader={module_name}.{function_name} "
+            f"loader_season={loader_season} "
+            f"error={primary_error} "
+            f"action={action}"
+        )
 
     if (
         fallback_key
@@ -3801,26 +3792,21 @@ def call_loader(
                 f"fallback_error={fallback_error}"
             ) from fallback_error
 
-    if (
-        fallback_key
-        in RELEASE_FALLBACKS
-    ):
-        (
-            frame,
-            source,
-        ) = release_fallback(
-            league,
-            table,
-            internal_season,
-            sdv_season,
-        )
+    (
+        frame,
+        source,
+    ) = release_fallback(
+        league,
+        table,
+        internal_season,
+        sdv_season,
+    )
 
-        return (
-            frame,
-            source,
-            loader_season,
-        )
-
+    return (
+        frame,
+        source,
+        loader_season,
+    )
 
 
 

@@ -12893,7 +12893,6 @@ def _step18_sha256(path: Path) -> str:
 def _step18_build_source_frame(
     input_file: Path,
     source: str,
-    settings: dict[str, Any],
     internal_season: int,
     temp_dir: Path,
 ) -> pd.DataFrame:
@@ -13589,7 +13588,6 @@ def run_wnba_market_band_validation(
             frame = _step18_build_source_frame(
                 input_file,
                 source,
-                settings,
                 internal_season,
                 temp_dir,
             )
