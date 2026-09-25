@@ -329,26 +329,30 @@ def parse_season_config_row(
             f"for league={league}"
         )
 
-    values: dict[
-        str,
-        int,
-    ] = {}
+    missing_field = next(
+        (
+            field
+            for field in required_fields
+            if field not in row
+        ),
+        None,
+    )
 
-    for field in required_fields:
-        if field not in row:
-            raise ValueError(
-                f"Missing {league}.{field} "
-                f"in {SEASON_CONFIG}"
-            )
+    if missing_field is not None:
+        raise ValueError(
+            f"Missing {league}.{missing_field} "
+            f"in {SEASON_CONFIG}"
+        )
 
+    def parsed_value(
+        field: str,
+    ) -> int:
         raw_value = row[
             field
         ]
 
         try:
-            values[
-                field
-            ] = int(
+            return int(
                 raw_value
             )
         except (
@@ -359,6 +363,13 @@ def parse_season_config_row(
                 f"Invalid {league}.{field}: "
                 f"{raw_value!r}"
             ) from exc
+
+    values = {
+        field: parsed_value(
+            field
+        )
+        for field in required_fields
+    }
 
     for label in (
         "start",
