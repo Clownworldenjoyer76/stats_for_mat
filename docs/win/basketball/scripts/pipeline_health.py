@@ -122,18 +122,19 @@ def clean(value) -> str:
 
 def clean_id(value) -> str:
     text = clean(value)
-    if not text:
-        return ""
+    number = fnum(
+        text
+    )
 
-    try:
-        number = float(text)
-        if math.isfinite(number) and number.is_integer():
-            return str(int(number))
-    except (TypeError, ValueError):
-        pass
+    if (
+        number is not None
+        and number.is_integer()
+    ):
+        return str(
+            int(number)
+        )
 
     return text
-
 
 def fnum(value):
     try:
@@ -877,6 +878,35 @@ def validate_model_config() -> tuple[dict, str | None, dict, list[str]]:
     return cfg, source, report, fatals
 
 
+def explicit_ensemble_flag(
+    config: dict,
+) -> bool | None:
+    direct = bool_value(
+        config.get(
+            "ensemble_enabled"
+        )
+    )
+
+    if direct is not None:
+        return direct
+
+    nested = config.get(
+        "ensemble"
+    )
+
+    if isinstance(
+        nested,
+        dict,
+    ):
+        return bool_value(
+            nested.get(
+                "enabled"
+            )
+        )
+
+    return None
+
+
 def ensemble_enabled_for_league(
     model_cfg: dict,
     league: str,
@@ -885,36 +915,42 @@ def ensemble_enabled_for_league(
     if production_source == "ensemble":
         return True
 
-    direct = bool_value(model_cfg.get("ensemble_enabled"))
-    if direct is not None:
-        return direct
+    enabled = explicit_ensemble_flag(
+        model_cfg
+    )
 
-    ensemble_cfg = model_cfg.get("ensemble")
-    if isinstance(ensemble_cfg, dict):
-        enabled = bool_value(ensemble_cfg.get("enabled"))
-        if enabled is not None:
-            return enabled
-
-    leagues_cfg = model_cfg.get("leagues")
-    if not isinstance(leagues_cfg, dict):
-        return False
-
-    league_cfg = leagues_cfg.get(league)
-    if not isinstance(league_cfg, dict):
-        return False
-
-    enabled = bool_value(league_cfg.get("ensemble_enabled"))
     if enabled is not None:
         return enabled
 
-    league_ensemble = league_cfg.get("ensemble")
-    if isinstance(league_ensemble, dict):
-        enabled = bool_value(league_ensemble.get("enabled"))
-        if enabled is not None:
-            return enabled
+    leagues_cfg = model_cfg.get(
+        "leagues"
+    )
 
-    return False
+    if not isinstance(
+        leagues_cfg,
+        dict,
+    ):
+        return False
 
+    league_cfg = leagues_cfg.get(
+        league
+    )
+
+    if not isinstance(
+        league_cfg,
+        dict,
+    ):
+        return False
+
+    enabled = explicit_ensemble_flag(
+        league_cfg
+    )
+
+    return (
+        enabled
+        if enabled is not None
+        else False
+    )
 
 # =============================================================================
 # SDV HISTORICAL MANIFEST HEALTH

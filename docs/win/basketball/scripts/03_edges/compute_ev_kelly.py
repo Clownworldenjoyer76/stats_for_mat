@@ -3,6 +3,7 @@
 from __future__ import annotations
 import importlib.util, os, shutil, sys, tempfile
 from datetime import datetime
+from itertools import product
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -25,13 +26,23 @@ def main():
         date=datetime.now(NY).strftime("%Y_%m_%d")
         with tempfile.TemporaryDirectory(prefix="basketball_ev_") as td:
             root=Path(td); inp=root/"input"; out=root/"output"
-            for lg in LEAGUES:
-                up=lg.upper()
-                for market in MARKETS:
-                    src=REAL_INPUT/lg/market/f"{date}_{up}_{market}.csv"
-                    if src.exists():
-                        dst=inp/lg/market/src.name; dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(src,dst)
-            core.INPUT_DIR=inp; core.OUTPUT_DIR=out; core.main()
+            sources = (
+                (
+                    lg,
+                    market,
+                    REAL_INPUT/lg/market/f"{date}_{lg.upper()}_{market}.csv",
+                )
+                for lg, market in product(LEAGUES, MARKETS)
+            )
+            for lg, market, src in sources:
+                if not src.exists():
+                    continue
+                dst=inp/lg/market/src.name
+                dst.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(src,dst)
+            core.INPUT_DIR=inp
+            core.OUTPUT_DIR=out
+            core.main()
             for lg in LEAGUES:
                 up=lg.upper()
                 for market in MARKETS:

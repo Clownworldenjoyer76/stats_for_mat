@@ -387,6 +387,78 @@ def process_moneyline(df: pd.DataFrame, date: str, league_upper: str, settings: 
     return out_path, len(ml_df)
 
 
+def append_complementary_prices(
+    first_probability,
+    second_probability,
+    first_model: list,
+    second_model: list,
+    first_fair: list,
+    second_fair: list,
+    first_acceptable: list,
+    second_acceptable: list,
+    edge: float,
+    league_upper: str,
+    market_name: str,
+    first_name: str,
+    second_name: str,
+) -> None:
+    if (
+        first_probability == ""
+        or second_probability == ""
+    ):
+        for target in (
+            first_model,
+            second_model,
+            first_fair,
+            second_fair,
+            first_acceptable,
+            second_acceptable,
+        ):
+            target.append("")
+        return
+
+    first = float(
+        first_probability
+    )
+    second = float(
+        second_probability
+    )
+
+    if (
+        not math.isfinite(first)
+        or not math.isfinite(second)
+        or first <= 0
+        or second <= 0
+        or not math.isclose(
+            first + second,
+            1.0,
+            abs_tol=1e-12,
+        )
+    ):
+        raise ValueError(
+            f"{league_upper} "
+            f"{market_name} probabilities "
+            "are not complementary: "
+            f"{first_name}={first}, "
+            f"{second_name}={second}"
+        )
+
+    first_decimal = 1 / first
+    second_decimal = 1 / second
+
+    first_model.append(first)
+    second_model.append(second)
+    first_fair.append(first_decimal)
+    second_fair.append(second_decimal)
+    first_acceptable.append(
+        first_decimal
+        * (1 + edge)
+    )
+    second_acceptable.append(
+        second_decimal
+        * (1 + edge)
+    )
+
 # ============================================================
 # PROCESS TOTALS
 # ============================================================
@@ -449,39 +521,21 @@ def process_totals(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             "under",
         )
 
-        if p_over == "" or p_under == "":
-            over_model_prob.append("")
-            under_model_prob.append("")
-            fair_over.append("")
-            fair_under.append("")
-            acc_over.append("")
-            acc_under.append("")
-            continue
-
-        p_over = float(p_over)
-        p_under = float(p_under)
-
-        if (
-            not math.isfinite(p_over)
-            or not math.isfinite(p_under)
-            or p_over <= 0
-            or p_under <= 0
-            or not math.isclose(p_over + p_under, 1.0, abs_tol=1e-12)
-        ):
-            raise ValueError(
-                f"{league_upper} total probabilities are not complementary: "
-                f"over={p_over}, under={p_under}"
-            )
-
-        over_model_prob.append(p_over)
-        under_model_prob.append(p_under)
-
-        fair_over_dec = 1 / p_over
-        fair_under_dec = 1 / p_under
-        fair_over.append(fair_over_dec)
-        fair_under.append(fair_under_dec)
-        acc_over.append(fair_over_dec * (1 + total_edge))
-        acc_under.append(fair_under_dec * (1 + total_edge))
+        append_complementary_prices(
+            p_over,
+            p_under,
+            over_model_prob,
+            under_model_prob,
+            fair_over,
+            fair_under,
+            acc_over,
+            acc_under,
+            total_edge,
+            league_upper,
+            "total",
+            "over",
+            "under",
+        )
 
     total_df["over_model_prob"] = over_model_prob
     total_df["under_model_prob"] = under_model_prob
@@ -582,39 +636,21 @@ def process_spread(df: pd.DataFrame, date: str, league_upper: str, settings: dic
             "away",
         )
 
-        if p_home == "" or p_away == "":
-            home_model_prob.append("")
-            away_model_prob.append("")
-            fair_home.append("")
-            fair_away.append("")
-            acc_home.append("")
-            acc_away.append("")
-            continue
-
-        p_home = float(p_home)
-        p_away = float(p_away)
-
-        if (
-            not math.isfinite(p_home)
-            or not math.isfinite(p_away)
-            or p_home <= 0
-            or p_away <= 0
-            or not math.isclose(p_home + p_away, 1.0, abs_tol=1e-12)
-        ):
-            raise ValueError(
-                f"{league_upper} spread probabilities are not complementary: "
-                f"home={p_home}, away={p_away}"
-            )
-
-        home_model_prob.append(p_home)
-        away_model_prob.append(p_away)
-
-        fair_home_dec = 1 / p_home
-        fair_away_dec = 1 / p_away
-        fair_home.append(fair_home_dec)
-        fair_away.append(fair_away_dec)
-        acc_home.append(fair_home_dec * (1 + spread_edge))
-        acc_away.append(fair_away_dec * (1 + spread_edge))
+        append_complementary_prices(
+            p_home,
+            p_away,
+            home_model_prob,
+            away_model_prob,
+            fair_home,
+            fair_away,
+            acc_home,
+            acc_away,
+            spread_edge,
+            league_upper,
+            "spread",
+            "home",
+            "away",
+        )
 
     spread_df["home_spread_model_prob"] = home_model_prob
     spread_df["away_spread_model_prob"] = away_model_prob

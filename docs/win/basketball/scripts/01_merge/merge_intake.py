@@ -150,10 +150,27 @@ def clean(v) -> str:
 
 
 def comp_key(r: dict) -> tuple[str, str, str]:
+    fields = (
+        "game_date",
+        "home_team",
+        "away_team",
+    )
+
+    (
+        game_date,
+        home_team,
+        away_team,
+    ) = (
+        clean(
+            r.get(field)
+        )
+        for field in fields
+    )
+
     return (
-        clean(r.get("game_date")),
-        clean(r.get("home_team")).casefold(),
-        clean(r.get("away_team")).casefold(),
+        game_date,
+        home_team.casefold(),
+        away_team.casefold(),
     )
 
 

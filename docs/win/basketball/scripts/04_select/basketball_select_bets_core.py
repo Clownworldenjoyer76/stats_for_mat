@@ -401,12 +401,29 @@ def build_spread_sides(row, league, game_date, cfg):
         scfg = cfg[side]
         if not scfg.get("enabled", True):
             continue
-        line  = fv(row.get(f"{side}_spread"))
-        odds  = fv(row.get(f"{side}_dk_spread_american"))
-        ev    = fv(row.get(f"{side}_spread_ev"))
-        kelly = fv(row.get(f"{side}_spread_kelly"))
-        mp    = fv(row.get(f"{side}_spread_model_prob"))
-        evm   = fv(row.get(f"{side}_spread_edge_vs_market_pct"))
+
+        (
+            line,
+            odds,
+            ev,
+            kelly,
+            mp,
+            evm,
+        ) = (
+            fv(
+                row.get(
+                    f"{side}_{suffix}"
+                )
+            )
+            for suffix in (
+                "spread",
+                "dk_spread_american",
+                "spread_ev",
+                "spread_kelly",
+                "spread_model_prob",
+                "spread_edge_vs_market_pct",
+            )
+        )
 
         if not passes_model_edge(ev, league, "spread"):
             DEBUG_COUNTS["rejected_spread"] += 1

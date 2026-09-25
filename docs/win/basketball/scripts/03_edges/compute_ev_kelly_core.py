@@ -328,6 +328,39 @@ def process_one(path: Path, league: str, market: str,
     per_file.append(pf)
 
 
+def discover_input_files(
+    league: str,
+    market: str,
+) -> list[Path]:
+    folder = (
+        INPUT_DIR
+        / league
+        / market
+    )
+
+    if folder.is_dir():
+        files = sorted(
+            folder.glob("*.csv")
+        )
+        if files:
+            return files
+
+        warning = (
+            "NO FILES: "
+            f"league={league} "
+            f"market={market}"
+        )
+    else:
+        warning = (
+            f"INPUT FOLDER MISSING: {folder}"
+        )
+
+    _log(
+        warning,
+        "WARN",
+    )
+    return []
+
 def main():
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         f.write(f"=== compute_ev_kelly RUN {_now()} ===\n")
@@ -354,18 +387,17 @@ def main():
     try:
         for league in LEAGUES:
             for market in MARKETS:
-                folder = INPUT_DIR / league / market
-                if not folder.exists():
-                    _log(f"INPUT FOLDER MISSING: {folder}", "WARN")
-                    continue
-
-                files = sorted(folder.glob("*.csv"))
-                if not files:
-                    _log(f"NO FILES: league={league} market={market}", "WARN")
-                    continue
-
-                for f in files:
-                    process_one(f, league, market, summary, per_file)
+                for path in discover_input_files(
+                    league,
+                    market,
+                ):
+                    process_one(
+                        path,
+                        league,
+                        market,
+                        summary,
+                        per_file,
+                    )
 
     except Exception as e:
         _log(f"FATAL: {e}\n{traceback.format_exc()}", "ERROR")

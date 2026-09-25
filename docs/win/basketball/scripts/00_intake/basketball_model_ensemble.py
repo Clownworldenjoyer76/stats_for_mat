@@ -193,45 +193,31 @@ def log(
 def clean(
     value: Any,
 ) -> str:
-    if value is None:
-        return ""
-
-    return str(
-        value
-    ).strip()
+    return (
+        ""
+        if value is None
+        else str(value).strip()
+    )
 
 
 def clean_id(
     value: Any,
 ) -> str:
-    text = clean(
-        value
-    )
-
-    if not text:
-        return ""
+    text = clean(value)
 
     try:
-        number = float(
-            text
-        )
+        number = float(text)
+    except (TypeError, ValueError):
+        return text
 
-        if (
-            math.isfinite(number)
-            and number.is_integer()
-        ):
-            return str(
-                int(number)
-            )
-
-    except (
-        TypeError,
-        ValueError,
+    if (
+        text
+        and math.isfinite(number)
+        and number.is_integer()
     ):
-        pass
+        return str(int(number))
 
     return text
-
 
 def normalize_date(
     value: Any,
@@ -290,42 +276,21 @@ def file_date(
 def to_float(
     value: Any,
 ) -> float | None:
-    if value is None:
-        return None
+    if isinstance(value, bool):
+        return float(value)
 
-    if isinstance(
-        value,
-        bool,
-    ):
-        return float(
-            value
-        )
-
-    text = clean(
-        value
-    )
-
-    if not text:
-        return None
+    text = clean(value)
 
     try:
-        result = float(
-            text
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
+        result = float(text)
+    except (TypeError, ValueError):
         return None
 
-    if not math.isfinite(
+    return (
         result
-    ):
-        return None
-
-    return result
-
+        if text and math.isfinite(result)
+        else None
+    )
 
 def required_float(
     value: Any,
@@ -393,29 +358,29 @@ def write_json_atomic(
         exist_ok=True,
     )
 
-    tmp = Path(
-        f"{path}.tmp"
+    tmp = path.with_name(
+        f"{path.name}.tmp"
+    )
+
+    serialized = (
+        json.dumps(
+            payload,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
     )
 
     try:
         tmp.write_text(
-            json.dumps(
-                payload,
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
+            serialized,
             encoding="utf-8",
         )
-
-        tmp.replace(
-            path
-        )
-
+        tmp.replace(path)
     finally:
-        if tmp.exists():
-            tmp.unlink()
-
+        tmp.unlink(
+            missing_ok=True
+        )
 
 def read_csv_rows(
     path: Path,
@@ -451,8 +416,8 @@ def write_csv_atomic(
         exist_ok=True,
     )
 
-    tmp = Path(
-        f"{path}.tmp"
+    tmp = path.with_name(
+        f"{path.name}.tmp"
     )
 
     try:
@@ -466,20 +431,16 @@ def write_csv_atomic(
                 fieldnames=OUTPUT_FIELDS,
                 extrasaction="ignore",
             )
-
             writer.writeheader()
-            writer.writerows(
-                rows
-            )
 
-        tmp.replace(
-            path
-        )
+            for row in rows:
+                writer.writerow(row)
 
+        tmp.replace(path)
     finally:
-        if tmp.exists():
-            tmp.unlink()
-
+        tmp.unlink(
+            missing_ok=True
+        )
 
 def sha256_file(
     path: Path,

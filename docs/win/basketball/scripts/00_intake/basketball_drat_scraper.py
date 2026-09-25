@@ -192,31 +192,33 @@ def load_core():
     return module
 
 
-def main() -> None:
-    core = load_core()
-    now = datetime.now(NY)
-
+def select_active_urls(
+    urls: dict,
+    now: datetime,
+) -> tuple[
+    bool,
+    dict,
+    list[str],
+]:
     force_all = truthy(
-        os.getenv("BASKETBALL_FORCE_ALL_LEAGUES")
+        os.getenv(
+            "BASKETBALL_FORCE_ALL_LEAGUES"
+        )
     )
 
-    try:
-        season_config = load_season_config()
-    except Exception as exc:
-        core.log(
-            f"SEASON CONFIG FAILED: {exc}"
-        )
-        core.log("STATUS: FAILED")
-        raise SystemExit(1) from exc
+    season_config = (
+        load_season_config()
+    )
 
-    original = dict(core.URLS)
+    active = dict(
+        urls
+    )
 
-    if force_all:
-        active = original
-    else:
+    if not force_all:
         active = {
             key: value
-            for key, value in original.items()
+            for key, value
+            in urls.items()
             if in_season(
                 key,
                 now,
@@ -225,8 +227,35 @@ def main() -> None:
         }
 
     skipped = sorted(
-        set(original) - set(active)
+        set(urls)
+        - set(active)
     )
+
+    return (
+        force_all,
+        active,
+        skipped,
+    )
+
+def main() -> None:
+    core = load_core()
+    now = datetime.now(NY)
+
+    try:
+        (
+            force_all,
+            active,
+            skipped,
+        ) = select_active_urls(
+            core.URLS,
+            now,
+        )
+    except Exception as exc:
+        core.log(
+            f"SEASON CONFIG FAILED: {exc}"
+        )
+        core.log("STATUS: FAILED")
+        raise SystemExit(1) from exc
 
     core.URLS = active
 

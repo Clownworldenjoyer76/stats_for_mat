@@ -4089,6 +4089,50 @@ def skipped_league_state(
     }
 
 
+def unsafe_history_component(
+    rule: dict,
+) -> dict:
+    method = rule.get(
+        "method"
+    )
+
+    window = rule.get(
+        "window_games"
+    )
+
+    if (
+        window is None
+        and method
+        == "regime_aware"
+    ):
+        windows = (
+            rule.get(
+                "windows_games"
+            )
+            or []
+        )
+
+        window = (
+            max(
+                windows
+            )
+            if windows
+            else None
+        )
+
+    return {
+        **component_stub(
+            "error",
+            method,
+            window,
+        ),
+        "error": (
+            "Unsafe historical "
+            "adjusted rows could "
+            "not be reversed"
+        ),
+    }
+
 def process_league(
     league: str,
     league_cfg: dict[str, Any],
@@ -4281,46 +4325,9 @@ def process_league(
                 "regime_aware",
             }
         ):
-            margin_method = margin_rule.get(
-                "method"
+            margin = unsafe_history_component(
+                margin_rule
             )
-
-            margin_window = margin_rule.get(
-                "window_games"
-            )
-
-            if (
-                margin_window is None
-                and margin_method
-                == "regime_aware"
-            ):
-                margin_windows = (
-                    margin_rule.get(
-                        "windows_games"
-                    )
-                    or []
-                )
-
-                margin_window = (
-                    max(
-                        margin_windows
-                    )
-                    if margin_windows
-                    else None
-                )
-
-            margin = {
-                **component_stub(
-                    "error",
-                    margin_method,
-                    margin_window,
-                ),
-                "error": (
-                    "Unsafe historical "
-                    "adjusted rows could "
-                    "not be reversed"
-                ),
-            }
 
         else:
             (
@@ -4342,46 +4349,9 @@ def process_league(
                 "regime_aware",
             }
         ):
-            total_method = total_rule.get(
-                "method"
+            total = unsafe_history_component(
+                total_rule
             )
-
-            total_window = total_rule.get(
-                "window_games"
-            )
-
-            if (
-                total_window is None
-                and total_method
-                == "regime_aware"
-            ):
-                total_windows = (
-                    total_rule.get(
-                        "windows_games"
-                    )
-                    or []
-                )
-
-                total_window = (
-                    max(
-                        total_windows
-                    )
-                    if total_windows
-                    else None
-                )
-
-            total = {
-                **component_stub(
-                    "error",
-                    total_method,
-                    total_window,
-                ),
-                "error": (
-                    "Unsafe historical "
-                    "adjusted rows could "
-                    "not be reversed"
-                ),
-            }
 
         else:
             (

@@ -71,89 +71,128 @@ FINAL_COLUMNS = [
 
 
 def truthy(value: str | None) -> bool:
-    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+    normalized = str(
+        value or ""
+    ).strip().casefold()
+
+    return normalized in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
 
-def validate_month_day(
+def _season_field(
+    row: dict,
     league: str,
-    label: str,
-    month: int,
-    day: int,
-) -> None:
-    """Validate a month/day pair using a leap year."""
-    try:
-        datetime(2000, month, day)
-    except ValueError as exc:
+    field: str,
+) -> int:
+    if field not in row:
         raise ValueError(
-            f"Invalid {league}.{label}: month={month}, day={day}"
+            f"Missing {league}.{field} "
+            f"in {SEASON_CONFIG}"
+        )
+
+    try:
+        return int(
+            row[field]
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Invalid {league}.{field}: "
+            f"{row[field]!r}"
         ) from exc
 
 
 def load_season_config() -> dict[str, dict[str, int]]:
-    """Load and validate operational season dates."""
     if not SEASON_CONFIG.exists():
         raise FileNotFoundError(
-            f"Season config not found: {SEASON_CONFIG}"
+            f"Season config not found: "
+            f"{SEASON_CONFIG}"
         )
 
-    with open(SEASON_CONFIG, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f) or {}
+    raw = (
+        yaml.safe_load(
+            SEASON_CONFIG.read_text(
+                encoding="utf-8"
+            )
+        )
+        or {}
+    )
 
-    if not isinstance(raw, dict):
+    if not isinstance(
+        raw,
+        dict,
+    ):
         raise ValueError(
-            f"{SEASON_CONFIG} must contain a top-level mapping"
+            f"{SEASON_CONFIG} must contain "
+            "a top-level mapping"
         )
 
-    required_fields = (
+    fields = (
         "start_month",
         "start_day",
         "end_month",
         "end_day",
     )
 
-    config: dict[str, dict[str, int]] = {}
+    config: dict[
+        str,
+        dict[str, int],
+    ] = {}
 
     for league in SUPPORTED_LEAGUES:
-        row = raw.get(league)
+        row = raw.get(
+            league
+        )
 
-        if not isinstance(row, dict):
+        if not isinstance(
+            row,
+            dict,
+        ):
             raise ValueError(
-                f"Missing season configuration for league={league}"
+                "Missing season configuration "
+                f"for league={league}"
             )
 
-        values: dict[str, int] = {}
+        values = {
+            field: _season_field(
+                row,
+                league,
+                field,
+            )
+            for field in fields
+        }
 
-        for field in required_fields:
-            if field not in row:
-                raise ValueError(
-                    f"Missing {league}.{field} in {SEASON_CONFIG}"
-                )
+        for label in (
+            "start",
+            "end",
+        ):
+            month = values[
+                f"{label}_month"
+            ]
+            day = values[
+                f"{label}_day"
+            ]
 
             try:
-                values[field] = int(row[field])
-            except (TypeError, ValueError) as exc:
+                datetime(
+                    2000,
+                    month,
+                    day,
+                )
+            except ValueError as exc:
                 raise ValueError(
-                    f"Invalid {league}.{field}: {row[field]!r}"
+                    f"Invalid {league}.{label}: "
+                    f"month={month}, day={day}"
                 ) from exc
 
-        validate_month_day(
-            league,
-            "start",
-            values["start_month"],
-            values["start_day"],
-        )
-
-        validate_month_day(
-            league,
-            "end",
-            values["end_month"],
-            values["end_day"],
-        )
-
-        config[league] = values
+        config[
+            league
+        ] = values
 
     return config
-
 
 def in_season(
     league: str,

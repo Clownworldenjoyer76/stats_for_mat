@@ -104,30 +104,83 @@ with open(LOG_FILE, "w", encoding="utf-8") as startup_log_handle:
     )
 
 
-def _now() -> str:
-    return datetime.now(UTC).isoformat()
-
-
 def log(level: str, message: str) -> None:
-    with open(LOG_FILE, "a", encoding="utf-8") as log_handle:
+    timestamp = datetime.now(
+        UTC
+    ).isoformat()
+
+    with LOG_FILE.open(
+        "a",
+        encoding="utf-8",
+    ) as log_handle:
         log_handle.write(
-            f"{_now()} | {level} | {message}\n"
+            f"{timestamp} | "
+            f"{level} | "
+            f"{message}\n"
         )
 
 
-def warn(message: str) -> None:
-    global WARNING_COUNT
+def _count_and_log(
+    level: str,
+    message: str,
+) -> None:
+    global WARNING_COUNT, ERROR_COUNT
 
-    WARNING_COUNT += 1
-    log("WARNING", message)
+    if level == "WARNING":
+        WARNING_COUNT += 1
+    elif level == "ERROR":
+        ERROR_COUNT += 1
+
+    log(
+        level,
+        message,
+    )
+
+
+def warn(message: str) -> None:
+    _count_and_log(
+        "WARNING",
+        message,
+    )
 
 
 def error(message: str) -> None:
-    global ERROR_COUNT
+    _count_and_log(
+        "ERROR",
+        message,
+    )
 
-    ERROR_COUNT += 1
-    log("ERROR", message)
 
+def performance_rates(
+    bets: int,
+    units_flat: float,
+    stake_total: float,
+    units_kelly: float,
+    wins: int,
+    losses: int,
+) -> tuple[float, float, float]:
+    decided = (
+        wins
+        + losses
+    )
+
+    return (
+        (
+            units_flat / bets
+            if bets > 0
+            else np.nan
+        ),
+        (
+            units_kelly / stake_total
+            if stake_total > 0
+            else np.nan
+        ),
+        (
+            wins / decided
+            if decided > 0
+            else np.nan
+        ),
+    )
 
 def log_input(
     path: Path,
@@ -498,22 +551,17 @@ def aggregate_block(
             else 0.0
         )
 
-        roi_flat = (
-            units_flat / bets
-            if bets > 0
-            else np.nan
-        )
-
-        roi_kelly = (
-            units_kelly / stake_total
-            if stake_total > 0
-            else np.nan
-        )
-
-        win_pct = (
-            wins / (wins + losses)
-            if (wins + losses) > 0
-            else np.nan
+        (
+            roi_flat,
+            roi_kelly,
+            win_pct,
+        ) = performance_rates(
+            bets,
+            units_flat,
+            stake_total,
+            units_kelly,
+            wins,
+            losses,
         )
 
         avg_ev = (
@@ -1268,22 +1316,17 @@ def build_summary_grand_total(
         )
     )
 
-    roi_flat = (
-        units_flat / bets
-        if bets > 0
-        else np.nan
-    )
-
-    roi_kelly = (
-        units_kelly / stake_total
-        if stake_total > 0
-        else np.nan
-    )
-
-    win_pct = (
-        wins / (wins + losses)
-        if (wins + losses) > 0
-        else np.nan
+    (
+        roi_flat,
+        roi_kelly,
+        win_pct,
+    ) = performance_rates(
+        bets,
+        units_flat,
+        stake_total,
+        units_kelly,
+        wins,
+        losses,
     )
 
     avg_ev = (

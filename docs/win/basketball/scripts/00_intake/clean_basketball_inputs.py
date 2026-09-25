@@ -1013,6 +1013,67 @@ def sum_nested(stats, league, key, default=0):
     return stats.get(league, {}).get(key, default)
 
 
+def summary_counts(
+    league,
+    bad_odds_blanked,
+    bad_lines_blanked,
+    outlier_counts,
+):
+    odds = bad_odds_blanked.get(
+        league,
+        {},
+    )
+    lines = bad_lines_blanked.get(
+        league,
+        {},
+    )
+    outliers = outlier_counts.get(
+        league,
+        {},
+    )
+
+    bad_ml = odds.get(
+        "ML",
+        0,
+    )
+    bad_total = odds.get(
+        "TOTAL",
+        0,
+    )
+    bad_spread = odds.get(
+        "SPREAD",
+        0,
+    )
+    bad_total_lines = lines.get(
+        "TOTAL",
+        0,
+    )
+    bad_spread_lines = lines.get(
+        "SPREAD",
+        0,
+    )
+
+    return (
+        bad_ml,
+        bad_total,
+        bad_spread,
+        bad_ml
+        + bad_total
+        + bad_spread,
+        bad_total_lines,
+        bad_spread_lines,
+        bad_total_lines
+        + bad_spread_lines,
+        outliers.get(
+            "spread",
+            0,
+        ),
+        outliers.get(
+            "total",
+            0,
+        ),
+    )
+
 def write_league_summaries(
     pred_files,
     book_files,
@@ -1027,17 +1088,22 @@ def write_league_summaries(
     skipped_historical_missing,
 ):
     for league in ("NBA", "NCAAM", "WNBA"):
-        bad_ml = bad_odds_blanked.get(league, {}).get("ML", 0)
-        bad_total = bad_odds_blanked.get(league, {}).get("TOTAL", 0)
-        bad_spread = bad_odds_blanked.get(league, {}).get("SPREAD", 0)
-        bad_odds_total_all = bad_ml + bad_total + bad_spread
-
-        bad_total_lines = bad_lines_blanked.get(league, {}).get("TOTAL", 0)
-        bad_spread_lines = bad_lines_blanked.get(league, {}).get("SPREAD", 0)
-        bad_lines_total_all = bad_total_lines + bad_spread_lines
-
-        spread_outliers = outlier_counts.get(league, {}).get("spread", 0)
-        total_outliers = outlier_counts.get(league, {}).get("total", 0)
+        (
+            bad_ml,
+            bad_total,
+            bad_spread,
+            bad_odds_total_all,
+            bad_total_lines,
+            bad_spread_lines,
+            bad_lines_total_all,
+            spread_outliers,
+            total_outliers,
+        ) = summary_counts(
+            league,
+            bad_odds_blanked,
+            bad_lines_blanked,
+            outlier_counts,
+        )
 
         log_league(league, "")
         log_league(league, "============================================================")
@@ -1089,17 +1155,22 @@ def write_master_summary(
     log_master("============================================================")
 
     for league in ("NBA", "NCAAM", "WNBA"):
-        bad_ml = bad_odds_blanked.get(league, {}).get("ML", 0)
-        bad_total = bad_odds_blanked.get(league, {}).get("TOTAL", 0)
-        bad_spread = bad_odds_blanked.get(league, {}).get("SPREAD", 0)
-        bad_odds_total_all = bad_ml + bad_total + bad_spread
-
-        bad_total_lines = bad_lines_blanked.get(league, {}).get("TOTAL", 0)
-        bad_spread_lines = bad_lines_blanked.get(league, {}).get("SPREAD", 0)
-        bad_lines_total_all = bad_total_lines + bad_spread_lines
-
-        spread_outliers = outlier_counts.get(league, {}).get("spread", 0)
-        total_outliers = outlier_counts.get(league, {}).get("total", 0)
+        (
+            bad_ml,
+            bad_total,
+            bad_spread,
+            bad_odds_total_all,
+            bad_total_lines,
+            bad_spread_lines,
+            bad_lines_total_all,
+            spread_outliers,
+            total_outliers,
+        ) = summary_counts(
+            league,
+            bad_odds_blanked,
+            bad_lines_blanked,
+            outlier_counts,
+        )
 
         log_master("")
         log_master(f"--- {league} ---")
