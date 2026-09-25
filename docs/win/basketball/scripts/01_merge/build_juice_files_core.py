@@ -728,6 +728,11 @@ def main():
                                 league,
                             )
 
+                        else:
+                            raise ValueError(
+                                f"Unsupported market type: {market_type}"
+                            )
+
                         files_written.append((str(out_path), count))
                         log(f"WROTE {out_path.name} ({count} rows)")
                         audit(

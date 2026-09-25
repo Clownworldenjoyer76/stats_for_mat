@@ -17,6 +17,7 @@ No zero-row placeholder rows are ever created.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 import importlib
 import importlib.metadata
 import io
@@ -32,6 +33,23 @@ import requests
 import yaml
 
 from sdv_season_mapping import sdv_season_id
+
+
+def optional_callable_attr(
+    module: Any,
+    name: str,
+) -> Callable[..., Any] | None:
+    candidate = getattr(
+        module,
+        name,
+        None,
+    )
+
+    return (
+        candidate
+        if callable(candidate)
+        else None
+    )
 
 
 BASE = Path("docs/win/basketball")
@@ -766,13 +784,12 @@ def load_nba_stats_schedule(
         module_name
     )
 
-    loader = getattr(
+    loader = optional_callable_attr(
         module,
         loader_name,
-        None,
     )
 
-    if callable(loader):
+    if loader is not None:
         try:
             frame = loader(
                 seasons=[
@@ -2049,15 +2066,14 @@ def load_wnba_stats_schedule(
         module_name
     )
 
-    loader = getattr(
+    loader = optional_callable_attr(
         module,
         loader_name,
-        None,
     )
 
     loader_error = None
 
-    if callable(loader):
+    if loader is not None:
         try:
             frame = loader(
                 seasons=[
@@ -2977,15 +2993,14 @@ def load_pro_schedule_crosswalk(
         module_name
     )
 
-    loader = getattr(
+    loader = optional_callable_attr(
         module,
         loader_name,
-        None,
     )
 
     loader_error = None
 
-    if callable(loader):
+    if loader is not None:
         try:
             frame = loader(
                 seasons=[
@@ -3625,13 +3640,12 @@ def call_loader(
         module_name
     )
 
-    loader = getattr(
+    loader = optional_callable_attr(
         module,
         function_name,
-        None,
     )
 
-    if callable(loader):
+    if loader is not None:
         try:
             return (
                 loader(
@@ -3683,6 +3697,14 @@ def call_loader(
             f"{module_name}.{function_name}"
         )
 
+        if (
+            fallback_key
+            not in LOADER_FALLBACKS
+            and fallback_key
+            not in RELEASE_FALLBACKS
+        ):
+            raise primary_error
+
     if (
         fallback_key
         in LOADER_FALLBACKS
@@ -3709,13 +3731,12 @@ def call_loader(
             )
         )
 
-        fallback_loader = getattr(
+        fallback_loader = optional_callable_attr(
             fallback_module,
             fallback_function_name,
-            None,
         )
 
-        if not callable(fallback_loader):
+        if fallback_loader is None:
             fallback_error = RuntimeError(
                 "SportsDataVerse fallback "
                 "loader missing: "
@@ -3800,16 +3821,7 @@ def call_loader(
             loader_season,
         )
 
-    if primary_error is not None:
-        raise RuntimeError(
-            f"{league}.{table}: "
-            f"loader failed: {primary_error}"
-        ) from primary_error
 
-    raise RuntimeError(
-        "SportsDataVerse loader missing: "
-        f"{module_name}.{function_name}"
-    )
 
 
 def normalize(
