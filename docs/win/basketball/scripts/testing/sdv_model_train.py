@@ -83,34 +83,21 @@ def clean_id(
         value
     )
 
-    if not text:
-        return ""
+    number = to_float(
+        text
+    )
 
-    try:
-        number = float(
-            text
-        )
-
-        if (
-            math.isfinite(
-                number
-            )
-            and number.is_integer()
-        ):
-            return str(
-                int(
-                    number
-                )
-            )
-
-    except (
-        TypeError,
-        ValueError,
+    if (
+        number is None
+        or not number.is_integer()
     ):
-        pass
+        return text
 
-    return text
-
+    return str(
+        int(
+            number
+        )
+    )
 
 def to_float(
     value: Any,

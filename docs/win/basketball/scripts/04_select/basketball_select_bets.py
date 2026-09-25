@@ -22,6 +22,33 @@ def load_core():
     if spec is None or spec.loader is None: raise RuntimeError(f"Unable to load {CORE_PATH}")
     m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
 
+def incremental_sources(date: str):
+    pattern = f"*/*/{date}_*.csv"
+
+    for src in sorted(
+        REAL_INPUT.glob(pattern)
+    ):
+        market = src.parent.name
+        league = src.parent.parent.name
+
+        if (
+            league not in LEAGUES
+            or market not in MARKETS
+        ):
+            continue
+
+        expected_name = (
+            f"{date}_{league.upper()}_"
+            f"{market}.csv"
+        )
+
+        if src.name == expected_name:
+            yield (
+                league,
+                market,
+                src,
+            )
+
 def main():
     core=load_core()
     if truthy(os.getenv("BASKETBALL_FULL_REBUILD")):
@@ -30,12 +57,10 @@ def main():
         date=datetime.now(NY).strftime("%Y_%m_%d")
         with tempfile.TemporaryDirectory(prefix="basketball_select_") as td:
             root=Path(td); inp=root/"input"; out=root/"select"
-            for lg in LEAGUES:
-                up=lg.upper()
-                for market in MARKETS:
-                    src=REAL_INPUT/lg/market/f"{date}_{up}_{market}.csv"
-                    if src.exists():
-                        dst=inp/lg/market/src.name; dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(src,dst)
+            for lg, market, src in incremental_sources(date):
+                dst=inp/lg/market/src.name
+                dst.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(src,dst)
             core.INPUT_DIR=inp; core.SELECT_DIR=out; core.main()
             for lg in LEAGUES:
                 dest=REAL_SELECT/lg/"daily_picks"/f"{date}_{lg}_selected.csv"
